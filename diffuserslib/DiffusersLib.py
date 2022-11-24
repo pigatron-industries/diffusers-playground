@@ -2,7 +2,7 @@ import torch
 import random
 import os
 from huggingface_hub import login
-from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline
+from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 
@@ -69,7 +69,7 @@ class DiffusersLib:
     def createGenerator(self, seed=None):
         if(seed is None):
             seed = random.randInt(0, MAX_SEED)
-        return torch.Generator(device=self.device).manual_seed(seed)
+        return torch.Generator(device=self.device).manual_seed(seed), seed
 
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
@@ -89,13 +89,12 @@ class DiffusersLib:
             args['feature_extractor'] = self.feature_extractor
             args['clip_model'] = self.clip_model
 
-        self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args)
+        self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
-        self.textToImagePipeline = self.textToImagePipeline.to(self.device)
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None):
-        generator = self.createGenerator(seed)
+        generator, seed = self.createGenerator(seed)
         with torch.autocast(self.device):
             image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
         return image, seed
@@ -113,20 +112,38 @@ class DiffusersLib:
         if(self.text_encoder is not None):
             args['text_encoder'] = self.text_encoder
 
-        self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(model, **args)
+        self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(model, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
-        self.imageToImagePipeline = self.imageToImagePipeline.to(self.device)
 
 
-    def ImageToImage(self, inimage, prompt, negprompt, steps, scale, width, height, seed=None):
+    def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None):
         inimage = inimage.convert("RGB")
-        generator = self.createGenerator(seed)
+        generator, seed = self.createGenerator(seed)
         with torch.autocast(self.device):
-            image = self.imageToImagePipeline(prompt, init_image=inimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
+            image = self.imageToImagePipeline(prompt, init_image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
         return image, seed
 
 
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
         print(f"Creating inpainting pipeline from model {model}")
+        args = {}
+        args['safety_checker'] = dummy
+        args['torch_dtype'] = torch.float16
+        if(self.vae is not None):
+            args['vae'] = self.vae
+        if(self.tokenizer is not None):
+            args['tokenizer'] = self.tokenizer
+        if(self.text_encoder is not None):
+            args['text_encoder'] = self.text_encoder
+
+        self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(model, **args).to(self.device)
+        self.inpaintingPipeline.enable_attention_slicing()
 
 
+    def inpaint(self, inimage, maskimage, prompt, negprompt, steps, scale, seed=None):
+        inimage = inimage.convert("RGB")
+        maskimage = maskimage.convert("RGB")
+        generator, seed = self.createGenerator(seed)
+        with torch.autocast(self.device):
+            image = self.inpaintingPipeline(prompt, image=inimage, mask_image=maskimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+        return image, seed
