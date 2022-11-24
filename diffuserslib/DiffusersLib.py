@@ -73,11 +73,12 @@ class DiffusersLib:
         return torch.Generator(device=self.device).manual_seed(seed), seed
 
 
-    def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
+    def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, fp16revision=True, custom_pipeline=None):
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
-        args['revision'] = 'fp16'
+        if(fp16revision):
+            args['revision'] = 'fp16'
         if(self.vae is not None):
             args['vae'] = self.vae
         if(self.tokenizer is not None):
@@ -104,11 +105,13 @@ class DiffusersLib:
         return image, seed
 
 
-    def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
+    def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, fp16revision=True):
         print(f"Creating image to image pipeline from model {model}")
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
+        if(fp16revision):
+            args['revision'] = 'fp16'
         if(self.vae is not None):
             args['vae'] = self.vae
         if(self.tokenizer is not None):
@@ -128,11 +131,13 @@ class DiffusersLib:
         return image, seed
 
 
-    def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
+    def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL, fp16revision=True):
         print(f"Creating inpainting pipeline from model {model}")
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
+        if(fp16revision):
+            args['revision'] = 'fp16'
         if(self.vae is not None):
             args['vae'] = self.vae
         if(self.tokenizer is not None):
