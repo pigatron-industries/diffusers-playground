@@ -4,11 +4,12 @@ import os
 from huggingface_hub import login
 from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline
 from diffusers.models import AutoencoderKL
-from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor
+from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
 DEFAULT_INPAINT_MODEL = 'runwayml/stable-diffusion-inpainting'
+DEFAULT_CLIP_MODEL = 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K'
 MAX_SEED = 4294967295
 
 
@@ -60,6 +61,11 @@ class DiffusersLib:
             self.loadTextEmbedding(file_path)
 
 
+    def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
+        self.feature_extractor = CLIPFeatureExtractor.from_pretrained(DEFAULT_CLIP_MODEL)
+        self.clip_model = CLIPModel.from_pretrained(DEFAULT_CLIP_MODEL, torch_dtype=torch.float16)
+
+
     def createGenerator(self, seed=None):
         if(seed is None):
             seed = random.randInt(0, MAX_SEED)
@@ -79,7 +85,8 @@ class DiffusersLib:
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
         if(custom_pipeline == 'clip_guided_stable_diffusion'):
-            pass #TODO add feature_extractor and clip_model
+            args['feature_extractor'] = self.feature_extractor
+            args['clip_model'] = self.clip_model
 
         self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args)
         self.textToImagePipeline.enable_attention_slicing()
