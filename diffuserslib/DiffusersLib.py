@@ -77,6 +77,7 @@ class DiffusersLib:
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
+        args['revision'] = 'fp16'
         if(self.vae is not None):
             args['vae'] = self.vae
         if(self.tokenizer is not None):
