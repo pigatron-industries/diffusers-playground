@@ -74,7 +74,6 @@ class DiffusersLib:
 
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
-        print(f"Creating text to image pipeline from model {model}")
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
@@ -89,6 +88,9 @@ class DiffusersLib:
         if(custom_pipeline == 'clip_guided_stable_diffusion'):
             args['feature_extractor'] = self.feature_extractor
             args['clip_model'] = self.clip_model
+
+        print(f"Creating text to image pipeline from model {model}")
+        print(args)
 
         self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
