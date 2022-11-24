@@ -54,7 +54,7 @@ class DiffusersLib:
 
     def loadTextEmbeddings(self, directory, model=DEFAULT_TEXTTOIMAGE_MODEL):
         self.tokenizer = CLIPTokenizer.from_pretrained(model, subfolder='tokenizer')
-        self.text_encoder = CLIPTextModel.from_pretrained(model, 'text_encoder')
+        self.text_encoder = CLIPTextModel.from_pretrained(model, subfolder='text_encoder')
         for embed_file in os.listdir(directory):
             file_path = directory + '/' + embed_file
             print(file_path)
@@ -73,6 +73,7 @@ class DiffusersLib:
 
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
+        print(f"Creating text to image pipeline from model {model}")
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
@@ -101,6 +102,7 @@ class DiffusersLib:
 
 
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
+        print(f"Creating image to image pipeline from model {model}")
         args = {}
         args['safety_checker'] = dummy
         args['torch_dtype'] = torch.float16
@@ -125,5 +127,6 @@ class DiffusersLib:
 
 
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
-        pass
+        print(f"Creating inpainting pipeline from model {model}")
+
 
