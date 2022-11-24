@@ -40,7 +40,7 @@ class DiffusersLib:
 
     def loadTextEmbedding(self, embed_file):
         learned_embeds = torch.load(embed_file, map_location="cpu")
-        trained_token = list(learned_embed.keys())[0]
+        trained_token = list(learned_embeds.keys())[0]
         learned_embed = learned_embeds[trained_token]
         dtype = self.text_encoder.get_input_embeddings().weight.dtype
         learned_embed.to(dtype)
