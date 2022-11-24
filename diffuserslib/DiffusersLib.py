@@ -69,7 +69,7 @@ class DiffusersLib:
     def createGenerator(self, seed=None):
         if(seed is None):
             seed = random.randInt(0, MAX_SEED)
-        return torch.Generator(device=self.device).manuak_seed(seed)
+        return torch.Generator(device=self.device).manual_seed(seed)
 
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
