@@ -28,6 +28,7 @@ class DiffusersLib:
         self.vae = None
         self.tokenizer = None
         self.text_encoder = None
+        self.schedulerClass = None
 
 
     def loginHuggingFace(self, token):
@@ -73,6 +74,18 @@ class DiffusersLib:
         return torch.Generator(device=self.device).manual_seed(seed), seed
 
 
+    def loadScheduler(self, schedulerClass):
+        """Load scheduler and update on all created pipelines"""
+        self.schedulerClass = schedulerClass
+        if(self.textToImagePipeline is not None):
+            self.textToImagePipeline.scheduler = schedulerClass.from_config(self.textToImagePipeline.scheduler.config)
+        if(self.imageToImagePipeline is not None):
+            self.imageToImagePipeline.scheduler = schedulerClass.from_config(self.imageToImagePipeline.scheduler.config)
+        if(self.inpaintingPipeline is not None):
+            self.inpaintingPipeline.scheduler = schedulerClass.from_config(self.inpaintingPipeline.scheduler.config)
+        pass
+
+
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, fp16revision=True, custom_pipeline=None):
         args = {}
         args['safety_checker'] = dummy
@@ -96,6 +109,8 @@ class DiffusersLib:
 
         self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
+        if(self.schedulerClass is not None):
+            self.textToImagePipeline.scheduler = self.schedulerClass.from_config(self.textToImagePipeline.scheduler.config)
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None):
@@ -121,6 +136,8 @@ class DiffusersLib:
 
         self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(model, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
+        if(self.schedulerClass is not None):
+            self.imageToImagePipeline.scheduler = self.schedulerClass.from_config(self.imageToImagePipeline.scheduler.config)
 
 
     def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None):
@@ -147,6 +164,8 @@ class DiffusersLib:
 
         self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(model, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
+        if(self.schedulerClass is not None):
+            self.inpaintingPipeline.scheduler = self.schedulerClass.from_config(self.inpaintingPipeline.scheduler.config)
 
 
     def inpaint(self, inimage, maskimage, prompt, negprompt, steps, scale, seed=None):
