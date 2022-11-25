@@ -88,7 +88,7 @@ class DiffusersLib:
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, fp16revision=True, custom_pipeline=None):
         args = {}
-        args['safety_checker'] = dummy
+        args['safety_checker'] = None
         args['torch_dtype'] = torch.float16
         if(fp16revision):
             args['revision'] = 'fp16'
