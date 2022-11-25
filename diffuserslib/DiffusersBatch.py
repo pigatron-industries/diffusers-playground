@@ -34,13 +34,12 @@ class RandomNumberBatchArgument(BatchArgument):
 
 
 class RandomNumberArgument(Argument):
-    def __init__(self, min, max, num):
+    def __init__(self, min, max):
         self.min = min
         self.max = max
-        self.num = num
         
     def __call__(self):
-        return random.randint(self.min, self.max, self.num)
+        return random.randint(self.min, self.max)
 
 
 class StringListBatchArgument(BatchArgument):
@@ -64,7 +63,11 @@ def createBatchArguments(argdict):
     keys, values = zip(*batchargs.items())
     for bundle in itertools.product(*values):
         args = dict(zip(keys, bundle))
-        args = args | flatargs
+        for flatargkey in flatargs.keys():
+            if(isinstance(flatargs[flatargkey], Argument)):
+                args[flatargkey] = flatargs[flatargkey]()
+            else:
+                args[flatargkey] = flatargs[flatargkey]
         batch.append(args)
 
     return batch
