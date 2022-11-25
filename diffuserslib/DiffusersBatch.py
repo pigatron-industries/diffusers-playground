@@ -1,11 +1,17 @@
 
 
 import itertools
+import numpy as np
+import random
 
 
 class BatchArgument:
     pass
-        
+
+
+class Argument:
+    pass    
+
 
 class NumberRangeBatchArgument(BatchArgument):
     def __init__(self, min, max, step):
@@ -16,6 +22,33 @@ class NumberRangeBatchArgument(BatchArgument):
     def __call__(self):
         return range(self.min, self.max, self.step)
 
+
+class RandomNumberBatchArgument(BatchArgument):
+    def __init__(self, min, max, num):
+        self.min = min
+        self.max = max
+        self.num = num
+        
+    def __call__(self):
+        return np.random.randint(self.min, self.max, self.num)
+
+
+class RandomNumberArgument(Argument):
+    def __init__(self, min, max, num):
+        self.min = min
+        self.max = max
+        self.num = num
+        
+    def __call__(self):
+        return random.randint(self.min, self.max, self.num)
+
+
+class StringListBatchArgument(BatchArgument):
+    def __init__(self, list):
+        self.list = list
+    
+    def __call__(self):
+        return self.list
 
 
 def createBatchArguments(argdict):
