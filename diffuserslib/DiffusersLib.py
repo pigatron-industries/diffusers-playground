@@ -13,7 +13,7 @@ DEFAULT_CLIP_MODEL = 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K'
 MAX_SEED = 4294967295
 
 
-# Use to bypass safety checker
+# Use to bypass safety checker as some pipelines don't like None
 def dummy(images, **kwargs):
     return images, False
 
@@ -105,8 +105,6 @@ class DiffusersLib:
             args['clip_model'] = self.clip_model
 
         print(f"Creating text to image pipeline from model {model}")
-        print(args)
-
         self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
         if(self.schedulerClass is not None):
