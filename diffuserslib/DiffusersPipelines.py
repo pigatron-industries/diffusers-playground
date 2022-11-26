@@ -9,7 +9,7 @@ from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLI
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
 DEFAULT_INPAINT_MODEL = 'runwayml/stable-diffusion-inpainting'
-DEFAUL_UPSCALE_MODEL = 'stabilityai/stable-diffusion-x4-upscaler'
+DEFAULT_UPSCALE_MODEL = 'stabilityai/stable-diffusion-x4-upscaler'
 DEFAULT_CLIP_MODEL = 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K'
 MAX_SEED = 4294967295
 
