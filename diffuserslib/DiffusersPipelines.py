@@ -18,7 +18,7 @@ def dummy(images, **kwargs):
     return images, False
 
 
-class DiffusersLib:
+class DiffusersPipelines:
 
     def __init__(self, device = "cuda"):
         self.device = "cuda"
