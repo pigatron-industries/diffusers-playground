@@ -192,6 +192,7 @@ class DiffusersPipelines:
 
 
     def upscale(self, inimage, prompt):
+        inimage = inimage.convert("RGB")
         with torch.autocast(self.device):
             image = self.upscalePipeline(image=inimage, prompt=prompt).images[0]
         return image
