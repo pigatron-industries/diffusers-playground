@@ -180,7 +180,6 @@ class DiffusersPipelines:
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL, fp16revision=True):
         print(f"Creating upscale pipeline from model {model}")
         args = {}
-        args['safety_checker'] = None
         args['torch_dtype'] = torch.float16
         if(fp16revision):
             args['revision'] = 'fp16'
