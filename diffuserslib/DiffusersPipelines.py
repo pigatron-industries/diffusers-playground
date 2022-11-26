@@ -2,13 +2,14 @@ import torch
 import random
 import os
 from huggingface_hub import login
-from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline
+from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
 DEFAULT_INPAINT_MODEL = 'runwayml/stable-diffusion-inpainting'
+DEFAUL_UPSCALE_MODEL = 'stabilityai/stable-diffusion-x4-upscaler'
 DEFAULT_CLIP_MODEL = 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K'
 MAX_SEED = 4294967295
 
@@ -173,3 +174,22 @@ class DiffusersPipelines:
         with torch.autocast(self.device):
             image = self.inpaintingPipeline(prompt, image=inimage, mask_image=maskimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
         return image, seed
+
+
+    def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL, fp16revision=True):
+        print(f"Creating upscale pipeline from model {model}")
+        args = {}
+        args['torch_dtype'] = torch.float16
+        if(fp16revision):
+            args['revision'] = 'fp16'
+
+        self.upscalePipeline = StableDiffusionUpscalePipeline.from_pretrained(model, **args).to(self.device)
+        self.upscalePipeline.enable_attention_slicing()
+        if(self.schedulerClass is not None):
+            self.upscalePipeline.scheduler = self.schedulerClass.from_config(self.upscalePipeline.scheduler.config)
+
+
+    def upscale(self, inimage, prompt):
+        with torch.autocast(self.device):
+            image = self.upscalePipeline(image=inimage, prompt=prompt).images[0]
+        return image
