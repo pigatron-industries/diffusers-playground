@@ -1,6 +1,6 @@
 from PIL import Image
 import math
-from ImageUtils import createMask
+from .ImageUtils import createMask
 
 
 def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, seed=None, tilewidth=640, tileheight=640, overlap=128):
