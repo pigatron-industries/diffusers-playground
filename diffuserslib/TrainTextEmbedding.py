@@ -103,6 +103,7 @@ class TextEmbeddingTrainer():
         self.vae = AutoencoderKL.from_pretrained(self.model, subfolder="vae")
         self.unet = UNet2DConditionModel.from_pretrained(self.model, subfolder="unet")
         self.train_token = train_token
+        self.embed_type = embed_type
 
         num_added_tokens = self.tokenizer.add_tokens(train_token)
         if (num_added_tokens == 0):
@@ -233,20 +234,21 @@ class TextEmbeddingTrainer():
 
         # Create the pipeline using using the trained modules and save it.
         if accelerator.is_main_process:
-            pipeline = StableDiffusionPipeline(
-                text_encoder=accelerator.unwrap_model(text_encoder),
-                vae=self.vae,
-                unet=self.unet,
-                tokenizer=self.tokenizer,
-                scheduler=PNDMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", skip_prk_steps=True),
-                safety_checker=StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker"),
-                feature_extractor=CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
-            )
-            pipeline.save_pretrained(self.pipe_dir)
+            # pipeline = StableDiffusionPipeline(
+            #     text_encoder=accelerator.unwrap_model(text_encoder),
+            #     vae=self.vae,
+            #     unet=self.unet,
+            #     tokenizer=self.tokenizer,
+            #     scheduler=PNDMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", skip_prk_steps=True),
+            #     safety_checker=StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker"),
+            #     feature_extractor=CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
+            # )
+            # pipeline.save_pretrained(self.pipe_dir)
             # Also save the newly trained embeddings
             learned_embeds = accelerator.unwrap_model(text_encoder).get_input_embeddings().weight[self.train_token_id]
             learned_embeds_dict = {self.train_token: learned_embeds.detach().cpu()}
-            torch.save(learned_embeds_dict, os.path.join(self.out_dir, f"embed_{self.train_token.strip('<>')}.bin"))
+            type_string = "object" if self.embed_type == EmbedType.object else "style"
+            torch.save(learned_embeds_dict, os.path.join(self.out_dir, f"embed_{type_string}_{self.train_token.strip('<>')}_{self.train_steps}.bin"))
 
 
 
