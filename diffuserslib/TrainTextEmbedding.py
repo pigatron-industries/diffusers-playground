@@ -91,9 +91,9 @@ class TextEmbeddingTrainer():
         self.data_dir = data_dir
         self.input_dir = data_dir + INPUT_DIR
         self.pipe_dir = data_dir + PIPE_DIR
-        os.makedirs(self.out_dir, exists_ok=True)
-        os.makedirs(self.pipe_dir, exists_ok=True)
-        os.makedirs(self.input_dir, exists_ok=True)
+        os.makedirs(self.out_dir, exist_ok=True)
+        os.makedirs(self.pipe_dir, exist_ok=True)
+        os.makedirs(self.input_dir, exist_ok=True)
     
 
     def trainSetup(self, embed_type, train_token, init_token):
