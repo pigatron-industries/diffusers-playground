@@ -78,9 +78,6 @@ class EmbedType:
     style = 2
 
 
-
-
-
 class TextEmbeddingTrainer():
 
     def __init__(self, model=DEFAULT_BASE_MODEL, data_dir=DEFAULT_DATA_DIR, out_dir=DEFAULT_OUT_DIR):
