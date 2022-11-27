@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from transformers import CLIPFeatureExtractor, CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, DDPMScheduler, PNDMScheduler, StableDiffusionPipeline, UNet2DConditionModel
+from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
@@ -238,7 +239,8 @@ class TextEmbeddingTrainer():
                 unet=self.unet,
                 tokenizer=self.tokenizer,
                 scheduler=PNDMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", skip_prk_steps=True),
-                safety_checker=None
+                safety_checker=StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker"),
+                feature_extractor=CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
             )
             pipeline.save_pretrained(self.pipe_dir)
             # Also save the newly trained embeddings
