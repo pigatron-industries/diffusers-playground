@@ -1,7 +1,6 @@
 import torch
 import random
 import os
-from huggingface_hub import login
 from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
@@ -31,10 +30,6 @@ class DiffusersPipelines:
         self.tokenizer = None
         self.text_encoder = None
         self.schedulerClass = None
-
-
-    def loginHuggingFace(self, token):
-        login(token=token)
 
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):

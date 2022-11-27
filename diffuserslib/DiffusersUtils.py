@@ -1,6 +1,11 @@
 from PIL import Image
 import math
 from .ImageUtils import createMask
+from huggingface_hub import login
+
+
+def loginHuggingFace(token):
+    login(token=token)
 
 
 def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, seed=None, tilewidth=640, tileheight=640, overlap=128):
