@@ -9,19 +9,16 @@ import torch.nn.functional as F
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from transformers import CLIPFeatureExtractor, CLIPTextModel, CLIPTokenizer
-from diffusers import AutoencoderKL, DDPMScheduler, PNDMScheduler, StableDiffusionPipeline, UNet2DConditionModel
-from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+from transformers import CLIPTextModel, CLIPTokenizer
+from diffusers import AutoencoderKL, DDPMScheduler, UNet2DConditionModel
 from accelerate import Accelerator
 from accelerate.logging import get_logger
-from accelerate.utils import set_seed
 from tqdm.auto import tqdm
 
 DEFAULT_BASE_MODEL = 'runwayml/stable-diffusion-v1-5'
 DEFAULT_DATA_DIR = '/content/data'
 DEFAULT_OUT_DIR = '/content/out'
 INPUT_DIR = '/input'
-PIPE_DIR = '/pipe'
 
 imagenet_object_templates_small = [
     "a photo of a {}",
@@ -91,9 +88,7 @@ class TextEmbeddingTrainer():
         self.out_dir = out_dir
         self.data_dir = data_dir
         self.input_dir = data_dir + INPUT_DIR
-        self.pipe_dir = data_dir + PIPE_DIR
         os.makedirs(self.out_dir, exist_ok=True)
-        os.makedirs(self.pipe_dir, exist_ok=True)
         os.makedirs(self.input_dir, exist_ok=True)
     
 
@@ -232,19 +227,8 @@ class TextEmbeddingTrainer():
 
             accelerator.wait_for_everyone()
 
-        # Create the pipeline using using the trained modules and save it.
+        # save the newly trained embeddings
         if accelerator.is_main_process:
-            # pipeline = StableDiffusionPipeline(
-            #     text_encoder=accelerator.unwrap_model(text_encoder),
-            #     vae=self.vae,
-            #     unet=self.unet,
-            #     tokenizer=self.tokenizer,
-            #     scheduler=PNDMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", skip_prk_steps=True),
-            #     safety_checker=StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker"),
-            #     feature_extractor=CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
-            # )
-            # pipeline.save_pretrained(self.pipe_dir)
-            # Also save the newly trained embeddings
             learned_embeds = accelerator.unwrap_model(text_encoder).get_input_embeddings().weight[self.train_token_id]
             learned_embeds_dict = {self.train_token: learned_embeds.detach().cpu()}
             type_string = "object" if self.embed_type == EmbedType.object else "style"
