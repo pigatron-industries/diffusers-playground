@@ -141,7 +141,7 @@ class TextEmbeddingTrainer():
         self.gradient_accumulation_steps = 4
         self.scale_lr = True
         self.noise_scheduler = DDPMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=1000)
-        accelerate.notebook_launcher(self.training_function, args=(self))
+        accelerate.notebook_launcher(self.training_function)
 
 
     def training_function(self):
@@ -152,7 +152,7 @@ class TextEmbeddingTrainer():
             self.learning_rate = (self.learning_rate * self.gradient_accumulation_steps * self.train_batch_size * accelerator.num_processes)
 
         # Initialize the optimizer
-        optimizer = torch.optim.AdamW(text_encoder.get_input_embeddings().parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.AdamW(self.text_encoder.get_input_embeddings().parameters(), lr=self.learning_rate)
         text_encoder, optimizer, train_dataloader = accelerator.prepare(self.text_encoder, optimizer, train_dataloader)
 
         self.vae.to(accelerator.device)
