@@ -248,7 +248,9 @@ class TextEmbeddingTrainer():
             learned_embeds = accelerator.unwrap_model(text_encoder).get_input_embeddings().weight[self.train_token_id]
             learned_embeds_dict = {self.train_token: learned_embeds.detach().cpu()}
             type_string = "object" if self.embed_type == EmbedType.object else "style"
-            torch.save(learned_embeds_dict, os.path.join(self.out_dir, f"embed_{type_string}_{self.train_token.strip('<>')}_{self.train_steps}.bin"))
+            filename = f"embed_{type_string}_{self.train_token.strip('<>')}_{self.train_steps}.bin"
+            print(f"Saving embed file {self.out_dir} / {filename}")
+            torch.save(learned_embeds_dict, os.path.join(self.out_dir, filename))
 
 
 
