@@ -140,7 +140,7 @@ class TextEmbeddingTrainer():
         self.train_batch_size = train_batch_size
         self.gradient_accumulation_steps = 4
         self.scale_lr = True
-        self.noise_scheduler = DDPMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=1000, tensor_format="pt")
+        self.noise_scheduler = DDPMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=1000)
         accelerate.notebook_launcher(self.training_function, args=(self))
 
 

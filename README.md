@@ -1,6 +1,6 @@
 # Stable Diffusion Playground
 
-## To install in google colab
+## To install and import in google colab
 
 
 ```
