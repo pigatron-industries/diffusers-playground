@@ -12,7 +12,6 @@ from torchvision import transforms
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import AutoencoderKL, DDPMScheduler, UNet2DConditionModel
 from accelerate import Accelerator
-from accelerate.logging import get_logger
 from tqdm.auto import tqdm
 
 DEFAULT_BASE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -139,7 +138,6 @@ class TextEmbeddingTrainer():
 
 
     def training_function(self):
-        logger = get_logger(__name__)
         accelerator = Accelerator(gradient_accumulation_steps=self.gradient_accumulation_steps)
         train_dataloader = torch.utils.data.DataLoader(self.train_dataset, batch_size=self.train_batch_size, shuffle=True)
         if self.scale_lr:
@@ -160,12 +158,12 @@ class TextEmbeddingTrainer():
         total_batch_size = self.train_batch_size * accelerator.num_processes * self.gradient_accumulation_steps
 
         # Train!
-        logger.info("***** Running training *****")
-        logger.info(f"  Num examples = {len(self.train_dataset)}")
-        logger.info(f"  Instantaneous batch size per device = {self.train_batch_size}")
-        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
-        logger.info(f"  Gradient Accumulation steps = {self.gradient_accumulation_steps}")
-        logger.info(f"  Total optimization steps = {self.train_steps}")
+        print("***** Running training *****")
+        print(f"  Num examples = {len(self.train_dataset)}")
+        print(f"  Instantaneous batch size per device = {self.train_batch_size}")
+        print(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
+        print(f"  Gradient Accumulation steps = {self.gradient_accumulation_steps}")
+        print(f"  Total optimization steps = {self.train_steps}")
 
         # Only show the progress bar once on each machine.
         progress_bar = tqdm(range(self.train_steps), disable=not accelerator.is_local_main_process)
