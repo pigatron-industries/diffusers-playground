@@ -21,7 +21,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, se
             bottom = (yslice == yslices-1)
             left = (xslice == 0)
             right = (xslice == xslices-1)
-            mask = createMask(tilewidth, tileheight, overlap, top, bottom, left, right)
+            mask = createMask(tilewidth, tileheight, overlap/2, top, bottom, left, right)
             
             x = xslice * (tilewidth - overlap)
             y = yslice * (tileheight - overlap)
