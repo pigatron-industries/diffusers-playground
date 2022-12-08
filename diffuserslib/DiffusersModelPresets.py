@@ -65,3 +65,4 @@ def getHuggingFacePresetsList():
     presets.addModel('plasmo/woolitize',                              DiffusersBaseModel.sd_1_5, True,  'woolitize',          AUTOENCODER_MODEL_1_5)
     presets.addModel('plasmo/food-crit',                              DiffusersBaseModel.sd_1_5, True,  '',                   AUTOENCODER_MODEL_1_5)
     presets.addModel('Aybeeceedee/knollingcase',                      DiffusersBaseModel.sd_1_5, False, 'knollingcase',       AUTOENCODER_MODEL_1_5)
+    return presets
