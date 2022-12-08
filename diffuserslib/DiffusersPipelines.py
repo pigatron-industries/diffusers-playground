@@ -3,6 +3,7 @@ import random
 import os
 import sys
 from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline
+from diffusers import DPMSolverMultistepScheduler, EulerDiscreteScheduler, EulerAncestralDiscreteScheduler
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .DiffusersModelPresets import DiffusersModelList
