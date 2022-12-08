@@ -5,29 +5,27 @@ class DiffusersBaseModel:
     sd_1_5 = 1
     sd_2_0_512 = 2
     sd_2_0_768 = 3
-
-
-class DiffusersModelLocation:
-    local = 1
-    huggingface = 2
-
+ 
 
 class DiffusersModel:
-    def __init__(self, modelid, base, fp16=True, stylephrase=None, vae=None, location=DiffusersModelLocation.huggingface):
+    def __init__(self, modelid, base, fp16=True, stylephrase=None, vae=None, modelpath=None):
         self.modelid = modelid
         self.base = base
         self.fp16 = fp16
         self.stylephrase = stylephrase
         self.vae = vae
-        self.location = location
+        if(modelpath is None):
+            self.modelpath = modelid
+        else:
+            self.modelpath = modelpath
 
 
 class DiffusersModelList:
     def __init__(self):
         self.models = {}
 
-    def addModel(self, modelid, base, fp16=True, stylephrase=None, vae=None, location=DiffusersModelLocation.huggingface):
-        self.models[modelid] = DiffusersModel(modelid, base, fp16, stylephrase, vae, location)
+    def addModel(self, modelid, base, fp16=True, stylephrase=None, vae=None, modelpath=None):
+        self.models[modelid] = DiffusersModel(modelid, base, fp16, stylephrase, vae, modelpath)
 
     def addModels(self, models):
         self.models.update(models.models)
@@ -36,7 +34,7 @@ class DiffusersModelList:
         if modelid in self.models:
             return self.models[modelid]
         else:
-            return DiffusersModel('modelid', None, False, None, None)
+            return DiffusersModel(modelid, None, False, None, None)
 
 
 

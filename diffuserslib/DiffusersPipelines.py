@@ -6,7 +6,7 @@ from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableD
 from diffusers import DPMSolverMultistepScheduler, EulerDiscreteScheduler, EulerAncestralDiscreteScheduler
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
-from .DiffusersModelPresets import DiffusersModelList
+from .DiffusersModelPresets import DiffusersModelList, DiffusersModelLocation
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -44,8 +44,12 @@ class DiffusersPipelines:
         self.presets.addModels(presets)
 
     
-    def addPreset(self, preset):
-        self.presets.addModel(preset)
+    def addPreset(self, modelid, base, fp16=True, stylephrase=None, vae=None, local=False):
+        if(local):
+            modelpath = self.localmodelpath + '/' + modelid
+        else:
+            modelpath = None
+        self.presets.addModel(modelid, base, fp16, stylephrase, vae, modelpath)
 
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
@@ -112,7 +116,7 @@ class DiffusersPipelines:
         if(custom_pipeline == 'clip_guided_stable_diffusion'):
             args['feature_extractor'] = self.feature_extractor
             args['clip_model'] = self.clip_model
-        self.textToImagePipeline = DiffusionPipeline.from_pretrained(model, **args).to(self.device)
+        self.textToImagePipeline = DiffusionPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
 
 
@@ -139,7 +143,7 @@ class DiffusersPipelines:
             args['tokenizer'] = self.tokenizer
         if(self.text_encoder is not None):
             args['text_encoder'] = self.text_encoder
-        self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(model, **args).to(self.device)
+        self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
 
 
@@ -167,7 +171,7 @@ class DiffusersPipelines:
             args['tokenizer'] = self.tokenizer
         if(self.text_encoder is not None):
             args['text_encoder'] = self.text_encoder
-        self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(model, **args).to(self.device)
+        self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
 
 
@@ -184,12 +188,12 @@ class DiffusersPipelines:
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL, fp16revision=True):
         print(f"Creating upscale pipeline from model {model}")
-        presets = self.presets.getModel(model)
+        preset = self.presets.getModel(model)
         args = {}
         args['torch_dtype'] = torch.float16
-        if(presets.fp16):
+        if(preset.fp16):
             args['revision'] = 'fp16'
-        self.upscalePipeline = StableDiffusionUpscalePipeline.from_pretrained(model, **args).to(self.device)
+        self.upscalePipeline = StableDiffusionUpscalePipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.upscalePipeline.enable_attention_slicing()
 
 
