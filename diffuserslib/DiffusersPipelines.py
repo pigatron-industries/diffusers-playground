@@ -27,7 +27,8 @@ def str_to_class(str):
 
 class DiffusersPipelines:
 
-    def __init__(self, device = DEFAULT_DEVICE):
+    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE):
+        self.localmodelpath = localmodelpath
         self.device = device
         self.textToImagePipeline = None
         self.imageToImagePipeline = None
@@ -41,6 +42,10 @@ class DiffusersPipelines:
 
     def addPresets(self, presets):
         self.presets.addModels(presets)
+
+    
+    def addPreset(self, preset):
+        self.presets.addModel(preset)
 
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
