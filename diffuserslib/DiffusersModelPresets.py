@@ -2,9 +2,9 @@
 AUTOENCODER_MODEL_1_5 = 'stabilityai/sd-vae-ft-mse'
 
 class DiffusersBaseModel:
-    sd_1_5 = 1
-    sd_2_0_512 = 2
-    sd_2_0_768 = 3
+    sd_1_5 = 'sd_1_5'
+    sd_2_0_512 = 'sd_2_0_512'
+    sd_2_0_768 = 'sd_2_0_768'
  
 
 class DiffusersModel:
