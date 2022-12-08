@@ -36,7 +36,6 @@ class DiffusersPipelines:
         self.vae = None
         self.tokenizer = None
         self.text_encoder = None
-        self.schedulerClass = None
         self.presets = DiffusersModelList()
 
 
@@ -85,9 +84,7 @@ class DiffusersPipelines:
 
     def loadScheduler(self, schedulerClass, pipeline):
         if (isinstance(schedulerClass, str)):
-            self.schedulerClass = str_to_class(schedulerClass)
-        else:
-            self.schedulerClass = schedulerClass
+            schedulerClass = str_to_class(schedulerClass)
         pipeline.scheduler = schedulerClass.from_config(pipeline.scheduler.config)
 
 
