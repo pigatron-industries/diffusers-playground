@@ -6,7 +6,7 @@ from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableD
 from diffusers import DPMSolverMultistepScheduler, EulerDiscreteScheduler, EulerAncestralDiscreteScheduler
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
-from .DiffusersModelPresets import DiffusersModelList, DiffusersModelLocation
+from .DiffusersModelPresets import DiffusersModelList
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
