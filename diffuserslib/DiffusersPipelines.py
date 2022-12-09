@@ -27,7 +27,7 @@ def str_to_class(str):
 
 class DiffusersPipelines:
 
-    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE):
+    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True):
         self.localmodelpath = localmodelpath
         self.device = device
         self.textToImagePipeline = None
@@ -37,6 +37,7 @@ class DiffusersPipelines:
         self.vae = None
         self.tokenizers = {}
         self.text_encoders = {}
+        self.safety_checker = safety_checker
         self.presets = DiffusersModelList()
 
 
@@ -91,8 +92,8 @@ class DiffusersPipelines:
 
     def createGenerator(self, seed=None):
         if(seed is None):
-            seed = random.randInt(0, MAX_SEED)
-        return torch.Generator(device=self.device).manual_seed(seed), seed
+            seed = random.randint(0, MAX_SEED)
+        return torch.Generator().manual_seed(seed), seed
 
 
     def loadScheduler(self, schedulerClass, pipeline):
@@ -101,12 +102,11 @@ class DiffusersPipelines:
         pipeline.scheduler = schedulerClass.from_config(pipeline.scheduler.config)
 
 
-    def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
-        print(f"Creating text to image pipeline from model {model}")
-        preset = self.presets.getModel(model)
+    def createArgs(self, preset):
         args = {}
-        args['safety_checker'] = None
         args['torch_dtype'] = torch.float16
+        if (not self.safety_checker):
+            args['safety_checker'] = None
         if(preset.fp16):
             args['revision'] = 'fp16'
         if(preset.vae is not None):
@@ -115,6 +115,13 @@ class DiffusersPipelines:
             args['tokenizer'] = self.tokenizers[preset.base]
         if(preset.base in self.text_encoders):
             args['text_encoder'] = self.text_encoders[preset.base]
+        return args
+
+
+    def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
+        print(f"Creating text to image pipeline from model {model}")
+        preset = self.presets.getModel(model)
+        args = self.createArgs(preset)
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
         if(custom_pipeline == 'clip_guided_stable_diffusion'):
@@ -128,32 +135,15 @@ class DiffusersPipelines:
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
-        with torch.autocast(self.device):
-            image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
+        # with torch.autocast(self.device):
+        image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
         return image, seed
-
-
-    def createArgs(self, preset):
-        args = {}
-        args['safety_checker'] = None
-        args['torch_dtype'] = torch.float16
-        return args
 
 
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
         print(f"Creating image to image pipeline from model {model}")
         preset = self.presets.getModel(model)
-        args = {}
-        args['safety_checker'] = None
-        args['torch_dtype'] = torch.float16
-        if(preset.fp16):
-            args['revision'] = 'fp16'
-        if(preset.vae is not None):
-            args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(preset.base in self.tokenizers):
-            args['tokenizer'] = self.tokenizers[preset.base]
-        if(preset.base in self.text_encoders):
-            args['text_encoder'] = self.text_encoders[preset.base]
+        args = self.createArgs()
         self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
 
@@ -171,17 +161,7 @@ class DiffusersPipelines:
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
         print(f"Creating inpainting pipeline from model {model}")
         preset = self.presets.getModel(model)
-        args = {}
-        args['safety_checker'] = None
-        args['torch_dtype'] = torch.float16
-        if(preset.fp16):
-            args['revision'] = 'fp16'
-        if(preset.vae is not None):
-            args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(preset.base in self.tokenizers):
-            args['tokenizer'] = self.tokenizers[preset.base]
-        if(preset.base in self.text_encoders):
-            args['text_encoder'] = self.text_encoders[preset.base]
+        args = self.createArgs()
         self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
 
