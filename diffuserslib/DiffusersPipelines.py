@@ -30,6 +30,7 @@ class DiffusersPipelines:
     def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True):
         self.localmodelpath = localmodelpath
         self.device = device
+        self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.textToImagePipeline = None
         self.imageToImagePipeline = None
         self.inpaintingPipeline = None
@@ -135,8 +136,8 @@ class DiffusersPipelines:
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
-        # with torch.autocast(self.device):
-        image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
+        with torch.autocast(self.inferencedevice):
+            image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
         return image, seed
 
 
@@ -153,7 +154,7 @@ class DiffusersPipelines:
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.imageToImagePipeline)
-        with torch.autocast(self.device):
+        with torch.autocast(self.inferencedevice):
             image = self.imageToImagePipeline(prompt, init_image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
         return image, seed
 
@@ -172,7 +173,7 @@ class DiffusersPipelines:
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.inpaintingPipeline)
-        with torch.autocast(self.device):
+        with torch.autocast(self.inferencedevice):
             image = self.inpaintingPipeline(prompt, image=inimage, mask_image=maskimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
         return image, seed
 
@@ -192,6 +193,6 @@ class DiffusersPipelines:
         inimage = inimage.convert("RGB")
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.upscalePipeline)
-        with torch.autocast(self.device):
+        with torch.autocast(self.inferencedevice):
             image = self.upscalePipeline(image=inimage, prompt=prompt).images[0]
         return image
