@@ -87,14 +87,14 @@ class DiffusersPipelines:
 
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
-        self.feature_extractor = CLIPFeatureExtractor.from_pretrained(DEFAULT_CLIP_MODEL)
-        self.clip_model = CLIPModel.from_pretrained(DEFAULT_CLIP_MODEL, torch_dtype=torch.float16)
+        self.feature_extractor = CLIPFeatureExtractor.from_pretrained(model)
+        self.clip_model = CLIPModel.from_pretrained(model, torch_dtype=torch.float16)
 
 
     def createGenerator(self, seed=None):
         if(seed is None):
             seed = random.randint(0, MAX_SEED)
-        return torch.Generator().manual_seed(seed), seed
+        return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
 
 
     def loadScheduler(self, schedulerClass, pipeline):
