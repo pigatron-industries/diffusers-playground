@@ -35,8 +35,8 @@ class DiffusersPipelines:
         self.inpaintingPipeline = None
         self.upscalePipeline = None
         self.vae = None
-        self.tokenizer = None
-        self.text_encoder = None
+        self.tokenizers = {}
+        self.text_encoders = {}
         self.presets = DiffusersModelList()
 
 
@@ -56,30 +56,32 @@ class DiffusersPipelines:
         self.vae = AutoencoderKL.from_pretrained(model)
 
 
-    def loadTextEmbedding(self, embed_file):
+    def loadTextEmbedding(self, embed_file, base):
+        text_encoder = self.text_encoders[base]
+        tokenizer = self.tokenizers[base]
         learned_embeds = torch.load(embed_file, map_location="cpu")
         trained_token = list(learned_embeds.keys())[0]
         print(f"loaded embedding token {trained_token}")
         learned_embed = learned_embeds[trained_token]
-        dtype = self.text_encoder.get_input_embeddings().weight.dtype
+        dtype = text_encoder.get_input_embeddings().weight.dtype
         learned_embed.to(dtype)
-        num_added_tokens = self.tokenizer.add_tokens(trained_token) # can replace token with something else if needed
+        num_added_tokens = tokenizer.add_tokens(trained_token) # can replace token with something else if needed
         if(num_added_tokens == 0):
             raise ValueError(f"The tokenizer already contains the token {trained_token}")
-        self.text_encoder.resize_token_embeddings(len(self.tokenizer))
-        token_id = self.tokenizer.convert_tokens_to_ids(trained_token)
-        self.text_encoder.get_input_embeddings().weight.data[token_id] = learned_embed
+        text_encoder.resize_token_embeddings(len(tokenizer))
+        token_id = tokenizer.convert_tokens_to_ids(trained_token)
+        text_encoder.get_input_embeddings().weight.data[token_id] = learned_embed
 
 
     def loadTextEmbeddings(self, directory, model=DEFAULT_TEXTTOIMAGE_MODEL):
         preset = self.presets.getModel(model)
         embeddingspath = directory + '/' + preset.base
         print('loading text embeddings from path ' + embeddingspath)
-        self.tokenizer = CLIPTokenizer.from_pretrained(preset.modelpath, subfolder='tokenizer')
-        self.text_encoder = CLIPTextModel.from_pretrained(preset.modelpath, subfolder='text_encoder')
+        self.tokenizers[preset.base] = CLIPTokenizer.from_pretrained(preset.modelpath, subfolder='tokenizer')
+        self.text_encoders[preset.base] = CLIPTextModel.from_pretrained(preset.modelpath, subfolder='text_encoder')
         for embed_file in os.listdir(embeddingspath):
             file_path = embeddingspath + '/' + embed_file
-            self.loadTextEmbedding(file_path)
+            self.loadTextEmbedding(file_path, preset.base)
 
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
@@ -109,10 +111,10 @@ class DiffusersPipelines:
             args['revision'] = 'fp16'
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(self.tokenizer is not None):
-            args['tokenizer'] = self.tokenizer
-        if(self.text_encoder is not None):
-            args['text_encoder'] = self.text_encoder
+        if(preset.base in self.tokenizers):
+            args['tokenizer'] = self.tokenizers[preset.base]
+        if(preset.base in self.text_encoders):
+            args['text_encoder'] = self.text_encoders[preset.base]
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
         if(custom_pipeline == 'clip_guided_stable_diffusion'):
@@ -131,6 +133,13 @@ class DiffusersPipelines:
         return image, seed
 
 
+    def createArgs(self, preset):
+        args = {}
+        args['safety_checker'] = None
+        args['torch_dtype'] = torch.float16
+        return args
+
+
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
         print(f"Creating image to image pipeline from model {model}")
         preset = self.presets.getModel(model)
@@ -141,10 +150,10 @@ class DiffusersPipelines:
             args['revision'] = 'fp16'
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(self.tokenizer is not None):
-            args['tokenizer'] = self.tokenizer
-        if(self.text_encoder is not None):
-            args['text_encoder'] = self.text_encoder
+        if(preset.base in self.tokenizers):
+            args['tokenizer'] = self.tokenizers[preset.base]
+        if(preset.base in self.text_encoders):
+            args['text_encoder'] = self.text_encoders[preset.base]
         self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
 
@@ -159,7 +168,7 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL, fp16revision=True):
+    def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
         print(f"Creating inpainting pipeline from model {model}")
         preset = self.presets.getModel(model)
         args = {}
@@ -169,10 +178,10 @@ class DiffusersPipelines:
             args['revision'] = 'fp16'
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(self.tokenizer is not None):
-            args['tokenizer'] = self.tokenizer
-        if(self.text_encoder is not None):
-            args['text_encoder'] = self.text_encoder
+        if(preset.base in self.tokenizers):
+            args['tokenizer'] = self.tokenizers[preset.base]
+        if(preset.base in self.text_encoders):
+            args['text_encoder'] = self.text_encoders[preset.base]
         self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
 
@@ -188,7 +197,7 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL, fp16revision=True):
+    def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
         print(f"Creating upscale pipeline from model {model}")
         preset = self.presets.getModel(model)
         args = {}
