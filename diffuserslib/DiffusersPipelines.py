@@ -136,6 +136,7 @@ class DiffusersPipelines:
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
+        print(self.inferencedevice)
         with torch.autocast(self.inferencedevice):
             image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
         return image, seed
