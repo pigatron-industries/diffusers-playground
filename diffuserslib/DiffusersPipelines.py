@@ -145,7 +145,7 @@ class DiffusersPipelines:
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
         print(f"Creating image to image pipeline from model {model}")
         preset = self.presets.getModel(model)
-        args = self.createArgs()
+        args = self.createArgs(preset)
         self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
 
@@ -163,7 +163,7 @@ class DiffusersPipelines:
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
         print(f"Creating inpainting pipeline from model {model}")
         preset = self.presets.getModel(model)
-        args = self.createArgs()
+        args = self.createArgs(preset)
         self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
 
