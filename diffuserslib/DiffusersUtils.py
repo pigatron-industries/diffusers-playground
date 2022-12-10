@@ -8,7 +8,7 @@ def loginHuggingFace(token):
     login(token=token)
 
 
-def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, seed=None, tilewidth=640, tileheight=640, overlap=128):
+def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
     xslices = math.ceil(initimg.width / (tilewidth-overlap))
     yslices = math.ceil(initimg.height / (tileheight-overlap))
     print(f'Processing {xslices} x {yslices} slices')
@@ -28,7 +28,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, se
             image_slice = merged_image.crop((x, y, x+tilewidth, y+tileheight))
 
             image_slice = image_slice.convert("RGB")
-            imageout_slice, _ = pipelines.imageToImage(image_slice, prompt, negprompt, strength, scale, seed)
+            imageout_slice, _ = pipelines.imageToImage(image_slice, prompt, negprompt, strength, scale, seed, scheduler)
             
             imr, img, imb = imageout_slice.split()
             mmr, mmg, mmb, mma = mask.split()
