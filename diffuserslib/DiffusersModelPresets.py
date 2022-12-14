@@ -43,7 +43,7 @@ def getHuggingFacePresetsList():
 
     # 2.1 768
     #                model                                  base                           fp16   phrase            vae
-    presets.addModel('stabilityai/stable-diffusion-2-1',      DiffusersBaseModel.sd_2_1_768, True,  None,             None)
+    presets.addModel('stabilityai/stable-diffusion-2-1',    DiffusersBaseModel.sd_2_1_768, True,  None,             None)
 
     # 2.0 768
     #                model                                  base                           fp16   phrase            vae
@@ -56,7 +56,7 @@ def getHuggingFacePresetsList():
     presets.addModel('nitrosocke/Future-Diffusion',         DiffusersBaseModel.sd_2_0_512, False, 'future style',   None)
 
     # 1.5
-    #                model                                            base                       fp16   phrase            vae
+    #                model                                            base                       fp16   phrase                vae
     presets.addModel('runwayml/stable-diffusion-v1-5',                DiffusersBaseModel.sd_1_5, True,  None,                 AUTOENCODER_MODEL_1_5)
     presets.addModel('hassanblend/hassanblend1.4',                    DiffusersBaseModel.sd_1_5, False, None,                 AUTOENCODER_MODEL_1_5)
     presets.addModel('Linaqruf/anything-v3.0',                        DiffusersBaseModel.sd_1_5, False, None,                 None)
@@ -67,4 +67,5 @@ def getHuggingFacePresetsList():
     presets.addModel('plasmo/woolitize',                              DiffusersBaseModel.sd_1_5, True,  'woolitize',          AUTOENCODER_MODEL_1_5)
     presets.addModel('plasmo/food-crit',                              DiffusersBaseModel.sd_1_5, True,  '',                   AUTOENCODER_MODEL_1_5)
     presets.addModel('Aybeeceedee/knollingcase',                      DiffusersBaseModel.sd_1_5, False, 'knollingcase',       AUTOENCODER_MODEL_1_5)
+    presets.addModel('wavymulder/Analog-Diffusion',                   DiffusersBaseModel.sd_1_5, True,  'analog style',       AUTOENCODER_MODEL_1_5)
     return presets
