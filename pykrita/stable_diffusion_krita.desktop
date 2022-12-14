@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=stable_diffusion_krita
+X-Python-2-Compatible=false
+X-Krita-Manual=manual.html
+Name=Stable Diffusion
+Comment=Stable Diffusion Plugin for Krita. Needs running Stable Diffusion WebUI.
