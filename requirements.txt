@@ -1,5 +1,5 @@
 huggingface_hub==0.11.0
-diffusers==0.9.0
-transformers==4.24.0
+diffusers==0.10.2
+transformers==4.25.1
 accelerate==0.14.0
 ftfy==6.1.1

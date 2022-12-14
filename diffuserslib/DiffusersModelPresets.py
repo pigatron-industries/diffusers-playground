@@ -41,6 +41,10 @@ class DiffusersModelList:
 def getHuggingFacePresetsList():
     presets = DiffusersModelList()
 
+    # 2.1 768
+    #                model                                  base                           fp16   phrase            vae
+    presets.addModel('stabilityai/stable-diffusion-2-1',      DiffusersBaseModel.sd_2_1_768, True,  None,             None)
+
     # 2.0 768
     #                model                                  base                           fp16   phrase            vae
     presets.addModel('stabilityai/stable-diffusion-2',      DiffusersBaseModel.sd_2_0_768, True,  None,             None)
