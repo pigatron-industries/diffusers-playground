@@ -62,7 +62,7 @@ def getHuggingFacePresetsList():
     presets.addModel('hassanblend/hassanblend1.4',                    DiffusersBaseModel.sd_1_5, False, None,                 AUTOENCODER_MODEL_1_5)
     presets.addModel('Linaqruf/anything-v3.0',                        DiffusersBaseModel.sd_1_5, False, None,                 None)
     presets.addModel('nitrosocke/redshift-diffusion',                 DiffusersBaseModel.sd_1_5, False, 'redshift style',     AUTOENCODER_MODEL_1_5)
-    presets.addModel('Fictiverse/Stable_Diffusion_Microscopic_model', DiffusersBaseModel.sd_1_5, True,  'microscopic',        AUTOENCODER_MODEL_1_5)
+    presets.addModel('Fictiverse/Stable_Diffusion_Microscopic_model', DiffusersBaseModel.sd_1_5, False, 'microscopic',        AUTOENCODER_MODEL_1_5)
     presets.addModel('Fictiverse/Stable_Diffusion_PaperCut_Model',    DiffusersBaseModel.sd_1_5, True,  'papercut',           AUTOENCODER_MODEL_1_5)
     presets.addModel('BunnyViking/rachelwalkerstylewatercolour',      DiffusersBaseModel.sd_1_5, True,  'rachelwalker style', AUTOENCODER_MODEL_1_5)
     presets.addModel('plasmo/woolitize',                              DiffusersBaseModel.sd_1_5, True,  'woolitize',          AUTOENCODER_MODEL_1_5)
