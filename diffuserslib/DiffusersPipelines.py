@@ -65,11 +65,13 @@ class DiffusersPipelines:
         tokenizer = self.tokenizers[base]
         learned_embeds = torch.load(embed_file, map_location="cpu")
         trained_token = list(learned_embeds.keys())[0]
-        print(f"loaded embedding token {trained_token}")
         learned_embed = learned_embeds[trained_token]
         dtype = text_encoder.get_input_embeddings().weight.dtype
         learned_embed.to(dtype)
-        num_added_tokens = tokenizer.add_tokens(trained_token) # can replace token with something else if needed
+        if(token is None):
+            token = trained_token
+        print(f"loaded embedding token {trained_token}")
+        num_added_tokens = tokenizer.add_tokens(token)
         if(num_added_tokens == 0):
             raise ValueError(f"The tokenizer already contains the token {trained_token}")
         text_encoder.resize_token_embeddings(len(tokenizer))
