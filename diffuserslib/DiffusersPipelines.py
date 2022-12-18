@@ -70,12 +70,12 @@ class DiffusersPipelines:
         learned_embed.to(dtype)
         if(token is None):
             token = trained_token
-        print(f"loaded embedding token {trained_token}")
+        print(f"loaded embedding token {token}")
         num_added_tokens = tokenizer.add_tokens(token)
         if(num_added_tokens == 0):
-            raise ValueError(f"The tokenizer already contains the token {trained_token}")
+            raise ValueError(f"The tokenizer already contains the token {token}")
         text_encoder.resize_token_embeddings(len(tokenizer))
-        token_id = tokenizer.convert_tokens_to_ids(trained_token)
+        token_id = tokenizer.convert_tokens_to_ids(token)
         text_encoder.get_input_embeddings().weight.data[token_id] = learned_embed
 
 
