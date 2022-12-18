@@ -2,6 +2,7 @@ import itertools
 import numpy as np
 import random
 import time
+import re
 
 from IPython.display import display
 import ipywidgets as widgets
@@ -36,6 +37,14 @@ class RandomNumberBatchArgument(BatchArgument):
         return np.random.randint(self.min, self.max, self.num)
 
 
+class StringListBatchArgument(BatchArgument):
+    def __init__(self, list):
+        self.list = list
+    
+    def __call__(self):
+        return self.list
+
+
 class RandomNumberArgument(Argument):
     def __init__(self, min, max):
         self.min = min
@@ -45,20 +54,72 @@ class RandomNumberArgument(Argument):
         return random.randint(self.min, self.max)
 
 
-class StringListBatchArgument(BatchArgument):
-    def __init__(self, list):
-        self.list = list
-    
-    def __call__(self):
-        return self.list
 
+class RandomPromptProcessor(Argument):
+    def __init__(self, modifier_dict, prompt=""):
+        self.modifier_dict = modifier_dict
+        self.prompt = prompt
+
+
+    def setPrompt(self, prompt):
+        self.prompt = prompt
+
+
+    def randomiseFromDict(self, prompt):
+        # randomise from dictionary of items defined outside of prompt _colour_
+        out_prompt = prompt
+        for modifiername, wordlist in self.modifier_dict.items():
+            if f'_{modifiername}_' in out_prompt:
+                randomword = wordlist[random.randint(0, len(wordlist)-1)]
+                out_prompt = out_prompt.replace(f'_{modifiername}_', randomword)
+            if f'__{modifiername}__' in out_prompt:
+                out_prompt = out_prompt.replace(f'__{modifiername}__', self.randomCombo(wordlist))
+        return out_prompt
+
+
+    def randomCombo(wordlist):
+        numberofwords = random.randint(0, len(wordlist)-1)
+        out_prompt = ""
+        random.shuffle(wordlist)
+        for i, word in enumerate(wordlist):
+            if i > 0:
+                out_prompt += ", "
+            out_prompt += word
+            if i >= numberofwords:
+                break
+        return out_prompt
+
+
+    def randomiseFromPrompt(self, prompt):
+        # randomise from list of items in prompt between brackets {cat|dog}
+        out_prompt = prompt
+        tokenised_brackets = re.findall(r'\{.*?\}', out_prompt)
+        for bracket in tokenised_brackets:
+            options = bracket[1:-1].split('|')
+            randomoption = options[random.randint(0, len(options)-1)]
+            out_prompt = out_prompt.replace(bracket, randomoption, 1)
+        return out_prompt
+
+
+    def __call__(self):
+        outprompt = self.randomiseFromDict(self.prompt)
+        outprompt = self.randomiseFromPrompt(outprompt)
+        return outprompt
+
+
+def mergeDict(d1, d2):
+    dict = d1
+    for key in d2.keys():
+        dict[key] = d2[key]
+    return dict
 
 
 class DiffusersBatch:
 
-    def __init__(self, pipeline, argdict, outputdir):
+    def __init__(self, pipeline, argdict, count=1, outputdir="."):
         self.pipeline = pipeline
         self.argdict = argdict
+        self.count = count
         self.outputdir = outputdir
         self._createBatchArguments()
         print(f"Created batch of size {len(self.argsbatch)}")
@@ -67,24 +128,33 @@ class DiffusersBatch:
     def _createBatchArguments(self):
         batchargs = {}
         flatargs = {}
-        batch = []
+        self.argsbatch = []
+
+        # Expand instances of BatchArgument into lists of items
         for arg in self.argdict.keys():
             if(isinstance(self.argdict[arg], BatchArgument)):
                 batchargs[arg] = self.argdict[arg]()
             else:
                 flatargs[arg] = self.argdict[arg]
-        
-        keys, values = zip(*batchargs.items())
-        for bundle in itertools.product(*values):
-            args = dict(zip(keys, bundle))
+
+        for batch in range(0, self.count):
+            # Evaluate instances of Argument
+            args = {}
             for flatargkey in flatargs.keys():
                 if(isinstance(flatargs[flatargkey], Argument)):
                     args[flatargkey] = flatargs[flatargkey]()
                 else:
                     args[flatargkey] = flatargs[flatargkey]
-            batch.append(args)
 
-        self.argsbatch = batch
+            # product of each combo of BatchArgument
+            if(len(batchargs) > 0):
+                keys, values = zip(*batchargs.items())
+                for bundle in itertools.product(*values):
+                    iterargs = dict(zip(keys, bundle))
+                    self.argsbatch.append(mergeDict(iterargs, args))
+            else:
+                self.argsbatch.append(args)
+
         return batch
 
 
