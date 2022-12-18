@@ -106,11 +106,11 @@ class DiffusersBatch:
         output = widgets.Output()
         self.argsbatch[index]["output"] = output
         saveBtn = widgets.Button(description="Save")
-        saveBtn.on_click(functools.partial(self._saveImage, index))
+        saveBtn.on_click(functools.partial(self._saveOutput, index))
         display(saveBtn, output)
 
 
-    def _saveImage(self, index, btn):
+    def _saveOutput(self, index, btn):
         args = self.argsbatch[index]
         timestamp = args['timestamp']
         output = args['output']
