@@ -46,12 +46,13 @@ class DiffusersView(FlaskView):
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
 
-        output = []
+        outputimages = []
         for i in range(0, batch):
             outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed)
             display(outimage)
-            output.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
+        output = { "images": outputimages }
         return jsonify(output)
 
     
@@ -72,12 +73,13 @@ class DiffusersView(FlaskView):
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-        output = []
+        outputimages = []
         for i in range(0, batch):
             outimage, usedseed = self.pipelines.imageToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
             display(outimage)
-            output.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
+        output = { "images": outputimages }
         return jsonify(output)
 
 
@@ -98,11 +100,12 @@ class DiffusersView(FlaskView):
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-        output = []
+        outputimages = []
         for i in range(0, batch):
             outimage = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
-            output.append({ "image": base64EncodeImage(outimage) })
+            outputimages.append({ "image": base64EncodeImage(outimage) })
 
+        output = { "images": outputimages }
         return jsonify(output)
 
 
@@ -124,12 +127,13 @@ class DiffusersView(FlaskView):
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-        output = []
+        outputimages = []
         for i in range(0, batch):
             outimage, usedseed = self.pipelines.inpaint(inimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
             display(outimage)
-            output.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
+        output = { "images": outputimages }
         return jsonify(output)
 
 
@@ -153,14 +157,15 @@ class DiffusersView(FlaskView):
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-        output = []
+        outputimages = []
         for i in range(0, batch):
             pass
             # TODO
             # outimage = upscale(inimage=initimage, amount=amount, method=method, prompt=prompt)
             # display(outimage)
-            # output.append({ "image": base64EncodeImage(outimage) })
+            # outputimages.append({ "image": base64EncodeImage(outimage) })
 
+        output = { "images": outputimages }
         return jsonify(output)
 
 

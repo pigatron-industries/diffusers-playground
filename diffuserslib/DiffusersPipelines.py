@@ -2,11 +2,13 @@ import torch
 import random
 import os
 import sys
+import re
 from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline
 from diffusers import DPMSolverMultistepScheduler, EulerDiscreteScheduler, EulerAncestralDiscreteScheduler
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .DiffusersModelPresets import DiffusersModelList
+from .StringUtils import findBetween
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -58,7 +60,7 @@ class DiffusersPipelines:
         self.vae = AutoencoderKL.from_pretrained(model)
 
 
-    def loadTextEmbedding(self, embed_file, base):
+    def loadTextEmbedding(self, embed_file, base, token=None):
         text_encoder = self.text_encoders[base]
         tokenizer = self.tokenizers[base]
         learned_embeds = torch.load(embed_file, map_location="cpu")
@@ -67,9 +69,11 @@ class DiffusersPipelines:
         learned_embed = learned_embeds[trained_token]
         dtype = text_encoder.get_input_embeddings().weight.dtype
         learned_embed.to(dtype)
-        num_added_tokens = tokenizer.add_tokens(trained_token) # can replace token with something else if needed
+        if(token is None):
+            token = trained_token
+        num_added_tokens = tokenizer.add_tokens(token)
         if(num_added_tokens == 0):
-            raise ValueError(f"The tokenizer already contains the token {trained_token}")
+            raise ValueError(f"The tokenizer already contains the token {token}")
         text_encoder.resize_token_embeddings(len(tokenizer))
         token_id = tokenizer.convert_tokens_to_ids(trained_token)
         text_encoder.get_input_embeddings().weight.data[token_id] = learned_embed
@@ -83,7 +87,8 @@ class DiffusersPipelines:
         self.text_encoders[preset.base] = CLIPTextModel.from_pretrained(preset.modelpath, subfolder='text_encoder')
         for embed_file in os.listdir(embeddingspath):
             file_path = embeddingspath + '/' + embed_file
-            self.loadTextEmbedding(file_path, preset.base)
+            token = findBetween(embed_file, '<', '>')
+            self.loadTextEmbedding(file_path, preset.base, f"<{token}>")
 
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
