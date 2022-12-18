@@ -87,8 +87,8 @@ class DiffusersPipelines:
         self.text_encoders[preset.base] = CLIPTextModel.from_pretrained(preset.modelpath, subfolder='text_encoder')
         for embed_file in os.listdir(embeddingspath):
             file_path = embeddingspath + '/' + embed_file
-            token = findBetween(embed_file, '<', '>')
-            self.loadTextEmbedding(file_path, preset.base, f"<{token}>")
+            token = findBetween(embed_file, '<', '>', True)
+            self.loadTextEmbedding(file_path, preset.base, token)
 
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
