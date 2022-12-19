@@ -64,8 +64,17 @@ class DiffusersPipelines:
         text_encoder = self.text_encoders[base]
         tokenizer = self.tokenizers[base]
         learned_embeds = torch.load(embed_file, map_location="cpu")
-        trained_token = list(learned_embeds.keys())[0]
-        learned_embed = learned_embeds[trained_token]
+        
+        if ('string_to_param' in learned_embeds):  # pt embedding
+            string_to_token = learned_embeds['string_to_token']
+            trained_token = list(string_to_token.keys())[0]
+            string_to_param = learned_embeds['string_to_param']
+            # I don't know why this tensor contains multiple dimensions, i'm just picking the first one for now
+            learned_embed = string_to_param[trained_token][0] 
+        else: # bin diffusers concept
+            trained_token = list(learned_embeds.keys())[0]
+            learned_embed = learned_embeds[trained_token]
+
         dtype = text_encoder.get_input_embeddings().weight.dtype
         learned_embed.to(dtype)
         if(token is None):
@@ -89,7 +98,8 @@ class DiffusersPipelines:
             file_path = embeddingspath + '/' + embed_file
             print(f"loading embedding from file {embed_file}")
             token = findBetween(embed_file, '<', '>', True)
-            self.loadTextEmbedding(file_path, preset.base, token)
+            if (file_path.endswith('.bin') or file_path.endswith('.pt')):
+                self.loadTextEmbedding(file_path, preset.base, token)
 
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
