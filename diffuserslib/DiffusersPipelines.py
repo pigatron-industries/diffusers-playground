@@ -52,12 +52,12 @@ class DiffusersPipelines:
         self.presets.addModels(presets)
 
     
-    def addPreset(self, modelid, base, fp16=True, stylephrase=None, vae=None, local=False):
+    def addPreset(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, local=False):
         if(local):
             modelpath = self.localmodelpath + '/' + modelid
         else:
             modelpath = None
-        self.presets.addModel(modelid, base, fp16, stylephrase, vae, modelpath)
+        self.presets.addModel(modelid, base, fp16, stylephrase, vae, autocast, modelpath)
 
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
