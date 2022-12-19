@@ -96,8 +96,8 @@ class DiffusersPipelines:
         preset = self.presets.getModel(model)
         embeddingspath = directory + '/' + preset.base
         print('loading text embeddings from path ' + embeddingspath)
-        self.tokenizers[preset.base] = CLIPTokenizer.from_pretrained(preset.modelpath, subfolder='tokenizer')
-        self.text_encoders[preset.base] = CLIPTextModel.from_pretrained(preset.modelpath, subfolder='text_encoder')
+        self.tokenizers[preset.base] = CLIPTokenizer.from_pretrained(preset.modelpath, subfolder='tokenizer', torch_dtype=torch.float16)
+        self.text_encoders[preset.base] = CLIPTextModel.from_pretrained(preset.modelpath, subfolder='text_encoder', torch_dtype=torch.float16)
         for embed_file in os.listdir(embeddingspath):
             file_path = embeddingspath + '/' + embed_file
             print(f"loading embedding from file {embed_file}")
