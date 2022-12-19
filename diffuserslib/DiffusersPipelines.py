@@ -152,7 +152,7 @@ class DiffusersPipelines:
         self.textToImagePipeline.enable_attention_slicing()
 
 
-    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None):
+    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
