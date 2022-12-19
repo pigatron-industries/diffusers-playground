@@ -34,9 +34,13 @@ class DiffusersPipelines:
         self.device = device
         self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.textToImagePipeline = None
+        self.textToImagePreset = None
         self.imageToImagePipeline = None
+        self.imageToImagePreset = None
         self.inpaintingPipeline = None
+        self.inpaintingPreset = None
         self.upscalePipeline = None
+        self.upscalePreset = None
         self.vae = None
         self.tokenizers = {}
         self.text_encoders = {}
@@ -137,14 +141,14 @@ class DiffusersPipelines:
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
         print(f"Creating text to image pipeline from model {model}")
-        preset = self.presets.getModel(model)
-        args = self.createArgs(preset)
+        self.textToImagePreset = self.presets.getModel(model)
+        args = self.createArgs(self.textToImagePreset)
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
         if(custom_pipeline == 'clip_guided_stable_diffusion'):
             args['feature_extractor'] = self.feature_extractor
             args['clip_model'] = self.clip_model
-        self.textToImagePipeline = DiffusionPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        self.textToImagePipeline = DiffusionPipeline.from_pretrained(self.textToImagePreset.modelpath, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
 
 
@@ -152,17 +156,19 @@ class DiffusersPipelines:
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
-        print(self.inferencedevice)
-        with torch.autocast(self.inferencedevice):
+        if(self.textToImagePreset.autocast):
+            with torch.autocast(self.inferencedevice):
+                image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
+        else:
             image = self.textToImagePipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
         return image, seed
 
 
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
         print(f"Creating image to image pipeline from model {model}")
-        preset = self.presets.getModel(model)
-        args = self.createArgs(preset)
-        self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        self.imageToImagePreset = self.presets.getModel(model)
+        args = self.createArgs(self.imageToImagePreset)
+        self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(self.imageToImagePreset.modelpath, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
 
 
@@ -178,9 +184,9 @@ class DiffusersPipelines:
 
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
         print(f"Creating inpainting pipeline from model {model}")
-        preset = self.presets.getModel(model)
-        args = self.createArgs(preset)
-        self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        self.inpaintingPreset = self.presets.getModel(model)
+        args = self.createArgs(self.inpaintingPreset)
+        self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(self.inpaintingPreset.modelpath, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
 
 
@@ -197,12 +203,12 @@ class DiffusersPipelines:
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
         print(f"Creating upscale pipeline from model {model}")
-        preset = self.presets.getModel(model)
+        self.upscalePreset = self.presets.getModel(model)
         args = {}
         args['torch_dtype'] = torch.float16
-        if(preset.fp16):
+        if(self.upscalePreset.fp16):
             args['revision'] = 'fp16'
-        self.upscalePipeline = StableDiffusionUpscalePipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        self.upscalePipeline = StableDiffusionUpscalePipeline.from_pretrained(self.upscalePreset.modelpath, **args).to(self.device)
         self.upscalePipeline.enable_attention_slicing()
 
 

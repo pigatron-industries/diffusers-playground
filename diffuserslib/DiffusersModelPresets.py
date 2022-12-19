@@ -5,16 +5,18 @@ class DiffusersBaseModel:
     sd_1_5 = 'sd_1_5'
     sd_2_0_512 = 'sd_2_0_512'
     sd_2_0_768 = 'sd_2_0_768'
+    sd_2_1_512 = 'sd_2_1_512'
     sd_2_1_768 = 'sd_2_1_768'
  
 
 class DiffusersModel:
-    def __init__(self, modelid, base, fp16=True, stylephrase=None, vae=None, modelpath=None):
+    def __init__(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, modelpath=None):
         self.modelid = modelid
         self.base = base
         self.fp16 = fp16
         self.stylephrase = stylephrase
         self.vae = vae
+        self.autocast = autocast
         if(modelpath is None):
             self.modelpath = modelid
         else:
@@ -25,8 +27,8 @@ class DiffusersModelList:
     def __init__(self):
         self.models = {}
 
-    def addModel(self, modelid, base, fp16=True, stylephrase=None, vae=None, modelpath=None):
-        self.models[modelid] = DiffusersModel(modelid, base, fp16, stylephrase, vae, modelpath)
+    def addModel(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, modelpath=None):
+        self.models[modelid] = DiffusersModel(modelid, base, fp16, stylephrase, vae, autocast, modelpath)
 
     def addModels(self, models):
         self.models.update(models.models)
@@ -43,8 +45,12 @@ def getHuggingFacePresetsList():
     presets = DiffusersModelList()
 
     # 2.1 768
-    #                model                                  base                           fp16   phrase            vae
-    presets.addModel('stabilityai/stable-diffusion-2-1',    DiffusersBaseModel.sd_2_1_768, True,  None,             None)
+    #                model                                  base                           fp16   phrase            vae   autocast
+    presets.addModel('stabilityai/stable-diffusion-2-1',    DiffusersBaseModel.sd_2_1_768, True,  None,             None, False)
+
+    # 2.1 512
+    #                model                                    base                           fp16   phrase            vae
+    presets.addModel('stabilityai/stable-diffusion-2-1-base', DiffusersBaseModel.sd_2_1_512, True,  None,             None)
 
     # 2.0 768
     #                model                                  base                           fp16   phrase            vae
