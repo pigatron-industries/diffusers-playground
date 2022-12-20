@@ -5,3 +5,4 @@ from .DiffusersWeb import *
 from .DiffusersUtils import *
 from .TrainTextEmbedding import *
 from .ImageUtils import *
+from .Web import *
