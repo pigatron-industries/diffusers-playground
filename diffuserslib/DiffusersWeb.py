@@ -8,7 +8,10 @@ import json
 from IPython.display import display
 
 
-app = Flask(__name__)
+def startWebServer():
+    app = Flask(__name__)
+    DiffusersView.register(app)
+    app.run()
 
 
 class DiffusersView(FlaskView):
@@ -17,10 +20,6 @@ class DiffusersView(FlaskView):
 
     def __init__(self):
         pass
-
-
-    def run(self):
-        app.run()
 
 
     @route("/", methods=["GET"])
@@ -169,4 +168,7 @@ class DiffusersView(FlaskView):
         return jsonify(output)
 
 
-DiffusersView.register(app)
+def startWebServer():
+    app = Flask(__name__)
+    DiffusersView.register(app)
+    app.run()

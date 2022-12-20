@@ -1,5 +1,16 @@
 from PIL import Image, ImageDraw
 
+def base64EncodeImage(image):
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    b64image = base64.b64encode(buffered.getvalue())
+    return b64image.decode()
+
+
+def base64DecodeImage(b64image):
+    buffer = BytesIO(base64.b64decode(b64image))
+    image = Image.open(buffer)
+    return image
 
 # create alpha mask with gradient at overlap
 def createMask(width, height, overlap, top=False, bottom=False, left=False, right=False):
