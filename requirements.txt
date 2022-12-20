@@ -13,3 +13,7 @@ fairscale
 opencv-python
 typer
 rich
+# web
+flask
+flask_classful
+werkzeug==2.1.2

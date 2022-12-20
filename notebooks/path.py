@@ -1,8 +1,7 @@
 import os, sys
 
 def setPathLocalNotebook():
-    os.chdir("../workspace")
     sys.path.append('..')
-    sys.path.append('./src/esrgan')
-    sys.path.append('./src/blip')
-    sys.path.append('./src/clip-interrogator')
+    sys.path.append('../workspace/src/esrgan')
+    sys.path.append('../workspace/src/blip')
+    sys.path.append('../workspace/src/clip-interrogator')
