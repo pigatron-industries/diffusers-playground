@@ -4,5 +4,6 @@ from .DiffusersBatch import *
 from .DiffusersWeb import *
 from .DiffusersUtils import *
 from .TrainTextEmbedding import *
+from .ImageTools import *
 from .ImageUtils import *
 from .Web import *
