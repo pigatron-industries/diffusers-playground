@@ -1,4 +1,4 @@
-from flask import Flask, Response, request, send_file, jsonify
+from flask import request, jsonify
 from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImage
@@ -8,15 +8,9 @@ import json
 from IPython.display import display
 
 
-def startWebServer():
-    app = Flask(__name__)
-    DiffusersView.register(app)
-    app.run()
-
-
 class DiffusersView(FlaskView):
     route_base = '/'
-    pipelines = None
+    pipelines: DiffusersPipelines = None
 
     def __init__(self):
         pass
@@ -166,9 +160,3 @@ class DiffusersView(FlaskView):
 
         output = { "images": outputimages }
         return jsonify(output)
-
-
-def startWebServer():
-    app = Flask(__name__)
-    DiffusersView.register(app)
-    app.run()
