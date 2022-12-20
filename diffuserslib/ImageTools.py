@@ -11,11 +11,17 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def upscaleESRGAN(inimage, scale=4, model="remacri"):
+def upscaleESRGAN(inimage, scale=4, model="remacri", cpu=False):
+    prevcwd = os.getcwd()
     chdirWorkspaceDirectory("esrgan")
     infile = "input/work.png"
     outfile = "output/work.png"
     model = f'4x_{model}.pth'
     inimage.save(infile)
-    runcmd(['python', 'upscale.py', model])
-    return Image.open(outfile)
+    cmd = ['python', 'upscale.py', model]
+    if(cpu):
+        cmd.append('--cpu')
+    runcmd(cmd)
+    outimage = Image.open(outfile)
+    os.chdir(prevcwd)
+    return outimage
