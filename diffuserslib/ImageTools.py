@@ -43,4 +43,4 @@ DEFAULT_CLIP_MODEL = "ViT-L-14/openai"
 
 class ClipInterrogator():
     def __init__(model=DEFAULT_CLIP_MODEL):
-
+        pass
