@@ -3,6 +3,7 @@ from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImage
 from .ImageUtils import base64EncodeImage, base64DecodeImage
+from .ImageTools import upscaleEsrgan
 import json
 
 from IPython.display import display
@@ -35,6 +36,7 @@ class DiffusersView(FlaskView):
         scheduler = data.get("scheduler", "DPMSolverMultistepScheduler")
         batch = data.get("batch", 1)
 
+        print('txt2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
@@ -62,6 +64,7 @@ class DiffusersView(FlaskView):
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
+        print('img2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
@@ -89,6 +92,7 @@ class DiffusersView(FlaskView):
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
+        print('img2imgTiled')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
@@ -116,6 +120,7 @@ class DiffusersView(FlaskView):
         initimage = base64DecodeImage(data['initimage'])
         maskimage = base64DecodeImage(data['maskimage'])
 
+        print('inpaint')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
@@ -135,28 +140,21 @@ class DiffusersView(FlaskView):
         r = request
         data = json.loads(r.data)
         method = data.get("method", "esrgan/remacri")
-        amount = data.get("amount", 4)
-        seed = data.get("seed", None)
         prompt = data.get("prompt", "")
-        negprompt = data.get("negprompt", "")
-        steps = data.get("steps", 30)
-        scale = data.get("scale", 9)
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
-        maskimage = base64DecodeImage(data['maskimage'])
 
-        print(f'Prompt: {prompt}')
-        print(f'Negative: {negprompt}')
-        print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
+        print('upscale')
+        print(f'Method: {method}')
 
         outputimages = []
         for i in range(0, batch):
-            pass
-            # TODO
-            # outimage = upscale(inimage=initimage, amount=amount, method=method, prompt=prompt)
-            # display(outimage)
-            # outputimages.append({ "image": base64EncodeImage(outimage) })
+            if(method == "stable-difusion"):
+                outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
+            elif(method == "esrgan"):
+                outimage = upscaleEsrgan(initimage, model=method.split('/')[1])
+            outputimages.append({ "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
         return jsonify(output)

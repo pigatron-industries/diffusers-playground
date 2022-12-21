@@ -11,7 +11,7 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def upscaleESRGAN(inimage, scale=4, model="remacri", cpu=False):
+def upscaleEsrgan(inimage, scale=4, model="remacri", cpu=False):
     prevcwd = os.getcwd()
     chdirWorkspaceDirectory("esrgan")
     infile = "input/work.png"
