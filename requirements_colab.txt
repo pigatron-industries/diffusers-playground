@@ -2,8 +2,10 @@
 huggingface_hub==0.11.0
 diffusers==0.10.2
 transformers==4.25.1
-accelerate
-ftfy
-# interrogator
-timm
-fairscale
+accelerate==0.14.0
+ftfy==6.1.1
+
+# web
+flask
+flask_classful
+werkzeug==2.1.2

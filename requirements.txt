@@ -2,18 +2,21 @@
 huggingface_hub==0.11.0
 diffusers==0.10.2
 transformers==4.25.1
-accelerate
-ftfy
+accelerate==0.14.0
+ftfy==6.1.1
 torchvision
 ipywidgets
-# interrogator
-timm
-fairscale
-# esrgan
-opencv-python
-typer
-rich
+
 # web
 flask
 flask_classful
 werkzeug==2.1.2
+
+# interrogator
+timm
+fairscale
+
+# esrgan
+opencv-python
+typer
+rich
