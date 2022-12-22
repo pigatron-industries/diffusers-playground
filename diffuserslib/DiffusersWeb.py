@@ -3,7 +3,7 @@ from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImage
 from .ImageUtils import base64EncodeImage, base64DecodeImage
-from .ImageTools import upscaleEsrgan
+from .ImageTools import ImageTools
 import json
 
 from IPython.display import display
@@ -12,6 +12,7 @@ from IPython.display import display
 class DiffusersView(FlaskView):
     route_base = '/'
     pipelines: DiffusersPipelines = None
+    tools: ImageTools = None
 
     def __init__(self):
         pass
@@ -153,7 +154,7 @@ class DiffusersView(FlaskView):
             if(method == "stable-difusion"):
                 outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
             elif(method == "esrgan"):
-                outimage = upscaleEsrgan(initimage, model=method.split('/')[1])
+                outimage = self.tools.upscaleEsrgan(initimage, model=method.split('/')[1])
             outputimages.append({ "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }

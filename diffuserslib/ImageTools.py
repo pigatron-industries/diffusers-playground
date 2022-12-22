@@ -1,46 +1,74 @@
 import os, subprocess, sys
 from PIL import Image
 
+DEFAULT_CLIP_MODEL = "ViT-L-14/openai"
+
+
 def chdirWorkspaceDirectory(subfolder):
     filepath = os.path.dirname(os.path.realpath(__file__))
     dir = os.path.normpath(os.path.join(filepath, "../workspace/src/" + subfolder))
     os.chdir(dir)
 
 
-def addPath(subfolder):
+def addToolPath(subfolder):
     filepath = os.path.dirname(os.path.realpath(__file__))
     dir = os.path.normpath(os.path.join(filepath, "../workspace/src/" + subfolder))
     sys.path.append(dir)
-
-
-def addToolPatha():
-    addPath("esrgan")
-    addPath("blip")
-    addPath("clip-interrogator")
 
 
 def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def upscaleEsrgan(inimage, scale=4, model="remacri", cpu=False):
-    prevcwd = os.getcwd()
-    chdirWorkspaceDirectory("esrgan")
-    infile = "input/work.png"
-    outfile = "output/work.png"
-    model = f'4x_{model}.pth'
-    inimage.save(infile)
-    cmd = ['python', 'upscale.py', model]
-    if(cpu):
-        cmd.append('--cpu')
-    runcmd(cmd)
-    outimage = Image.open(outfile)
-    os.chdir(prevcwd)
-    return outimage
+
+class ImageTools():
+    def __init__(self):
+        self.addToolPaths()
+        self.clipInterrogator = None
 
 
-DEFAULT_CLIP_MODEL = "ViT-L-14/openai"
+    def addToolPaths(self):
+        addToolPath("esrgan")
+        addToolPath("blip")
+        addToolPath("clip-interrogator")
 
-class ClipInterrogator():
-    def __init__(model=DEFAULT_CLIP_MODEL):
-        pass
+
+    def upscaleEsrgan(inimage, scale=4, model="remacri", cpu=False):
+        prevcwd = os.getcwd()
+        chdirWorkspaceDirectory("esrgan")
+        infile = "input/work.png"
+        outfile = "output/work.png"
+        model = f'4x_{model}.pth'
+        inimage.save(infile)
+        cmd = ['python', 'upscale.py', model] 
+        # TODO import upscale and run method directly
+        if(cpu):
+            cmd.append('--cpu')
+        runcmd(cmd)
+        outimage = Image.open(outfile)
+        os.chdir(prevcwd)
+        return outimage
+
+
+    def loadClipInterrogator(self, model = DEFAULT_CLIP_MODEL):
+        from clip_interrogator import Interrogator, Config
+        config = Config()
+        config.blip_num_beams = 64
+        config.blip_offload = False
+        config.clip_model_name = model
+        if(model == "ViT-L-14/openai"):
+            config.chunk_size = 2048
+            config.flavor_intermediate_count = 2048
+        else:
+            config.chunk_size = 1024
+            config.flavor_intermediate_count = 1024
+        self.clipInterrogator = Interrogator(config)
+
+
+    def clipInterrogate(self, inimage, mode = 'best'):
+        if (mode == 'best'):
+            return self.clipInterrogator.interrogate(inimage)
+        elif mode == 'classic':
+            return self.clipInterrogator.interrogate_classic(inimage)
+        else:
+            return self.clipInterrogator.interrogate_fast(inimage)
