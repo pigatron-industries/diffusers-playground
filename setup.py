@@ -20,5 +20,6 @@ def setup(colab=False):
     runcmd(['rm src/esrgan/output/*'], True)
 
 
-setup()
+if __name__ == "__main__":
+    setup()
 
