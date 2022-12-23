@@ -3,7 +3,7 @@ import random
 import os
 import sys
 import re
-from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline
+from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline
 from diffusers import DPMSolverMultistepScheduler, EulerDiscreteScheduler, EulerAncestralDiscreteScheduler
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
@@ -12,6 +12,7 @@ from .StringUtils import findBetween
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
+DEFAULT_DEPTHTOIMAGE_MODEL = 'stabilityai/stable-diffusion-2-depth'
 DEFAULT_INPAINT_MODEL = 'runwayml/stable-diffusion-inpainting'
 DEFAULT_UPSCALE_MODEL = 'stabilityai/stable-diffusion-x4-upscaler'
 DEFAULT_CLIP_MODEL = 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K'
@@ -37,6 +38,8 @@ class DiffusersPipelines:
         self.textToImagePreset = None
         self.imageToImagePipeline = None
         self.imageToImagePreset = None
+        self.depthToImagePipeline = None
+        self.depthToImagePreset = None
         self.inpaintingPipeline = None
         self.inpaintingPreset = None
         self.upscalePipeline = None
@@ -183,6 +186,26 @@ class DiffusersPipelines:
             self.loadScheduler(scheduler, self.imageToImagePipeline)
         with torch.autocast(self.inferencedevice):
             image = self.imageToImagePipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
+        return image, seed
+
+
+    def createDepthToImagePipeline(self, model=DEFAULT_DEPTHTOIMAGE_MODEL):
+        print(f"Creating depth to image pipeline from model {model}")
+        self.depthToImagePreset = self.presets.getModel(model)
+        args = self.createArgs(self.depthToImagePreset)
+        self.depthToImagePipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(self.depthToImagePreset.modelpath, **args).to(self.device)
+        self.depthToImagePipeline.enable_attention_slicing()
+
+
+    def depthToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None):
+        if (self.imageToImagePipeline is None):
+            raise Exception('image to image pipeline not loaded')
+        inimage = inimage.convert("RGB")
+        generator, seed = self.createGenerator(seed)
+        if(scheduler is not None):
+            self.loadScheduler(scheduler, self.depthToImagePipeline)
+        with torch.autocast(self.inferencedevice):
+            image = self.depthToImagePipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
         return image, seed
 
 
