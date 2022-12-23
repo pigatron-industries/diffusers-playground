@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 workspace/
+cache/
 .DS_Store
