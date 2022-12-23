@@ -153,6 +153,8 @@ class DiffusersPipelines:
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None):
+        if (self.textToImagePipeline is None):
+            raise Exception('text to image pipeline not loaded')
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
@@ -173,6 +175,8 @@ class DiffusersPipelines:
 
 
     def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None):
+        if (self.imageToImagePipeline is None):
+            raise Exception('image to image pipeline not loaded')
         inimage = inimage.convert("RGB")
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
@@ -191,6 +195,8 @@ class DiffusersPipelines:
 
 
     def inpaint(self, inimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
+        if (self.inpaintingPipeline is None):
+            raise Exception('inpainting pipeline not loaded')
         inimage = inimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         generator, seed = self.createGenerator(seed)
@@ -213,6 +219,8 @@ class DiffusersPipelines:
 
 
     def upscale(self, inimage, prompt, scheduler=None):
+        if (self.upscalePipeline is None):
+            raise Exception('upscale pipeline not loaded')
         inimage = inimage.convert("RGB")
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.upscalePipeline)

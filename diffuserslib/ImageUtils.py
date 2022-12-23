@@ -1,4 +1,6 @@
 from PIL import Image, ImageDraw
+from io import BytesIO
+import base64
 
 def base64EncodeImage(image):
     buffered = BytesIO()

@@ -50,7 +50,7 @@ class SDConfig:
     width=512
     height=512    
     dlgData={
-        "mode": "txt2img",
+        "action": "txt2img",
         "prompt": "",
         "negprompt": "",
         "seed": "",
@@ -58,9 +58,9 @@ class SDConfig:
         "steps_update": 50,
         "num": 2,
         "modifiers": "highly detailed\n",
-        "cfg_value": 7.5,
+        "scale": 7.5,
         "strength": .75,
-        # "sampling_method":"LMS",
+        "scheduler":"DPMSolverMultistepScheduler",
         "upscale_amount": 2,
         "upscale_method": "all"
     }
@@ -105,16 +105,16 @@ class SDParameters:
     seed = 0
     num =0
     strength=1.0
-    cfg_value=0.5
+    scale=0.5
     seedList =["","","",""]
     imageDialog = None
     regenerate = False
     image64=""
     maskImage64=""
-    # sampling_method="LMS"
+    scheduler="DPMSolverMultistepScheduler"
     inpaint_mask_blur=4
     inpaint_mask_content="latent noise" 
-    mode="txt2img"
+    action="txt2img"
     strength = 1 
     upscale_amount = 1
     upscale_method = "all"
@@ -316,12 +316,12 @@ class ModifierDialog(QDialog):
 
 # default dialog for image generation: txt2img, img2img and inpainting
 class SDDialog(QDialog):
-    def __init__(self,mode,image):
+    def __init__(self,action,image):
         super().__init__(None)
-        SDConfig.dlgData["mode"]=mode
+        SDConfig.dlgData["action"]=action
         data=SDConfig.dlgData
 
-        self.setWindowTitle("Stable Diffusion "+data["mode"])
+        self.setWindowTitle("Stable Diffusion "+data["action"])
 
         QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.buttonBox = QDialogButtonBox(QBtn)
@@ -337,13 +337,13 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.prompt)
         self.modifiers= ModifierDialog.modifierInput(self,formLayout)
 
-        if (data["mode"] not in ("upscale")):
+        if (data["action"] not in ("upscale")):
             formLayout.addWidget(QLabel("Negative"))
             self.negprompt = QLineEdit()
             self.negprompt.setText(data.get("negprompt", ""))
             formLayout.addWidget(self.negprompt) 
 
-        if (data["mode"] in ("upscale")):
+        if (data["action"] in ("upscale")):
             upscalemethod_label=QLabel("Upscale method")
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
@@ -354,21 +354,21 @@ class SDDialog(QDialog):
             formLayout.addWidget(upscale_label)
             self.upscale_amount=self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
 
-        if (data["mode"] in ("img2img", "img2img_tiled")):
+        if (data["action"] in ("img2img", "img2imgTiled")):
             formLayout.addWidget(QLabel("Strength"))
             self.strength=self.addSlider(formLayout,data["strength"]*100,0,100,1,100)
 
-        if (data["mode"] in ("txt2img", "inpainting")):
+        if (data["action"] in ("txt2img", "inpaint")):
             steps_label=QLabel("Steps")
             steps_label.setToolTip("more steps = slower but often better quality. Recommendation start with lower step like 15 and update in image overview with higher one like 50")
             formLayout.addWidget(steps_label)        
             self.steps=self.addSlider(formLayout,data["steps"],1,250,5,1)
 
-        if (data["mode"] not in ("upscale")):
-            cfg_label=QLabel("Guidance Scale")
-            cfg_label.setToolTip("how strongly the image should follow the prompt")
-            formLayout.addWidget(cfg_label)        
-            self.cfg_value=self.addSlider(formLayout,data["cfg_value"]*10,10,300,5,10)
+        if (data["action"] not in ("upscale")):
+            scale_label=QLabel("Guidance Scale")
+            scale_label.setToolTip("how strongly the image should follow the prompt")
+            formLayout.addWidget(scale_label)        
+            self.scale=self.addSlider(formLayout,data.get("scale", 9)*10,10,300,5,10)
      
             seed_label=QLabel("Seed (empty=random)")
             seed_label.setToolTip("same seed and same prompt = same image")
@@ -377,20 +377,19 @@ class SDDialog(QDialog):
             self.seed.setText(data["seed"])                  
             formLayout.addWidget(self.seed)
 
-        if (not data["mode"]=="upscale" and not data["mode"]=="img2img_tiled"):
+        if (not data["action"]=="upscale" and not data["action"]=="img2imgTiled"):
             formLayout.addWidget(QLabel("Number images"))        
             self.num=self.addSlider(formLayout,data["num"],1,4,1,1)
    
-        # cfg_label=QLabel("Sampling method")
-        # cfg_label.setToolTip("")
-        # formLayout.addWidget(cfg_label)           
-        # self.sampling_method = QComboBox()
-        # self.sampling_method.addItems(['LMS', 'Euler a', 'Euler', 'Heun','DPM2','DPM2 a','DDIM','PLMS'])
-        # self.sampling_method.setCurrentText(data.get("sampling_method","LMS"))
-        # formLayout.addWidget(self.sampling_method)
+        scheduler_label=QLabel("Scheduler")
+        formLayout.addWidget(scheduler_label)           
+        self.scheduler = QComboBox()
+        self.scheduler.addItems(['DPMSolverMultistepScheduler', 'EulerDiscreteScheduler', 'EulerAncestralDiscreteScheduler'])
+        self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
+        formLayout.addWidget(self.scheduler)
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
-        if (not data["mode"]=="txt2img" and not data["mode"]=="upscale" and not data["mode"]=="img2img_tiled"):
+        if (not data["action"]=="txt2img" and not data["action"]=="upscale" and not data["action"]=="img2imgTiled"):
             imgLabel=QLabel()        
             self.layout.addWidget(imgLabel) 
             imgLabel.setPixmap(QPixmap.fromImage(image))  
@@ -419,21 +418,21 @@ class SDDialog(QDialog):
     # put data from dialog in configuration and save it        
     def setDlgData(self):
 
-        if SDConfig.dlgData["mode"] not in ("upscale"):
+        if SDConfig.dlgData["action"] not in ("upscale"):
             SDConfig.dlgData["prompt"]=self.prompt.text()
             SDConfig.dlgData["negprompt"]=self.negprompt.text()
             SDConfig.dlgData["seed"]=self.seed.text()
-            SDConfig.dlgData["cfg_value"]=self.cfg_value.value()/10
+            SDConfig.dlgData["scale"]=self.scale.value()/10
             SDConfig.dlgData["modifiers"]=self.modifiers.toPlainText()
-            # SDConfig.dlgData["sampling_method"]=self.sampling_method.currentText()
+            SDConfig.dlgData["scheduler"]=self.scheduler.currentText()
         
-        if SDConfig.dlgData["mode"] in ("txt2img", "img2img", "inpainting"):
+        if SDConfig.dlgData["action"] in ("txt2img", "img2img", "inpaint"):
             SDConfig.dlgData["num"]=int(self.num.value())
-        if SDConfig.dlgData["mode"] in ("img2img", "img2img_tiled"):
+        if SDConfig.dlgData["action"] in ("img2img", "img2imgTiled"):
             SDConfig.dlgData["strength"]=self.strength.value()/100
-        if SDConfig.dlgData["mode"] in ("txt2img", "inpainting"):
+        if SDConfig.dlgData["action"] in ("txt2img", "inpaint"):
             SDConfig.dlgData["steps"]=int(self.steps.value())
-        if SDConfig.dlgData["mode"] in ("upscale"):
+        if SDConfig.dlgData["action"] in ("upscale"):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
 
@@ -451,7 +450,7 @@ def selectImage(params: SDParameters,qImg):
     ptr = qImg.bits()
     ptr.setsize(qImg.byteCount())
 
-    if (params.mode == "upscale" or params.mode == "face_enhance"):
+    if (params.action == "upscale" or params.action == "face_enhance"):
         layer.setPixelData(QByteArray(ptr.asstring()),0,0,qImg.width(),qImg.height())
         #resize canvas to fit
         if(qImg.width() > doc.width()):
@@ -471,12 +470,12 @@ def selectImage(params: SDParameters,qImg):
 
 # asking for image of result set and update option
 class showImages(QDialog):
-    def __init__(self,qImgs,p: SDParameters):
+    def __init__(self, images, params: SDParameters):
         super().__init__(None)
-        self.qImgs=qImgs
+        self.images=images
         self.setWindowTitle("Result")
-        QBtn =  QDialogButtonBox.Cancel
-        self.SDParam=p
+        QBtn = QDialogButtonBox.Cancel
+        self.SDParam=params
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -493,17 +492,16 @@ class showImages(QDialog):
 
         layout=QHBoxLayout()
         top_layout.addLayout(layout)
-        self.imgLabels=[0]*len(qImgs)
-        self.seedLabel=[0]*len(qImgs)
-        self.qImgs=qImgs
+        self.imgLabels=[0]*len(images)
+        self.seedLabel=[0]*len(images)
         i=0
-        for qImg in qImgs:       
+        for imagedata in images:       
             v_layout = QVBoxLayout()
             layout.addLayout(v_layout)       
             imgLabel=QLabel()
             v_layout.addWidget(imgLabel) 
-            imgLabel.setPixmap(QPixmap.fromImage(qImg).scaled(380,380,Qt.KeepAspectRatio))  
-            seedLabel=QLabel(p.seedList[i])
+            imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
+            seedLabel=QLabel(str(imagedata["seed"]))
             seedLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
             self.seedLabel[i]=seedLabel
             v_layout.addWidget(seedLabel)     
@@ -512,7 +510,7 @@ class showImages(QDialog):
             v_layout.addLayout(h_layout)               
             btn=QPushButton("Select")          
             h_layout.addWidget(btn,stretch=1)
-            btn.clicked.connect(lambda ch, num=i: selectImage(p,self.qImgs[num]))
+            btn.clicked.connect(lambda ch, num=i: selectImage(params, self.images[num]["qimage"]))
             btnUpdate=QPushButton()  
             btnUpdate.setIcon( Krita.instance().icon('updateColorize'))        
             h_layout.addWidget(btnUpdate,stretch=1)
@@ -523,11 +521,12 @@ class showImages(QDialog):
         top_layout.addWidget(QLabel("Update one image with new Steps value"))
         self.steps_update=SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("steps_update",50),1,250,5,1)
         
-        if (p.mode in ("img2img", "inpainting")):
+        if (params.action in ("img2img", "inpaint")):
             top_layout.addWidget(QLabel("Update with new Strengths value"))
             self.strength_update=SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("strength",0.5)*100,0,100,1,100)
 
         self.setLayout(top_layout)
+
     # start request for HQ version of one image
     def regenerateStart(self):
         p = copy(self.SDParam)
@@ -542,21 +541,21 @@ class showImages(QDialog):
         p.regenerate=True
         runSD(p)
 
-    def updateImages(self,qImgs,seeds):
+    def updateImages(self, images):
         i=0
-        self.qImgs=qImgs
-        self.SDParam.seedList=seeds
-        for qImg in qImgs:
+        self.images=images
+        for image in images:
             imgLabel=self.imgLabels[i]
             seedLabel=self.seedLabel[i]
-            seedLabel.setText(seeds[i])
-            imgLabel.setPixmap(QPixmap.fromImage(qImg).scaled(380,380,Qt.KeepAspectRatio))  
+            seedLabel.setText(image["seed"])
+            imgLabel.setPixmap(QPixmap.fromImage(image["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
             i=i+1
+
     # update one single image with new parameters
     def updateImageStart(self,num):
         p = copy(self.SDParam)
-        p.seed=p.seedList[num]
-        if (p.mode in ("img2img", "inpainting")): 
+        p.seed=self.images[num]["seed"]
+        if (p.action in ("img2img", "inpaint")): 
             p.strength=self.strength_update.value()/100
         SDConfig.dlgData["steps_update"]=self.steps_update.value()
         SDConfig.save(SDConfig)
@@ -570,15 +569,15 @@ class showImages(QDialog):
         runSD(p)
 
     # update image with HQ version       
-    def updateImage(self,qImg):
+    def updateImage(self, imagedata):
         num=self.updateImageNum
         imgLabel=self.imgLabels[num]
-        self.qImgs[num]=qImg
-        imgLabel.setPixmap(QPixmap.fromImage(qImg).scaled(380,380,Qt.KeepAspectRatio))  
+        self.images[num]["qimage"]=imagedata["qimage"]
+        imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
 
 
-def imageResultDialog(qImgs,p):
-    dlg = showImages(qImgs,p)
+def imageResultDialog(imagedata,params):
+    dlg = showImages(imagedata,params)
     if dlg.exec():
         print("HQ Update here")
 
@@ -592,15 +591,17 @@ def base64ToQImage(data):
      imagen.loadFromData( bytearr, 'PNG' )      
      return imagen
 
-def getServerData(reqData):
+def getServerData(action, reqData):
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")
-    endpoint+="/api/" 
+    endpoint+="/api/"+action
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
     }    
     try:
+        print("endpoint")
+        print(endpoint)
         req = urllib.request.Request(endpoint, reqData, headers)
         with urllib.request.urlopen(req) as f:
             res = f.read()
@@ -619,27 +620,25 @@ def runSD(params: SDParameters):
     # dramatic interface change needed!
     Colab=True
     if (SDConfig.type=="Local"): Colab=False
-    if (not params.seed): seed=-1
+    if (not params.seed): seed=None
     else: seed=int(params.seed)
     inpainting_fill_options= ['fill', 'original', 'latent noise', 'latent nothing',"g-diffusion"]
     inpainting_fill=inpainting_fill_options.index(SDConfig.inpaint_mask_content)
-    print(inpainting_fill)
     j = {'prompt': params.prompt, \
         'negprompt': params.negprompt, \
-        'mode': params.mode, \
-        'initimage': {'image':params.image64, 'mask':params.maskImage64}, \
+        'initimage': params.image64, \
+        'initmask': params.maskImage64, \
         'steps':params.steps, \
-        # 'sampler':params.sampling_method, \
+        'scheduler':params.scheduler, \
         'mask_blur': SDConfig.inpaint_mask_blur, \
         'inpainting_fill':inpainting_fill, \
         'use_gfpgan': False, \
-        'batch_count': params.num, \
-        'cfg_scale': params.cfg_value, \
+        'batch': params.num, \
+        'scale': params.scale, \
         'strength': params.strength, \
         'seed':seed, \
         'height':SDConfig.height, \
         'width':SDConfig.width, \
-        'resize_mode': 0, \
         'upscale_method':params.upscale_method, \
         'upscale_amount': params.upscale_amount, \
         'upscale_overlap':64, \
@@ -649,32 +648,26 @@ def runSD(params: SDParameters):
 
     print(j)
     data = json.dumps(j).encode("utf-8")
-    res=getServerData(data)
+    res=getServerData(params.action, data)
     if not res: return    
     response=json.loads(res)
-  #  print(response)
+    # print(response)
     num = len(response["images"])
-    images = [0]*num
+    images = []
     params.seedList=[0]*num
-    info=response["info"]
-    # info=json.loads(s)
 
-    firstSeed=int(info["seed"])
-    # if (num==1):
-    #     data = response["images"][0] # first image
-    #     params.seedList[0]=str(int(firstSeed))
-    #     images[0]=base64ToQImage(data)
-    # else:
-    for i in range(0,num):
-        data = response["images"][i] 
-        params.seedList[i]=str(int(firstSeed)+i)
-        images[i]=base64ToQImage(data)
-    if (params.imageDialog):                 # only refresh image
+    for image in response["images"]:
+        image["qimage"] = base64ToQImage(image["image"])
+        images.append(image)
+
+    if (params.imageDialog):  # only refresh image
         if (params.regenerate):
             print("generate new")
-            params.imageDialog.updateImages(images,params.seedList)
+            params.imageDialog.updateImages(images)
         else:  
             params.imageDialog.updateImage(images[0])
+    else:
+        imageResultDialog(images,params)
     return images
 
 
@@ -722,16 +715,15 @@ def TxtToImage():
         p = SDParameters()
         p.prompt=getFullPrompt(dlg)
         if not p.prompt: return        
-        p.mode="txt2img"
+        p.action="txt2img"
         data=SDConfig.dlgData
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
         p.num=data["num"]
-        # p.sampling_method=data["sampling_method"]
-        p.cfg_value=data["cfg_value"]
-        images = runSD(p)
-        imageResultDialog( images,p)
+        p.scheduler=data["scheduler"]
+        p.scale=data["scale"]
+        runSD(p)
 
 
 def base64EncodeImage(image):
@@ -761,16 +753,15 @@ def ImageToImage():
         p.prompt=getFullPrompt(dlg)
         if not p.prompt: return
         data=SDConfig.dlgData
-        p.mode="img2img"
+        p.action="img2img"
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
         p.num=data["num"]
-        p.cfg_value=data["cfg_value"]
+        p.scale=data["scale"]
         p.image64=image64
         p.strength=data["strength"]
-        images = runSD(p)
-        imageResultDialog( images,p)
+        runSD(p)
 
 
 def TiledImageToImage():
@@ -785,7 +776,7 @@ def TiledImageToImage():
         image = QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
     image64 = base64EncodeImage(image)
     
-    dlg = SDDialog("img2img_tiled",image)
+    dlg = SDDialog("img2imgTiled",image)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -794,16 +785,15 @@ def TiledImageToImage():
         p.prompt=getFullPrompt(dlg)
         if not p.prompt: return
         data=SDConfig.dlgData
-        p.mode="img2img_tiled"
+        p.action="img2imgTiled"
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
         p.num=1
-        p.cfg_value=data["cfg_value"]
+        p.scale=data["scale"]
         p.image64=image64
         p.strength=data["strength"]
-        images = runSD(p)
-        imageResultDialog( images,p)
+        runSD(p)
 
 
 def Upscale(): 
@@ -827,17 +817,16 @@ def Upscale():
         params.prompt=getFullPrompt(dlg)
         # if not params.prompt: return
         data=SDConfig.dlgData
-        params.mode = "upscale"
+        params.action = "upscale"
         # params.steps = data["steps"]
         # params.seed = data["seed"]
         params.num = 1
-        # params.cfg_value = data["cfg_value"]
+        # params.scale = data["scale"]
         params.image64 = image64
         # params.strength = data["strength"]
         params.upscale_amount = data["upscale_amount"]
         params.upscale_method = data["upscale_method"]
-        images = runSD(params)
-        imageResultDialog(images, params)
+        runSD(params)
 
 
 def FaceEnhance(): 
@@ -853,16 +842,15 @@ def FaceEnhance():
     image64 = base64EncodeImage(image)
     
     params = SDParameters()
-    params.mode = "face_enhance"
+    params.action = "face_enhance"
     params.image64 = image64
     params.num = 1
-    params.cfg_value = None
+    params.scale = None
     params.prompt = "Face Enhance"
-    images = runSD(params)
-    selectImage(params, images[0])
+    runSD(params)
 
 
-def Inpainting():    
+def Inpaint():    
     n = getLayer()
     if (n==None):  return    
     s=getSelection()
@@ -919,17 +907,16 @@ def Inpainting():
         p.prompt=getFullPrompt(dlg)
         if not p.prompt: return        
         data=SDConfig.dlgData
-        p.mode="inpainting"
+        p.action="inpaint"
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
         p.num=data["num"]
-        p.cfg_value=data["cfg_value"]
+        p.scale=data["scale"]
         p.strength=data["strength"]
         p.image64=image64
         p.maskImage64=maskImage64
-        images = runSD(p)
-        imageResultDialog( images,p)
+        runSD(p)
 
 # config dialog
 def Config():
