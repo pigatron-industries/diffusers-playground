@@ -6,9 +6,9 @@ def runcmd(cmd, shell=False):
 
 def setup(colab=False, esrgan=True, clipInterrogator=True):
     if(colab):
-        runcmd(['pip', 'install', '-r', '../requirements_colab.txt'])
+        runcmd(['pip', 'install', '-r', 'requirements_colab.txt'])
     else:
-        runcmd(['pip', 'install', '-r', '../requirements.txt'])
+        runcmd(['pip', 'install', '-r', 'requirements.txt'])
 
     runcmd(['mkdir workspace'], True)
     os.chdir("workspace")
