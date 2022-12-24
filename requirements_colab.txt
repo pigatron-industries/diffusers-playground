@@ -5,6 +5,11 @@ transformers==4.25.1
 accelerate==0.14.0
 ftfy==6.1.1
 
+# esrgan
+opencv-python
+typer
+rich
+
 # web
 flask
 flask_classful

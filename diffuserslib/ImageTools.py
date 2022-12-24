@@ -1,5 +1,6 @@
 import os, subprocess, sys
 from PIL import Image
+from pathlib import Path
 
 DEFAULT_CLIP_MODEL = "ViT-L-14/openai"
 
@@ -40,11 +41,11 @@ class ImageTools():
         outfile = "output/work.png"
         model = f'4x_{model}.pth'
         inimage.save(infile)
-        cmd = ['python', 'upscale.py', model] 
-        # TODO import upscale and run method directly
-        if(cpu):
-            cmd.append('--cpu')
-        runcmd(cmd)
+
+        from upscale import Upscale
+        upscale = Upscale(model = "4x_remacri.pth", input=Path("input"), output=Path("output"))
+        upscale.run()
+
         outimage = Image.open(outfile)
         if (scale != 4):
             outimage.resize((inimage.width*scale, inimage.height*scale))
