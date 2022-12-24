@@ -347,7 +347,7 @@ class SDDialog(QDialog):
             upscalemethod_label=QLabel("Upscale method")
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
-            self.upscale_method.addItems(['aczos3', 'esrgan/lollypop', 'esrgan/remacri', 'stable-diffusion'])
+            self.upscale_method.addItems(['laczos3', 'esrgan/lollypop', 'esrgan/remacri', 'stable-diffusion'])
             self.upscale_method.setCurrentText(data.get("upscale_method","all"))
             formLayout.addWidget(self.upscale_method)
             upscale_label = QLabel("Upscale amount")
