@@ -500,7 +500,7 @@ class showImages(QDialog):
             layout.addLayout(v_layout)       
             imgLabel=QLabel()
             v_layout.addWidget(imgLabel) 
-            imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
+            imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(384,384,Qt.KeepAspectRatio))  
             seedLabel=QLabel(str(imagedata.get("seed", -1)))
             seedLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
             self.seedLabel[i]=seedLabel
@@ -548,7 +548,7 @@ class showImages(QDialog):
             imgLabel=self.imgLabels[i]
             seedLabel=self.seedLabel[i]
             seedLabel.setText(image["seed"])
-            imgLabel.setPixmap(QPixmap.fromImage(image["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
+            imgLabel.setPixmap(QPixmap.fromImage(image["qimage"]).scaled(384,384,Qt.KeepAspectRatio))  
             i=i+1
 
     # update one single image with new parameters
@@ -573,7 +573,7 @@ class showImages(QDialog):
         num=self.updateImageNum
         imgLabel=self.imgLabels[num]
         self.images[num]["qimage"]=imagedata["qimage"]
-        imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
+        imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(384,384,Qt.KeepAspectRatio))  
 
 
 def imageResultDialog(imagedata,params):
@@ -676,20 +676,27 @@ def runSD(params: SDParameters):
 
 def getDocument():
     d = Application.activeDocument()
-    if (d==None):  errorMessage("Please add a document","Needs document with a layer and selection.")
+    if (d==None):  
+        errorMessage("Please add a document", "Needs document with a layer and selection.")
     return d
 
 def getLayer():
-    d=getDocument()
-    if (d==None):  return
+    d = getDocument()
+    if (d==None):  
+        return
     n = d.activeNode()
+    if(n.type()!="paintlayer"):
+        errorMessage("Select a paint layer",  "Selected layer must be a paint layer.")
+        return
     return n
 
 def getSelection():
     d = getDocument()
-    if (d==None): return
+    if (d==None): 
+        return
     s = d.selection()
-    if (s==None):  errorMessage("Please make a selection","Operation runs on a selection only. Please use rectangle select tool.")
+    if (s==None):  
+        errorMessage("Please make a selection", "Operation runs on a selection only. Please use rectangle select tool.")
     return s      
 
 def getFullPrompt(dlg):
@@ -742,7 +749,9 @@ def ImageToImage():
     s=getSelection()
     if (s==None):   
         return    
-    n=getLayer()
+    n = getLayer()
+    if (n==None):   
+        return  
     data=n.pixelData(s.x(),s.y(),s.width(),s.height())
     image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
     image64 = base64EncodeImage(image)
@@ -771,6 +780,8 @@ def ImageToImage():
 def TiledImageToImage():
     doc = getDocument()
     layer = getLayer()
+    if (layer==None):   
+        return  
     selection = doc.selection()
     if(selection is None):
         data = layer.pixelData(0, 0, doc.width(), doc.height())
@@ -804,6 +815,8 @@ def TiledImageToImage():
 def Upscale(): 
     doc = getDocument()
     layer = getLayer()
+    if (layer==None):   
+        return  
     selection = doc.selection()
     if(selection is None):
         data = layer.pixelData(0, 0, doc.width(), doc.height())
@@ -838,6 +851,8 @@ def Upscale():
 def FaceEnhance(): 
     doc = getDocument()
     layer = getLayer()
+    if (layer==None):   
+        return  
     selection = doc.selection()
     if(selection is None):
         data = layer.pixelData(0, 0, doc.width(), doc.height())
@@ -857,12 +872,14 @@ def FaceEnhance():
 
 
 def Inpaint():    
-    n = getLayer()
-    if (n==None):  return    
-    s=getSelection()
-    if (s==None):   return
-    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
-    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    layer = getLayer()
+    if (layer==None):   
+        return  
+    selection = getSelection()
+    if (selection==None):   
+        return
+    data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
+    image=QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
 
     # image = image.scaled(512,512, Qt.KeepAspectRatio, Qt.SmoothTransformation)        # not using config here
     print(image.width(),image.height())        
@@ -903,7 +920,7 @@ def Inpaint():
    # maskImage64 = "data:image/png;base64,"+DataAsString
     maskImage64 =DataAsString
     SDConfig.load(SDConfig)
-    image = image.scaled(380,380, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # preview smaller
+    image = image.scaled(384, 384, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # preview smaller
     dlg = SDDialog("inpainting",image)
     dlg.resize(900,200)
 
