@@ -594,7 +594,7 @@ def base64ToQImage(data):
 def getServerData(action, reqData):
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")
-    endpoint+="/api/"+action
+    endpoint+="/api/"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -602,7 +602,10 @@ def getServerData(action, reqData):
     try:
         print("endpoint")
         print(endpoint)
-        req = urllib.request.Request(endpoint, reqData, headers)
+        req = urllib.request.Request(endpoint, None, headers, method="GET") # do a 'ping' to check server is  running first
+        with urllib.request.urlopen(req) as f:
+            res = f.read()
+        req = urllib.request.Request(endpoint+action, reqData, headers, method="POST")
         with urllib.request.urlopen(req) as f:
             res = f.read()
             return res

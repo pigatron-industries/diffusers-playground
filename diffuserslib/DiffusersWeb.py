@@ -18,7 +18,7 @@ class DiffusersView(FlaskView):
         pass
 
 
-    @route("/", methods=["GET"])
+    @route("/api/", methods=["GET"])
     def info(self):
         return 'stable-diffusion'
 
