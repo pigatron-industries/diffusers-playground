@@ -501,7 +501,7 @@ class showImages(QDialog):
             imgLabel=QLabel()
             v_layout.addWidget(imgLabel) 
             imgLabel.setPixmap(QPixmap.fromImage(imagedata["qimage"]).scaled(380,380,Qt.KeepAspectRatio))  
-            seedLabel=QLabel(str(imagedata["seed"]))
+            seedLabel=QLabel(str(imagedata.get("seed", -1)))
             seedLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
             self.seedLabel[i]=seedLabel
             v_layout.addWidget(seedLabel)     
