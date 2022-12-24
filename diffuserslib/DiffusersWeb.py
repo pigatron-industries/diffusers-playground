@@ -154,7 +154,7 @@ class DiffusersView(FlaskView):
         for i in range(0, batch):
             if(method == "stable-difusion"):
                 outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
-            elif(method.startswith("esrgan")):  
+            elif(method.startswith("esrgan")):
                 outimage = self.tools.upscaleEsrgan(initimage, scale=amount, model=method.split('/')[1])
             else:
                 outimage = self.tools.upscaleEsrgan(initimage, scale=amount)

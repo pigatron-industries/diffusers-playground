@@ -33,7 +33,7 @@ class ImageTools():
         addToolPath("clip-interrogator")
 
 
-    def upscaleEsrgan(inimage, scale=4, model="remacri", cpu=False):
+    def upscaleEsrgan(self, inimage, scale=4, model="remacri", cpu=False):
         prevcwd = os.getcwd()
         chdirWorkspaceDirectory("esrgan")
         infile = "input/work.png"
