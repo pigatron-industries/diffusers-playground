@@ -100,8 +100,8 @@ class DiffusersView(FlaskView):
 
         outputimages = []
         for i in range(0, batch):
-            outimage = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
-            outputimages.append({ "image": base64EncodeImage(outimage) })
+            outimage, usedseed = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
         return jsonify(output)
@@ -141,6 +141,7 @@ class DiffusersView(FlaskView):
         r = request
         data = json.loads(r.data)
         method = data.get("method", "esrgan/remacri")
+        amount = data.get("amount", 4)
         prompt = data.get("prompt", "")
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
         batch = data.get("batch", 1)
@@ -153,8 +154,10 @@ class DiffusersView(FlaskView):
         for i in range(0, batch):
             if(method == "stable-difusion"):
                 outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
-            elif(method == "esrgan"):
-                outimage = self.tools.upscaleEsrgan(initimage, model=method.split('/')[1])
+            elif(method.startsWith("esrgan")):  
+                outimage = self.tools.upscaleEsrgan(initimage, scale=amount, model=method.split('/')[1])
+            else:
+                outimage = self.tools.upscaleEsrgan(initimage, scale=amount)
             outputimages.append({ "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }

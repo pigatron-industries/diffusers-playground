@@ -347,7 +347,7 @@ class SDDialog(QDialog):
             upscalemethod_label=QLabel("Upscale method")
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
-            self.upscale_method.addItems(['Laczos3', 'lollypop', 'remacri', 'stable-diffusion'])
+            self.upscale_method.addItems(['aczos3', 'esrgan/lollypop', 'esrgan/remacri', 'stable-diffusion'])
             self.upscale_method.setCurrentText(data.get("upscale_method","all"))
             formLayout.addWidget(self.upscale_method)
             upscale_label = QLabel("Upscale amount")
@@ -627,7 +627,7 @@ def runSD(params: SDParameters):
     j = {'prompt': params.prompt, \
         'negprompt': params.negprompt, \
         'initimage': params.image64, \
-        'initmask': params.maskImage64, \
+        'maskimage': params.maskImage64, \
         'steps':params.steps, \
         'scheduler':params.scheduler, \
         'mask_blur': SDConfig.inpaint_mask_blur, \
@@ -639,8 +639,8 @@ def runSD(params: SDParameters):
         'seed':seed, \
         'height':SDConfig.height, \
         'width':SDConfig.width, \
-        'upscale_method':params.upscale_method, \
-        'upscale_amount': params.upscale_amount, \
+        'method': params.upscale_method, \
+        'amount': params.upscale_amount, \
         'upscale_overlap':64, \
         'inpaint_full_res':True, \
         'inpainting_mask_invert': 0 \
@@ -759,6 +759,7 @@ def ImageToImage():
         p.seed=data["seed"]
         p.num=data["num"]
         p.scale=data["scale"]
+        p.scheduler=data["scheduler"]
         p.image64=image64
         p.strength=data["strength"]
         runSD(p)
@@ -791,6 +792,7 @@ def TiledImageToImage():
         p.seed=data["seed"]
         p.num=1
         p.scale=data["scale"]
+        p.scheduler=data["scheduler"]
         p.image64=image64
         p.strength=data["strength"]
         runSD(p)
@@ -824,6 +826,7 @@ def Upscale():
         # params.scale = data["scale"]
         params.image64 = image64
         # params.strength = data["strength"]
+        # p.scheduler=data["scheduler"]
         params.upscale_amount = data["upscale_amount"]
         params.upscale_method = data["upscale_method"]
         runSD(params)
@@ -914,6 +917,7 @@ def Inpaint():
         p.num=data["num"]
         p.scale=data["scale"]
         p.strength=data["strength"]
+        p.scheduler=data["scheduler"]
         p.image64=image64
         p.maskImage64=maskImage64
         runSD(p)

@@ -46,6 +46,8 @@ class ImageTools():
             cmd.append('--cpu')
         runcmd(cmd)
         outimage = Image.open(outfile)
+        if (scale != 4):
+            outimage.resize((inimage.width*scale, inimage.height*scale))
         os.chdir(prevcwd)
         return outimage
 

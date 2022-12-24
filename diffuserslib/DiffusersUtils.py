@@ -1,6 +1,7 @@
 from PIL import Image
-import math
+import math, random
 from .ImageUtils import createMask
+from .DiffusersPipelines import MAX_SEED
 from huggingface_hub import login
 
 
@@ -9,6 +10,9 @@ def loginHuggingFace(token):
 
 
 def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
+    if(seed is None):
+        seed = random.randint(0, MAX_SEED)
+    
     xslices = math.ceil(initimg.width / (tilewidth-overlap))
     yslices = math.ceil(initimg.height / (tileheight-overlap))
     print(f'Processing {xslices} x {yslices} slices')
@@ -35,4 +39,4 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
             finished_slice = Image.merge('RGBA', [imr, img, imb, mma])  # we want the RGB from the original, but the transparency from the mask
             merged_image.alpha_composite(finished_slice, (x, y))
 
-    return merged_image
+    return merged_image, seed
