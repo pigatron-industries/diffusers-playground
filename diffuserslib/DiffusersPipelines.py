@@ -199,7 +199,7 @@ class DiffusersPipelines:
 
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None):
         if (self.imageToImagePipeline is None):
-            raise Exception('image to image pipeline not loaded')
+            raise Exception('depth to image pipeline not loaded')
         inimage = inimage.convert("RGB")
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):

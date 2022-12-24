@@ -18,6 +18,7 @@ def setup(colab=False):
     runcmd(['cp ../models/esrgan/* src/esrgan/models'], True)
     runcmd(['rm src/esrgan/input/*'], True)
     runcmd(['rm src/esrgan/output/*'], True)
+    os.chdir("..")
 
 
 if __name__ == "__main__":
