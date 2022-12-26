@@ -14,6 +14,7 @@ def chdirWorkspaceDirectory(subfolder):
 def addToolPath(subfolder):
     filepath = os.path.dirname(os.path.realpath(__file__))
     dir = os.path.normpath(os.path.join(filepath, "../workspace/src/" + subfolder))
+    print(f"toolpath: {dir}")
     sys.path.append(dir)
 
 
@@ -54,6 +55,7 @@ class ImageTools():
 
 
     def loadClipInterrogator(self, model = DEFAULT_CLIP_MODEL):
+        chdirWorkspaceDirectory("clip_interrogator")
         from clip_interrogator import Interrogator, Config
         config = Config()
         config.blip_num_beams = 64
