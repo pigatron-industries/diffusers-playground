@@ -55,7 +55,6 @@ class ImageTools():
 
 
     def loadClipInterrogator(self, model = DEFAULT_CLIP_MODEL):
-        chdirWorkspaceDirectory("clip_interrogator")
         from clip_interrogator import Interrogator, Config
         config = Config()
         config.blip_num_beams = 64

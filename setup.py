@@ -5,11 +5,6 @@ def runcmd(cmd, shell=False):
 
 
 def setup(colab=False, esrgan=True, clipInterrogator=True):
-    if(colab):
-        runcmd(['pip', 'install', '-r', 'requirements_colab.txt'])
-    else:
-        runcmd(['pip', 'install', '-r', 'requirements.txt'])
-
     runcmd(['mkdir workspace'], True)
     os.chdir("workspace")
     runcmd('pwd')
@@ -23,6 +18,11 @@ def setup(colab=False, esrgan=True, clipInterrogator=True):
     if(clipInterrogator):
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/BLIP.git@lib#egg=blip'])
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/clip-interrogator.git#egg=clip-interrogator'])
+
+    if(colab):
+        runcmd(['pip', 'install', '-r', 'requirements_colab.txt'])
+    else:
+        runcmd(['pip', 'install', '-r', 'requirements.txt'])
 
     os.chdir("..")
 
