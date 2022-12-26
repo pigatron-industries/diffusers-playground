@@ -19,12 +19,11 @@ def setup(colab=False, esrgan=True, clipInterrogator=True):
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/BLIP.git@lib#egg=blip'])
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/clip-interrogator.git#egg=clip-interrogator'])
 
+    os.chdir("..")
     if(colab):
         runcmd(['pip', 'install', '-r', 'requirements_colab.txt'])
     else:
         runcmd(['pip', 'install', '-r', 'requirements.txt'])
-
-    os.chdir("..")
 
 
 if __name__ == "__main__":
