@@ -160,7 +160,8 @@ class DiffusersBatch:
 
     def run(self):
         for i, args in enumerate(self.argsbatch):
-            print(f"Running for arguments: {args}")
+            print(f"Generating {i}/{len(self.argsbatch)}")
+            print(f"Arguments: {args}")
             image, seed = self.pipeline(**args)
             self.argsbatch[i]["image"] = image
             self.argsbatch[i]["seed"] = seed
