@@ -80,6 +80,34 @@ class DiffusersView(FlaskView):
         return jsonify(output)
 
 
+    @route("/api/depth2img", methods=["POST"])
+    def depth2img(self):
+        r = request
+        data = json.loads(r.data)
+        seed = data.get("seed", None)
+        prompt = data.get("prompt", "")
+        negprompt = data.get("negprompt", "")
+        strength = data.get("strength", 0.5)
+        scale = data.get("scale", 9)
+        scheduler = data.get("scheduler", "EulerDiscreteScheduler")
+        batch = data.get("batch", 1)
+        initimage = base64DecodeImage(data['initimage'])
+
+        print('depth2img')
+        print(f'Prompt: {prompt}')
+        print(f'Negative: {negprompt}')
+        print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
+
+        outputimages = []
+        for i in range(0, batch):
+            outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
+            display(outimage)
+            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+
+        output = { "images": outputimages }
+        return jsonify(output)
+
+
     @route("/api/img2imgTiled", methods=["POST"])
     def img2imgTiled(self):
         r = request
