@@ -71,6 +71,11 @@ imagenet_style_templates_small = [
     "a large painting in the style of {}",
 ]
 
+file_words_style_template = [
+    "{}, {} style",
+    "{} in style of {}",
+]
+
 
 class EmbedType:
     object = 1
@@ -88,7 +93,7 @@ class TextEmbeddingTrainer():
         os.makedirs(self.input_dir, exist_ok=True)
     
 
-    def trainSetup(self, embed_type, train_token, init_token):
+    def trainSetup(self, embed_type, train_token, init_token, use_filewords=False):
         self.tokenizer = CLIPTokenizer.from_pretrained(self.model, subfolder="tokenizer")
         self.text_encoder = CLIPTextModel.from_pretrained(self.model, subfolder="text_encoder")
         self.vae = AutoencoderKL.from_pretrained(self.model, subfolder="vae")
@@ -119,7 +124,7 @@ class TextEmbeddingTrainer():
         self.freezeParams(self.text_encoder.text_model.embeddings.position_embedding.parameters())
 
         self.train_dataset = TextualInversionDataset(data_root=self.input_dir, tokenizer=self.tokenizer, size=512,
-            train_token=train_token,repeats=100,learnable_property=embed_type, center_crop=False,set="train")
+            train_token=train_token,repeats=100,learnable_property=embed_type, center_crop=False,set="train", use_filewords=use_filewords)
 
 
     def freezeParams(self, params):
@@ -235,7 +240,7 @@ class TextEmbeddingTrainer():
 
 class TextualInversionDataset(Dataset):
     def __init__(self, data_root, tokenizer, learnable_property=EmbedType.object, size=512, repeats=100, interpolation=PIL.Image.LANCZOS, 
-                 flip_p=0.5, set="train", train_token="*", center_crop=False):
+                 flip_p=0.5, set="train", train_token="*", center_crop=False, use_filewords = False):
         self.data_root = data_root
         self.tokenizer = tokenizer
         self.learnable_property = learnable_property
@@ -243,13 +248,33 @@ class TextualInversionDataset(Dataset):
         self.train_token = train_token
         self.center_crop = center_crop
         self.flip_p = flip_p
-        self.image_paths = [os.path.join(self.data_root, file_path) for file_path in os.listdir(self.data_root)]
+
+        self.use_filewords  = use_filewords
+        self.image_paths = []
+        self.image_words = []
+        for file in os.listdir(self.data_root):
+            if file.endswith(('.png', '.jpg')):
+                path = os.path.join(self.data_root, file)
+                self.image_paths.append(path)
+                if(self.use_filewords):
+                    with open(f"${path[:-4]}.txt", 'r') as wordfile:
+                        words = wordfile.read().rstrip()
+                        self.image_words.append(words)
+
+        print(self.image_paths)
+        print(self.image_words)
+
         self.num_images = len(self.image_paths)
         self._length = self.num_images
         if set == "train":
             self._length = self.num_images * repeats
         self.interpolation = interpolation
-        self.templates = imagenet_style_templates_small if learnable_property == EmbedType.style else imagenet_object_templates_small
+        if(learnable_property == EmbedType.style):
+            self.templates = imagenet_style_templates_small
+        elif (learnable_property == EmbedType.object):
+            self.templates = imagenet_object_templates_small
+        else:
+            self.templates = file_words_style_template
         self.flip_transform = transforms.RandomHorizontalFlip(p=self.flip_p)
 
     def __len__(self):
@@ -262,7 +287,11 @@ class TextualInversionDataset(Dataset):
             image = image.convert("RGB")
 
         train_token = self.train_token
-        text = random.choice(self.templates).format(train_token)
+        if(self.use_filewords):
+            words = self.image_words[i % self.num_images]
+            text = random.choice(file_words_style_template).format(words, train_token)
+        else:
+            text = random.choice(self.templates).format(train_token)
 
         example["input_ids"] = self.tokenizer(
             text,
