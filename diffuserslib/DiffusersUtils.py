@@ -9,12 +9,13 @@ def loginHuggingFace(token):
     login(token=token)
 
 
-def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
+def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128, 
+                      offsetx=0, offsety=0):
     if(seed is None):
         seed = random.randint(0, MAX_SEED)
     
-    xslices = math.ceil(initimg.width / (tilewidth-overlap))
-    yslices = math.ceil(initimg.height / (tileheight-overlap))
+    xslices = math.ceil((initimg.width-offsetx) / (tilewidth-overlap))
+    yslices = math.ceil((initimg.height-offsety) / (tileheight-overlap))
     print(f'Processing {xslices} x {yslices} slices')
     merged_image = initimg.convert("RGBA")
 
@@ -27,8 +28,8 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
             right = (xslice == xslices-1)
             mask = createMask(tilewidth, tileheight, overlap/2, top, bottom, left, right)
             
-            x = xslice * (tilewidth - overlap)
-            y = yslice * (tileheight - overlap)
+            x = (xslice * (tilewidth - overlap)) + offsetx
+            y = (yslice * (tileheight - overlap)) + offsety
             image_slice = merged_image.crop((x, y, x+tilewidth, y+tileheight))
 
             image_slice = image_slice.convert("RGB")
@@ -40,3 +41,9 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
             merged_image.alpha_composite(finished_slice, (x, y))
 
     return merged_image, seed
+
+
+def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
+    image, seed = tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap, 0, 0)
+    image, seed = tiledImageToImage(pipelines, image, prompt, negprompt, strength/2, scale, scheduler, seed, tilewidth, tileheight, overlap, -256, -256)
+    return image, seed;
