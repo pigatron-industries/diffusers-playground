@@ -47,8 +47,8 @@ def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, sca
     offsetimage = Image.new(initimg.mode, (initimg.width+offsetx, initimg.height+offsety))
     offsetimage.paste(initimg, (offsetx, offsety, offsetx+initimg.width, offsety+initimg.height))
     outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength/2, scale, scheduler, seed, tilewidth, tileheight, overlap)
-    outimage.crop((offsetx, offsety, outimage.width, outimage.height))
-    return outimage, seed
+    image = outimage.crop((offsetx, offsety, outimage.width, outimage.height))
+    return image, seed
 
 
 def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
