@@ -42,15 +42,18 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
     return merged_image, seed
 
 
+def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, 
+                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0):
+    offsetimage = Image.new(initimg.mode, (initimg.width+offsetx, initimg.height+offsety))
+    offsetimage.paste(initimg, (offsetx, offsety, offsetx+initimg.width, offsety+initimg.height))
+    outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength/2, scale, scheduler, seed, tilewidth, tileheight, overlap)
+    outimage.crop((offsetx, offsety, outimage.width, outimage.height))
+    return outimage, seed
+
+
 def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
     image, seed = tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
-
-    offsetx = (tilewidth - overlap)/2;
-    offsety = (tileheight - overlap)/2;
-    offsetimage = Image.new(image.mode, (image.width+offsetx, image.height+offsety))
-    offsetimage.paste(image, (offsetx, offsety, offsetx+image.width, offsety+image.height))
-
-    image, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength/2, scale, scheduler, seed, tilewidth, tileheight, overlap)
-
-    image.crop((offsetx, offsety, image.width, image.height))
+    offsetx = int((tilewidth - overlap)/2)
+    offsety = int((tileheight - overlap)/2)
+    image, seed = tiledImageToImageOffset(pipelines, image, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap, offsetx, offsety)
     return image, seed
