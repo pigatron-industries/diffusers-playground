@@ -44,5 +44,13 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
 
 def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
     image, seed = tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
-    #TODO add empty space to top and left of image and run tmg2img again
-    return image, seed;
+
+    offsetx = (tilewidth - overlap)/2;
+    offsety = (tileheight - overlap)/2;
+    offsetimage = Image.new(image.mode, (image.width+offsetx, image.height+offsety))
+    offsetimage.paste(image, (offsetx, offsety, offsetx+image.width, offsety+image.height))
+
+    image, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength/2, scale, scheduler, seed, tilewidth, tileheight, overlap)
+
+    image.crop((offsetx, offsety, image.width, image.height))
+    return image, seed

@@ -128,8 +128,8 @@ class DiffusersView(FlaskView):
 
         outputimages = []
         for i in range(0, batch):
-            outimage, usedseed = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
-            # outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+            # outimage, usedseed = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+            outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
