@@ -4,7 +4,7 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def setup(colab=False, esrgan=True, clipInterrogator=True):
+def setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=False):
     runcmd(['mkdir workspace'], True)
     os.chdir("workspace")
     runcmd('pwd')
@@ -19,6 +19,9 @@ def setup(colab=False, esrgan=True, clipInterrogator=True):
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/BLIP.git@lib#egg=blip'])
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/clip-interrogator.git#egg=clip-interrogator'])
 
+    if(diffuserScripts):
+        runcmd(['pip', 'install', '-e', 'git+https://github.com/huggingface/diffusers#egg=diffusers'])
+
     os.chdir("..")
     if(colab):
         runcmd(['pip', 'install', '-r', 'requirements_colab.txt'])
@@ -27,5 +30,5 @@ def setup(colab=False, esrgan=True, clipInterrogator=True):
 
 
 if __name__ == "__main__":
-    setup()
+    setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=True)
 
