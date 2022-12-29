@@ -6,4 +6,5 @@ from .DiffusersUtils import *
 from .TrainTextEmbedding import *
 from .ImageTools import *
 from .ImageUtils import *
+from .ModelMerge import *
 from .Web import *
