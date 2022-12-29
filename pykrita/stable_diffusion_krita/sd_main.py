@@ -384,7 +384,20 @@ class SDDialog(QDialog):
         scheduler_label=QLabel("Scheduler")
         formLayout.addWidget(scheduler_label)           
         self.scheduler = QComboBox()
-        self.scheduler.addItems(['DPMSolverMultistepScheduler', 'EulerDiscreteScheduler', 'EulerAncestralDiscreteScheduler'])
+        self.scheduler.addItems([
+            'DDIMScheduler', 
+            'DDPMScheduler', 
+            'DPMSolverMultistepScheduler', 
+            'EulerAncestralDiscreteScheduler',
+            'EulerDiscreteScheduler',
+            'HeunDiscreteScheduler',
+            'IPNDMScheduler',
+            'KarrasVeScheduler',
+            'KDPM2AncestralDiscreteScheduler',
+            'KDPM2DiscreteScheduler', 
+            'LMSDiscreteScheduler', 
+            'ScoreSdeVeScheduler'
+        ])
         self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
         formLayout.addWidget(self.scheduler)
         formLayout.addWidget(QLabel(""))        
@@ -766,6 +779,38 @@ def ImageToImage():
         if not p.prompt: return
         data=SDConfig.dlgData
         p.action="img2img"
+        p.negprompt = data["negprompt"]
+        p.steps=data["steps"]
+        p.seed=data["seed"]
+        p.num=data["num"]
+        p.scale=data["scale"]
+        p.scheduler=data["scheduler"]
+        p.image64=image64
+        p.strength=data["strength"]
+        runSD(p)
+
+
+def DepthToImage():
+    s=getSelection()
+    if (s==None):   
+        return    
+    n = getLayer()
+    if (n==None):   
+        return  
+    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
+    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    image64 = base64EncodeImage(image)
+    
+    dlg = SDDialog("depth2img",image)
+    dlg.resize(900,200)
+
+    if dlg.exec():
+        dlg.setDlgData()
+        p = SDParameters()
+        p.prompt=getFullPrompt(dlg)
+        if not p.prompt: return
+        data=SDConfig.dlgData
+        p.action="depth2img"
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]

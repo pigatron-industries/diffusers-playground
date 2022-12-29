@@ -4,7 +4,10 @@ import os
 import sys
 import re
 from diffusers import DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline
-from diffusers import DPMSolverMultistepScheduler, EulerDiscreteScheduler, EulerAncestralDiscreteScheduler
+from diffusers import DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler
+from diffusers import KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler
+from diffusers import KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler
+from diffusers import ScoreSdeVeScheduler, IPNDMScheduler
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .DiffusersModelPresets import DiffusersModelList
