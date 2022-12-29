@@ -118,6 +118,7 @@ class DiffusersView(FlaskView):
         strength = data.get("strength", 0.4)
         scale = data.get("scale", 9)
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
+        method = data.get("methd", "multipass")
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
@@ -128,8 +129,12 @@ class DiffusersView(FlaskView):
 
         outputimages = []
         for i in range(0, batch):
-            # outimage, usedseed = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
-            outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+            if (method=="singlepass"):
+                outimage, usedseed = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+            elif (method=="multipass"):
+                outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+            elif (method=="inpaint"):
+                pass #TODO
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }

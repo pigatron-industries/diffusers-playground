@@ -52,7 +52,7 @@ def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, sca
 
 
 def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
-    image, seed = tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
+    image, _ = tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
     offsetx = int((tilewidth - overlap)/2)
     offsety = int((tileheight - overlap)/2)
     image, seed = tiledImageToImageOffset(pipelines, image, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap, offsetx, offsety)
