@@ -385,18 +385,14 @@ class SDDialog(QDialog):
         formLayout.addWidget(scheduler_label)           
         self.scheduler = QComboBox()
         self.scheduler.addItems([
-            'DDIMScheduler', 
-            'DDPMScheduler', 
+            'DDIMScheduler',
             'DPMSolverMultistepScheduler', 
             'EulerAncestralDiscreteScheduler',
             'EulerDiscreteScheduler',
-            'HeunDiscreteScheduler',
-            'IPNDMScheduler',
-            'KarrasVeScheduler',
-            'KDPM2AncestralDiscreteScheduler',
-            'KDPM2DiscreteScheduler', 
+            # 'HeunDiscreteScheduler',
+            # 'KDPM2AncestralDiscreteScheduler',
+            # 'KDPM2DiscreteScheduler', 
             'LMSDiscreteScheduler', 
-            'ScoreSdeVeScheduler'
         ])
         self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
         formLayout.addWidget(self.scheduler)
