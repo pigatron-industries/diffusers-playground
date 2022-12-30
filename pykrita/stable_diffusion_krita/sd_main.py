@@ -62,7 +62,8 @@ class SDConfig:
         "strength": .75,
         "scheduler":"DPMSolverMultistepScheduler",
         "upscale_amount": 2,
-        "upscale_method": "all"
+        "upscale_method": "all",
+        "tile_method": "singlepass"
     }
 
 
@@ -117,7 +118,8 @@ class SDParameters:
     action="txt2img"
     strength = 1 
     upscale_amount = 1
-    upscale_method = "all"
+    upscale_method = None
+    tile_method = None
 
 def errorMessage(text,detailed):
     msgBox= QMessageBox()
@@ -348,11 +350,19 @@ class SDDialog(QDialog):
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
             self.upscale_method.addItems(['laczos3', 'esrgan/lollypop', 'esrgan/remacri', 'stable-diffusion'])
-            self.upscale_method.setCurrentText(data.get("upscale_method","all"))
+            self.upscale_method.setCurrentText(data.get("upscale_method","esrgan/remacri"))
             formLayout.addWidget(self.upscale_method)
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
             self.upscale_amount=self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
+
+        if (data["action"] in ("img2imgTiled")):
+            tilemethod_label=QLabel("Tile method")
+            formLayout.addWidget(tilemethod_label)
+            self.tile_method = QComboBox()
+            self.tile_method.addItems(['singlepass', 'multipass', 'inpaint_seams'])
+            self.tile_method.setCurrentText(data.get("tile_method", "singlepass"))
+            formLayout.addWidget(self.tile_method)
 
         if (data["action"] in ("img2img", "img2imgTiled")):
             formLayout.addWidget(QLabel("Strength"))
@@ -406,7 +416,7 @@ class SDDialog(QDialog):
 
     # TODO replace with common createSlider 
     def addSlider(self,layout,value,min,max,steps,divider):
-        h_layout =  QHBoxLayout()
+        h_layout = QHBoxLayout()
         slider = QSlider(Qt.Orientation.Horizontal, self)
         slider.setRange(min, max)
 
@@ -441,6 +451,8 @@ class SDDialog(QDialog):
             SDConfig.dlgData["strength"]=self.strength.value()/100
         if SDConfig.dlgData["action"] in ("txt2img", "inpaint"):
             SDConfig.dlgData["steps"]=int(self.steps.value())
+        if SDConfig.dlgData["action"] in ("img2imgTiled"):
+            SDConfig.dlgData["tile_method"]=self.tile_method.currentText()
         if SDConfig.dlgData["action"] in ("upscale"):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
@@ -636,10 +648,14 @@ def runSD(params: SDParameters):
     else: seed=int(params.seed)
     inpainting_fill_options= ['fill', 'original', 'latent noise', 'latent nothing',"g-diffusion"]
     inpainting_fill=inpainting_fill_options.index(SDConfig.inpaint_mask_content)
+    method = None
+    if(params.upscale_method is not None):
+        method = params.upscale_method
+    elif(params.tile_method is not None):
+        method = params.tile_method
     j = {'prompt': params.prompt, \
         'negprompt': params.negprompt, \
         'initimage': params.image64, \
-        'maskimage': params.maskImage64, \
         'steps':params.steps, \
         'scheduler':params.scheduler, \
         'mask_blur': SDConfig.inpaint_mask_blur, \
@@ -651,7 +667,7 @@ def runSD(params: SDParameters):
         'seed':seed, \
         'height':SDConfig.height, \
         'width':SDConfig.width, \
-        'method': params.upscale_method, \
+        'method': method, \
         'amount': params.upscale_amount, \
         'upscale_overlap':64, \
         'inpaint_full_res':True, \
@@ -850,6 +866,7 @@ def TiledImageToImage():
         p.scheduler=data["scheduler"]
         p.image64=image64
         p.strength=data["strength"]
+        p.tile_method=data["tile_method"]
         runSD(p)
 
 
@@ -922,20 +939,14 @@ def Inpaint():
     data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
     image=QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
 
-    # image = image.scaled(512,512, Qt.KeepAspectRatio, Qt.SmoothTransformation)        # not using config here
     print(image.width(),image.height())        
     data = QByteArray()
     buf = QBuffer(data)
     image.save(buf, 'PNG')
     ba=data.toBase64()
     DataAsString=str(ba,"ascii")
-    #image64 = "data:image/png;base64,"+DataAsString
     image64 = DataAsString
 
-    maskImage=QPixmap(image.width(), image.height()).toImage()
-    maskImage = maskImage.convertToFormat(QImage.Format_ARGB32)
-    # generate mask image
-    maskImage.fill(QColor(Qt.black).rgb())
     foundTrans=False
     foundPixel=False
     for i in range(image.width()):
@@ -944,8 +955,8 @@ def Inpaint():
             alpha = qAlpha(rgb)
             if (alpha !=255):
                 foundTrans=True
-                maskImage.setPixel(i, j, QColor(Qt.white).rgb())
-            else: foundPixel=True
+            else: 
+                foundPixel=True
 
     if (foundTrans==False):
         errorMessage("No transparent pixels found","Needs content with part removed by eraser (Brush in Tool palette + Right click for Eraser selection)")
@@ -954,12 +965,8 @@ def Inpaint():
         errorMessage("No  pixels found","Maybe wrong layer selected? Choose one with some content n it.")
         return        
     data = QByteArray()
-    buf = QBuffer(data)
-    maskImage.save(buf, 'PNG')
     ba=data.toBase64()
     DataAsString=str(ba,"ascii")
-   # maskImage64 = "data:image/png;base64,"+DataAsString
-    maskImage64 =DataAsString
     SDConfig.load(SDConfig)
     image = image.scaled(384, 384, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # preview smaller
     dlg = SDDialog("inpainting",image)
@@ -980,7 +987,6 @@ def Inpaint():
         p.strength=data["strength"]
         p.scheduler=data["scheduler"]
         p.image64=image64
-        p.maskImage64=maskImage64
         runSD(p)
 
 # config dialog

@@ -4,6 +4,8 @@ from .ImageUtils import createMask
 from .DiffusersPipelines import MAX_SEED
 from huggingface_hub import login
 
+from IPython.display import display
+
 
 def loginHuggingFace(token):
     login(token=token)
@@ -40,6 +42,48 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
             merged_image.alpha_composite(finished_slice, (x, y))
 
     return merged_image, seed
+
+
+def tiledInpaint(pipelines, initimg, maskimg, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, tilewidth=512, tileheight=512, overlap=128):
+    if(seed is None):
+        seed = random.randint(0, MAX_SEED)
+    
+    xslices = math.ceil((initimg.width) / (tilewidth-overlap))
+    yslices = math.ceil((initimg.height) / (tileheight-overlap))
+    print(f'Processing {xslices} x {yslices} slices')
+    merged_image = initimg.convert("RGBA")
+
+    # split into slices
+    for yslice in range(yslices):
+        for xslice in range(xslices):
+            x = (xslice * (tilewidth - overlap))
+            y = (yslice * (tileheight - overlap))
+            image_slice = merged_image.crop((x, y, x+tilewidth, y+tileheight))
+            mask_slice = maskimg.crop((x, y, x+tilewidth, y+tilewidth))
+
+            image_slice = image_slice.convert("RGB")
+            mask_slice = mask_slice.convert("RGB")
+
+            display(image_slice)
+            display(mask_slice)
+
+            # TODO check if mask has any white in this slice, if all black then no inpainting necessary
+            imageout_slice, _ = pipelines.inpaint(image_slice, mask_slice, prompt, negprompt, steps, scale, seed, scheduler)
+
+            display(imageout_slice)
+            
+            # TODO merge original image in positions where there is no mask, to reduce seam
+            imageout_slice = imageout_slice.convert("RGBA")
+            merged_image.alpha_composite(imageout_slice, (x, y))
+
+            # remove used mask
+            maskimg.paste((0, 0, 0), [x, y, x+tilewidth, y+tileheight])
+
+    return merged_image, seed
+
+
+def tiledImageToImageInpaintSeams(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
+    pass
 
 
 def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, 

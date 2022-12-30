@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
-from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass
+from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask
 from .ImageTools import ImageTools
 import json
@@ -116,15 +116,17 @@ class DiffusersView(FlaskView):
         prompt = data.get("prompt", "")
         negprompt = data.get("negprompt", "")
         strength = data.get("strength", 0.4)
+        steps = data.get("steps", 50)
         scale = data.get("scale", 9)
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
-        method = data.get("methd", "multipass")
+        method = data.get("method", "multipass")
         offsetx = data.get("offsetx", 0)
-        offsety = data.get("offsetx", 0)
+        offsety = data.get("offsety", 0)
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
         print('img2imgTiled')
+        print(f'Method: {method}')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
@@ -138,8 +140,9 @@ class DiffusersView(FlaskView):
             elif (method=="multipass"):
                 outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                 scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
-            elif (method=="inpaint"):
-                pass #TODO
+            elif (method=="inpaint_seams"):
+                outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
@@ -166,11 +169,16 @@ class DiffusersView(FlaskView):
         print('inpaint')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
+        print(f'Height: {initimage.height}, Width: {initimage.width}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
         outputimages = []
         for i in range(0, batch):
-            outimage, usedseed = self.pipelines.inpaint(inimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+            if(initimage.height > 512 or initimage.width > 512):
+                outimage, usedseed = tiledInpaint(self.pipelines, initimg=initimage, maskimg=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, 
+                                                  scale=scale, scheduler=scheduler, seed=seed, overlap=128)
+            else:
+                outimage, usedseed = self.pipelines.inpaint(inimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
