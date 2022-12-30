@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass
-from .ImageUtils import base64EncodeImage, base64DecodeImage
+from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask
 from .ImageTools import ImageTools
 import json
 
@@ -158,7 +158,10 @@ class DiffusersView(FlaskView):
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
-        maskimage = base64DecodeImage(data['maskimage'])
+        if "maskimage" in data:
+            maskimage = base64DecodeImage(data['maskimage'])
+        else:
+            maskimage = alphaToMask(initimage);
 
         print('inpaint')
         print(f'Prompt: {prompt}')
