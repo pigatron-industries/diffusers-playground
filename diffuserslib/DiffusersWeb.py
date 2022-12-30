@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
-from .DiffusersUtils import tiledImageToImage, tiledImageToImageMultipass
+from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass
 from .ImageUtils import base64EncodeImage, base64DecodeImage
 from .ImageTools import ImageTools
 import json
@@ -119,6 +119,8 @@ class DiffusersView(FlaskView):
         scale = data.get("scale", 9)
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
         method = data.get("methd", "multipass")
+        offsetx = data.get("offsetx", 0)
+        offsety = data.get("offsetx", 0)
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
@@ -130,9 +132,12 @@ class DiffusersView(FlaskView):
         outputimages = []
         for i in range(0, batch):
             if (method=="singlepass"):
-                outimage, usedseed = tiledImageToImage(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+                outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                             scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128, 
+                                                             offsetx=offsetx, offsety=offsety)
             elif (method=="multipass"):
-                outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+                outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
             elif (method=="inpaint"):
                 pass #TODO
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
