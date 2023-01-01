@@ -68,12 +68,20 @@ class RandomPromptProcessor(Argument):
     def randomiseFromDict(self, prompt):
         # randomise from dictionary of items defined outside of prompt _colour_
         out_prompt = prompt
-        for modifiername, wordlist in self.modifier_dict.items():
-            if f'_{modifiername}_' in out_prompt:
-                randomword = wordlist[random.randint(0, len(wordlist)-1)]
-                out_prompt = out_prompt.replace(f'_{modifiername}_', randomword)
-            if f'__{modifiername}__' in out_prompt:
-                out_prompt = out_prompt.replace(f'__{modifiername}__', self.randomCombo(wordlist))
+
+        tokenised_brackets = re.findall(r'_.*?_', out_prompt)
+        for bracket in tokenised_brackets:
+            modifiername = bracket[1:-1]
+            options = self.modifier_dict[modifiername]
+            randomoption = options[random.randint(0, len(options)-1)]
+            out_prompt = out_prompt.replace(bracket, randomoption, 1)
+
+        tokenised_brackets = re.findall(r'__.*?__', out_prompt)
+        for bracket in tokenised_brackets:
+            modifiername = bracket[1:-1]
+            options = self.modifier_dict[modifiername]
+            out_prompt = out_prompt.replace(f'__{modifiername}__', self.randomCombo(wordlist))
+
         return out_prompt
 
 
