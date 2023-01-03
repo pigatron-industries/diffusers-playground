@@ -95,9 +95,19 @@ def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, sca
     return image, seed
 
 
-def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale,  scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
-    image, _ = tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
-    offsetx = int((tilewidth - overlap)/2)
-    offsety = int((tileheight - overlap)/2)
-    image, seed = tiledImageToImageOffset(pipelines, image, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap, offsetx, offsety)
-    return image, seed
+def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
+                               tilewidth=640, tileheight=640, overlap=128, passes=2, strengthMult=0.5):
+    offsetEven = (0, 0)
+    offsetOdd = (int((tilewidth - overlap)/2), int((tileheight - overlap)/2))
+    image = initimg
+
+    for i in range(0, passes):
+        if (i%2==0):
+            offset = offsetEven
+        else:
+            offset = offsetOdd
+        strength = strength * strengthMult
+        image, usedseed = tiledImageToImageOffset(pipelines, initimg=image, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, 
+                                                  seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offset[0], offsety=offset[1])
+
+    return image, usedseed
