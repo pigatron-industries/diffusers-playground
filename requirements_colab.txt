@@ -1,6 +1,6 @@
 # diffusers
 huggingface_hub==0.11.0
-diffusers==0.10.2
+diffusers==0.11.1
 transformers==4.25.1
 accelerate==0.14.0
 ftfy==6.1.1

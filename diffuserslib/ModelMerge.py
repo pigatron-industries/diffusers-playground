@@ -11,8 +11,15 @@ def chdirDiffuserScripts():
 def mergeModels(file_path, model_a, model_b, alpha, fp16):
     model_0 = torch.load(f'{file_path}/{model_a}')
     model_1 = torch.load(f'{file_path}/{model_b}')
-    theta_0 = model_0['state_dict']
-    theta_1 = model_1['state_dict']
+    if "state_dict" in model_0:
+        theta_0 = model_0['state_dict']
+    else:
+        theta_0 = model_0
+
+    if "state_dict" in model_1:
+        theta_1 = model_1['state_dict']
+    else:
+        theta_1 = model_1
 
     filename = f'{model_a[:-5]}_{model_b[:-5]}_{alpha}.ckpt'
 
