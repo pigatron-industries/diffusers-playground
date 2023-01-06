@@ -66,7 +66,7 @@ def getHuggingFacePresetsList():
     # 1.5
     #                model                                            base                       fp16   phrase                vae
     presets.addModel('runwayml/stable-diffusion-v1-5',                DiffusersBaseModel.sd_1_5, True,  None,                 AUTOENCODER_MODEL_1_5)
-    presets.addModel('hassanblend/hassanblend1.4',                    DiffusersBaseModel.sd_1_5, False, None,                 AUTOENCODER_MODEL_1_5)
+    presets.addModel('hassanblend/hassanblend1.5',                    DiffusersBaseModel.sd_1_5, False, None,                 AUTOENCODER_MODEL_1_5)
     presets.addModel('Linaqruf/anything-v3.0',                        DiffusersBaseModel.sd_1_5, False, None,                 None)
     presets.addModel('nitrosocke/redshift-diffusion',                 DiffusersBaseModel.sd_1_5, False, 'redshift style',     AUTOENCODER_MODEL_1_5)
     presets.addModel('Fictiverse/Stable_Diffusion_Microscopic_model', DiffusersBaseModel.sd_1_5, False, 'microscopic',        AUTOENCODER_MODEL_1_5)
