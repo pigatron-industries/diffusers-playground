@@ -12,6 +12,7 @@ from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .DiffusersModelPresets import DiffusersModelList
 from .StringUtils import findBetween
+from .ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -35,6 +36,7 @@ class DiffusersPipelines:
 
     def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True):
         self.localmodelpath = localmodelpath
+        self.localmodelcache = getModelsDir()
         self.device = device
         self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.textToImagePipeline = None
@@ -58,12 +60,10 @@ class DiffusersPipelines:
         self.presets.addModels(presets)
 
     
-    def addPreset(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, local=False):
-        if(local):
+    def addPreset(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+        if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
-        else:
-            modelpath = None
-        self.presets.addModel(modelid, base, fp16, stylephrase, vae, autocast, modelpath)
+        self.presets.addModel(modelid, base, fp16=fp16, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
@@ -145,9 +145,20 @@ class DiffusersPipelines:
         return args
 
 
+    def getModel(self, modelid):
+        preset = self.presets.getModel(modelid)
+        if(preset.location == 'url' and preset.modelpath.startswith('http')):
+            localmodelpath = self.localmodelcache + '/' + modelid
+            if (not os.path.isdir(localmodelpath)):
+                downloadModel(preset.modelpath, modelid)
+                convertToDiffusers(modelid)
+            preset.modelpath = localmodelpath
+        return preset
+
+
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
         print(f"Creating text to image pipeline from model {model}")
-        self.textToImagePreset = self.presets.getModel(model)
+        self.textToImagePreset = self.getModel(model)
         args = self.createArgs(self.textToImagePreset)
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
@@ -174,7 +185,7 @@ class DiffusersPipelines:
 
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
         print(f"Creating image to image pipeline from model {model}")
-        self.imageToImagePreset = self.presets.getModel(model)
+        self.imageToImagePreset = self.getModel(model)
         args = self.createArgs(self.imageToImagePreset)
         self.imageToImagePipeline = StableDiffusionImg2ImgPipeline.from_pretrained(self.imageToImagePreset.modelpath, **args).to(self.device)
         self.imageToImagePipeline.enable_attention_slicing()
@@ -194,7 +205,7 @@ class DiffusersPipelines:
 
     def createDepthToImagePipeline(self, model=DEFAULT_DEPTHTOIMAGE_MODEL):
         print(f"Creating depth to image pipeline from model {model}")
-        self.depthToImagePreset = self.presets.getModel(model)
+        self.depthToImagePreset = self.getModel(model)
         args = self.createArgs(self.depthToImagePreset)
         self.depthToImagePipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(self.depthToImagePreset.modelpath, **args).to(self.device)
         self.depthToImagePipeline.enable_attention_slicing()
@@ -214,7 +225,7 @@ class DiffusersPipelines:
 
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
         print(f"Creating inpainting pipeline from model {model}")
-        self.inpaintingPreset = self.presets.getModel(model)
+        self.inpaintingPreset = self.getModel(model)
         args = self.createArgs(self.inpaintingPreset)
         self.inpaintingPipeline = StableDiffusionInpaintPipeline.from_pretrained(self.inpaintingPreset.modelpath, **args).to(self.device)
         self.inpaintingPipeline.enable_attention_slicing()
@@ -235,7 +246,7 @@ class DiffusersPipelines:
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
         print(f"Creating upscale pipeline from model {model}")
-        self.upscalePreset = self.presets.getModel(model)
+        self.upscalePreset = self.getModel(model)
         args = {}
         args['torch_dtype'] = torch.float16
         if(self.upscalePreset.fp16):

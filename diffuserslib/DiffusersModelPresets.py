@@ -10,13 +10,15 @@ class DiffusersBaseModel:
  
 
 class DiffusersModel:
-    def __init__(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, modelpath=None):
+    def __init__(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         self.modelid = modelid
         self.base = base
         self.fp16 = fp16
         self.stylephrase = stylephrase
         self.vae = vae
         self.autocast = autocast
+        self.location = location
+        print(modelpath)
         if(modelpath is None):
             self.modelpath = modelid
         else:
@@ -27,8 +29,8 @@ class DiffusersModelList:
     def __init__(self):
         self.models = {}
 
-    def addModel(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, modelpath=None):
-        self.models[modelid] = DiffusersModel(modelid, base, fp16, stylephrase, vae, autocast, modelpath)
+    def addModel(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+        self.models[modelid] = DiffusersModel(modelid, base, fp16=fp16, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
     def addModels(self, models):
         self.models.update(models.models)

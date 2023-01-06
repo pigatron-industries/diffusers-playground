@@ -1,6 +1,6 @@
 import torch
 import os, subprocess, sys
-from urllib.request import urlretrieve
+import urllib.request as request
 from urllib.parse import urlparse
 
 
@@ -66,17 +66,19 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def convertToDiffusers(filename):
+def convertToDiffusers(modelname):
+    print("Converting model to Diffusers")
     chdirDiffuserScripts()
-    modelpath = getModelsDir() + "/" + filename
+    modelpath = getModelsDir() + "/" + modelname + ".ckpt"
     dumpFolder = modelpath[:-5]
     runcmd(['python', 'convert_original_stable_diffusion_to_diffusers.py', '--checkpoint_path', modelpath, '--dump_path', dumpFolder, '--extract_ema'])
 
 
-def downloadModel(url):
+def downloadModel(url, modelname):
+    print("Downloading model from " + url)
     chdirModels()
-    parsed = urlparse(url)
-    filename = os.path.basename(parsed.path)
-    urlretrieve(url, filename)
-    return filename
-
+    filename =  modelname+".ckpt"
+    opener = request.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+    request.install_opener(opener)
+    request.urlretrieve(url, filename)
