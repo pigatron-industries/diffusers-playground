@@ -62,7 +62,7 @@ def mergeModels(file_path, model_a, model_b, alpha, fp16):
     return f'{file_path}/{filename}'
 
 
-def runcmd(cmd, shell=False):
+def runcmd(cmd, shell=True):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
@@ -70,8 +70,9 @@ def convertToDiffusers(modelname):
     chdirDiffuserScripts()
     modelpath = getModelsDir() + "/" + modelname + ".ckpt"
     dumpFolder = modelpath[:-5]
-    print(f"Converting model to Diffusers, ckpt path: {modelpath}, diffusers folder: {dumpFolder}")
-    runcmd(['python', 'convert_original_stable_diffusion_to_diffusers.py', '--checkpoint_path', modelpath, '--dump_path', dumpFolder, '--extract_ema'])
+    print(f"Converting model to Diffusers")
+    print(f'python convert_original_stable_diffusion_to_diffusers.py --checkpoint_path {modelpath} --dump_path {dumpFolder} --extract_ema')
+    runcmd([f'python convert_original_stable_diffusion_to_diffusers.py --checkpoint_path {modelpath} --dump_path {dumpFolder} --extract_ema'])
 
 
 def downloadModel(url, modelname):

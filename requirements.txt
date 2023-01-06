@@ -7,6 +7,10 @@ ftfy==6.1.1
 torchvision
 ipywidgets
 
+# diffusers conversion script
+OmegaConf
+pytorch-lightning
+
 # web
 flask
 flask_classful

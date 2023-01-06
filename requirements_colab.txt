@@ -5,6 +5,10 @@ transformers==4.25.1
 accelerate==0.14.0
 ftfy==6.1.1
 
+# diffusers conversion script
+OmegaConf
+pytorch-lightning
+
 # esrgan
 opencv-python
 typer

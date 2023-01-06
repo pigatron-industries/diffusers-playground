@@ -18,7 +18,6 @@ class DiffusersModel:
         self.vae = vae
         self.autocast = autocast
         self.location = location
-        print(modelpath)
         if(modelpath is None):
             self.modelpath = modelid
         else:
