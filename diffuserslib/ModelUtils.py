@@ -67,10 +67,10 @@ def runcmd(cmd, shell=False):
 
 
 def convertToDiffusers(modelname):
-    print("Converting model to Diffusers")
     chdirDiffuserScripts()
     modelpath = getModelsDir() + "/" + modelname + ".ckpt"
     dumpFolder = modelpath[:-5]
+    print(f"Converting model to Diffusers, ckpt path: {modelpath}, diffusers folder: {dumpFolder}")
     runcmd(['python', 'convert_original_stable_diffusion_to_diffusers.py', '--checkpoint_path', modelpath, '--dump_path', dumpFolder, '--extract_ema'])
 
 
