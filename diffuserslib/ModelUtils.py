@@ -1,11 +1,23 @@
 import torch
 import os, subprocess, sys
+from urllib.request import urlretrieve
+from urllib.parse import urlparse
 
 
 def chdirDiffuserScripts():
     filepath = os.path.dirname(os.path.realpath(__file__))
     dir = os.path.normpath(os.path.join(filepath, "../workspace/src/diffusers/scripts"))
     os.chdir(dir)
+
+
+def getModelsDir():
+    filepath = os.path.dirname(os.path.realpath(__file__))
+    dir = os.path.normpath(os.path.join(filepath, "../workspace/models"))
+    return dir
+
+
+def chdirModels():
+    os.chdir(getModelsDir())
 
 
 def mergeModels(file_path, model_a, model_b, alpha, fp16):
@@ -48,3 +60,23 @@ def mergeModels(file_path, model_a, model_b, alpha, fp16):
 
     print(' ===============Merge Complete===============')
     return f'{file_path}/{filename}'
+
+
+def runcmd(cmd, shell=False):
+    print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
+
+
+def convertToDiffusers(filename):
+    chdirDiffuserScripts()
+    modelpath = getModelsDir() + "/" + filename
+    dumpFolder = modelpath[:-5]
+    runcmd(['python', 'convert_original_stable_diffusion_to_diffusers.py', '--checkpoint_path', modelpath, '--dump_path', dumpFolder, '--extract_ema'])
+
+
+def downloadModel(url):
+    chdirModels()
+    parsed = urlparse(url)
+    filename = os.path.basename(parsed.path)
+    urlretrieve(url, filename)
+    return filename
+

@@ -7,6 +7,7 @@ def runcmd(cmd, shell=False):
 def setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=False):
     runcmd(['mkdir workspace'], True)
     os.chdir("workspace")
+    os.mkdir("models")
     runcmd('pwd')
 
     if(esrgan):
