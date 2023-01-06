@@ -99,7 +99,7 @@ class DiffusersPipelines:
 
 
     def loadTextEmbeddings(self, directory, model=DEFAULT_TEXTTOIMAGE_MODEL):
-        preset = self.presets.getModel(model)
+        preset = self.getModel(model)
         embeddingspath = directory + '/' + preset.base
         print('loading text embeddings from path ' + embeddingspath)
         self.tokenizers[preset.base] = CLIPTokenizer.from_pretrained(preset.modelpath, subfolder='tokenizer', torch_dtype=torch.float16)
