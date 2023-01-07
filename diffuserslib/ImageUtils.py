@@ -26,12 +26,11 @@ def alphaToMask(image):
     return maskimage;
 
 
-def maskToAlpha(image, mask):
-    # use mask to create an alpha channel on image
-    imr, img, imb = image.split()
-    mmr = mask.split()
-    outimage = Image.merge('RGBA', [imr, img, imb, mmr])
-    return outimage
+def compositeImages(foreground_image, background_image):
+    foreground = foreground_image.convert("RGBA")
+    background = background_image.convert("RGBA")
+    background.paste(foreground, (0, 0), foreground)
+    return background
 
 
 # create alpha mask with gradient at overlap

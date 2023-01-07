@@ -13,7 +13,7 @@ from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLI
 from .DiffusersModelPresets import DiffusersModelList
 from .StringUtils import findBetween
 from .ModelUtils import getModelsDir, downloadModel, convertToDiffusers
-from .ImageUtils import maskToAlpha
+from .ImageUtils import compositeImages
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -241,11 +241,7 @@ class DiffusersPipelines:
         with torch.autocast(self.inferencedevice):
             outimage = self.inpaintingPipeline(prompt, image=inimage.convert("RGB"), mask_image=maskimage.convert("RGB"), 
                                             negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        
-        outimagealpha = maskToAlpha(outimage, maskimage)
-        inimage.alpha_composite(outimagealpha, (0, 0))
-
-        return inimage, seed
+        return compositeImages(inimage, outimage), seed
 
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
