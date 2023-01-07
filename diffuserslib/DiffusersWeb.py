@@ -180,8 +180,7 @@ class DiffusersView(FlaskView):
                                                   scale=scale, scheduler=scheduler, seed=seed, overlap=128)
             else:
                 outimage, usedseed = self.pipelines.inpaint(inimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
-                compositeImages(initimage, outimage, maskimage)
-            display(outimage)
+                outimage = compositeImages(initimage, outimage, maskimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
