@@ -59,10 +59,7 @@ def compositeImages(foreground, background, mask, maskDilation=21, maskFeather=1
     mask = mask.convert("L")
     dilated_mask = mask.filter(ImageFilter.MaxFilter(maskDilation))
     feathered_mask = dilated_mask.filter(ImageFilter.GaussianBlur(radius=maskFeather))
-    composite = Image.new("RGBA", background.size, (0, 0, 0, 0))
-    composite.paste(foreground, (0, 0), feathered_mask)
-    background.paste(composite, (0, 0), composite)
-    return background
+    return Image.composite(foreground, background, feathered_mask)
 
 
 # create alpha mask with gradient at overlap
