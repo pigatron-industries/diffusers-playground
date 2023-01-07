@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 from io import BytesIO
 import base64
 
@@ -44,12 +44,22 @@ def invertAlpha(image, target):
     return img, target_img
 
 
-def compositeImages(foreground, background, mask):
+def removeAlpha(image):
+    rgb_image = Image.new("RGB", image.size, (0, 0, 0))
+    for x in range(image.width):
+        for y in range(image.height):
+            r, g, b, a = image.getpixel((x, y))
+            rgb_image.putpixel((x, y), (r, g, b))
+    return rgb_image
+
+
+def compositeImages(foreground, background, mask, maskDilation=10):
     foreground = foreground.convert("RGBA")
     background = background.convert("RGBA")
     mask = mask.convert("L")
+    dilated_mask = mask.filter(ImageFilter.MaxFilter(maskDilation))
     composite = Image.new("RGBA", background.size, (0, 0, 0, 0))
-    composite.paste(foreground, (0, 0), mask)
+    composite.paste(foreground, (0, 0), dilated_mask)
     background.paste(composite, (0, 0), composite)
     return background
 
