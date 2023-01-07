@@ -44,7 +44,7 @@ def invertAlpha(image, target):
     return img, target_img
 
 
-def compositeImages(foreground_image, background_image, mask):
+def compositeImages(foreground, background, mask):
     foreground = foreground.convert("RGBA")
     background = background.convert("RGBA")
     mask = mask.convert("RGBA")
