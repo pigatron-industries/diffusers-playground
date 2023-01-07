@@ -2,6 +2,8 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 import base64
 
+from IPython.display import display
+
 def base64EncodeImage(image):
     buffered = BytesIO()
     image.save(buffered, format="PNG")
@@ -15,14 +17,17 @@ def base64DecodeImage(b64image):
     return image
 
 
-def alphaToMask(image):
+def alphaToMask(image, smooth=False):
     maskimage = Image.new(image.mode, (image.width, image.height))
     maskimage.paste((0, 0, 0), [0, 0, image.width, image.height])
     for x in range(image.width):
         for y in range(image.height):
-            pixel = image.getpixel((x, y))
-            if (pixel[3] < 255):
-                maskimage.putpixel((x, y), (255, 255, 255))
+            r, g, b, a = image.getpixel((x, y))
+            if (smooth):
+                if (a < 255):
+                    maskimage.putpixel((x, y), (255, 255, 255))
+            else:
+                maskimage.putpixel((x, y), 255-a)
     return maskimage;
 
 
@@ -34,7 +39,7 @@ def invertAlpha(image, target):
             r, g, b, a = img.getpixel((x, y))
             r_t, g_t, b_t, a_t = target_img.getpixel((x, y))
             target_img.putpixel((x, y), (r_t, g_t, b_t, 255 - a))
-    return target
+    return target_img
 
 
 def compositeImages(foreground_image, background_image, inverted=False):
