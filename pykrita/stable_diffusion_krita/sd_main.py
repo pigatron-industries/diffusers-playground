@@ -969,7 +969,7 @@ def Inpaint():
     DataAsString=str(ba,"ascii")
     SDConfig.load(SDConfig)
     image = image.scaled(384, 384, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # preview smaller
-    dlg = SDDialog("inpainting",image)
+    dlg = SDDialog("inpaint",image)
     dlg.resize(900,200)
 
     if dlg.exec():
