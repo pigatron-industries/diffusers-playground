@@ -27,9 +27,12 @@ def alphaToMask(image):
 
 
 def compositeImages(foreground_image, background_image):
+    # alpha channel must be on background and is inverted
     foreground = foreground_image.convert("RGBA")
     background = background_image.convert("RGBA")
-    background.paste(foreground, (0, 0), foreground)
+    composite = Image.new("RGBA", background.size, (0, 0, 0, 0))
+    composite.paste(foreground, (0, 0), background)
+    background.paste(composite, (0, 0), composite)
     return background
 
 
