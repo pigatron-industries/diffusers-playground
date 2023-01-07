@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_classful import FlaskView, route
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams
-from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask
+from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, compositeImages
 from .ImageTools import ImageTools
 import json
 
@@ -180,6 +180,7 @@ class DiffusersView(FlaskView):
                                                   scale=scale, scheduler=scheduler, seed=seed, overlap=128)
             else:
                 outimage, usedseed = self.pipelines.inpaint(inimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                compositeImages(initimage, outimage, maskimage)
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 

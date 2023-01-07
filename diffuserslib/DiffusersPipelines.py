@@ -241,7 +241,7 @@ class DiffusersPipelines:
         with torch.autocast(self.inferencedevice):
             outimage = self.inpaintingPipeline(prompt, image=inimage.convert("RGB"), mask_image=maskimage.convert("RGB"), 
                                             negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        return compositeImages(outimage, inimage, inverted=True), seed
+        return outimage, seed
 
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
