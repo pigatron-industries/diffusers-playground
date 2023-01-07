@@ -13,6 +13,7 @@ from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLI
 from .DiffusersModelPresets import DiffusersModelList
 from .StringUtils import findBetween
 from .ModelUtils import getModelsDir, downloadModel, convertToDiffusers
+from .ImageUtils import maskToAlpha
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -234,14 +235,17 @@ class DiffusersPipelines:
     def inpaint(self, inimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
         if (self.inpaintingPipeline is None):
             raise Exception('inpainting pipeline not loaded')
-        inimage = inimage.convert("RGB")
-        maskimage = maskimage.convert("RGB")
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.inpaintingPipeline)
         with torch.autocast(self.inferencedevice):
-            image = self.inpaintingPipeline(prompt, image=inimage, mask_image=maskimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        return image, seed
+            outimage = self.inpaintingPipeline(prompt, image=inimage.convert("RGB"), mask_image=maskimage.convert("RGB"), 
+                                            negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+        
+        outimagealpha = maskToAlpha(outimage, maskimage)
+        inimage.alpha_composite(outimagealpha, (0, 0))
+
+        return inimage, seed
 
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):

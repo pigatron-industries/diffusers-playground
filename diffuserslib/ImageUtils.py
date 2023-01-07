@@ -18,12 +18,20 @@ def base64DecodeImage(b64image):
 def alphaToMask(image):
     maskimage = Image.new(image.mode, (image.width, image.height))
     maskimage.paste((0, 0, 0), [0, 0, image.width, image.height])
-    for i in range(image.width):
-        for j in range(image.height):
-            pixel = image.getpixel((i, j))
+    for x in range(image.width):
+        for y in range(image.height):
+            pixel = image.getpixel((x, y))
             if (pixel[3] < 255):
-                maskimage.putpixel((i, j), (255, 255, 255))
+                maskimage.putpixel((x, y), (255, 255, 255))
     return maskimage;
+
+
+def maskToAlpha(image, mask):
+    # use mask to create an alpha channel on image
+    imr, img, imb = image.split()
+    mmr = mask.split()
+    outimage = Image.merge('RGBA', [imr, img, imb, mmr])
+    return outimage
 
 
 # create alpha mask with gradient at overlap
