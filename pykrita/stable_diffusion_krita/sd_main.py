@@ -339,13 +339,13 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.prompt)
         self.modifiers= ModifierDialog.modifierInput(self,formLayout)
 
-        if (data["action"] not in ("upscale")):
+        if (not data["action"] == ("upscale")):
             formLayout.addWidget(QLabel("Negative"))
             self.negprompt = QLineEdit()
             self.negprompt.setText(data.get("negprompt", ""))
             formLayout.addWidget(self.negprompt) 
 
-        if (data["action"] in ("upscale")):
+        if (data["action"] == "upscale"):
             upscalemethod_label=QLabel("Upscale method")
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
@@ -356,7 +356,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(upscale_label)
             self.upscale_amount=self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
 
-        if (data["action"] in ("img2imgTiled")):
+        if (data["action"] == "img2imgTiled"):
             tilemethod_label=QLabel("Tile method")
             formLayout.addWidget(tilemethod_label)
             self.tile_method = QComboBox()
@@ -374,7 +374,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(steps_label)        
             self.steps=self.addSlider(formLayout,data["steps"],1,250,5,1)
 
-        if (data["action"] not in ("upscale")):
+        if (not data["action"] == "upscale"):
             scale_label=QLabel("Guidance Scale")
             scale_label.setToolTip("how strongly the image should follow the prompt")
             formLayout.addWidget(scale_label)        
