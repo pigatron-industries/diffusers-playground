@@ -23,6 +23,11 @@ class DiffusersView(FlaskView):
         return 'stable-diffusion'
 
 
+    @route("/api/models", methods=["GET"])
+    def models(self):
+        return jsonify(self.pipelines.presets.models)
+
+
     @route("/api/txt2img", methods=["POST"])
     def txt2img(self):
         r = request
