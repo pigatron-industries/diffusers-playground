@@ -234,15 +234,15 @@ class DiffusersPipelines:
         self.inpaintingPipeline.enable_attention_slicing()
 
 
-    def inpaint(self, inimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
+    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
         if (self.inpaintingPipeline is None):
             raise Exception('inpainting pipeline not loaded')
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.inpaintingPipeline)
         with torch.autocast(self.inferencedevice):
-            outimage = self.inpaintingPipeline(prompt, image=inimage.convert("RGB"), mask_image=maskimage.convert("RGB"), 
-                                            negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+            outimage = self.inpaintingPipeline(prompt, image=initimage.convert("RGB"), mask_image=maskimage.convert("RGB"), 
+                                               negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
         return outimage, seed
 
 

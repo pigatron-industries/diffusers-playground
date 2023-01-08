@@ -1,6 +1,6 @@
 from PIL import Image
 import math, random
-from .ImageUtils import createMask
+from .ImageUtils import createMask, compositeImages
 from .DiffusersPipelines import MAX_SEED
 from huggingface_hub import login
 
@@ -44,6 +44,13 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
     return merged_image, seed
 
 
+def compositedInpaint(pipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3):
+    """ Standard inpaint but the result is composited back to the original using a feathered mask """
+    outimage, usedseed = pipelines.inpaint(initmage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed)
+    outimage = compositeImages(outimage, initimage, maskimage, maskDilation=maskDilation, maskFeather=maskFeather)
+    return outimage, usedseed
+
+
 def tiledInpaint(pipelines, initimg, maskimg, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, tilewidth=512, tileheight=512, overlap=128):
     if(seed is None):
         seed = random.randint(0, MAX_SEED)
@@ -68,7 +75,7 @@ def tiledInpaint(pipelines, initimg, maskimg, prompt, negprompt, scale, steps=50
             display(mask_slice)
 
             # TODO check if mask has any white in this slice, if all black then no inpainting necessary
-            imageout_slice, _ = pipelines.inpaint(image_slice, mask_slice, prompt, negprompt, steps, scale, seed, scheduler)
+            imageout_slice, _ = compositedInpaint(pipelines, image_slice, mask_slice, prompt, negprompt, steps, scale, seed, scheduler)
 
             display(imageout_slice)
             
