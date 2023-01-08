@@ -23,7 +23,7 @@ class DiffusersModel:
         else:
             self.modelpath = modelpath
 
-    def serialize(self):
+    def toDict(self):
         return {
             'modelid': self.modelid, 
             'base': self.base,

@@ -25,7 +25,8 @@ class DiffusersView(FlaskView):
 
     @route("/api/models", methods=["GET"])
     def models(self):
-        return jsonify(self.pipelines.presets.models)
+        models = [model.toDict() for model in self.pipelines.presets.models]
+        return jsonify(models)
 
 
     @route("/api/txt2img", methods=["POST"])
