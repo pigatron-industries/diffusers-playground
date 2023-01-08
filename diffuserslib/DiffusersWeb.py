@@ -43,6 +43,10 @@ class DiffusersView(FlaskView):
         scheduler = data.get("scheduler", "DPMSolverMultistepScheduler")
         batch = data.get("batch", 1)
 
+        model = data.get["model", None]
+        if(model is not None):
+            self.pipelines.createTextToImagePipeline(model)
+
         print('txt2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
@@ -71,6 +75,10 @@ class DiffusersView(FlaskView):
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
+        model = data.get["model", None]
+        if(model is not None):
+            self.pipelines.createImageToImagePipeline(model)
+
         print('img2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
@@ -98,6 +106,10 @@ class DiffusersView(FlaskView):
         scheduler = data.get("scheduler", "EulerDiscreteScheduler")
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
+
+        model = data.get["model", None]
+        if(model is not None):
+            self.pipelines.createDepthToImagePipeline(model)
 
         print('depth2img')
         print(f'Prompt: {prompt}')
@@ -130,6 +142,10 @@ class DiffusersView(FlaskView):
         offsety = data.get("offsety", 0)
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
+
+        model = data.get["model", None]
+        if(model is not None):
+            self.pipelines.createImageToImagePipeline(model)
 
         print('img2imgTiled')
         print(f'Method: {method}')
@@ -172,6 +188,10 @@ class DiffusersView(FlaskView):
             maskimage = base64DecodeImage(data['maskimage'])
         else:
             maskimage = alphaToMask(initimage);
+
+        model = data.get["model", None]
+        if(model is not None):
+            self.pipelines.createInpaintPipeline(model)
 
         print('inpaint')
         print(f'Prompt: {prompt}')
