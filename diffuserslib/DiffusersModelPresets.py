@@ -23,6 +23,13 @@ class DiffusersModel:
         else:
             self.modelpath = modelpath
 
+    def serialize(self):
+        return {
+            'modelid': self.modelid, 
+            'base': self.base,
+            'stylephrase': self.stylephrase,
+        }
+
 
 class DiffusersModelList:
     def __init__(self):
