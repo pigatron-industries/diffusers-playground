@@ -25,7 +25,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/models", methods=["GET"])
     def models(self):
-        models = [model.toDict() for model in self.pipelines.presets.models]
+        models = [model.toDict() for model in self.pipelines.presets.models.values()]
         return jsonify(models)
 
 

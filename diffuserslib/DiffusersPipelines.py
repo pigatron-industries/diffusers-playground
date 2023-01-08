@@ -160,6 +160,8 @@ class DiffusersPipelines:
 
 
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
+        if(self.textToImagePreset is not None and self.textToImagePreset.modelid == model):
+            return
         print(f"Creating text to image pipeline from model {model}")
         self.textToImagePreset = self.getModel(model)
         args = self.createArgs(self.textToImagePreset)
@@ -187,6 +189,8 @@ class DiffusersPipelines:
 
 
     def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
+        if(self.imageToImagePreset is not None and self.imageToImagePreset.modelid == model):
+            return
         print(f"Creating image to image pipeline from model {model}")
         self.imageToImagePreset = self.getModel(model)
         args = self.createArgs(self.imageToImagePreset)
@@ -207,6 +211,8 @@ class DiffusersPipelines:
 
 
     def createDepthToImagePipeline(self, model=DEFAULT_DEPTHTOIMAGE_MODEL):
+        if(self.depthToImagePreset is not None and self.depthToImagePreset.modelid == model):
+            return
         print(f"Creating depth to image pipeline from model {model}")
         self.depthToImagePreset = self.getModel(model)
         args = self.createArgs(self.depthToImagePreset)
@@ -227,6 +233,8 @@ class DiffusersPipelines:
 
 
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
+        if(self.inpaintingPreset is not None and self.inpaintingPreset.modelid == model):
+            return
         print(f"Creating inpainting pipeline from model {model}")
         self.inpaintingPreset = self.getModel(model)
         args = self.createArgs(self.inpaintingPreset)
@@ -247,6 +255,8 @@ class DiffusersPipelines:
 
 
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
+        if(self.upscalePreset is not None and self.upscalePreset.modelid == model):
+            return
         print(f"Creating upscale pipeline from model {model}")
         self.upscalePreset = self.getModel(model)
         args = {}
