@@ -8,6 +8,7 @@ ftfy==6.1.1
 # diffusers conversion script
 OmegaConf
 pytorch-lightning
+safetensors
 
 # esrgan
 opencv-python

@@ -10,6 +10,7 @@ ipywidgets
 # diffusers conversion script
 OmegaConf
 pytorch-lightning
+safetensors
 
 # web
 flask

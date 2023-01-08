@@ -2,6 +2,7 @@ import torch
 import os, subprocess, sys
 import urllib.request as request
 from urllib.parse import urlparse
+from safetensors.torch import load_file
 
 
 def chdirDiffuserScripts():
@@ -66,13 +67,25 @@ def runcmd(cmd, shell=True):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def convertToDiffusers(modelname):
+def convertToDiffusers(modelname, modelsdir=None):
+    if(modelsdir is None):
+        modelsdir = getModelsDir()
     chdirDiffuserScripts()
     modelpath = getModelsDir() + "/" + modelname + ".ckpt"
     dumpFolder = modelpath[:-5]
     print(f"Converting model to Diffusers")
     print(f'python convert_original_stable_diffusion_to_diffusers.py --checkpoint_path {modelpath} --dump_path {dumpFolder} --extract_ema')
     runcmd([f'python convert_original_stable_diffusion_to_diffusers.py --checkpoint_path {modelpath} --dump_path {dumpFolder} --extract_ema'])
+
+
+def convertSafetensorsToCkpt(modelname, modelsdir=None):
+    if(modelsdir is None):
+        modelsdir = getModelsDir()
+    fromfile = modelsdir + "/" + modelname + ".safetensors"
+    tofile = modelsdir + "/" + modelname + ".ckpt"
+    weights = load_file(fromfile, device='cpu')
+    with open(tofile, "wb") as f:
+        torch.save(weights, f)
 
 
 def downloadModel(url, modelname):
