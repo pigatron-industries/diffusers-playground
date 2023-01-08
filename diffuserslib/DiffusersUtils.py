@@ -97,7 +97,7 @@ def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, sca
                             tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0):
     offsetimage = Image.new(initimg.mode, (initimg.width+offsetx, initimg.height+offsety))
     offsetimage.paste(initimg, (offsetx, offsety, offsetx+initimg.width, offsety+initimg.height))
-    outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength/2, scale, scheduler, seed, tilewidth, tileheight, overlap)
+    outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
     image = outimage.crop((offsetx, offsety, outimage.width, outimage.height))
     return image, seed
 
