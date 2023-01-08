@@ -113,8 +113,8 @@ def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, 
             offset = offsetEven
         else:
             offset = offsetOdd
-        strength = strength * strengthMult
         image, usedseed = tiledImageToImageOffset(pipelines, initimg=image, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, 
                                                   seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offset[0], offsety=offset[1])
+        strength = strength * strengthMult
 
     return image, usedseed
