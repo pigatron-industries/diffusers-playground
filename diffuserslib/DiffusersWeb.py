@@ -31,6 +31,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/txt2img", methods=["POST"])
     def txt2img(self):
+        print('=== txt2img ===')
         r = request
         data = json.loads(r.data)
         seed = data.get("seed", None)
@@ -45,9 +46,9 @@ class DiffusersView(FlaskView):
 
         model = data.get["model", None]
         if(model is not None):
+            print(f'Model: {model}')
             self.pipelines.createTextToImagePipeline(model)
 
-        print('txt2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
@@ -64,6 +65,7 @@ class DiffusersView(FlaskView):
     
     @route("/api/img2img", methods=["POST"])
     def img2img(self):
+        print('=== img2img ===')
         r = request
         data = json.loads(r.data)
         seed = data.get("seed", None)
@@ -75,11 +77,11 @@ class DiffusersView(FlaskView):
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
-        model = data.get["model", None]
+        model = data.get("model", None)
         if(model is not None):
+            print(f'Model: {model}')
             self.pipelines.createImageToImagePipeline(model)
 
-        print('img2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
@@ -96,6 +98,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/depth2img", methods=["POST"])
     def depth2img(self):
+        print('=== depth2img ===')
         r = request
         data = json.loads(r.data)
         seed = data.get("seed", None)
@@ -107,11 +110,11 @@ class DiffusersView(FlaskView):
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
-        model = data.get["model", None]
+        model = data.get("model", None)
         if(model is not None):
+            print(f'Model: {model}')
             self.pipelines.createDepthToImagePipeline(model)
 
-        print('depth2img')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
@@ -128,6 +131,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/img2imgTiled", methods=["POST"])
     def img2imgTiled(self):
+        print('=== img2imgTiled ===')
         r = request
         data = json.loads(r.data)
         seed = data.get("seed", None)
@@ -143,11 +147,11 @@ class DiffusersView(FlaskView):
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
-        model = data.get["model", None]
+        model = data.get("model", None)
         if(model is not None):
+            print(f'Model: {model}')
             self.pipelines.createImageToImagePipeline(model)
 
-        print('img2imgTiled')
         print(f'Method: {method}')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
@@ -174,6 +178,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/inpaint", methods=["POST"])
     def inpaint(self):
+        print('=== inpaint ===')
         r = request
         data = json.loads(r.data)
         seed = data.get("seed", None)
@@ -189,11 +194,11 @@ class DiffusersView(FlaskView):
         else:
             maskimage = alphaToMask(initimage);
 
-        model = data.get["model", None]
+        model = data.get("model", None)
         if(model is not None):
+            print(f'Model: {model}')
             self.pipelines.createInpaintPipeline(model)
 
-        print('inpaint')
         print(f'Prompt: {prompt}')
         print(f'Negative: {negprompt}')
         print(f'Height: {initimage.height}, Width: {initimage.width}')
