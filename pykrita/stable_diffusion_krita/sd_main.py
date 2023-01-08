@@ -51,6 +51,7 @@ class SDConfig:
     height=512    
     dlgData={
         "action": "txt2img",
+        "model": "runwayml/stable-diffusion-v1-5",
         "prompt": "",
         "negprompt": "",
         "seed": "",
@@ -100,6 +101,7 @@ SDConfig.load(SDConfig)
 
 class SDParameters:
     "This is Stable Diffusion Parameter Class"     
+    model = None
     prompt = ""
     negprompt = ""
     steps = 0
@@ -339,6 +341,14 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.prompt)
         self.modifiers= ModifierDialog.modifierInput(self,formLayout)
 
+        if(data["action"] in ("txt2img", "img2img", "img2imgTiled")):
+            formLayout.addWidget(QLabel("Model"))
+            self.model = QComboBox()
+            # TODO get model list from api
+            self.model.addItems(["runwayml/stable-diffusion-v1-5", "realEldenApocalypseA", "HASDX", "darkstorm2150/Protogen_v5.3_Official_Release"])
+            self.model.setCurrentText(data.get("model", "runwayml/stable-diffusion-v1-5"))
+            formLayout.addWidget(self.model)
+
         if (not data["action"] == ("upscale")):
             formLayout.addWidget(QLabel("Negative"))
             self.negprompt = QLineEdit()
@@ -437,23 +447,30 @@ class SDDialog(QDialog):
     # put data from dialog in configuration and save it        
     def setDlgData(self):
 
-        if SDConfig.dlgData["action"] not in ("upscale"):
+        if (not SDConfig.dlgData["action"] == ("upscale")):
             SDConfig.dlgData["prompt"]=self.prompt.text()
             SDConfig.dlgData["negprompt"]=self.negprompt.text()
             SDConfig.dlgData["seed"]=self.seed.text()
             SDConfig.dlgData["scale"]=self.scale.value()/10
             SDConfig.dlgData["modifiers"]=self.modifiers.toPlainText()
             SDConfig.dlgData["scheduler"]=self.scheduler.currentText()
-        
-        if SDConfig.dlgData["action"] in ("txt2img", "img2img", "inpaint"):
+
+        if (SDConfig.dlgData["action"] in ("txt2img", "img2img", "img2imgTiled")):
+            SDConfig.dlgData["model"]=self.model.currentText()
+
+        if (SDConfig.dlgData["action"] in ("txt2img", "img2img", "inpaint")):
             SDConfig.dlgData["num"]=int(self.num.value())
-        if SDConfig.dlgData["action"] in ("img2img", "img2imgTiled"):
+
+        if (SDConfig.dlgData["action"] in ("img2img", "img2imgTiled")):
             SDConfig.dlgData["strength"]=self.strength.value()/100
-        if SDConfig.dlgData["action"] in ("txt2img", "inpaint"):
+
+        if (SDConfig.dlgData["action"] in ("txt2img", "inpaint")):
             SDConfig.dlgData["steps"]=int(self.steps.value())
-        if SDConfig.dlgData["action"] in ("img2imgTiled"):
+
+        if (SDConfig.dlgData["action"] == "img2imgTiled"):
             SDConfig.dlgData["tile_method"]=self.tile_method.currentText()
-        if SDConfig.dlgData["action"] in ("upscale"):
+
+        if (SDConfig.dlgData["action"] == "upscale"):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
 
@@ -653,7 +670,8 @@ def runSD(params: SDParameters):
         method = params.upscale_method
     elif(params.tile_method is not None):
         method = params.tile_method
-    j = {'prompt': params.prompt, \
+    j = { 'model': params.model, \
+        'prompt': params.prompt, \
         'negprompt': params.negprompt, \
         'initimage': params.image64, \
         'steps':params.steps, \
@@ -752,6 +770,7 @@ def TxtToImage():
         if not p.prompt: return        
         p.action="txt2img"
         data=SDConfig.dlgData
+        p.model = data["model"]
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
@@ -791,6 +810,7 @@ def ImageToImage():
         if not p.prompt: return
         data=SDConfig.dlgData
         p.action="img2img"
+        p.model = data["model"]
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
@@ -858,6 +878,7 @@ def TiledImageToImage():
         if not p.prompt: return
         data=SDConfig.dlgData
         p.action="img2imgTiled"
+        p.model = data["model"]
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
