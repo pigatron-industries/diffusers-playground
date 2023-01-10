@@ -46,7 +46,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
 
 def compositedInpaint(pipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
-    outimage, usedseed = pipelines.inpaint(initmage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed)
+    outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed)
     outimage = compositeImages(outimage, initimage, maskimage, maskDilation=maskDilation, maskFeather=maskFeather)
     return outimage, usedseed
 
