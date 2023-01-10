@@ -75,7 +75,7 @@ def tiledInpaint(pipelines, initimg, maskimg, prompt, negprompt, scale, steps=50
             display(mask_slice)
 
             # TODO check if mask has any white in this slice, if all black then no inpainting necessary
-            imageout_slice, _ = compositedInpaint(pipelines, image_slice, mask_slice, prompt, negprompt, steps, scale, seed, scheduler)
+            imageout_slice, _ = compositedInpaint(pipelines, initimage=image_slice, maskimage=mask_slice, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
 
             display(imageout_slice)
             
