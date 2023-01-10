@@ -210,7 +210,7 @@ class DiffusersView(FlaskView):
                 outimage, usedseed = tiledInpaint(self.pipelines, initimg=initimage, maskimg=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, 
                                                   scale=scale, scheduler=scheduler, seed=seed, overlap=128)
             else:
-                outimage, usedseed = compositedInpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
