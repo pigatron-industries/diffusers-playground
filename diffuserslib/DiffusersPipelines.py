@@ -55,8 +55,10 @@ class DiffusersPipelines:
         self.vae = None
         self.tokenizers = {}
         self.text_encoders = {}
+        self.embedded_token_parts = {}
         self.safety_checker = safety_checker
         self.presets = DiffusersModelList()
+        
 
 
     def addPresets(self, presets):
@@ -71,35 +73,7 @@ class DiffusersPipelines:
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
         self.vae = AutoencoderKL.from_pretrained(model)
-
-
-    def loadTextEmbedding(self, embed_file, base, token=None):
-        text_encoder = self.text_encoders[base]
-        tokenizer = self.tokenizers[base]
-        learned_embeds = torch.load(embed_file, map_location="cpu")
-        
-        if ('string_to_param' in learned_embeds):  # pt embedding
-            string_to_token = learned_embeds['string_to_token']
-            trained_token = list(string_to_token.keys())[0]
-            string_to_param = learned_embeds['string_to_param']
-            # I don't know why this tensor contains multiple dimensions, i'm just picking the first one for now
-            learned_embed = string_to_param[trained_token][0] 
-        else: # bin diffusers concept
-            trained_token = list(learned_embeds.keys())[0]
-            learned_embed = learned_embeds[trained_token]
-
-        dtype = text_encoder.get_input_embeddings().weight.dtype
-        learned_embed.to(dtype)
-        if(token is None):
-            token = trained_token
-        print(f"loaded embedding token {token}")
-        num_added_tokens = tokenizer.add_tokens(token)
-        if(num_added_tokens == 0):
-            raise ValueError(f"The tokenizer already contains the token {token}")
-        text_encoder.resize_token_embeddings(len(tokenizer))
-        token_id = tokenizer.convert_tokens_to_ids(token)
-        text_encoder.get_input_embeddings().weight.data[token_id] = learned_embed
-
+            
 
     def loadTextEmbeddings(self, directory, model=DEFAULT_TEXTTOIMAGE_MODEL):
         preset = self.getModel(model)
@@ -113,6 +87,51 @@ class DiffusersPipelines:
             token = findBetween(embed_file, '<', '>', True)
             if (file_path.endswith('.bin') or file_path.endswith('.pt')):
                 self.loadTextEmbedding(file_path, preset.base, token)
+
+
+    def loadTextEmbedding(self, embed_file, base, token=None):
+        learned_embeds = torch.load(embed_file, map_location="cpu")
+        if ('string_to_param' in learned_embeds):  # pt embedding
+            string_to_token = learned_embeds['string_to_token']
+            trained_token = list(string_to_token.keys())[0]
+            if(token is None):
+                token = trained_token
+            string_to_param = learned_embeds['string_to_param']
+            fulltoken = ''
+            for i, learned_embed in enumerate(string_to_param[trained_token]):
+                learned_embed = learned_embed
+                tokenpart = token + i
+                fulltoken = fulltoken + ' ' + tokenpart
+                self.embedded_token_parts[token].append(tokenpart)
+                self.addTextEmbedding(base, tokenpart, learned_embed)
+            self.embedded_token_parts[token] = fulltoken
+        else: # bin diffusers concept
+            trained_token = list(learned_embeds.keys())[0]
+            if(token is None):
+                token = trained_token
+            learned_embed = learned_embeds[trained_token]
+            self.addTextEmbedding(base, token, learned_embed)
+
+
+    def addTextEmbedding(self, base, token, learned_embed):
+        text_encoder = self.text_encoders[base]
+        tokenizer = self.tokenizers[base]
+        dtype = text_encoder.get_input_embeddings().weight.dtype
+        learned_embed.to(dtype)
+        print(f"loaded embedding token {token}")
+        num_added_tokens = tokenizer.add_tokens(token)
+        if(num_added_tokens == 0):
+            raise ValueError(f"The tokenizer already contains the token {token}")
+        text_encoder.resize_token_embeddings(len(tokenizer))
+        token_id = tokenizer.convert_tokens_to_ids(token)
+        text_encoder.get_input_embeddings().weight.data[token_id] = learned_embed
+
+
+    def processPrompt(self, prompt):
+        for token, fulltoken in self.embedded_token_parts.items():
+            if token in prompt:
+                prompt = prompt.replace(token, fulltoken)
+        return prompt
 
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
@@ -177,6 +196,7 @@ class DiffusersPipelines:
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None):
         if (self.textToImagePipeline is None):
             raise Exception('text to image pipeline not loaded')
+        prompt = self.processPrompt()
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
@@ -202,6 +222,7 @@ class DiffusersPipelines:
         if (self.imageToImagePipeline is None):
             raise Exception('image to image pipeline not loaded')
         inimage = inimage.convert("RGB")
+        prompt = self.processPrompt()
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.imageToImagePipeline)
@@ -224,6 +245,7 @@ class DiffusersPipelines:
         if (self.imageToImagePipeline is None):
             raise Exception('depth to image pipeline not loaded')
         inimage = inimage.convert("RGB")
+        prompt = self.processPrompt()
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.depthToImagePipeline)
@@ -245,6 +267,7 @@ class DiffusersPipelines:
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
         if (self.inpaintingPipeline is None):
             raise Exception('inpainting pipeline not loaded')
+        prompt = self.processPrompt()
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.inpaintingPipeline)
@@ -270,6 +293,7 @@ class DiffusersPipelines:
     def upscale(self, inimage, prompt, scheduler=None):
         if (self.upscalePipeline is None):
             raise Exception('upscale pipeline not loaded')
+        prompt = self.processPrompt()
         inimage = inimage.convert("RGB")
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.upscalePipeline)
