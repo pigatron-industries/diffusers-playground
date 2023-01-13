@@ -196,7 +196,7 @@ class DiffusersPipelines:
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None):
         if (self.textToImagePipeline is None):
             raise Exception('text to image pipeline not loaded')
-        prompt = self.processPrompt()
+        prompt = self.processPrompt(prompt)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.textToImagePipeline)
@@ -222,7 +222,7 @@ class DiffusersPipelines:
         if (self.imageToImagePipeline is None):
             raise Exception('image to image pipeline not loaded')
         inimage = inimage.convert("RGB")
-        prompt = self.processPrompt()
+        prompt = self.processPrompt(prompt)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.imageToImagePipeline)
@@ -245,7 +245,7 @@ class DiffusersPipelines:
         if (self.imageToImagePipeline is None):
             raise Exception('depth to image pipeline not loaded')
         inimage = inimage.convert("RGB")
-        prompt = self.processPrompt()
+        prompt = self.processPrompt(prompt)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.depthToImagePipeline)
@@ -267,7 +267,7 @@ class DiffusersPipelines:
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
         if (self.inpaintingPipeline is None):
             raise Exception('inpainting pipeline not loaded')
-        prompt = self.processPrompt()
+        prompt = self.processPrompt(prompt)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.inpaintingPipeline)
@@ -293,7 +293,7 @@ class DiffusersPipelines:
     def upscale(self, inimage, prompt, scheduler=None):
         if (self.upscalePipeline is None):
             raise Exception('upscale pipeline not loaded')
-        prompt = self.processPrompt()
+        prompt = self.processPrompt(prompt)
         inimage = inimage.convert("RGB")
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.upscalePipeline)
