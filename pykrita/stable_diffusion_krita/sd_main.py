@@ -344,8 +344,10 @@ class SDDialog(QDialog):
         if(data["action"] in ("txt2img", "img2img", "img2imgTiled")):
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
-            # TODO get model list from api
-            self.model.addItems(["runwayml/stable-diffusion-v1-5", "realEldenApocalypseA", "HASDX", "darkstorm2150/Protogen_v5.3_Official_Release"])
+            models = getModels()
+            modelids = [model["modelid"] for model in models]
+            modelids.sort()
+            self.model.addItems(modelids)
             self.model.setCurrentText(data.get("model", "runwayml/stable-diffusion-v1-5"))
             formLayout.addWidget(self.model)
 
@@ -628,6 +630,20 @@ def base64ToQImage(data):
      bytearr = QtCore.QByteArray.fromBase64( image64 )
      imagen.loadFromData( bytearr, 'PNG' )      
      return imagen
+
+
+def getModels():
+    endpoint=SDConfig.url
+    endpoint=endpoint.strip("/")
+    endpoint+="/api/models"
+    headers = {
+        "Accept": "application/json",
+    } 
+    req = urllib.request.Request(endpoint, None, headers, method="GET")
+    with urllib.request.urlopen(req) as f:
+        res = f.read()
+    return json.loads(res)
+
 
 def getServerData(action, reqData):
     endpoint=SDConfig.url
