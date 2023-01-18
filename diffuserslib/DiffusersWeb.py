@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
+from threading import Thread
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, compositeImages
@@ -15,6 +16,8 @@ class DiffusersView(FlaskView):
     tools: ImageTools = None
 
     def __init__(self):
+        self.jobThread = None
+        self.jobStatus = { "status":"none", "action":"none" }
         pass
 
 
@@ -29,22 +32,32 @@ class DiffusersView(FlaskView):
         return jsonify(models)
 
 
+    @route("/api/async", methods=["GET"])
+    def getJobAsync(self):
+        return jsonify(self.jobStatus)
+
+
+    @route("/api/async/txt2img", methods=["POST"])
+    def txt2imgAsync(self):
+        # TODO error if job is already running
+        r = request
+        params = json.loads(r.data)
+        self.jobThread = Thread(target = self.txt2imgRun, args=params)
+        self.jobThread.start()
+        self.jobStatus = {"status":"running", "action": "txt2img"}
+        return jsonify(self.jobStatus)
+
+
     @route("/api/txt2img", methods=["POST"])
     def txt2img(self):
-        print('=== txt2img ===')
         r = request
-        data = json.loads(r.data)
-        seed = data.get("seed", None)
-        prompt = data.get("prompt", "")
-        negprompt = data.get("negprompt", "")
-        steps = data.get("steps", 20)
-        scale = data.get("scale", 9)
-        width = data.get("width", 512)
-        height = data.get("height", 512)
-        scheduler = data.get("scheduler", "DPMSolverMultistepScheduler")
-        batch = data.get("batch", 1)
+        params = json.loads(r.data)
+        output = self.txt2imgRun(**params)
+        return jsonify(output)
 
-        model = data.get["model", None]
+    
+    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1):
+        print('=== txt2img ===')
         if(model is not None):
             print(f'Model: {model}')
             self.pipelines.createTextToImagePipeline(model)
@@ -59,8 +72,8 @@ class DiffusersView(FlaskView):
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        output = { "images": outputimages }
-        return jsonify(output)
+        self.jobStatus = { "status":"finished", "action":"txt2img", "images": outputimages }
+        return self.jobStatus
 
     
     @route("/api/img2img", methods=["POST"])
