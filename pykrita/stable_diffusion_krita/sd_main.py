@@ -64,7 +64,10 @@ class SDConfig:
         "scheduler":"DPMSolverMultistepScheduler",
         "upscale_amount": 2,
         "upscale_method": "all",
-        "tile_method": "singlepass"
+        "tile_method": "singlepass",
+        "tile_width": 640,
+        "tile_height": 640,
+        "tile_overlap": 128
     }
 
 
@@ -122,6 +125,10 @@ class SDParameters:
     upscale_amount = 1
     upscale_method = None
     tile_method = None
+    tile_width = None
+    tile_height = None
+    tile_overlap = None
+
 
 def errorMessage(text,detailed):
     msgBox= QMessageBox()
@@ -375,6 +382,15 @@ class SDDialog(QDialog):
             self.tile_method.addItems(['singlepass', 'multipass', 'inpaint_seams'])
             self.tile_method.setCurrentText(data.get("tile_method", "singlepass"))
             formLayout.addWidget(self.tile_method)
+            tilewidth_label=QLabel("Tile width")
+            formLayout.addWidget(tilewidth_label)
+            self.tile_width=createSlider(self, formLayout, data.get("tile_width", 640), 256, 1024, 64, 1)
+            tileheight_label=QLabel("Tile height")
+            formLayout.addWidget(tileheight_label)
+            self.tile_height=createSlider(self, formLayout, data.get("tile_height", 640), 256, 1024, 64, 1)
+            tileoverlap_label=QLabel("Tile overlap")
+            formLayout.addWidget(tileoverlap_label)
+            self.tile_overlap=createSlider(self, formLayout, data.get("tile_overlap", 128), -128, 128, 2, 1)
 
         if (data["action"] in ("img2img", "img2imgTiled")):
             formLayout.addWidget(QLabel("Strength"))
@@ -471,6 +487,9 @@ class SDDialog(QDialog):
 
         if (SDConfig.dlgData["action"] == "img2imgTiled"):
             SDConfig.dlgData["tile_method"]=self.tile_method.currentText()
+            SDConfig.dlgData["tile_width"]=self.tile_width.currentText()
+            SDConfig.dlgData["tile_height"]=self.tile_height.currentText()
+            SDConfig.dlgData["tile_overlap"]=self.tile_overlap.currentText()
 
         if (SDConfig.dlgData["action"] == "upscale"):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
@@ -705,7 +724,10 @@ def runSD(params: SDParameters):
         'amount': params.upscale_amount, \
         'upscale_overlap':64, \
         'inpaint_full_res':True, \
-        'inpainting_mask_invert': 0 \
+        'inpainting_mask_invert': 0, \
+        'tile_width': params.tile_width, \
+        'tile_height': params.tile_height, \
+        'tile_overlap': params.tile_overlap \
         }    
 
     print(j)

@@ -144,6 +144,9 @@ class DiffusersView(FlaskView):
         method = data.get("method", "multipass")
         offsetx = data.get("offsetx", 0)
         offsety = data.get("offsety", 0)
+        tilewidth = data.get("tilewidth", 640)
+        tileheight = data.get("tileheight", 640)
+        tileoverlap = data.get("tileoverlap", 128)
         batch = data.get("batch", 1)
         initimage = base64DecodeImage(data['initimage'])
 
@@ -161,15 +164,15 @@ class DiffusersView(FlaskView):
         for i in range(0, batch):
             if (method=="singlepass"):
                 outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                             scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128, 
+                                                             scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
                                                              offsetx=offsetx, offsety=offsety)
             elif (method=="multipass"):
                 outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128, 
+                                                                scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
                                                                 passes=2, strengthMult=0.5)
             elif (method=="inpaint_seams"):
                 outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=640, tileheight=640, overlap=128)
+                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
         output = { "images": outputimages }
