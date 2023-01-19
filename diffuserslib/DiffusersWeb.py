@@ -58,9 +58,9 @@ class DiffusersView(FlaskView):
         return jsonify(output)
 
     
-    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1):
+    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1, **kwargs):
         print('=== txt2img ===')
-        if(model is not None):
+        if(model is not None and model != ""):
             print(f'Model: {model}')
             self.pipelines.createTextToImagePipeline(model)
 
@@ -78,11 +78,11 @@ class DiffusersView(FlaskView):
         return self.jobStatus
 
 
-    def img2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1):
+    def img2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         print('=== img2img ===')
         initimage = base64DecodeImage(initimage)
 
-        if(model is not None):
+        if(model is not None and model != ""):
             print(f'Model: {model}')
             self.pipelines.createImageToImagePipeline(model)
 
@@ -100,11 +100,11 @@ class DiffusersView(FlaskView):
         return self.jobStatus
 
 
-    def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1):
+    def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         print('=== depth2img ===')
         initimage = base64DecodeImage(initimage)
 
-        if(model is not None):
+        if(model is not None and model != ""):
             print(f'Model: {model}')
             self.pipelines.createDepthToImagePipeline(model)
 
@@ -123,11 +123,11 @@ class DiffusersView(FlaskView):
 
 
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negppompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
-                        method="singlepass", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1):
+                        method="singlepass", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         print('=== img2imgTiled ===')
         initimage = base64DecodeImage(initimage)
 
-        if(model is not None):
+        if(model is not None and model != ""):
             print(f'Model: {model}')
             self.pipelines.createImageToImagePipeline(model)
 
@@ -155,7 +155,7 @@ class DiffusersView(FlaskView):
         return self.jobStatus
 
 
-    def inpaintRun(self, initimage, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1):
+    def inpaintRun(self, initimage, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         print('=== inpaint ===')
         initimage = base64DecodeImage(initimage)
         if maskimage is None:
@@ -163,7 +163,7 @@ class DiffusersView(FlaskView):
         else:
             maskimage = base64DecodeImage(maskimage)
 
-        if(model is not None):
+        if(model is not None and model != ""):
             print(f'Model: {model}')
             self.pipelines.createInpaintPipeline(model)
 
@@ -185,7 +185,7 @@ class DiffusersView(FlaskView):
         return self.jobStatus
 
 
-    def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1):
+    def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, **kwargs):
         print('=== upscale ===')
         initimage = base64DecodeImage(initimage)
 
