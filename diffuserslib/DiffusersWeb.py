@@ -51,7 +51,7 @@ class DiffusersView(FlaskView):
         runfunc = getattr(self, f'{action}Run')
         self.job.thread = Thread(target = runfunc, kwargs=params)
         self.job.thread.start()
-        self.job.status = {"status":"running", "action": "txt2img"}
+        self.job.status = {"status":"running", "action": action}
         print(self.job.status)
         return jsonify(self.job.status)
 
@@ -86,7 +86,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"txt2img", "error":e }
+            self.job.status = { "status":"error", "action":"txt2img", "error":e.message }
             raise e
 
 
@@ -113,7 +113,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"img2img", "error":e }
+            self.job.status = { "status":"error", "action":"img2img", "error":e.message }
             raise e
 
 
@@ -140,11 +140,11 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"depth2img", "error":e }
+            self.job.status = { "status":"error", "action":"depth2img", "error":e.message }
             raise e
 
 
-    def img2imgTiledRun(self, initimage, seed=None, prompt="", negppompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
+    def img2imgTiledRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
                         method="singlepass", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
@@ -178,7 +178,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"img2imgTiled", "error":e }
+            self.job.status = { "status":"error", "action":"img2imgTiled", "error":e.message }
             raise e
 
 
@@ -213,7 +213,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"inpaint", "error":e }
+            self.job.status = { "status":"error", "action":"inpaint", "error":e.message }
             raise e
 
 
@@ -238,5 +238,5 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"upscale", "error":e }
+            self.job.status = { "status":"error", "action":"upscale", "error":e.message }
             raise e

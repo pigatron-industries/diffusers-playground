@@ -488,9 +488,9 @@ class SDDialog(QDialog):
 
         if (SDConfig.dlgData["action"] == "img2imgTiled"):
             SDConfig.dlgData["tile_method"]=self.tile_method.currentText()
-            SDConfig.dlgData["tile_width"]=self.tile_width.currentText()
-            SDConfig.dlgData["tile_height"]=self.tile_height.currentText()
-            SDConfig.dlgData["tile_overlap"]=self.tile_overlap.currentText()
+            SDConfig.dlgData["tile_width"]=self.tile_width.value()
+            SDConfig.dlgData["tile_height"]=self.tile_height.value()
+            SDConfig.dlgData["tile_overlap"]=self.tile_overlap.value()
 
         if (SDConfig.dlgData["action"] == "upscale"):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
