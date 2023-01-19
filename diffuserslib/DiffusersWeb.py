@@ -10,14 +10,19 @@ import json
 from IPython.display import display
 
 
+class DiffusersJob():
+    def __init__(self):
+        thread = None
+        status = { "status":"none", "action":"none" }
+
+
 class DiffusersView(FlaskView):
     route_base = '/'
     pipelines: DiffusersPipelines = None
     tools: ImageTools = None
+    job: DiffusersJob = DiffusersJob()
 
     def __init__(self):
-        self.jobThread = None
-        self.jobStatus = { "status":"none", "action":"none" }
         pass
 
 
@@ -34,7 +39,8 @@ class DiffusersView(FlaskView):
 
     @route("/api/async", methods=["GET"])
     def getJobAsync(self):
-        return jsonify(self.jobStatus)
+        print(self.job.status)
+        return jsonify(self.job.status)
 
 
     @route("/api/async/<action>", methods=["POST"])
@@ -43,10 +49,11 @@ class DiffusersView(FlaskView):
         r = request
         params = json.loads(r.data)
         runfunc = getattr(self, f'{action}Run')
-        self.jobThread = Thread(target = runfunc, args=params)
-        self.jobThread.start()
-        self.jobStatus = {"status":"running", "action": "txt2img"}
-        return jsonify(self.jobStatus)
+        self.job.thread = Thread(target = runfunc, kwargs=params)
+        self.job.thread.start()
+        self.job.status = {"status":"running", "action": "txt2img"}
+        print(self.job.status)
+        return jsonify(self.job.status)
 
 
     @route("/api/<action>", methods=["POST"])
@@ -74,8 +81,8 @@ class DiffusersView(FlaskView):
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.jobStatus = { "status":"finished", "action":"txt2img", "images": outputimages }
-        return self.jobStatus
+        self.job.status = { "status":"finished", "action":"txt2img", "images": outputimages }
+        return self.job.status
 
 
     def img2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
@@ -96,8 +103,8 @@ class DiffusersView(FlaskView):
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.jobStatus = { "status":"finished", "action":"img2img", "images": outputimages }
-        return self.jobStatus
+        self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }
+        return self.job.status
 
 
     def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
@@ -118,8 +125,8 @@ class DiffusersView(FlaskView):
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.jobStatus = { "status":"finished", "action":"depth2img", "images": outputimages }
-        return self.jobStatus
+        self.job.status = { "status":"finished", "action":"depth2img", "images": outputimages }
+        return self.job.status
 
 
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negppompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
@@ -151,8 +158,8 @@ class DiffusersView(FlaskView):
                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.jobStatus = { "status":"finished", "action":"img2imgTiled", "images": outputimages }
-        return self.jobStatus
+        self.job.status = { "status":"finished", "action":"img2imgTiled", "images": outputimages }
+        return self.job.status
 
 
     def inpaintRun(self, initimage, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
@@ -181,8 +188,8 @@ class DiffusersView(FlaskView):
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.jobStatus = { "status":"finished", "action":"inpaint", "images": outputimages }
-        return self.jobStatus
+        self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
+        return self.job.status
 
 
     def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, **kwargs):
@@ -201,5 +208,5 @@ class DiffusersView(FlaskView):
                 outimage = self.tools.upscaleEsrgan(initimage, scale=amount)
             outputimages.append({ "image": base64EncodeImage(outimage) })
 
-        self.jobStatus = { "status":"finished", "action":"upscale", "images": outputimages }
-        return self.jobStatus
+        self.job.status = { "status":"finished", "action":"upscale", "images": outputimages }
+        return self.job.status

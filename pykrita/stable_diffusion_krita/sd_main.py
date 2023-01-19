@@ -7,6 +7,7 @@ from krita import *
 from PyQt5.Qt import QByteArray
 from PyQt5.QtGui  import QImage, QPixmap
 import array
+import time
 from copy import copy
 from pathlib import Path
 
@@ -692,6 +693,46 @@ def getServerData(action, reqData):
         return None
 
 
+def getServerDataAsync(action, reqData):
+    endpoint=SDConfig.url
+    endpoint=endpoint.strip("/")
+    endpoint+="/api/"
+    asyncEndpoint = endpoint+"async"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }    
+    try:
+        print("endpoint")
+        print(endpoint)
+        # do a 'ping' to check server is  running first
+        req = urllib.request.Request(endpoint, None, headers, method="GET")
+        with urllib.request.urlopen(req) as f:
+            res = f.read()
+        # make initial request to start async job
+        req = urllib.request.Request(asyncEndpoint+"/"+action, reqData, headers, method="POST")
+        with urllib.request.urlopen(req) as f:
+            res = f.read()
+        while (True):
+            time.sleep(5)
+            # poll get enpoint for response
+            req = urllib.request.Request(asyncEndpoint, None, headers, method="GET")
+            with urllib.request.urlopen(req) as f:
+                res = f.read()
+            data = json.loads(res)
+            if(data["status"] == "finished"):
+                return res
+
+    except http.client.IncompleteRead as e:
+        print("Incomplete Read Exception - better restart Colab or ")
+        res = e.partial 
+        return res           
+    except Exception as e:
+        error_message = traceback.format_exc() 
+        errorMessage("Server Error","Endpoint: "+endpoint+", Reason: "+error_message)        
+        return None
+
+
 def runSD(params: SDParameters):
     # dramatic interface change needed!
     Colab=True
@@ -732,7 +773,7 @@ def runSD(params: SDParameters):
 
     print(j)
     data = json.dumps(j).encode("utf-8")
-    res=getServerData(params.action, data)
+    res=getServerDataAsync(params.action, data)
     if not res: return    
     response=json.loads(res)
     # print(response)
