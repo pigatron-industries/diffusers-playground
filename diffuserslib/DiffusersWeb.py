@@ -38,18 +38,19 @@ class DiffusersView(FlaskView):
 
 
     @route("/api/async/<action>", methods=["POST"])
-    def txt2imgAsync(self, action):
+    def asyncAction(self, action):
         # TODO error if job is already running
         r = request
         params = json.loads(r.data)
-        self.jobThread = Thread(target = self.txt2imgRun, args=params)
+        runfunc = getattr(self, f'{action}Run')
+        self.jobThread = Thread(target = runfunc, args=params)
         self.jobThread.start()
         self.jobStatus = {"status":"running", "action": "txt2img"}
         return jsonify(self.jobStatus)
 
 
     @route("/api/<action>", methods=["POST"])
-    def txt2img(self, action):
+    def syncAction(self, action):
         r = request
         params = json.loads(r.data)
         runfunc = getattr(self, f'{action}Run')
