@@ -66,147 +66,177 @@ class DiffusersView(FlaskView):
 
     
     def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1, **kwargs):
-        print('=== txt2img ===')
-        if(model is not None and model != ""):
-            print(f'Model: {model}')
-            self.pipelines.createTextToImagePipeline(model)
+        try:
+            print('=== txt2img ===')
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createTextToImagePipeline(model)
 
-        print(f'Prompt: {prompt}')
-        print(f'Negative: {negprompt}')
-        print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
+            print(f'Prompt: {prompt}')
+            print(f'Negative: {negprompt}')
+            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
 
-        outputimages = []
-        for i in range(0, batch):
-            outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed)
-            display(outimage)
-            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+            outputimages = []
+            for i in range(0, batch):
+                outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed)
+                display(outimage)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.job.status = { "status":"finished", "action":"txt2img", "images": outputimages }
-        return self.job.status
+            self.job.status = { "status":"finished", "action":"txt2img", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"txt2img", "error":e }
+            raise e
 
 
     def img2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
-        print('=== img2img ===')
-        initimage = base64DecodeImage(initimage)
+        try:
+            print('=== img2img ===')
+            initimage = base64DecodeImage(initimage)
 
-        if(model is not None and model != ""):
-            print(f'Model: {model}')
-            self.pipelines.createImageToImagePipeline(model)
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createImageToImagePipeline(model)
 
-        print(f'Prompt: {prompt}')
-        print(f'Negative: {negprompt}')
-        print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
+            print(f'Prompt: {prompt}')
+            print(f'Negative: {negprompt}')
+            print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-        outputimages = []
-        for i in range(0, batch):
-            outimage, usedseed = self.pipelines.imageToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
-            display(outimage)
-            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+            outputimages = []
+            for i in range(0, batch):
+                outimage, usedseed = self.pipelines.imageToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
+                display(outimage)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }
-        return self.job.status
+            self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"img2img", "error":e }
+            raise e
 
 
     def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
-        print('=== depth2img ===')
-        initimage = base64DecodeImage(initimage)
+        try:
+            print('=== depth2img ===')
+            initimage = base64DecodeImage(initimage)
 
-        if(model is not None and model != ""):
-            print(f'Model: {model}')
-            self.pipelines.createDepthToImagePipeline(model)
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createDepthToImagePipeline(model)
 
-        print(f'Prompt: {prompt}')
-        print(f'Negative: {negprompt}')
-        print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
+            print(f'Prompt: {prompt}')
+            print(f'Negative: {negprompt}')
+            print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-        outputimages = []
-        for i in range(0, batch):
-            outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
-            display(outimage)
-            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+            outputimages = []
+            for i in range(0, batch):
+                outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
+                display(outimage)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.job.status = { "status":"finished", "action":"depth2img", "images": outputimages }
-        return self.job.status
+            self.job.status = { "status":"finished", "action":"depth2img", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"depth2img", "error":e }
+            raise e
 
 
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negppompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
                         method="singlepass", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
-        print('=== img2imgTiled ===')
-        initimage = base64DecodeImage(initimage)
+        try:
+            print('=== img2imgTiled ===')
+            initimage = base64DecodeImage(initimage)
 
-        if(model is not None and model != ""):
-            print(f'Model: {model}')
-            self.pipelines.createImageToImagePipeline(model)
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createImageToImagePipeline(model)
 
-        print(f'Method: {method}')
-        print(f'Prompt: {prompt}')
-        print(f'Negative: {negprompt}')
-        print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
+            print(f'Method: {method}')
+            print(f'Prompt: {prompt}')
+            print(f'Negative: {negprompt}')
+            print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-        outputimages = []
-        for i in range(0, batch):
-            if (method=="singlepass"):
-                outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                             scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                             offsetx=offsetx, offsety=offsety)
-            elif (method=="multipass"):
-                outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+            outputimages = []
+            for i in range(0, batch):
+                if (method=="singlepass"):
+                    outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                 scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                passes=2, strengthMult=0.5)
-            elif (method=="inpaint_seams"):
-                outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
-            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+                                                                offsetx=offsetx, offsety=offsety)
+                elif (method=="multipass"):
+                    outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
+                                                                    passes=2, strengthMult=0.5)
+                elif (method=="inpaint_seams"):
+                    outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        self.job.status = { "status":"finished", "action":"img2imgTiled", "images": outputimages }
-        return self.job.status
+            self.job.status = { "status":"finished", "action":"img2imgTiled", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"img2imgTiled", "error":e }
+            raise e
 
 
     def inpaintRun(self, initimage, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
-        print('=== inpaint ===')
-        initimage = base64DecodeImage(initimage)
-        if maskimage is None:
-            maskimage = alphaToMask(initimage)
-        else:
-            maskimage = base64DecodeImage(maskimage)
-
-        if(model is not None and model != ""):
-            print(f'Model: {model}')
-            self.pipelines.createInpaintPipeline(model)
-
-        print(f'Prompt: {prompt}')
-        print(f'Negative: {negprompt}')
-        print(f'Height: {initimage.height}, Width: {initimage.width}')
-        print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
-
-        outputimages = []
-        for i in range(0, batch):
-            if(initimage.height > 512 or initimage.width > 512):
-                outimage, usedseed = tiledInpaint(self.pipelines, initimg=initimage, maskimg=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, 
-                                                  scale=scale, scheduler=scheduler, seed=seed, overlap=128)
+        try:
+            print('=== inpaint ===')
+            initimage = base64DecodeImage(initimage)
+            if maskimage is None:
+                maskimage = alphaToMask(initimage)
             else:
-                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
-            outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+                maskimage = base64DecodeImage(maskimage)
 
-        self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
-        return self.job.status
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createInpaintPipeline(model)
+
+            print(f'Prompt: {prompt}')
+            print(f'Negative: {negprompt}')
+            print(f'Height: {initimage.height}, Width: {initimage.width}')
+            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
+
+            outputimages = []
+            for i in range(0, batch):
+                if(initimage.height > 512 or initimage.width > 512):
+                    outimage, usedseed = tiledInpaint(self.pipelines, initimg=initimage, maskimg=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, 
+                                                    scale=scale, scheduler=scheduler, seed=seed, overlap=128)
+                else:
+                    outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+
+            self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"inpaint", "error":e }
+            raise e
 
 
     def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, **kwargs):
-        print('=== upscale ===')
-        initimage = base64DecodeImage(initimage)
+        try:
+            print('=== upscale ===')
+            initimage = base64DecodeImage(initimage)
 
-        print(f'Method: {method}')
+            print(f'Method: {method}')
 
-        outputimages = []
-        for i in range(0, batch):
-            if(method == "stable-difusion"):
-                outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
-            elif(method.startswith("esrgan")):
-                outimage = self.tools.upscaleEsrgan(initimage, scale=amount, model=method.split('/')[1])
-            else:
-                outimage = self.tools.upscaleEsrgan(initimage, scale=amount)
-            outputimages.append({ "image": base64EncodeImage(outimage) })
+            outputimages = []
+            for i in range(0, batch):
+                if(method == "stable-difusion"):
+                    outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
+                elif(method.startswith("esrgan")):
+                    outimage = self.tools.upscaleEsrgan(initimage, scale=amount, model=method.split('/')[1])
+                else:
+                    outimage = self.tools.upscaleEsrgan(initimage, scale=amount)
+                outputimages.append({ "image": base64EncodeImage(outimage) })
 
-        self.job.status = { "status":"finished", "action":"upscale", "images": outputimages }
-        return self.job.status
+            self.job.status = { "status":"finished", "action":"upscale", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"upscale", "error":e }
+            raise e

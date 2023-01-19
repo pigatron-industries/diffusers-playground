@@ -722,6 +722,9 @@ def getServerDataAsync(action, reqData):
             data = json.loads(res)
             if(data["status"] == "finished"):
                 return res
+            elif(data["status"] == "error"):
+                errorMessage("Job Error", "Reason: "+data["error"])
+                return None
 
     except http.client.IncompleteRead as e:
         print("Incomplete Read Exception - better restart Colab or ")
@@ -729,7 +732,7 @@ def getServerDataAsync(action, reqData):
         return res           
     except Exception as e:
         error_message = traceback.format_exc() 
-        errorMessage("Server Error","Endpoint: "+endpoint+", Reason: "+error_message)        
+        errorMessage("Server Error", "Endpoint: "+endpoint+", Reason: "+error_message)        
         return None
 
 
