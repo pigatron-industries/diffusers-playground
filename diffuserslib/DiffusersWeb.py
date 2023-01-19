@@ -37,8 +37,8 @@ class DiffusersView(FlaskView):
         return jsonify(self.jobStatus)
 
 
-    @route("/api/async/txt2img", methods=["POST"])
-    def txt2imgAsync(self):
+    @route("/api/async/<action>", methods=["POST"])
+    def txt2imgAsync(self, action):
         # TODO error if job is already running
         r = request
         params = json.loads(r.data)
@@ -48,11 +48,12 @@ class DiffusersView(FlaskView):
         return jsonify(self.jobStatus)
 
 
-    @route("/api/txt2img", methods=["POST"])
-    def txt2img(self):
+    @route("/api/<action>", methods=["POST"])
+    def txt2img(self, action):
         r = request
         params = json.loads(r.data)
-        output = self.txt2imgRun(**params)
+        runfunc = getattr(self, f'{action}Run')
+        output = runfunc(**params)
         return jsonify(output)
 
     
@@ -75,22 +76,11 @@ class DiffusersView(FlaskView):
         self.jobStatus = { "status":"finished", "action":"txt2img", "images": outputimages }
         return self.jobStatus
 
-    
-    @route("/api/img2img", methods=["POST"])
-    def img2img(self):
-        print('=== img2img ===')
-        r = request
-        data = json.loads(r.data)
-        seed = data.get("seed", None)
-        prompt = data.get("prompt", "")
-        negprompt = data.get("negprompt", "")
-        strength = data.get("strength", 0.5)
-        scale = data.get("scale", 9)
-        scheduler = data.get("scheduler", "EulerDiscreteScheduler")
-        batch = data.get("batch", 1)
-        initimage = base64DecodeImage(data['initimage'])
 
-        model = data.get("model", None)
+    def img2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1):
+        print('=== img2img ===')
+        initimage = base64DecodeImage(initimage)
+
         if(model is not None):
             print(f'Model: {model}')
             self.pipelines.createImageToImagePipeline(model)
@@ -105,25 +95,14 @@ class DiffusersView(FlaskView):
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        output = { "images": outputimages }
-        return jsonify(output)
+        self.jobStatus = { "status":"finished", "action":"img2img", "images": outputimages }
+        return self.jobStatus
 
 
-    @route("/api/depth2img", methods=["POST"])
-    def depth2img(self):
+    def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1):
         print('=== depth2img ===')
-        r = request
-        data = json.loads(r.data)
-        seed = data.get("seed", None)
-        prompt = data.get("prompt", "")
-        negprompt = data.get("negprompt", "")
-        strength = data.get("strength", 0.5)
-        scale = data.get("scale", 9)
-        scheduler = data.get("scheduler", "EulerDiscreteScheduler")
-        batch = data.get("batch", 1)
-        initimage = base64DecodeImage(data['initimage'])
+        initimage = base64DecodeImage(initimage)
 
-        model = data.get("model", None)
         if(model is not None):
             print(f'Model: {model}')
             self.pipelines.createDepthToImagePipeline(model)
@@ -138,32 +117,15 @@ class DiffusersView(FlaskView):
             display(outimage)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        output = { "images": outputimages }
-        return jsonify(output)
+        self.jobStatus = { "status":"finished", "action":"depth2img", "images": outputimages }
+        return self.jobStatus
 
 
-    @route("/api/img2imgTiled", methods=["POST"])
-    def img2imgTiled(self):
+    def img2imgTiledRun(self, initimage, seed=None, prompt="", negppompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
+                        method="singlepass", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1):
         print('=== img2imgTiled ===')
-        r = request
-        data = json.loads(r.data)
-        seed = data.get("seed", None)
-        prompt = data.get("prompt", "")
-        negprompt = data.get("negprompt", "")
-        strength = data.get("strength", 0.4)
-        steps = data.get("steps", 50)
-        scale = data.get("scale", 9)
-        scheduler = data.get("scheduler", "EulerDiscreteScheduler")
-        method = data.get("method", "multipass")
-        offsetx = data.get("offsetx", 0)
-        offsety = data.get("offsety", 0)
-        tilewidth = data.get("tilewidth", 640)
-        tileheight = data.get("tileheight", 640)
-        tileoverlap = data.get("tileoverlap", 128)
-        batch = data.get("batch", 1)
-        initimage = base64DecodeImage(data['initimage'])
+        initimage = base64DecodeImage(initimage)
 
-        model = data.get("model", None)
         if(model is not None):
             print(f'Model: {model}')
             self.pipelines.createImageToImagePipeline(model)
@@ -188,29 +150,18 @@ class DiffusersView(FlaskView):
                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        output = { "images": outputimages }
-        return jsonify(output)
+        self.jobStatus = { "status":"finished", "action":"img2imgTiled", "images": outputimages }
+        return self.jobStatus
 
 
-    @route("/api/inpaint", methods=["POST"])
-    def inpaint(self):
+    def inpaintRun(self, initimage, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1):
         print('=== inpaint ===')
-        r = request
-        data = json.loads(r.data)
-        seed = data.get("seed", None)
-        prompt = data.get("prompt", "")
-        negprompt = data.get("negprompt", "")
-        steps = data.get("steps", 30)
-        scale = data.get("scale", 9)
-        scheduler = data.get("scheduler", "EulerDiscreteScheduler")
-        batch = data.get("batch", 1)
-        initimage = base64DecodeImage(data['initimage'])
-        if "maskimage" in data:
-            maskimage = base64DecodeImage(data['maskimage'])
+        initimage = base64DecodeImage(initimage)
+        if maskimage is None:
+            maskimage = alphaToMask(initimage)
         else:
-            maskimage = alphaToMask(initimage);
+            maskimage = base64DecodeImage(maskimage)
 
-        model = data.get("model", None)
         if(model is not None):
             print(f'Model: {model}')
             self.pipelines.createInpaintPipeline(model)
@@ -229,22 +180,14 @@ class DiffusersView(FlaskView):
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
             outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-        output = { "images": outputimages }
-        return jsonify(output)
+        self.jobStatus = { "status":"finished", "action":"inpaint", "images": outputimages }
+        return self.jobStatus
 
 
-    @route("/api/upscale", methods=["POST"])
-    def upscale(self):
-        r = request
-        data = json.loads(r.data)
-        method = data.get("method", "esrgan/remacri")
-        amount = data.get("amount", 4)
-        prompt = data.get("prompt", "")
-        scheduler = data.get("scheduler", "EulerDiscreteScheduler")
-        batch = data.get("batch", 1)
-        initimage = base64DecodeImage(data['initimage'])
+    def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1):
+        print('=== upscale ===')
+        initimage = base64DecodeImage(initimage)
 
-        print('upscale')
         print(f'Method: {method}')
 
         outputimages = []
@@ -257,5 +200,5 @@ class DiffusersView(FlaskView):
                 outimage = self.tools.upscaleEsrgan(initimage, scale=amount)
             outputimages.append({ "image": base64EncodeImage(outimage) })
 
-        output = { "images": outputimages }
-        return jsonify(output)
+        self.jobStatus = { "status":"finished", "action":"upscale", "images": outputimages }
+        return self.jobStatus
