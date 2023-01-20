@@ -3,7 +3,7 @@ from flask_classful import FlaskView, route
 from threading import Thread
 from .DiffusersPipelines import DiffusersPipelines
 from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
-from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, compositeImages
+from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
 import json
 
@@ -106,6 +106,7 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 outimage, usedseed = self.pipelines.imageToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
+                outimage = applyColourCorrection(initimage, outimage)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 

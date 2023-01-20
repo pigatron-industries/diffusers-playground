@@ -10,6 +10,9 @@ OmegaConf
 pytorch-lightning
 safetensors
 
+# image tools
+blendmodes
+
 # esrgan
 opencv-python
 typer
