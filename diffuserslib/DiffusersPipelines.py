@@ -178,6 +178,14 @@ class DiffusersPipelines:
         return preset
 
 
+    def latentsToImage(self, pipeline, latents):
+        latents = 1 / 0.18215 * latents
+        image = pipeline.vae.decode(latents).sample[0]
+        image = (image / 2 + 0.5).clamp(0, 1)
+        image = image.cpu().permute(1, 2, 0).numpy()
+        return pipeline.numpy_to_pil(image)
+
+
     def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
         if(self.textToImagePreset is not None and self.textToImagePreset.modelid == model):
             return
