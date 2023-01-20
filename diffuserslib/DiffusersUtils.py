@@ -45,7 +45,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
             
             if(overlap >= 0):
                 mask = createMask(tilewidth, tileheight, overlap/2, top, bottom, left, right)
-                imr, img, imb = imageout_slice.split()
+                imr, img, imb, _ = imageout_slice.split()
                 mmr, mmg, mmb, mma = mask.split()
                 finished_slice = Image.merge('RGBA', [imr, img, imb, mma])  # we want the RGB from the original, but the transparency from the mask
             else:
