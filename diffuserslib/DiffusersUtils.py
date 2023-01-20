@@ -1,6 +1,6 @@
 from PIL import Image
 import math, random
-from .ImageUtils import createMask, compositeImages
+from .ImageUtils import createMask, compositeImages, applyColourCorrection
 from .DiffusersPipelines import MAX_SEED
 from huggingface_hub import login
 
@@ -41,6 +41,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
 
             image_slice = image_slice.convert("RGB")
             imageout_slice, _ = pipelines.imageToImage(image_slice, prompt, negprompt, strength, scale, seed, scheduler)
+            imageout_slice = applyColourCorrection(image_slice, imageout_slice)
             
             if(overlap >= 0):
                 mask = createMask(tilewidth, tileheight, overlap/2, top, bottom, left, right)
