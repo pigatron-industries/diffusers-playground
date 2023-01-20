@@ -11,6 +11,7 @@ pytorch-lightning
 safetensors
 
 # image tools
+scikit-image==0.19.3
 blendmodes
 
 # esrgan
