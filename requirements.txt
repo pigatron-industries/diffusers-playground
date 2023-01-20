@@ -12,6 +12,10 @@ OmegaConf
 pytorch-lightning
 safetensors
 
+# image tools
+scikit-image
+blendmodes
+
 # web
 flask
 flask_classful

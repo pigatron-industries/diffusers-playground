@@ -1,6 +1,10 @@
 from PIL import Image, ImageDraw, ImageFilter
 from io import BytesIO
+from skimage import exposure
+from blendmodes.blend import blendLayers, BlendType
+import numpy as np
 import base64
+import cv2
 
 from IPython.display import display
 
@@ -82,3 +86,22 @@ def createMask(width, height, overlap, top=False, bottom=False, left=False, righ
     mask = Image.new('RGBA', (width, height), color=0)
     mask.putalpha(alpha)
     return mask
+
+
+def createColourCorrectionTarget(image):
+    correction_target = cv2.cvtColor(np.asarray(image.copy()), cv2.COLOR_RGB2LAB)
+    return correction_target
+
+
+def applyColourCorrection(target, image):
+    outimage = Image.fromarray(cv2.cvtColor(exposure.match_histograms(
+        cv2.cvtColor(
+            np.asarray(image),
+            cv2.COLOR_RGB2LAB
+        ),
+        target,
+        channel_axis=2
+    ), cv2.COLOR_LAB2RGB).astype("uint8"))
+
+    outimage = blendLayers(outimage, image, BlendType.LUMINOSITY)
+    return outimage
