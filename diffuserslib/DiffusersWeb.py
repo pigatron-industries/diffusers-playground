@@ -64,12 +64,19 @@ class DiffusersView(FlaskView):
         output = runfunc(**params)
         return jsonify(output)
 
+
+    def updateAsyncProgress(self, description, total, done):
+        self.job.status['description'] = description
+        self.job.status['total'] = total
+        self.job.status['done'] = done
+
     
     def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== txt2img ===')
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateAsyncProgress(f"Loading Model ${model}", 1, 0)
                 self.pipelines.createTextToImagePipeline(model)
 
             print(f'Prompt: {prompt}')
@@ -78,6 +85,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateAsyncProgress(f"Running", 1, 0)
                 outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -159,6 +167,7 @@ class DiffusersView(FlaskView):
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
+            print(f'Method: {method}, Tile width: {tilewidth}, Tile height: {tileheight}, Tile Overlap: {tileoverlap}')
 
             outputimages = []
             for i in range(0, batch):
