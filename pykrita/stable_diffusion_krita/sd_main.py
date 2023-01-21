@@ -68,7 +68,9 @@ class SDConfig:
         "tile_method": "singlepass",
         "tile_width": 640,
         "tile_height": 640,
-        "tile_overlap": 128
+        "tile_overlap": 128,
+        "tile_alignmentx": "tile_centred",
+        "tile_alignmenty": "tile_centred",
     }
 
 
@@ -129,6 +131,8 @@ class SDParameters:
     tile_width = None
     tile_height = None
     tile_overlap = None
+    tile_alignmentx = None
+    tile_alignmenty = None
 
 
 def errorMessage(text,detailed):
@@ -377,21 +381,36 @@ class SDDialog(QDialog):
             self.upscale_amount=self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
 
         if (data["action"] == "img2imgTiled"):
-            tilemethod_label=QLabel("Tile method")
+            tilemethod_label = QLabel("Tile method")
             formLayout.addWidget(tilemethod_label)
             self.tile_method = QComboBox()
             self.tile_method.addItems(['singlepass', 'multipass', 'inpaint_seams'])
             self.tile_method.setCurrentText(data.get("tile_method", "singlepass"))
             formLayout.addWidget(self.tile_method)
-            tilewidth_label=QLabel("Tile width")
+            
+            tilewidth_label = QLabel("Tile width")
             formLayout.addWidget(tilewidth_label)
             self.tile_width=createSlider(self, formLayout, data.get("tile_width", 640), 256, 1024, 64, 1)
-            tileheight_label=QLabel("Tile height")
+            tileheight_label = QLabel("Tile height")
             formLayout.addWidget(tileheight_label)
             self.tile_height=createSlider(self, formLayout, data.get("tile_height", 640), 256, 1024, 64, 1)
-            tileoverlap_label=QLabel("Tile overlap")
+            tileoverlap_label = QLabel("Tile overlap")
             formLayout.addWidget(tileoverlap_label)
-            self.tile_overlap=createSlider(self, formLayout, data.get("tile_overlap", 128), -128, 128, 2, 1)
+            self.tile_overlap = createSlider(self, formLayout, data.get("tile_overlap", 128), -128, 128, 2, 1)
+
+            tilealignmentx_label = QLabel("Tile alignment x")
+            formLayout.addWidget(tilealignmentx_label)
+            self.tile_alignmentx = QComboBox()
+            self.tile_alignmentx.addItems(['tile_centre', 'tile_edge'])
+            self.tile_alignmentx.setCurrentText(data.get("tile_alignmentx","tile_centre"))
+            formLayout.addWidget(self.tile_alignmentx)
+
+            tilealignmenty_label = QLabel("Tile alignment y")
+            formLayout.addWidget(tilealignmenty_label)
+            self.tile_alignmenty = QComboBox()
+            self.tile_alignmenty.addItems(['tile_centre', 'tile_edge'])
+            self.tile_alignmenty.setCurrentText(data.get("tile_alignmenty","tile_centre"))
+            formLayout.addWidget(self.tile_alignmenty)
 
         if (data["action"] in ("img2img", "img2imgTiled")):
             formLayout.addWidget(QLabel("Strength"))
@@ -491,6 +510,8 @@ class SDDialog(QDialog):
             SDConfig.dlgData["tile_width"]=self.tile_width.value()
             SDConfig.dlgData["tile_height"]=self.tile_height.value()
             SDConfig.dlgData["tile_overlap"]=self.tile_overlap.value()
+            SDConfig.dlgData["tile_alignmentx"]=self.tile_alignmentx.currentText()
+            SDConfig.dlgData["tile_alignmenty"]=self.tile_alignmenty.currentText()
 
         if (SDConfig.dlgData["action"] == "upscale"):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
@@ -749,30 +770,33 @@ def runSD(params: SDParameters):
         method = params.upscale_method
     elif(params.tile_method is not None):
         method = params.tile_method
-    j = { 'model': params.model, \
-        'prompt': params.prompt, \
-        'negprompt': params.negprompt, \
-        'initimage': params.image64, \
-        'steps':params.steps, \
-        'scheduler':params.scheduler, \
-        'mask_blur': SDConfig.inpaint_mask_blur, \
-        'inpainting_fill':inpainting_fill, \
-        'use_gfpgan': False, \
-        'batch': params.num, \
-        'scale': params.scale, \
-        'strength': params.strength, \
-        'seed':seed, \
-        'height':SDConfig.height, \
-        'width':SDConfig.width, \
-        'method': method, \
-        'amount': params.upscale_amount, \
-        'upscale_overlap':64, \
-        'inpaint_full_res':True, \
-        'inpainting_mask_invert': 0, \
-        'tilewidth': params.tile_width, \
-        'tileheight': params.tile_height, \
-        'tileoverlap': params.tile_overlap \
-        }    
+    j = { 
+        'model': params.model,
+        'prompt': params.prompt,
+        'negprompt': params.negprompt,
+        'initimage': params.image64,
+        'steps':params.steps,
+        'scheduler':params.scheduler,
+        'mask_blur': SDConfig.inpaint_mask_blur,
+        'inpainting_fill':inpainting_fill,
+        'use_gfpgan': False,
+        'batch': params.num,
+        'scale': params.scale,
+        'strength': params.strength,
+        'seed':seed,
+        'height':SDConfig.height,
+        'width':SDConfig.width,
+        'method': method,
+        'amount': params.upscale_amount,
+        'upscale_overlap':64,
+        'inpaint_full_res':True,
+        'inpainting_mask_invert': 0,
+        'tilewidth': params.tile_width,
+        'tileheight': params.tile_height,
+        'tileoverlap': params.tile_overlap,
+        'tilealignmentx': params.tile_alignmentx,
+        'tilealignmenty': params.tile_alignmenty
+    }    
 
     print(j)
     data = json.dumps(j).encode("utf-8")
@@ -973,6 +997,8 @@ def TiledImageToImage():
         p.tile_width=data["tile_width"]
         p.tile_height=data["tile_height"]
         p.tile_overlap=data["tile_overlap"]
+        p.tile_alignmentx=data["tile_alignmentx"]
+        p.tile_alignmenty=data["tile_alignmenty"]
         runSD(p)
 
 
