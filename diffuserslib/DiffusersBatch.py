@@ -220,5 +220,5 @@ class DiffusersBatch:
                 value = args[arg]
                 if (isinstance(value, str) or isinstance(value, int) or isinstance(value, float)):
                     file.write(f"{arg}: {value}\n")
-                elif (isinstance(value, Image) and hasattr(value, 'filename')):
+                elif (isinstance(value, Image.Image) and hasattr(value, 'filename')):
                     file.write(f"{arg}: {value.filename}\n")
