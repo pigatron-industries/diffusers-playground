@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_classful import FlaskView, route
 from threading import Thread
 from .DiffusersPipelines import DiffusersPipelines
-from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
+from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
 import json
@@ -154,7 +154,7 @@ class DiffusersView(FlaskView):
 
 
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
-                        method="singlepass", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
+                        method="singlepass", alignment="tile_centre", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
             initimage = base64DecodeImage(initimage)
@@ -172,9 +172,14 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 if (method=="singlepass"):
-                    outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                offsetx=offsetx, offsety=offsety)
+                    if (alignment in ["tile_centre", "tile_edge"]):
+                        outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
+                                                                    alignment=alignment)
+                    else:
+                        outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
+                                                                    offsetx=offsetx, offsety=offsety)
                 elif (method=="multipass"):
                     outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 

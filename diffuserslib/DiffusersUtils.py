@@ -56,6 +56,38 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
     return merged_image, seed
 
 
+def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
+                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0):
+    # creates a new image slightly bigger than original image to allow tiling to start at negative offset
+    offsetimage = Image.new(initimg.mode, (initimg.width-offsetx, initimg.height-offsety))
+    offsetimage.paste(initimg, (-offsetx, -offsety, -offsetx+initimg.width, -offsety+initimg.height))
+    outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
+    image = outimage.crop((-offsetx, -offsety, outimage.width, outimage.height))
+    return image, seed
+
+
+def tiledImageToImageCentred(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
+                            tilewidth=640, tileheight=640, overlap=128, alignment='tile_centre'):
+    # find top left of initial centre tile 
+    offsetx = int(initimg.width/2)
+    offsety = int(initimg.height/2)
+    if(alignment == 'tile_centre'):
+        offsetx = offsetx - int(tilewidth/2)
+        offsety = offsety - int(tileheight/2)
+    else:
+        offsetx = offsetx - int(tilewidth+(overlap/2))
+        offsety = offsety - int(tileheight+(overlap/2))
+
+    # find top left of first tile outside of image
+    while offsetx > 0:
+        offsetx = offsetx - (tilewidth-overlap)
+    while offsety > 0:
+        offsety = offsety - (tileheight-overlap)
+
+    return tiledImageToImageOffset(pipelines, initimg=initimg, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, 
+                            tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety)
+
+
 def compositedInpaint(pipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
     outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed)
@@ -108,19 +140,10 @@ def tiledImageToImageInpaintSeams(pipelines, initimg, prompt, negprompt, strengt
     pass
 
 
-def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0):
-    offsetimage = Image.new(initimg.mode, (initimg.width+offsetx, initimg.height+offsety))
-    offsetimage.paste(initimg, (offsetx, offsety, offsetx+initimg.width, offsety+initimg.height))
-    outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
-    image = outimage.crop((offsetx, offsety, outimage.width, outimage.height))
-    return image, seed
-
-
 def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
                                tilewidth=640, tileheight=640, overlap=128, passes=2, strengthMult=0.5):
     offsetEven = (0, 0)
-    offsetOdd = (int((tilewidth - overlap)/2), int((tileheight - overlap)/2))
+    offsetOdd = (-int((tilewidth - overlap)/2), -int((tileheight - overlap)/2))
     image = initimg
 
     for i in range(0, passes):
