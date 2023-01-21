@@ -124,7 +124,9 @@ class RandomImage(Argument):
 
     def __call__(self):
         file = random.choice(self.filelist)
-        return Image.open(file)
+        image = Image.open(file)
+        image.filename = file
+        return image
 
 
 def mergeDict(d1, d2):
@@ -218,3 +220,5 @@ class DiffusersBatch:
                 value = args[arg]
                 if (isinstance(value, str) or isinstance(value, int) or isinstance(value, float)):
                     file.write(f"{arg}: {value}\n")
+                elif (isinstance(value, Image) and hasattr(value, 'filename')):
+                    file.write(f"{arg}: {value.filename}\n")
