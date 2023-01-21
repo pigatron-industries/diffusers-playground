@@ -201,7 +201,7 @@ class DiffusersPipelines:
         self.textToImagePipeline.enable_attention_slicing()
 
 
-    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None):
+    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, **kwargs):
         if (self.textToImagePipeline is None):
             raise Exception('text to image pipeline not loaded')
         prompt = self.processPrompt(prompt)
@@ -226,7 +226,7 @@ class DiffusersPipelines:
         self.imageToImagePipeline.enable_attention_slicing()
 
 
-    def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None):
+    def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, **kwargs):
         if (self.imageToImagePipeline is None):
             raise Exception('image to image pipeline not loaded')
         inimage = inimage.convert("RGB")
@@ -249,7 +249,7 @@ class DiffusersPipelines:
         self.depthToImagePipeline.enable_attention_slicing()
 
 
-    def depthToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None):
+    def depthToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, **kwargs):
         if (self.imageToImagePipeline is None):
             raise Exception('depth to image pipeline not loaded')
         inimage = inimage.convert("RGB")
@@ -272,7 +272,7 @@ class DiffusersPipelines:
         self.inpaintingPipeline.enable_attention_slicing()
 
 
-    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None):
+    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, **kwargs):
         if (self.inpaintingPipeline is None):
             raise Exception('inpainting pipeline not loaded')
         prompt = self.processPrompt(prompt)
