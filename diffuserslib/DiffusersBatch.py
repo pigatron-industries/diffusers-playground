@@ -3,6 +3,8 @@ import numpy as np
 import random
 import time
 import re
+import glob
+from PIL import Image
 
 from IPython.display import display
 import ipywidgets as widgets
@@ -60,10 +62,8 @@ class RandomPromptProcessor(Argument):
         self.modifier_dict = modifier_dict
         self.prompt = prompt
 
-
     def setPrompt(self, prompt):
         self.prompt = prompt
-
 
     def randomiseFromDict(self, prompt):
         # randomise from dictionary of items defined outside of prompt _colour_
@@ -73,17 +73,16 @@ class RandomPromptProcessor(Argument):
         for bracket in tokenised_brackets:
             modifiername = bracket[1:-1]
             options = self.modifier_dict[modifiername]
-            randomoption = options[random.randint(0, len(options)-1)]
+            randomoption = random.choice(options)
             out_prompt = out_prompt.replace(bracket, randomoption, 1)
 
         tokenised_brackets = re.findall(r'__.*?__', out_prompt)
         for bracket in tokenised_brackets:
             modifiername = bracket[1:-1]
             options = self.modifier_dict[modifiername]
-            out_prompt = out_prompt.replace(f'__{modifiername}__', self.randomCombo(wordlist))
+            out_prompt = out_prompt.replace(f'__{modifiername}__', self.randomCombo(options))
 
         return out_prompt
-
 
     def randomCombo(wordlist):
         numberofwords = random.randint(0, len(wordlist)-1)
@@ -97,22 +96,35 @@ class RandomPromptProcessor(Argument):
                 break
         return out_prompt
 
-
     def randomiseFromPrompt(self, prompt):
         # randomise from list of items in prompt between brackets {cat|dog}
         out_prompt = prompt
         tokenised_brackets = re.findall(r'\{.*?\}', out_prompt)
         for bracket in tokenised_brackets:
             options = bracket[1:-1].split('|')
-            randomoption = options[random.randint(0, len(options)-1)]
+            randomoption = random.choice(options)
             out_prompt = out_prompt.replace(bracket, randomoption, 1)
         return out_prompt
-
 
     def __call__(self):
         outprompt = self.randomiseFromDict(self.prompt)
         outprompt = self.randomiseFromPrompt(outprompt)
         return outprompt
+
+
+class RandomImage:
+
+    @classmethod
+    def fromDirectory(cls, directory):
+        filelist = glob.glob(f'{directory}/*.png')
+        return cls(filelist)
+
+    def __init__(self, filelist):
+        self.filelist = filelist
+
+    def __call__(self):
+        file = random.choice(self.filelist)
+        return Image.open(file)
 
 
 def mergeDict(d1, d2):
