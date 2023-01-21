@@ -154,7 +154,7 @@ class DiffusersView(FlaskView):
 
 
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
-                        method="singlepass", alignmentx="tile_centre", alignmenty="tile_centre", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
+                        method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
             initimage = base64DecodeImage(initimage)
@@ -174,7 +174,7 @@ class DiffusersView(FlaskView):
                 if (method=="singlepass"):
                     outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                  alignmentx=alignmentx, alignmenty=alignmenty)
+                                                                  alignmentx=tilealignmentx, alignmenty=tilealignmenty)
                 elif (method=="multipass"):
                     outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
