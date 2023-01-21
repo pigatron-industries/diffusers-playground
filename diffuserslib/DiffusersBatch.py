@@ -112,7 +112,7 @@ class RandomPromptProcessor(Argument):
         return outprompt
 
 
-class RandomImage:
+class RandomImage(Argument):
 
     @classmethod
     def fromDirectory(cls, directory):
