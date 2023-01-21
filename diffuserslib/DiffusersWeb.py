@@ -154,7 +154,7 @@ class DiffusersView(FlaskView):
 
 
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
-                        method="singlepass", alignment="tile_centre", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
+                        method="singlepass", alignmentx="tile_centre", alignmenty="tile_centre", offsetx=0, offsety=0, tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
             initimage = base64DecodeImage(initimage)
@@ -172,14 +172,9 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 if (method=="singlepass"):
-                    if (alignment in ["tile_centre", "tile_edge"]):
-                        outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                    alignment=alignment)
-                    else:
-                        outimage, usedseed = tiledImageToImageOffset(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                    offsetx=offsetx, offsety=offsety)
+                    outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                                                                  scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
+                                                                  alignmentx=alignmentx, alignmenty=alignmenty)
                 elif (method=="multipass"):
                     outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 

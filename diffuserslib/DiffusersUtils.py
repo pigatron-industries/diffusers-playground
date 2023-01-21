@@ -67,15 +67,17 @@ def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, sca
 
 
 def tiledImageToImageCentred(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                            tilewidth=640, tileheight=640, overlap=128, alignment='tile_centre'):
+                            tilewidth=640, tileheight=640, overlap=128, alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0):
     # find top left of initial centre tile 
-    offsetx = int(initimg.width/2)
-    offsety = int(initimg.height/2)
-    if(alignment == 'tile_centre'):
+    offsetx = offsetx + int(initimg.width/2)
+    offsety = offsety + int(initimg.height/2)
+    if(alignmentx == 'tile_centre'):
         offsetx = offsetx - int(tilewidth/2)
-        offsety = offsety - int(tileheight/2)
     else:
         offsetx = offsetx - int(tilewidth+(overlap/2))
+    if(alignmenty == 'tile_centre'):
+        offsety = offsety - int(tileheight/2)
+    else:
         offsety = offsety - int(tileheight+(overlap/2))
 
     # find top left of first tile outside of image
