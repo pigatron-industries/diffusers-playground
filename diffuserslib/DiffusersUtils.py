@@ -22,7 +22,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
         merged_image = initimg.convert("RGBA")
     else:
         # if overlap is negative create new transparent image to leave gaps between tiles
-        merged_image = Image.new("RGBA", size=initimg.size(), color=(255, 255, 255, 0))
+        merged_image = Image.new("RGBA", size=initimg.size, color=(255, 255, 255, 0))
 
     # split into slices
     for yslice in range(yslices):
