@@ -769,9 +769,9 @@ def runSD(params: SDParameters):
         'upscale_overlap':64, \
         'inpaint_full_res':True, \
         'inpainting_mask_invert': 0, \
-        'tile_width': params.tile_width, \
-        'tile_height': params.tile_height, \
-        'tile_overlap': params.tile_overlap \
+        'tilewidth': params.tile_width, \
+        'tileheight': params.tile_height, \
+        'tileoverlap': params.tile_overlap \
         }    
 
     print(j)
@@ -970,6 +970,9 @@ def TiledImageToImage():
         p.image64=image64
         p.strength=data["strength"]
         p.tile_method=data["tile_method"]
+        p.tile_width=data["tile_width"]
+        p.tile_height=data["tile_height"]
+        p.tile_overlap=data["tile_overlap"]
         runSD(p)
 
 
