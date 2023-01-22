@@ -21,12 +21,12 @@ def mergeDict(d1, d2):
     return dict
 
 
-def evaluateArguments(args):
+def evaluateArguments(args, **kwargs):
     outargs = {}
     for argkey in args.keys():
         argvalue = args[argkey]
         if(callable(argvalue)):
-            outargs[argkey] = argvalue()
+            outargs[argkey] = argvalue(**kwargs)
         else:
             outargs[argkey] = argvalue
     return outargs
