@@ -12,8 +12,16 @@ class RandomNumberArgument(Argument):
         self.min = min
         self.max = max
         
-    def __call__(self):
+    def __call__(self, **kwargs):
         return random.randint(self.min, self.max)
+
+
+class RandomStringArgument(Argument):
+    def __init__(self, stringlist):
+        self.stringlist = stringlist
+
+    def __call__(self, **kwargs):
+        return random.choice(self.stringlist)
 
 
 class RandomPromptProcessor(Argument):
