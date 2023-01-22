@@ -36,6 +36,25 @@ class DrawRegularShape(GeometryTask):
         return context
 
 
+class DrawCheckerboard(GeometryTask):
+    def __init__(self, size=(64, 64), fill="black"):
+        self.args = {
+            "size": size,
+            "fill": fill
+        }
+
+    def __call__(self, context):
+        args = evaluateArguments(self.args, context=context)
+        draw = ImageDraw.Draw(context.image)
+        square_width = args["size"][0]
+        square_height = args["size"][1]
+        for i in range(0, context.size[0], square_width):
+            for j in range(0, context.size[1], square_height):
+                if (i//square_width + j//square_height) % 2 == 0:
+                    draw.rectangle([i+context.offset[0], j+context.offset[1], i+square_width+context.offset[0], j+square_height+context.offset[1]], fill=args["fill"])
+        return context
+
+
 class Symmetrize(GeometryTask):
     """ horizontal, vertical, or rotation """
     def __init__(self, type="horizontal"):
