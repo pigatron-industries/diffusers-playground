@@ -1,6 +1,5 @@
 from .DiffusersPipelines import *
 from .DiffusersModelPresets import *
-from .DiffusersBatch import *
 from .DiffusersWeb import *
 from .DiffusersUtils import *
 from .TrainTextEmbedding import *
@@ -8,3 +7,7 @@ from .ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
 from .Web import *
+
+from .batch.BatchRunner import *
+from .batch.ArgumentsBatch import *
+from .batch.ArgumentsRandom import *
