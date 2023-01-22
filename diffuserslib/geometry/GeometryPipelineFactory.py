@@ -5,9 +5,9 @@ from .. import RandomNumberArgument, RandomChoiceArgument
 import math
 
 
-def shapeGeometryPipeline(size=(512, 512), sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
+def shapeGeometryPipeline(size=(512, 512), background="white", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
                           symmetry=RandomChoiceArgument(["horizontal", "vertical", "rotation", "none"])):
-    geometry = GeometryPipeline(size=size)
+    geometry = GeometryPipeline(size=size, background=background)
     for i in range(shapes):
         geometry.addTask(DrawRegularShape(
             position=RandomPositionArgument(), 
@@ -20,8 +20,8 @@ def shapeGeometryPipeline(size=(512, 512), sides=RandomNumberArgument(3, 6), min
     return geometry
 
 
-def spiralGeometryPipeline(size=(512, 512), sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1, rotation=360, steps=8, zoom=4):
-    geometry = GeometryPipeline(size=size)
+def spiralGeometryPipeline(size=(512, 512), background="white", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1, rotation=360, steps=8, zoom=4):
+    geometry = GeometryPipeline(size=size, background=background)
     for i in range(shapes):
         geometry.addTask(DrawRegularShape(
             position=RandomPositionArgument(), 
@@ -34,7 +34,7 @@ def spiralGeometryPipeline(size=(512, 512), sides=RandomNumberArgument(3, 6), mi
     return geometry
 
 
-def checkerboardGeometryPipeline(size=(512, 512), blocksize = None):
+def checkerboardGeometryPipeline(size=(512, 512), background="white", blocksize = None):
     if(blocksize is None):
         blocksize = RandomChoiceArgument([
             #  aspect ratio dependent
@@ -45,9 +45,10 @@ def checkerboardGeometryPipeline(size=(512, 512), blocksize = None):
             (math.ceil(size[0]/2), math.ceil(size[0]/2)), 
             (math.ceil(size[0]/3), math.ceil(size[0]/3)), 
             (math.ceil(size[0]/4), math.ceil(size[0]/4)),
-            (math.ceil(size[0]/5), math.ceil(size[0]/5)),
-            (math.ceil(size[0]/8), math.ceil(size[0]/8))
+            (math.ceil(size[0]/8), math.ceil(size[0]/8)),
+            (math.ceil(size[0]/16), math.ceil(size[0]/16)),
+            (math.ceil(size[0]/16), math.ceil(size[0]/32))
         ])
-    geometry = GeometryPipeline(size=size)
+    geometry = GeometryPipeline(size=size, background=background)
     geometry.addTask(DrawCheckerboard(size = blocksize))
     return geometry
