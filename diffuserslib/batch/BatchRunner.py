@@ -21,6 +21,17 @@ def mergeDict(d1, d2):
     return dict
 
 
+def evaluateArguments(args):
+    outargs = {}
+    for argkey in args.keys():
+        argvalue = args[argkey]
+        if(callable(argvalue)):
+            outargs[argkey] = argvalue()
+        else:
+            outargs[argkey] = argvalue
+    return outargs
+
+
 class BatchRunner:
 
     def __init__(self, pipeline, argdict, count=1, outputdir="."):
@@ -46,12 +57,7 @@ class BatchRunner:
 
         for batch in range(0, self.count):
             # Evaluate instances of Argument
-            args = {}
-            for flatargkey in flatargs.keys():
-                if(isinstance(flatargs[flatargkey], Argument)):
-                    args[flatargkey] = flatargs[flatargkey]()
-                else:
-                    args[flatargkey] = flatargs[flatargkey]
+            args = evaluateArguments(flatargs)
 
             # product of each combo of BatchArgument
             if(len(batchargs) > 0):
