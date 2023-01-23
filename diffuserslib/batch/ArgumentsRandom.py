@@ -16,6 +16,17 @@ class RandomNumberArgument(Argument):
         return random.randint(self.min, self.max)
 
 
+class SequentialNumberArgument(Argument):
+    """  """
+    def __init__(self, start):
+        self.num = start
+        
+    def __call__(self, **kwargs):
+        num = self.num
+        self.num = self.num + 1
+        return num
+
+
 class RandomChoiceArgument(Argument):
     def __init__(self, list):
         self.list = list
