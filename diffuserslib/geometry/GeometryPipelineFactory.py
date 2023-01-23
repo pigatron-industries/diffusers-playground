@@ -45,6 +45,7 @@ def checkerboardGeometryPipeline(size=(512, 512), background="white", blocksize 
             (math.ceil(size[0]/2), math.ceil(size[0]/2)), 
             (math.ceil(size[0]/3), math.ceil(size[0]/3)), 
             (math.ceil(size[0]/4), math.ceil(size[0]/4)),
+            (math.ceil(size[0]/5), math.ceil(size[0]/5)),
             (math.ceil(size[0]/8), math.ceil(size[0]/8)),
             (math.ceil(size[0]/16), math.ceil(size[0]/16)),
             (math.ceil(size[0]/16), math.ceil(size[0]/32))
