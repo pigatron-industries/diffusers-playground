@@ -1,8 +1,8 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
 from threading import Thread
-from .inference.DiffusersPipelines import DiffusersPipelines
-from .inference.DiffusersUtils import tiledImageToImageOffset, tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
+from .inference.DiffusersPipelines import DiffusersPipelines, DEFAULT_INPAINT_MODEL, DEFAULT_TEXTTOIMAGE_MODEL, DEFAULT_DEPTHTOIMAGE_MODEL
+from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
 import json
@@ -45,7 +45,8 @@ class DiffusersView(FlaskView):
 
     @route("/api/async/<action>", methods=["POST"])
     def asyncAction(self, action):
-        # TODO error if job is already running
+        if (self.job.thread.is_alive()):
+            return jsonify(self.job.status)
         r = request
         params = json.loads(r.data)
         runfunc = getattr(self, f'{action}Run')
@@ -74,6 +75,8 @@ class DiffusersView(FlaskView):
     def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== txt2img ===')
+            if(self.pipelines.imageToImagePipeline is None and model is None):
+                model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
                 self.updateAsyncProgress(f"Loading Model ${model}", 1, 0)
@@ -103,6 +106,8 @@ class DiffusersView(FlaskView):
             print('=== img2img ===')
             initimage = base64DecodeImage(initimage)
 
+            if(self.pipelines.imageToImagePipeline is None and model is None):
+                model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
                 self.pipelines.createImageToImagePipeline(model)
@@ -131,6 +136,8 @@ class DiffusersView(FlaskView):
             print('=== depth2img ===')
             initimage = base64DecodeImage(initimage)
 
+            if(self.pipelines.imageToImagePipeline is None and model is None):
+                model = DEFAULT_DEPTHTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
                 self.pipelines.createDepthToImagePipeline(model)
@@ -159,6 +166,8 @@ class DiffusersView(FlaskView):
             print('=== img2imgTiled ===')
             initimage = base64DecodeImage(initimage)
 
+            if(self.pipelines.imageToImagePipeline is None and model is None):
+                model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
                 self.pipelines.createImageToImagePipeline(model)
@@ -201,6 +210,8 @@ class DiffusersView(FlaskView):
             else:
                 maskimage = base64DecodeImage(maskimage)
 
+            if(self.pipelines.inpaintingPipeline is None and model is None):
+                model = DEFAULT_INPAINT_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
                 self.pipelines.createInpaintPipeline(model)

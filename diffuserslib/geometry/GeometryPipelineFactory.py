@@ -34,7 +34,7 @@ def spiralGeometryPipeline(size=(512, 512), background="white", sides=RandomNumb
     return geometry
 
 
-def checkerboardGeometryPipeline(size=(512, 512), background="white", blocksize = None, start = "black"):
+def checkerboardGeometryPipeline(size=(512, 512), background="white", foreground="black", blocksize = None, start = "black"):
     if(blocksize is None):
         blocksize = RandomChoiceArgument([
             #  aspect ratio dependent
@@ -51,5 +51,5 @@ def checkerboardGeometryPipeline(size=(512, 512), background="white", blocksize 
             (math.ceil(size[0]/16), math.ceil(size[0]/32))
         ])
     geometry = GeometryPipeline(size=size, background=background)
-    geometry.addTask(DrawCheckerboard(size = blocksize, start = start))
+    geometry.addTask(DrawCheckerboard(size = blocksize, start = start, fill=foreground))
     return geometry
