@@ -1,12 +1,13 @@
-from .DiffusersPipelines import *
 from .DiffusersModelPresets import *
 from .DiffusersWeb import *
-from .DiffusersUtils import *
 from .TrainTextEmbedding import *
 from .ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
 from .Web import *
+
+from .inference.DiffusersPipelines import *
+from .inference.DiffusersUtils import *
 
 from .batch.BatchRunner import *
 from .batch.ArgumentsBatch import *

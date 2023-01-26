@@ -1,8 +1,8 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
 from threading import Thread
-from .DiffusersPipelines import DiffusersPipelines
-from .DiffusersUtils import tiledImageToImageOffset, tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
+from .inference.DiffusersPipelines import DiffusersPipelines
+from .inference.DiffusersUtils import tiledImageToImageOffset, tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
 import json

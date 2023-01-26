@@ -2,7 +2,6 @@ import torch
 import random
 import os
 import sys
-import re
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, 
                         StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, StableDiffusionImageVariationPipeline,
                         # Schedulers
@@ -12,10 +11,9 @@ from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, Stabl
                         ScoreSdeVeScheduler, IPNDMScheduler, )
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
-from .DiffusersModelPresets import DiffusersModelList
-from .StringUtils import findBetween
-from .ModelUtils import getModelsDir, downloadModel, convertToDiffusers
-from .ImageUtils import compositeImages
+from ..DiffusersModelPresets import DiffusersModelList
+from ..StringUtils import findBetween
+from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'

@@ -1,6 +1,6 @@
 from PIL import Image
 import math, random
-from .ImageUtils import createMask, compositeImages, applyColourCorrection
+from ..ImageUtils import createMask, compositeImages, applyColourCorrection
 from .DiffusersPipelines import MAX_SEED
 from huggingface_hub import login
 
