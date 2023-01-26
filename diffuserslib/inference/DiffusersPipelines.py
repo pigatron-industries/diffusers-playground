@@ -54,6 +54,7 @@ class DiffusersPipelines:
         self.tokenizers = {}
         self.text_encoders = {}
         self.embedded_token_parts = {}
+        self.textembedings = {}
         self.safety_checker = safety_checker
         self.presets = DiffusersModelList()
         
@@ -189,6 +190,7 @@ class DiffusersPipelines:
             return
         print(f"Creating text to image pipeline from model {model}")
         self.textToImagePreset = self.getModel(model)
+        # TODO load text embeddings here, using text encoder from model passed in
         args = self.createArgs(self.textToImagePreset)
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
