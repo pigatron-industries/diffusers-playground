@@ -1,4 +1,5 @@
 import torch
+from typing import Dict
 from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
@@ -52,8 +53,8 @@ class TextEmbedding:
 
 class TextEmbeddings:
     def __init__(self, base: str):
-        self.base = base
-        self.embeddings = {}
+        self.base: str = base
+        self.embeddings: Dict[str, TextEmbedding] = {}
 
     def load_directory(self, path: str, base: str):
         print(f'Loading text embeddings for base {base} from path {path}')
