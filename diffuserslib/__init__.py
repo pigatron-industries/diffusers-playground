@@ -4,6 +4,7 @@ from .TrainTextEmbedding import *
 from .ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
+from .FileUtils import *
 from .Web import *
 
 from .inference.DiffusersPipelines import *
