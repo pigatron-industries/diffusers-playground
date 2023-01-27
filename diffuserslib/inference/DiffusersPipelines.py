@@ -89,7 +89,7 @@ class DiffusersPipelines:
 
     def processPrompt(self, prompt: str, pipeline: DiffusersPipeline):
         if (pipeline.preset.base in self.textembeddings):
-            for textembedding in self.textembeddings[pipeline.preset.base]:
+            for textembedding in self.textembeddings[pipeline.preset.base].embeddings:
                 if (textembedding.token in prompt):
                     prompt = prompt.replace(textembedding.token, textembedding.expandedtoken)
         return prompt
