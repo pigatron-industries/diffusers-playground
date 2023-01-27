@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
 from threading import Thread
-from .inference.DiffusersPipelines import DiffusersPipelines, DEFAULT_INPAINT_MODEL, DEFAULT_TEXTTOIMAGE_MODEL, DEFAULT_DEPTHTOIMAGE_MODEL
+from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
@@ -75,7 +75,7 @@ class DiffusersView(FlaskView):
     def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== txt2img ===')
-            if(self.pipelines.imageToImagePipeline is None and model is None):
+            if(self.pipelines.pipelineImageToImage is None and model is None):
                 model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
@@ -106,7 +106,7 @@ class DiffusersView(FlaskView):
             print('=== img2img ===')
             initimage = base64DecodeImage(initimage)
 
-            if(self.pipelines.imageToImagePipeline is None and model is None):
+            if(self.pipelines.pipelineImageToImage is None and model is None):
                 model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
@@ -136,7 +136,7 @@ class DiffusersView(FlaskView):
             print('=== depth2img ===')
             initimage = base64DecodeImage(initimage)
 
-            if(self.pipelines.imageToImagePipeline is None and model is None):
+            if(self.pipelines.pipelineDepthToImage is None and model is None):
                 model = DEFAULT_DEPTHTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
@@ -160,13 +160,66 @@ class DiffusersView(FlaskView):
             raise e
 
 
+    def imagevarRun(self, initimage, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+        try:
+            print('=== imagevar ===')
+            initimage = base64DecodeImage(initimage)
+
+            if(self.pipelines.pipelineImageVariation is None and model is None):
+                model = DEFAULT_IMAGEVARIATION_MODEL
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createImageVariationPipeline(model)
+
+            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
+
+            outputimages = []
+            for i in range(0, batch):
+                outimage, usedseed = self.pipelines.imageVariation(inimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+
+            self.job.status = { "status":"finished", "action":"imagevariation", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"imagevariation", "error":e.message }
+            raise e
+
+
+    def instructpix2pixRun(self, initimage, prompt, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+        try:
+            print('=== instructpix2pix ===')
+            initimage = base64DecodeImage(initimage)
+
+            if(self.pipelines.pipelineInstructPixToPix is None and model is None):
+                model = DEFAULT_INSTRUCTPIXTOPIX_MODEL
+            if(model is not None and model != ""):
+                print(f'Model: {model}')
+                self.pipelines.createInstructPixToPixPipeline(model)
+
+            print(f'Prompt: {prompt}')
+            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
+
+            outputimages = []
+            for i in range(0, batch):
+                outimage, usedseed = self.pipelines.instructPixToPix(prompt=prompt, inimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+
+            self.job.status = { "status":"finished", "action":"instructpix2pix", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"instructpix2pix", "error":e.message }
+            raise e
+
+
     def img2imgTiledRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
                         method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
             initimage = base64DecodeImage(initimage)
 
-            if(self.pipelines.imageToImagePipeline is None and model is None):
+            if(self.pipelines.pipelineImageToImage is None and model is None):
                 model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
@@ -210,7 +263,7 @@ class DiffusersView(FlaskView):
             else:
                 maskimage = base64DecodeImage(maskimage)
 
-            if(self.pipelines.inpaintingPipeline is None and model is None):
+            if(self.pipelines.pipelineInpainting is None and model is None):
                 model = DEFAULT_INPAINT_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')

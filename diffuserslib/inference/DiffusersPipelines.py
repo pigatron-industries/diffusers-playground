@@ -2,10 +2,10 @@ import torch
 import random
 import os
 import sys
-import glob
 from typing import Dict
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, 
-                        StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, StableDiffusionImageVariationPipeline,
+                        StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
+                        StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -22,6 +22,8 @@ DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
 DEFAULT_DEPTHTOIMAGE_MODEL = 'stabilityai/stable-diffusion-2-depth'
 DEFAULT_INPAINT_MODEL = 'runwayml/stable-diffusion-inpainting'
+DEFAULT_IMAGEVARIATION_MODEL = 'lambdalabs/sd-image-variations-diffusers'
+DEFAULT_INSTRUCTPIXTOPIX_MODEL = 'timbrooks/instruct-pix2pix'
 DEFAULT_UPSCALE_MODEL = 'stabilityai/stable-diffusion-x4-upscaler'
 DEFAULT_CLIP_MODEL = 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K'
 DEFAULT_DEVICE = 'cuda'
@@ -55,6 +57,8 @@ class DiffusersPipelines:
         self.pipelineImageToImage: DiffusersPipeline = None
         self.pipelineDepthToImage: DiffusersPipeline = None
         self.pipelineInpainting: DiffusersPipeline = None
+        self.pipelineImageVariation: DiffusersPipeline = None
+        self.pipelineInstructPixToPix: DiffusersPipeline = None
         self.pipelineUpscale: DiffusersPipeline = None
 
         self.vae = None
@@ -117,8 +121,8 @@ class DiffusersPipelines:
         args['torch_dtype'] = torch.float16
         if (not self.safety_checker):
             args['safety_checker'] = None
-        if(preset.fp16):
-            args['revision'] = 'fp16'
+        if(preset.revision is not None):
+            args['revision'] = preset.revision
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
         return args
@@ -198,6 +202,30 @@ class DiffusersPipelines:
         self.addTextEmbeddingsToPipeline(self.pipelineInpainting)
 
 
+    def createImageVariationPipeline(self, model=DEFAULT_IMAGEVARIATION_MODEL):
+        if(self.pipelineInstructPixToPix is not None and self.pipelineInstructPixToPix.preset.modelid == model):
+            return
+        print(f"Creating image variation pipeline from model {model}")
+        preset = self.getModel(model)
+        args = self.createArgs(preset)
+        pipeline = StableDiffusionImageVariationPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        pipeline.enable_attention_slicing()
+        self.pipelineImageVariation = DiffusersPipeline(preset, pipeline)
+        self.addTextEmbeddingsToPipeline(self.pipelineImageVariation)
+
+
+    def createInstructPixToPixPipeline(self, model=DEFAULT_INSTRUCTPIXTOPIX_MODEL):
+        if(self.pipelineInstructPixToPix is not None and self.pipelineInstructPixToPix.preset.modelid == model):
+            return
+        print(f"Creating instruct pix to pix pipeline from model {model}")
+        preset = self.getModel(model)
+        args = self.createArgs(preset)
+        pipeline = StableDiffusionInstructPix2PixPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        pipeline.enable_attention_slicing()
+        self.pipelineInstructPixToPix = DiffusersPipeline(preset, pipeline)
+        self.addTextEmbeddingsToPipeline(self.pipelineInstructPixToPix)
+
+
     def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
         if(self.pipelineUpscale is not None and self.pipelineUpscale.preset.modelid == model):
             return
@@ -269,6 +297,28 @@ class DiffusersPipelines:
         with torch.autocast(self.inferencedevice):
             outimage = self.pipelineInpainting.pipeline(prompt, image=initimage.convert("RGB"), mask_image=maskimage.convert("RGB"), 
                                                negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+        return outimage, seed
+
+
+    def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, **kwargs):
+        if (self.pipelineImageVariation is None):
+            raise Exception('image variation pipeline not loaded')
+        generator, seed = self.createGenerator(seed)
+        if(scheduler is not None):
+            self.loadScheduler(scheduler, self.pipelineInpainting)
+        with torch.autocast(self.inferencedevice):
+            outimage = self.pipelineInpainting.pipeline(image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+        return outimage, seed
+
+
+    def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, **kwargs):
+        if (self.pipelineInstructPixToPix is None):
+            raise Exception('image instruct pix to pix not loaded')
+        generator, seed = self.createGenerator(seed)
+        if(scheduler is not None):
+            self.loadScheduler(scheduler, self.pipelineInstructPixToPix)
+        with torch.autocast(self.inferencedevice):
+            outimage = self.pipelineInstructPixToPix.pipeline(prompt, image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
         return outimage, seed
 
 
