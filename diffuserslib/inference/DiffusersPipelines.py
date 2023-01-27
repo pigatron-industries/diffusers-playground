@@ -154,7 +154,7 @@ class DiffusersPipelines:
             args['clip_model'] = self.clip_model
         self.textToImagePipeline = DiffusionPipeline.from_pretrained(self.textToImagePreset.modelpath, **args).to(self.device)
         self.textToImagePipeline.enable_attention_slicing()
-        self.addTextEmbeddingsToPipeline(self.textToImagePipeline)
+        self.addTextEmbeddingsToPipeline(self.textToImagePreset.base, self.textToImagePipeline)
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, **kwargs):
