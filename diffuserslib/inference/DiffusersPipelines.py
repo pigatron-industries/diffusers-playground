@@ -118,10 +118,6 @@ class DiffusersPipelines:
             args['revision'] = 'fp16'
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(preset.base in self.tokenizers):
-            args['tokenizer'] = self.tokenizers[preset.base]
-        if(preset.base in self.text_encoders):
-            args['text_encoder'] = self.text_encoders[preset.base]
         return args
 
 
