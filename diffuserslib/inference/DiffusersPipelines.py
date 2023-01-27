@@ -82,7 +82,7 @@ class DiffusersPipelines:
             self.textembeddings[base].load_directory(path, base)
 
     def addTextEmbeddingsToPipeline(self, base, pipeline):
-        self.textembeddings[base].add_to_model(pipeline.text_encode,  pipeline.tokenizer)
+        self.textembeddings[base].add_to_model(pipeline.text_encoder, pipeline.tokenizer)
 
 
     def processPrompt(self, prompt):
