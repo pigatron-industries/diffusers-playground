@@ -45,7 +45,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/async/<action>", methods=["POST"])
     def asyncAction(self, action):
-        if (self.job.thread.is_alive()):
+        if (self.job.thread is not None and self.job.thread.is_alive()):
             return jsonify(self.job.status)
         r = request
         params = json.loads(r.data)

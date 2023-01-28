@@ -54,6 +54,7 @@ class SDConfig:
         "action": "txt2img",
         "model": "runwayml/stable-diffusion-v1-5",
         "prompt": "",
+        "instruct": "",
         "negprompt": "",
         "seed": "",
         "steps": 15,
@@ -109,6 +110,7 @@ class SDParameters:
     "This is Stable Diffusion Parameter Class"     
     model = None
     prompt = ""
+    instruct = ""
     negprompt = ""
     steps = 0
     seed = 0
@@ -330,6 +332,18 @@ class ModifierDialog(QDialog):
             self.modifiers.setPlainText(SDConfig.dlgData["modifiers"])
 
 
+fields = {
+    'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'scheduler'],
+    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'depth2img':       ['prompt', 'negprompt', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
+    'inpaint':         ['prompt', 'negprompt', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
+    'imagevariation':  ['steps', 'seed', 'scale', 'num', 'image', 'scheduler'],
+    'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+}
+
+
 # default dialog for image generation: txt2img, img2img and inpainting
 class SDDialog(QDialog):
     def __init__(self,action,image):
@@ -347,13 +361,22 @@ class SDDialog(QDialog):
         formLayout= QVBoxLayout()
         self.layout.addLayout(formLayout)
 
-        formLayout.addWidget(QLabel("Prompt"))
-        self.prompt = QLineEdit()
-        self.prompt.setText(data["prompt"])            
-        formLayout.addWidget(self.prompt)
-        self.modifiers= ModifierDialog.modifierInput(self,formLayout)
+        actionfields = fields[action]
 
-        if(data["action"] in ("txt2img", "img2img", "img2imgTiled")):
+        if('prompt' in actionfields):
+            formLayout.addWidget(QLabel("Prompt"))
+            self.prompt = QLineEdit()
+            self.prompt.setText(data["prompt"])            
+            formLayout.addWidget(self.prompt)
+            self.modifiers= ModifierDialog.modifierInput(self,formLayout)
+
+        if('instruct' in actionfields):
+            formLayout.addWidget(QLabel("Instruction"))
+            self.instruct = QLineEdit()
+            self.instruct.setText(data["instruct"])            
+            formLayout.addWidget(self.instruct)
+
+        if('model' in actionfields):
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
             models = getModels()
@@ -363,13 +386,13 @@ class SDDialog(QDialog):
             self.model.setCurrentText(data.get("model", "runwayml/stable-diffusion-v1-5"))
             formLayout.addWidget(self.model)
 
-        if (not data["action"] == ("upscale")):
+        if('negprompt' in actionfields):
             formLayout.addWidget(QLabel("Negative"))
             self.negprompt = QLineEdit()
             self.negprompt.setText(data.get("negprompt", ""))
             formLayout.addWidget(self.negprompt) 
 
-        if (data["action"] == "upscale"):
+        if('upscale_method' in actionfields):
             upscalemethod_label=QLabel("Upscale method")
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
@@ -380,7 +403,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(upscale_label)
             self.upscale_amount=self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
 
-        if (data["action"] == "img2imgTiled"):
+        if('tile_method' in actionfields):
             tilemethod_label = QLabel("Tile method")
             formLayout.addWidget(tilemethod_label)
             self.tile_method = QComboBox()
@@ -412,22 +435,23 @@ class SDDialog(QDialog):
             self.tile_alignmenty.setCurrentText(data.get("tile_alignmenty","tile_centre"))
             formLayout.addWidget(self.tile_alignmenty)
 
-        if (data["action"] in ("img2img", "img2imgTiled")):
+        if('strength' in actionfields):
             formLayout.addWidget(QLabel("Strength"))
             self.strength=self.addSlider(formLayout,data["strength"]*100,0,100,1,100)
 
-        if (data["action"] in ("txt2img", "inpaint")):
+        if('steps' in actionfields):
             steps_label=QLabel("Steps")
             steps_label.setToolTip("more steps = slower but often better quality. Recommendation start with lower step like 15 and update in image overview with higher one like 50")
             formLayout.addWidget(steps_label)        
             self.steps=self.addSlider(formLayout,data["steps"],1,250,5,1)
 
-        if (not data["action"] == "upscale"):
+        if('scale' in actionfields):
             scale_label=QLabel("Guidance Scale")
             scale_label.setToolTip("how strongly the image should follow the prompt")
             formLayout.addWidget(scale_label)        
             self.scale=self.addSlider(formLayout,data.get("scale", 9)*10,10,300,5,10)
      
+        if('seed' in actionfields):
             seed_label=QLabel("Seed (empty=random)")
             seed_label.setToolTip("same seed and same prompt = same image")
             formLayout.addWidget(seed_label)      
@@ -435,28 +459,31 @@ class SDDialog(QDialog):
             self.seed.setText(data["seed"])                  
             formLayout.addWidget(self.seed)
 
-        if (not data["action"]=="upscale" and not data["action"]=="img2imgTiled"):
+        if('num' in actionfields):
             formLayout.addWidget(QLabel("Number images"))        
             self.num=self.addSlider(formLayout,data["num"],1,4,1,1)
    
-        scheduler_label=QLabel("Scheduler")
-        formLayout.addWidget(scheduler_label)           
-        self.scheduler = QComboBox()
-        self.scheduler.addItems([
-            'DDIMScheduler',
-            'DPMSolverMultistepScheduler', 
-            'EulerAncestralDiscreteScheduler',
-            'EulerDiscreteScheduler',
-            # 'HeunDiscreteScheduler',
-            # 'KDPM2AncestralDiscreteScheduler',
-            # 'KDPM2DiscreteScheduler', 
-            'LMSDiscreteScheduler', 
-        ])
-        self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
-        formLayout.addWidget(self.scheduler)
+        if('scheduler' in actionfields):
+            scheduler_label=QLabel("Scheduler")
+            formLayout.addWidget(scheduler_label)           
+            self.scheduler = QComboBox()
+            self.scheduler.addItems([
+                'DDIMScheduler',
+                'DPMSolverMultistepScheduler', 
+                'EulerAncestralDiscreteScheduler',
+                'EulerDiscreteScheduler',
+                # 'HeunDiscreteScheduler',
+                # 'KDPM2AncestralDiscreteScheduler',
+                # 'KDPM2DiscreteScheduler', 
+                'LMSDiscreteScheduler', 
+            ])
+            self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
+            formLayout.addWidget(self.scheduler)
+
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
-        if (not data["action"]=="txt2img" and not data["action"]=="upscale" and not data["action"]=="img2imgTiled"):
+
+        if('image' in actionfields):
             imgLabel=QLabel()        
             self.layout.addWidget(imgLabel) 
             imgLabel.setPixmap(QPixmap.fromImage(image))  
@@ -484,39 +511,36 @@ class SDDialog(QDialog):
         
     # put data from dialog in configuration and save it        
     def setDlgData(self):
-
-        if (not SDConfig.dlgData["action"] == ("upscale")):
+        actionfields = fields[SDConfig.dlgData["action"]]
+        if('prompt' in actionfields):
             SDConfig.dlgData["prompt"]=self.prompt.text()
-            SDConfig.dlgData["negprompt"]=self.negprompt.text()
-            SDConfig.dlgData["seed"]=self.seed.text()
-            SDConfig.dlgData["scale"]=self.scale.value()/10
             SDConfig.dlgData["modifiers"]=self.modifiers.toPlainText()
+        if('negprompt' in actionfields):
+            SDConfig.dlgData["negprompt"]=self.negprompt.text()
+        if('seed' in actionfields):
+            SDConfig.dlgData["seed"]=self.seed.text()
+        if('scale' in actionfields):
+            SDConfig.dlgData["scale"]=self.scale.value()/10
+        if('scheduler' in actionfields):
             SDConfig.dlgData["scheduler"]=self.scheduler.currentText()
-
-        if (SDConfig.dlgData["action"] in ("txt2img", "img2img", "img2imgTiled")):
+        if('model' in actionfields):
             SDConfig.dlgData["model"]=self.model.currentText()
-
-        if (SDConfig.dlgData["action"] in ("txt2img", "img2img", "inpaint")):
+        if('num' in actionfields):
             SDConfig.dlgData["num"]=int(self.num.value())
-
-        if (SDConfig.dlgData["action"] in ("img2img", "img2imgTiled")):
+        if('strength' in actionfields):
             SDConfig.dlgData["strength"]=self.strength.value()/100
-
-        if (SDConfig.dlgData["action"] in ("txt2img", "inpaint")):
+        if('steps' in actionfields):
             SDConfig.dlgData["steps"]=int(self.steps.value())
-
-        if (SDConfig.dlgData["action"] == "img2imgTiled"):
+        if('tile_method' in actionfields):
             SDConfig.dlgData["tile_method"]=self.tile_method.currentText()
             SDConfig.dlgData["tile_width"]=self.tile_width.value()
             SDConfig.dlgData["tile_height"]=self.tile_height.value()
             SDConfig.dlgData["tile_overlap"]=self.tile_overlap.value()
             SDConfig.dlgData["tile_alignmentx"]=self.tile_alignmentx.currentText()
             SDConfig.dlgData["tile_alignmenty"]=self.tile_alignmenty.currentText()
-
-        if (SDConfig.dlgData["action"] == "upscale"):
+        if('upscale_method' in actionfields):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
-
         SDConfig.save(SDConfig)
 
 
@@ -598,11 +622,12 @@ class showImages(QDialog):
             btnUpdate.clicked.connect(lambda ch, num=i: self.updateImageStart(num))
             i=i+1
             
-        #layout.addWidget(self.buttonBox)
+        #TODO add scale control here
+        
         top_layout.addWidget(QLabel("Update one image with new Steps value"))
         self.steps_update=SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("steps_update",50),1,250,5,1)
         
-        if (params.action in ("img2img", "inpaint")):
+        if (params.action in ("img2img", "inpaint", "img2imgTiled")):
             top_layout.addWidget(QLabel("Update with new Strengths value"))
             self.strength_update=SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("strength",0.5)*100,0,100,1,100)
 
@@ -1038,6 +1063,73 @@ def Upscale():
         runSD(params)
 
 
+def ImageVariation():
+    s=getSelection()
+    if (s==None):   
+        return    
+    n = getLayer()
+    if (n==None):   
+        return  
+    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
+    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    image64 = base64EncodeImage(image)
+    
+    dlg = SDDialog("imagevariation", image)
+    dlg.resize(900,200)
+
+    if dlg.exec():
+        dlg.setDlgData()
+        p = SDParameters()
+        data=SDConfig.dlgData
+        p.action="imagevariation"
+        p.steps=data["steps"]
+        p.seed=data["seed"]
+        p.num=data["num"]
+        p.scale=data["scale"]
+        p.scheduler=data["scheduler"]
+        p.image64=image64
+        runSD(p)
+
+
+def InstructPixToPix():
+    s=getSelection()
+    if (s==None):   
+        return    
+    n = getLayer()
+    if (n==None):   
+        return  
+    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
+    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    image64 = base64EncodeImage(image)
+    
+    dlg = SDDialog("instructpix2pix",image)
+    dlg.resize(900,200)
+
+    if dlg.exec():
+        dlg.setDlgData()
+        p = SDParameters()
+        data=SDConfig.dlgData
+        p.action="instructpix2pix"
+        p.instruct=data["instruct"]
+        p.steps=data["steps"]
+        p.seed=data["seed"]
+        p.num=data["num"]
+        p.scale=data["scale"]
+        p.scheduler=data["scheduler"]
+        p.image64=image64
+        runSD(p)
+
+
+# TODO creating parameters should be replaced with this
+def getParametersForAction(action, data):
+    p = SDParameters()
+    p.action = action
+    actionfields = fields[action]
+    for field in actionfields:
+        setattr(p, field, data[field])
+    return p
+
+
 def FaceEnhance(): 
     doc = getDocument()
     layer = getLayer()
@@ -1139,11 +1231,3 @@ def expandSelection():
     s2.select(x, y, SDConfig.width, SDConfig.height, 1)
     d.setSelection(s2)
     d.refreshProjection()
-
-
-#Inpainting()
-#TxtToImage()
-#ImageToImage()
-#Config()
-#expandSelection()
-

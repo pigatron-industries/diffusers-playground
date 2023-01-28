@@ -30,14 +30,22 @@ class SDDocker(DockWidget):
         h_layout2.addWidget(btnTiledImg2Img) 
         mainWidget.layout().addLayout(h_layout2)
 
+        btnImageVariation = QPushButton("Image Variation", mainWidget)
+        btnInstructPix2Pix = QPushButton("Instruct Pix 2 Pix", mainWidget)
+        h_layout3 = QHBoxLayout()
+        h_layout3.addWidget(btnImageVariation) 
+        h_layout3.addWidget(btnInstructPix2Pix)
+        mainWidget.layout().addLayout(h_layout3)
+
         btnConfig = QPushButton("", mainWidget)
         btnConfig.setIcon(Krita.instance().icon('configure'))
         btnSelection = QPushButton("", mainWidget)
         btnSelection.setIcon(Krita.instance().icon('tool_rect_selection'))
-        h_layout3 = QHBoxLayout()
-        h_layout3.addWidget(btnConfig)        
-        h_layout3.addWidget(btnSelection)        
-        mainWidget.layout().addLayout(h_layout3)
+        h_layout4 = QHBoxLayout()
+        h_layout4.addWidget(btnConfig)        
+        h_layout4.addWidget(btnSelection)        
+        mainWidget.layout().addLayout(h_layout4)
+
         btnTxt2Txt.clicked.connect(sd_main.TxtToImage)
         btnImg2Img.clicked.connect(sd_main.ImageToImage)
         btnDepth2Img.clicked.connect(sd_main.DepthToImage)
@@ -46,6 +54,10 @@ class SDDocker(DockWidget):
 
         # btnFaceEnhance.clicked.connect(sd_main.FaceEnhance)
         btnTiledImg2Img.clicked.connect(sd_main.TiledImageToImage)
+
+        btnImageVariation.clicked.connect(sd_main.ImageVariation)
+        btnInstructPix2Pix.clicked.connect(sd_main.InstructPixToPix)
+
         btnConfig.clicked.connect(sd_main.Config)
         btnSelection.clicked.connect(sd_main.expandSelection)
 
