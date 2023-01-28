@@ -1,4 +1,4 @@
-
+from krita import *
 
 def errorMessage(text,detailed):
     msgBox= QMessageBox()

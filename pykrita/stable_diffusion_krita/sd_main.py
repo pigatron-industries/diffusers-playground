@@ -684,8 +684,7 @@ def runSD(params: SDParameters):
     }    
 
     print(j)
-    data = json.dumps(j).encode("utf-8")
-    res=getServerDataAsync(params.action, data)
+    res=getServerDataAsync(params.action, j)
     if not res: return    
     response=json.loads(res)
     # print(response)

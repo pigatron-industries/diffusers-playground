@@ -9,7 +9,8 @@ import json
 
 
 
-def getServerDataAsync(action, reqData):
+def getServerDataAsync(action, data):
+    reqData = json.dumps(data).encode("utf-8")
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")
     endpoint+="/api/"
@@ -19,8 +20,6 @@ def getServerDataAsync(action, reqData):
         "Accept": "application/json",
     }    
     try:
-        print("endpoint")
-        print(endpoint)
         # do a 'ping' to check server is  running first
         req = urllib.request.Request(endpoint, None, headers, method="GET")
         with urllib.request.urlopen(req) as f:
@@ -29,6 +28,15 @@ def getServerDataAsync(action, reqData):
         req = urllib.request.Request(asyncEndpoint+"/"+action, reqData, headers, method="POST")
         with urllib.request.urlopen(req) as f:
             res = f.read()
+
+        progress = QProgressDialog("Running SD...", "Cancel", 0, 100)
+        progress.setMinimumDuration(0)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setValue(0)
+        progress.show()
+        progress.forceShow()
+        i = 0
+
         while (True):
             time.sleep(5)
             # poll get enpoint for response
@@ -36,6 +44,19 @@ def getServerDataAsync(action, reqData):
             with urllib.request.urlopen(req) as f:
                 res = f.read()
             data = json.loads(res)
+
+            i = i + 1
+            done = data.get("done", 0)
+            total = data.get("total", 1)
+            if(done == 0):
+                done = 1
+            else:
+                done = done*100 / total
+            progress.setValue(done)
+            progress.setLabelText(data.get("description", ""))
+            progress.show()
+            progress.forceShow()
+
             if(data["status"] == "finished"):
                 return res
             elif(data["status"] == "error"):
