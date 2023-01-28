@@ -70,10 +70,10 @@ class DiffusersPipelines:
         self.presets.addModels(presets)
 
     
-    def addPreset(self, modelid, base, fp16=True, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+    def addPreset(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
-        self.presets.addModel(modelid, base, fp16=fp16, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+        self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
@@ -274,7 +274,7 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def depthToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, **kwargs):
+    def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, **kwargs):
         if (self.pipelineDepthToImage is None):
             raise Exception('depth to image pipeline not loaded')
         inimage = inimage.convert("RGB")
@@ -283,7 +283,7 @@ class DiffusersPipelines:
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.pipelineDepthToImage)
         with torch.autocast(self.inferencedevice):
-            image = self.pipelineDepthToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
+            image = self.pipelineDepthToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, steps=steps, generator=generator).images[0]
         return image, seed
 
 

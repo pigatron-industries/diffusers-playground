@@ -131,7 +131,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, steps=50, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== depth2img ===')
             initimage = base64DecodeImage(initimage)
@@ -148,7 +148,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
-                outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
+                outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, steps=steps, seed=seed, scheduler=scheduler)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -160,7 +160,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def imagevarRun(self, initimage, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def imagevariationRun(self, initimage, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== imagevar ===')
             initimage = base64DecodeImage(initimage)
