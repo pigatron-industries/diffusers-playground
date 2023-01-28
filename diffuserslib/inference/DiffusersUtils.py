@@ -11,13 +11,18 @@ def loginHuggingFace(token):
     login(token=token)
 
 
-def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128):
+def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128, callback=None):
     if(seed is None):
         seed = random.randint(0, MAX_SEED)
     
     xslices = math.ceil((initimg.width) / (tilewidth-overlap))
     yslices = math.ceil((initimg.height) / (tileheight-overlap))
+    totalslices = xslices * yslices
+    slicesdone = 0
     print(f'Processing {xslices} x {yslices} slices')
+    if(callback is not None):
+        callback("Running", totalslices, slicesdone)
+
     if(overlap >= 0):
         merged_image = initimg.convert("RGBA")
     else:
@@ -53,21 +58,26 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
 
             merged_image.alpha_composite(finished_slice, (x, y))
 
+            if(callback is not None):
+                slicesdone = slicesdone + 1
+                callback("Running", totalslices, slicesdone)
+
     return merged_image, seed
 
 
 def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0):
+                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0, callback=None):
     # creates a new image slightly bigger than original image to allow tiling to start at negative offset
     offsetimage = Image.new(initimg.mode, (initimg.width-offsetx, initimg.height-offsety))
     offsetimage.paste(initimg, (-offsetx, -offsety, -offsetx+initimg.width, -offsety+initimg.height))
-    outimage, seed = tiledImageToImage(pipelines, offsetimage, prompt, negprompt, strength, scale, scheduler, seed, tilewidth, tileheight, overlap)
+    outimage, seed = tiledImageToImage(pipelines=pipelines, initimg=offsetimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, 
+                                       scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback)
     image = outimage.crop((-offsetx, -offsety, outimage.width, outimage.height))
     return image, seed
 
 
 def tiledImageToImageCentred(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                            tilewidth=640, tileheight=640, overlap=128, alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0):
+                            tilewidth=640, tileheight=640, overlap=128, alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, callback=None):
     # find top left of initial centre tile 
     offsetx = offsetx + int(initimg.width/2)
     offsety = offsety + int(initimg.height/2)
@@ -87,7 +97,7 @@ def tiledImageToImageCentred(pipelines, initimg, prompt, negprompt, strength, sc
         offsety = offsety - (tileheight-overlap)
 
     return tiledImageToImageOffset(pipelines, initimg=initimg, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, 
-                            tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety)
+                            tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, callback=callback)
 
 
 def compositedInpaint(pipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3):
