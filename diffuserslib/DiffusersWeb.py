@@ -13,7 +13,7 @@ from IPython.display import display
 class DiffusersJob():
     def __init__(self):
         self.thread = None
-        self.status = { "status":"none", "action":"none" }
+        self.status = { "status":"none", "action":"none", "description": "", "total": 0, "done": 0}
 
 
 class DiffusersView(FlaskView):
@@ -66,7 +66,7 @@ class DiffusersView(FlaskView):
         return jsonify(output)
 
 
-    def updateAsyncProgress(self, description, total, done):
+    def updateProgress(self, description, total, done):
         self.job.status['description'] = description
         self.job.status['total'] = total
         self.job.status['done'] = done
@@ -79,7 +79,7 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
-                self.updateAsyncProgress(f"Loading Model ${model}", 1, 0)
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createTextToImagePipeline(model)
 
             print(f'Prompt: {prompt}')
@@ -88,7 +88,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
-                self.updateAsyncProgress(f"Running", 1, 0)
+                self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -110,6 +110,7 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createImageToImagePipeline(model)
 
             print(f'Prompt: {prompt}')
@@ -118,6 +119,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = self.pipelines.imageToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler)
                 outimage = applyColourCorrection(initimage, outimage)
                 display(outimage)
@@ -140,6 +142,7 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_DEPTHTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createDepthToImagePipeline(model)
 
             print(f'Prompt: {prompt}')
@@ -148,6 +151,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, steps=steps, seed=seed, scheduler=scheduler)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -169,12 +173,14 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_IMAGEVARIATION_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createImageVariationPipeline(model)
 
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = self.pipelines.imageVariation(initimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -195,6 +201,7 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_INSTRUCTPIXTOPIX_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createInstructPixToPixPipeline(model)
 
             print(f'Prompt: {prompt}')
@@ -202,6 +209,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = self.pipelines.instructPixToPix(prompt=prompt, initimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -223,6 +231,7 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_TEXTTOIMAGE_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createImageToImagePipeline(model)
 
             print(f'Method: {method}')
@@ -233,6 +242,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 if (method=="singlepass"):
                     outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
@@ -267,6 +277,7 @@ class DiffusersView(FlaskView):
                 model = DEFAULT_INPAINT_MODEL
             if(model is not None and model != ""):
                 print(f'Model: {model}')
+                self.updateProgress("Loading Model", 1, 0)
                 self.pipelines.createInpaintPipeline(model)
 
             print(f'Prompt: {prompt}')
@@ -276,6 +287,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 if(initimage.height > 512 or initimage.width > 512):
                     outimage, usedseed = tiledInpaint(self.pipelines, initimg=initimage, maskimg=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, 
                                                     scale=scale, scheduler=scheduler, seed=seed, overlap=128)
@@ -301,6 +313,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
                 if(method == "stable-difusion"):
                     outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler)
                 elif(method.startswith("esrgan")):
