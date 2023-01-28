@@ -5,14 +5,15 @@ from .. import RandomNumberArgument, RandomChoiceArgument
 import math
 
 
-def shapeGeometryPipeline(size=(512, 512), background="white", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
+def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
                           symmetry=RandomChoiceArgument(["horizontal", "vertical", "rotation", "none"])):
     geometry = GeometryPipeline(size=size, background=background)
     for i in range(shapes):
         geometry.addTask(DrawRegularShape(
             position=RandomPositionArgument(), 
             size=RandomNumberArgument(minsize, maxsize),
-            sides=sides
+            sides=sides,
+            fill=foreground
         ))
     geometry.addTask(Symmetrize(
         type=symmetry
