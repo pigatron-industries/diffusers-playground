@@ -110,7 +110,6 @@ class SDParameters:
     "This is Stable Diffusion Parameter Class"     
     model = None
     prompt = ""
-    instruct = ""
     negprompt = ""
     steps = 0
     seed = 0
@@ -373,7 +372,7 @@ class SDDialog(QDialog):
         if('instruct' in actionfields):
             formLayout.addWidget(QLabel("Instruction"))
             self.instruct = QLineEdit()
-            self.instruct.setText(data["instruct"])            
+            self.instruct.setText(data.get("instruct", ""))
             formLayout.addWidget(self.instruct)
 
         if('model' in actionfields):
@@ -515,6 +514,8 @@ class SDDialog(QDialog):
         if('prompt' in actionfields):
             SDConfig.dlgData["prompt"]=self.prompt.text()
             SDConfig.dlgData["modifiers"]=self.modifiers.toPlainText()
+        if('instruct' in actionfields):
+            SDConfig.dlgData["instruct"]=self.instruct.text()
         if('negprompt' in actionfields):
             SDConfig.dlgData["negprompt"]=self.negprompt.text()
         if('seed' in actionfields):
@@ -1110,7 +1111,7 @@ def InstructPixToPix():
         p = SDParameters()
         data=SDConfig.dlgData
         p.action="instructpix2pix"
-        p.instruct=data["instruct"]
+        p.prompt=data["instruct"]
         p.steps=data["steps"]
         p.seed=data["seed"]
         p.num=data["num"]
