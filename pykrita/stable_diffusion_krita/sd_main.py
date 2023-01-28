@@ -1,15 +1,17 @@
 from cmd import PROMPT
 from multiprocessing import dummy
 import urllib.request
-import http.client
 import json
 from krita import *
 from PyQt5.Qt import QByteArray
 from PyQt5.QtGui  import QImage, QPixmap
 import array
-import time
 from copy import copy
 from pathlib import Path
+
+from .sd_common import *
+from .sd_server import *
+from .sd_config import *
 
 # Stable Diffusion Plugin fpr Krita
 # (C) 2022, Nicolay Mausz
@@ -42,68 +44,6 @@ class ModifierData:
  #            str=f_in.read()
   #      self.unserialize(self,str)    
 
-class SDConfig:
-    "This is Stable Diffusion Plugin Main Configuration"     
-    url = "http://localhost:5000"
-    type="Colab"
-    inpaint_mask_blur=4
-    inpaint_mask_content="latent noise"     
-    width=512
-    height=512    
-    dlgData={
-        "action": "txt2img",
-        "model": "runwayml/stable-diffusion-v1-5",
-        "prompt": "",
-        "instruct": "",
-        "negprompt": "",
-        "seed": "",
-        "steps": 15,
-        "steps_update": 50,
-        "num": 2,
-        "modifiers": "highly detailed\n",
-        "scale": 7.5,
-        "strength": .75,
-        "scheduler":"DPMSolverMultistepScheduler",
-        "upscale_amount": 2,
-        "upscale_method": "all",
-        "tile_method": "singlepass",
-        "tile_width": 640,
-        "tile_height": 640,
-        "tile_overlap": 128,
-        "tile_alignmentx": "tile_centred",
-        "tile_alignmenty": "tile_centred",
-    }
-
-
-    def serialize(self):
-        obj={
-            "url":self.url,
-            "type":self.type,
-            "inpaint_mask_blur":self.inpaint_mask_blur, 
-            "inpaint_mask_content":self.inpaint_mask_content,
-            "width":self.width, 
-            "height":self.height,
-            "type": self.type,
-            "dlgData":self.dlgData
-        }
-        return json.dumps(obj)
-    def unserialize(self,str):
-        obj=json.loads(str)
-        self.url=obj.get("url","http://localhost:7860")
-        self.type=obj.get("type","Colab")
-        self.dlgData=obj["dlgData"]
-        self.inpaint_mask_blur=obj.get("inpaint_mask_blur",4)
-        self.inpaint_mask_content=obj.get("inpaint_mask_content","latent noise")
-        self.width=obj.get("width",512)
-        self.height=obj.get("height",512)
-    def save(self):
-        str=self.serialize(self)
-        Krita.instance().writeSetting ("SDPlugin", "Config", str)
-    def load(self):
-        str=Krita.instance().readSetting ("SDPlugin", "Config",None)
-        if (not str): return
-        self.unserialize(self,str)
-
 SDConfig.load(SDConfig)
 
 class SDParameters:
@@ -134,16 +74,6 @@ class SDParameters:
     tile_overlap = None
     tile_alignmentx = None
     tile_alignmenty = None
-
-
-def errorMessage(text,detailed):
-    msgBox= QMessageBox()
-    msgBox.resize(500,200)
-    msgBox.setWindowTitle("Stable Diffusion")
-    msgBox.setText(text)
-    msgBox.setDetailedText(detailed)
-    msgBox.setStyleSheet("QLabel{min-width: 700px;}")
-    msgBox.exec()
 
 
 def createSlider(dialog,layout,value,min,max,steps,divider):
@@ -710,77 +640,6 @@ def getModels():
     with urllib.request.urlopen(req) as f:
         res = f.read()
     return json.loads(res)
-
-
-def getServerData(action, reqData):
-    endpoint=SDConfig.url
-    endpoint=endpoint.strip("/")
-    endpoint+="/api/"
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }    
-    try:
-        print("endpoint")
-        print(endpoint)
-        req = urllib.request.Request(endpoint, None, headers, method="GET") # do a 'ping' to check server is  running first
-        with urllib.request.urlopen(req) as f:
-            res = f.read()
-        req = urllib.request.Request(endpoint+action, reqData, headers, method="POST")
-        with urllib.request.urlopen(req) as f:
-            res = f.read()
-            return res
-    except http.client.IncompleteRead as e:
-        print("Incomplete Read Exception - better restart Colab or ")
-        res = e.partial 
-        return res           
-    except Exception as e:
-        error_message = traceback.format_exc() 
-        errorMessage("Server Error","Endpoint: "+endpoint+", Reason: "+error_message)        
-        return None
-
-
-def getServerDataAsync(action, reqData):
-    endpoint=SDConfig.url
-    endpoint=endpoint.strip("/")
-    endpoint+="/api/"
-    asyncEndpoint = endpoint+"async"
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    }    
-    try:
-        print("endpoint")
-        print(endpoint)
-        # do a 'ping' to check server is  running first
-        req = urllib.request.Request(endpoint, None, headers, method="GET")
-        with urllib.request.urlopen(req) as f:
-            res = f.read()
-        # make initial request to start async job
-        req = urllib.request.Request(asyncEndpoint+"/"+action, reqData, headers, method="POST")
-        with urllib.request.urlopen(req) as f:
-            res = f.read()
-        while (True):
-            time.sleep(5)
-            # poll get enpoint for response
-            req = urllib.request.Request(asyncEndpoint, None, headers, method="GET")
-            with urllib.request.urlopen(req) as f:
-                res = f.read()
-            data = json.loads(res)
-            if(data["status"] == "finished"):
-                return res
-            elif(data["status"] == "error"):
-                errorMessage("Job Error", "Reason: "+data["error"])
-                return None
-
-    except http.client.IncompleteRead as e:
-        print("Incomplete Read Exception - better restart Colab or ")
-        res = e.partial 
-        return res           
-    except Exception as e:
-        error_message = traceback.format_exc() 
-        errorMessage("Server Error", "Endpoint: "+endpoint+", Reason: "+error_message)        
-        return None
 
 
 def runSD(params: SDParameters):
