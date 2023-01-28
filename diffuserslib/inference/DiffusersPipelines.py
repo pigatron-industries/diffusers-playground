@@ -307,7 +307,7 @@ class DiffusersPipelines:
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.pipelineImageVariation)
         with torch.autocast(self.inferencedevice):
-            outimage = self.pipelineInpainting.pipeline(image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+            outimage = self.pipelineImageVariation.pipeline(image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
         return outimage, seed
 
 
