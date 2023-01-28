@@ -12,8 +12,8 @@ from IPython.display import display
 
 class DiffusersJob():
     def __init__(self):
-        thread = None
-        status = { "status":"none", "action":"none" }
+        self.thread = None
+        self.status = { "status":"none", "action":"none" }
 
 
 class DiffusersView(FlaskView):
