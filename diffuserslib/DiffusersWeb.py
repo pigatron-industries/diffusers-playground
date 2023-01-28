@@ -175,7 +175,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
-                outimage, usedseed = self.pipelines.imageVariation(initmage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outimage, usedseed = self.pipelines.imageVariation(initimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"imagevariation", "images": outputimages }
@@ -202,7 +202,7 @@ class DiffusersView(FlaskView):
 
             outputimages = []
             for i in range(0, batch):
-                outimage, usedseed = self.pipelines.instructPixToPix(prompt=prompt, initmage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outimage, usedseed = self.pipelines.instructPixToPix(prompt=prompt, initimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"instructpix2pix", "images": outputimages }
