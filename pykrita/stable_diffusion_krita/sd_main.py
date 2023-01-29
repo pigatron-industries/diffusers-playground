@@ -294,8 +294,8 @@ class SDDialog(QDialog):
 
         if('prompt' in actionfields):
             formLayout.addWidget(QLabel("Prompt"))
-            self.prompt = QLineEdit()
-            self.prompt.setText(data["prompt"])            
+            self.prompt = QPlainTextEdit()
+            self.prompt.setPlainText(data["prompt"])            
             formLayout.addWidget(self.prompt)
             self.modifiers= ModifierDialog.modifierInput(self,formLayout)
 
@@ -442,7 +442,7 @@ class SDDialog(QDialog):
     def setDlgData(self):
         actionfields = fields[SDConfig.dlgData["action"]]
         if('prompt' in actionfields):
-            SDConfig.dlgData["prompt"]=self.prompt.text()
+            SDConfig.dlgData["prompt"]=self.prompt.toPlainText()
             SDConfig.dlgData["modifiers"]=self.modifiers.toPlainText()
         if('instruct' in actionfields):
             SDConfig.dlgData["instruct"]=self.instruct.text()
@@ -518,8 +518,8 @@ class showImages(QDialog):
         top_layout=QVBoxLayout()        
         prompt_layout=QHBoxLayout()        
         top_layout.addLayout(prompt_layout)
-        self.prompt = QLineEdit()
-        self.prompt.setText(SDConfig.dlgData.get("prompt",""))
+        self.prompt = QPlainTextEdit()
+        self.prompt.setPlainText(SDConfig.dlgData.get("prompt",""))
         prompt_layout.addWidget(self.prompt,stretch=9)
         btn_regenerate=QPushButton("Generate with steps "+str(SDConfig.dlgData["steps"]))         
         btn_regenerate.clicked.connect(self.regenerateStart)
@@ -598,7 +598,7 @@ class showImages(QDialog):
         SDConfig.save(SDConfig)
         p.num=1
         p.steps=SDConfig.dlgData["steps_update"]
-        SDConfig.dlgData["prompt"]=self.prompt.text()
+        SDConfig.dlgData["prompt"]=self.prompt.toPlainText()
         SDConfig.dlgData["modifiers"]=self.modifiers.toPlainText()
         p.prompt= getFullPrompt(self)        
         self.updateImageNum=num
@@ -740,7 +740,7 @@ def getFullPrompt(dlg):
         if (m and m[0]!="#"): modifiers+=", "+m
 
    # modifiers=dlg.modifiers.toPlainText().replace("\n", ", ")
-    prompt=dlg.prompt.text()
+    prompt=dlg.prompt.toPlainText()
     if (not prompt):      
         errorMessage("Empty prompt","Type some text in prompt input box about what you want to see.")
         return ""
