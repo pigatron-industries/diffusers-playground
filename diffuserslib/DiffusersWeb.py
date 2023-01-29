@@ -7,7 +7,7 @@ from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, apply
 from .ImageTools import ImageTools
 import json
 
-from IPython.display import display
+from IPython.display import display, clear_output
 
 
 class DiffusersJob():
@@ -47,6 +47,7 @@ class DiffusersView(FlaskView):
     def asyncAction(self, action):
         if (self.job.thread is not None and self.job.thread.is_alive()):
             return self.getJobAsync()
+        clear_output()
         r = request
         params = json.loads(r.data)
         runfunc = getattr(self, f'{action}Run')
