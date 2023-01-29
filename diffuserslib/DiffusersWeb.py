@@ -251,7 +251,7 @@ class DiffusersView(FlaskView):
                 elif (method=="multipass"):
                     outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                    passes=2, strengthMult=0.5)
+                                                                    passes=2, strengthMult=0.5, callback=self.updateProgress)
                 elif (method=="inpaint_seams"):
                     outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
