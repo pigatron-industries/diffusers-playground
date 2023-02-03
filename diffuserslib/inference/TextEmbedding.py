@@ -21,12 +21,7 @@ class TextEmbedding:
             if(token is None):
                 token = trained_token
             string_to_param = learned_embeds['string_to_param']
-            expandedtoken = ''
             embedding_vectors = string_to_param[trained_token]
-            for i in range(len(embedding_vectors)):
-                tokenpart = token + str(i)
-                expandedtoken = expandedtoken + ' ' + tokenpart
-            return cls(embedding_vectors, token, expandedtoken)
         else: # .bin diffusers concept
             trained_token = list(learned_embeds.keys())[0]
             if(token is None):
@@ -34,9 +29,15 @@ class TextEmbedding:
             embedding_vector = learned_embeds[trained_token]
 
             if (embedding_vector.ndim == 1):
-                return cls([embedding_vector], token)
+                embedding_vectors = [embedding_vector]
             else:
-                return cls(embedding_vector, token)
+                embedding_vectors = embedding_vector
+
+        expandedtoken = ''
+        for i in range(len(embedding_vectors)):
+            tokenpart = token + str(i)
+            expandedtoken = expandedtoken + ' ' + tokenpart
+        return cls(embedding_vectors, token, expandedtoken)
 
 
     def add_to_model(self, text_encoder, tokenizer):
