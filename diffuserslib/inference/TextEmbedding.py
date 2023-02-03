@@ -32,7 +32,11 @@ class TextEmbedding:
             if(token is None):
                 token = trained_token
             embedding_vector = learned_embeds[trained_token]
-            return cls([embedding_vector], token)
+
+            if (embedding_vector.ndim == 1):
+                return cls([embedding_vector], token)
+            else:
+                return cls(embedding_vector, token)
 
 
     def add_to_model(self, text_encoder, tokenizer):
@@ -60,9 +64,12 @@ class TextEmbeddings:
         print(f'Loading text embeddings for base {base} from path {path}')
         for embedding_path, embedding_file in getPathsFiles(f"{path}/*"):
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
-                embedding = TextEmbedding.from_file(embedding_path)
-                self.embeddings[embedding.token] = embedding
-                print(f"Loaded embedding token {embedding.token} from file {embedding_file} with {len(embedding.embedding_vectors)} vectors")
+                self.load_file(embedding_path, base)
+
+    def load_file(self, path: str, base: str):
+        embedding = TextEmbedding.from_file(path)
+        self.embeddings[embedding.token] = embedding
+        print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embedding_vectors)} vectors")
 
     def add_to_model(self, text_encoder, tokenizer):
         for embedding in self.embeddings.values():
