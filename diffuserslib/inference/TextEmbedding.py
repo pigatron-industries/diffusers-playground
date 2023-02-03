@@ -62,7 +62,7 @@ class TextEmbeddings:
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
                 embedding = TextEmbedding.from_file(embedding_path)
                 self.embeddings[embedding.token] = embedding
-                print(f"Loaded embedding token {embedding.token} from file {embedding_file}")
+                print(f"Loaded embedding token {embedding.token} from file {embedding_file} with {len(embedding.embedding_vectors)} vectors")
 
     def add_to_model(self, text_encoder, tokenizer):
         for embedding in self.embeddings.values():
