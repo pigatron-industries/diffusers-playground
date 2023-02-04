@@ -64,7 +64,7 @@ class TextEmbeddings:
         print(f'Loading text embeddings for base {base} from path {path}')
         for embedding_path, embedding_file in getPathsFiles(f"{path}/*"):
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
-                self.load_file(embedding_path, base)
+                self.load_file(embedding_path)
 
     def load_file(self, path: str, token: str = None):
         embedding = TextEmbedding.from_file(path, token)
