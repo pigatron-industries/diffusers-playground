@@ -36,7 +36,21 @@ class RandomChoiceArgument(Argument):
 
 
 class RandomPromptProcessor(Argument):
-    """ Randomise parts of a text prompt """
+    """ Randomise parts of a text prompt 
+            randomise from list of items in prompt between brackets 
+                {cat|dog}
+            randomise from dictionary of items defined outside of prompt, using single undercore format: 
+                _colour_  =  "red"
+            pick a number of items from dictionary:
+                _colour[3]_  =  "red green blue"
+            pick a random number of itesm between two numbers: 
+                _colour[2-3]_ 
+            change delimiter for chosen items: 
+                _colour[2-3,]_  =  "red, green, blue"
+                _colour[2-3 and]_  =  "red and green and blue"
+
+
+    """
     def __init__(self, modifier_dict, prompt=""):
         self.modifier_dict = modifier_dict
         self.prompt = prompt
@@ -44,16 +58,32 @@ class RandomPromptProcessor(Argument):
     def setPrompt(self, prompt):
         self.prompt = prompt
 
+    def randomItemsFromDict(self, modifiername, num):
+        items = self.modifier_dict[modifiername]
+        return random.sample(items, num)
+
     def randomiseFromDict(self, prompt):
         # randomise from dictionary of items defined outside of prompt _colour_
         out_prompt = prompt
 
         tokenised_brackets = re.findall(r'_.*?_', out_prompt)
-        for bracket in tokenised_brackets:
-            modifiername = bracket[1:-1]
-            options = self.modifier_dict[modifiername]
-            randomoption = random.choice(options)
-            out_prompt = out_prompt.replace(bracket, randomoption, 1)
+        for token in tokenised_brackets:
+            modifiername = re.sub(r'\[[^\]]*\]|_', '', token) #remove underscores and everything between square brackets
+            options = re.findall(r'\[(.*?)\]', token) # get everything between square brackets
+            delimiter = ' '
+            if(len(options) > 0):
+                numbers = [int(x) for x in re.findall(r'\d+', options[0])]
+                if(len(numbers) == 1): 
+                    num = numbers[0]
+                else:
+                    num = random.randint(numbers[0], numbers[1])
+                delimiterMatch = re.search(r'\d+([^\d]+)$', options[0]) # get all non numerical chars after last numerical
+                if(delimiterMatch):
+                    delimiter = delimiterMatch.group(1) + ' '
+            else:
+                num = 1
+            items = self.randomItemsFromDict(modifiername, num)
+            out_prompt = out_prompt.replace(token, delimiter.join(items), 1)
 
         tokenised_brackets = re.findall(r'__.*?__', out_prompt)
         for bracket in tokenised_brackets:
