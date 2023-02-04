@@ -98,11 +98,10 @@ class DiffusersPipelines:
             self.textembeddings[pipeline.preset.base].add_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer)
 
 
-    def processPrompt(self, prompt: str, pipeline: DiffusersPipeline):
+    def process_prompt(self, prompt: str, pipeline: DiffusersPipeline):
+        """ expands embedding tokens into multiple tokens, for each vector in embedding """
         if (pipeline.preset.base in self.textembeddings):
-            for textembedding in self.textembeddings[pipeline.preset.base].embeddings.values():
-                if (textembedding.token in prompt and textembedding.expandedtoken is not None):
-                    prompt = prompt.replace(textembedding.token, textembedding.expandedtoken)
+            prompt = self.textembeddings[pipeline.preset.base].processPrompt(prompt)
         return prompt
 
 

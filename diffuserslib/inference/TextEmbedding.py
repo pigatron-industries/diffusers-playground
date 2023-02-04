@@ -27,7 +27,6 @@ class TextEmbedding:
             if(token is None):
                 token = trained_token
             embedding_vector = learned_embeds[trained_token]
-
             if (embedding_vector.ndim == 1):
                 embedding_vectors = [embedding_vector]
             else:
@@ -75,3 +74,9 @@ class TextEmbeddings:
     def add_to_model(self, text_encoder, tokenizer):
         for embedding in self.embeddings.values():
             embedding.add_to_model(text_encoder, tokenizer)
+
+    def process_prompt(self, prompt: str):
+        for textembedding in self.embeddings.values():
+            if (textembedding.token in prompt and textembedding.expandedtoken is not None):
+                prompt = prompt.replace(textembedding.token, textembedding.expandedtoken)
+        return prompt
