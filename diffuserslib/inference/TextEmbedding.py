@@ -66,8 +66,8 @@ class TextEmbeddings:
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
                 self.load_file(embedding_path, base)
 
-    def load_file(self, path: str, base: str):
-        embedding = TextEmbedding.from_file(path)
+    def load_file(self, path: str, token: str = None):
+        embedding = TextEmbedding.from_file(path, token)
         self.embeddings[embedding.token] = embedding
         print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embedding_vectors)} vectors")
 

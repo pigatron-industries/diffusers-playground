@@ -87,10 +87,10 @@ class DiffusersPipelines:
             self.textembeddings[base].load_directory(path, base)
 
 
-    def loadTextEmbedding(self, path, base):
+    def loadTextEmbedding(self, path, base, token=None):
         if base not in self.textembeddings:
             self.textembeddings[base] = TextEmbeddings(base)
-        self.textembeddings[base].load_file(path, base)
+        self.textembeddings[base].load_file(path, token)
 
 
     def addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipeline):
