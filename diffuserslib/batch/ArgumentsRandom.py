@@ -65,7 +65,6 @@ class RandomPromptProcessor(Argument):
     def randomiseFromDict(self, prompt):
         # randomise from dictionary of items defined outside of prompt _colour_
         out_prompt = prompt
-
         tokenised_brackets = re.findall(r'_.*?_', out_prompt)
         for token in tokenised_brackets:
             modifiername = re.sub(r'\[[^\]]*\]|_', '', token) #remove underscores and everything between square brackets
@@ -84,13 +83,6 @@ class RandomPromptProcessor(Argument):
                 num = 1
             items = self.randomItemsFromDict(modifiername, num)
             out_prompt = out_prompt.replace(token, delimiter.join(items), 1)
-
-        tokenised_brackets = re.findall(r'__.*?__', out_prompt)
-        for bracket in tokenised_brackets:
-            modifiername = bracket[1:-1]
-            options = self.modifier_dict[modifiername]
-            out_prompt = out_prompt.replace(f'__{modifiername}__', self.randomCombo(options))
-
         return out_prompt
 
     def randomCombo(wordlist):

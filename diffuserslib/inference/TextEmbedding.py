@@ -1,14 +1,14 @@
 import torch
+import re
 from typing import Dict
 from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
 
 class TextEmbedding:
-    def __init__(self, embedding_vectors, token: str, expandedtoken: str = None):
+    def __init__(self, embedding_vectors, token: str):
         self.embedding_vectors = embedding_vectors
         self.token = token
-        self.expandedtoken = expandedtoken
 
     @classmethod
     def from_file(cls, embedding_path, token = None):
@@ -31,21 +31,14 @@ class TextEmbedding:
                 embedding_vectors = [embedding_vector]
             else:
                 embedding_vectors = embedding_vector
-
-        expandedtoken = ''
-        for i in range(len(embedding_vectors)):
-            tokenpart = token + str(i)
-            expandedtoken = expandedtoken + ' ' + tokenpart
-        return cls(embedding_vectors, token, expandedtoken)
+        return cls(embedding_vectors, token)
 
 
     def add_to_model(self, text_encoder, tokenizer):
         print(f"adding embedding token {self.token}")
         dtype = text_encoder.get_input_embeddings().weight.dtype
         for i, embedding_vector in enumerate(self.embedding_vectors):
-            tokenpart = self.token
-            if(len(self.embedding_vectors) > 1):
-                tokenpart = tokenpart + str(i)
+            tokenpart = self.token + str(i)
             embedding_vector.to(dtype)
             num_added_tokens = tokenizer.add_tokens(tokenpart)
             if(num_added_tokens == 0):
@@ -76,7 +69,25 @@ class TextEmbeddings:
             embedding.add_to_model(text_encoder, tokenizer)
 
     def process_prompt(self, prompt: str):
-        for textembedding in self.embeddings.values():
-            if (textembedding.token in prompt and textembedding.expandedtoken is not None):
-                prompt = prompt.replace(textembedding.token, textembedding.expandedtoken)
+        """ Expand token between angle brackets in prompt to a token for each vector in the embedding
+            Use all vectors: <token>
+            Use specific vectors: <token[0][4]>
+        """
+        prompttokens = re.findall(r'<.*?>', prompt)
+        for prompttoken in prompttokens:
+            tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken) # remove everything between square brackets
+            options = re.findall(r'\[(.*?)\]', prompttoken) # get everything between square brackets
+            if (tokenname in self.embeddings):
+                embedding = self.embeddings[tokenname]
+                expandedtoken = ''
+                if(len(options) == 0):
+                    # use all vectors in token
+                    for i, _ in enumerate(embedding.embedding_vectors):
+                        print(i)
+                        expandedtoken = expandedtoken + ' ' + embedding.token + str(i)
+                else:
+                    # use selected vectors
+                    for option in options:
+                        expandedtoken = expandedtoken + ' ' + embedding.token + option
+                prompt = prompt.replace(prompttoken, expandedtoken)
         return prompt

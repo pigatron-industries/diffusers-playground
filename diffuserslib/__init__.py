@@ -9,6 +9,7 @@ from .Web import *
 
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import *
+from .inference.TextEmbedding import *
 
 from .batch.BatchRunner import *
 from .batch.ArgumentsBatch import *
