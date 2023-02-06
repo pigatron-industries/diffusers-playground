@@ -289,12 +289,8 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                if(initimage.height > 512 or initimage.width > 512):
-                    outimage, usedseed = tiledInpaint(self.pipelines, initimg=initimage, maskimg=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, 
-                                                    scale=scale, scheduler=scheduler, seed=seed, overlap=128)
-                else:
-                    outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
-                    outimage = applyColourCorrection(initimage, outimage)
+                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+                outimage = applyColourCorrection(initimage, outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
