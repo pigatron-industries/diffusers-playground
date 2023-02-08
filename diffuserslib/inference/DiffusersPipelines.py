@@ -45,7 +45,7 @@ class DiffusersPipeline:
 
 
 class BaseModelData:
-    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict : Dict[str, list[str]] = None):
+    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None):  #: Dict[str, list[str]]
         self.base : str = base
         self.textembeddings : TextEmbeddings = textembeddings
         if (modifierdict is None):
@@ -109,20 +109,20 @@ class DiffusersPipelines:
 
 
     def loadTextEmbedding(self, path, base, token=None):
-        if base not in self.textembeddings:
-            self.textembeddings[base] = TextEmbeddings(base)
-        self.textembeddings[base].load_file(path, token)
+        if base not in self.baseModelData:
+            self.baseModelData[base] = BaseModelData(base, TextEmbeddings(base))
+        self.baseModelData[base].textembeddings.load_file(path, token)
 
 
     def addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipeline):
-        if (pipeline.preset.base in self.textembeddings):
-            self.textembeddings[pipeline.preset.base].add_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer)
+        if (pipeline.preset.base in self.baseModelData):
+            self.baseModelData[pipeline.preset.base].textembeddings.add_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer)
 
 
     def processPrompt(self, prompt: str, pipeline: DiffusersPipeline):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
-        if (pipeline.preset.base in self.textembeddings):
-            prompt = self.textembeddings[pipeline.preset.base].process_prompt(prompt)
+        if (pipeline.preset.base in self.baseModelData):
+            prompt = self.baseModelData[pipeline.preset.base].textembeddings.process_prompt(prompt)
         return prompt
 
 

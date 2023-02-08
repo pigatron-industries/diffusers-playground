@@ -19,6 +19,7 @@ class TextEmbedding:
     def __init__(self, embedding_vectors, token: str, embedclass: str = None):
         self.embedding_vectors = embedding_vectors
         self.token = token
+        self.embedclass = embedclass
 
     @classmethod
     def from_file(cls, embedding_path, token = None):
