@@ -44,14 +44,28 @@ class DiffusersPipeline:
         self.pipeline = pipeline
 
 
+class BaseModelData:
+    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict : Dict[str, list[str]] = None):
+        self.base : str = base
+        self.textembeddings : TextEmbeddings = textembeddings
+        if (modifierdict is None):
+            self.modifierdict = {}
+        else:
+            self.modifierdict = modifierdict
+
+
 class DiffusersPipelines:
 
-    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True):
+    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None):
         self.localmodelpath: str = localmodelpath
         self.localmodelcache: str = getModelsDir()
         self.device: str = device
         self.inferencedevice: str = 'cpu' if self.device == 'mps' else self.device
         self.safety_checker: bool = safety_checker
+        if (common_modifierdict is None):
+            self.common_modifierdict = {}
+        else:
+            self.common_modifierdict = common_modifierdict
 
         self.pipelineTextToImage: DiffusersPipeline = None
         self.pipelineImageToImage: DiffusersPipeline = None
@@ -62,7 +76,7 @@ class DiffusersPipelines:
         self.pipelineUpscale: DiffusersPipeline = None
 
         self.vae = None
-        self.textembeddings: Dict[str, TextEmbeddings] = {}
+        self.baseModelData: Dict[str, BaseModelData] = {}
         self.presets: DiffusersModelList = DiffusersModelList()
 
 
@@ -76,15 +90,22 @@ class DiffusersPipelines:
         self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
 
+    def getModifierDict(self, base):
+        modifiers = self.common_modifierdict.copy()
+        modifiers.update(self.baseModelData[base].modifierdict)
+        return modifiers
+
+
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
         self.vae = AutoencoderKL.from_pretrained(model)
             
 
     def loadTextEmbeddings(self, directory):
         for path, base in getPathsFiles(f"{directory}/*/"):
-            if base not in self.textembeddings:
-                self.textembeddings[base] = TextEmbeddings(base)
-            self.textembeddings[base].load_directory(path, base)
+            if base not in self.baseModelData:
+                self.baseModelData[base] = BaseModelData(base, TextEmbeddings(base))
+            self.baseModelData[base].textembeddings.load_directory(path, base)
+            self.baseModelData[base].modifierdict = self.baseModelData[base].textembeddings.modifiers
 
 
     def loadTextEmbedding(self, path, base, token=None):

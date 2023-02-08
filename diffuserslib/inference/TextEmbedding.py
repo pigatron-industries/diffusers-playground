@@ -1,12 +1,22 @@
 import torch
 import re
+import os
 from typing import Dict
 from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
 
+def getClassFromFilename(path):
+    filename = os.path.basename(path)
+    index = filename.find("_")
+    if index == -1:
+        return None
+    else:
+        return filename[:index]
+
+
 class TextEmbedding:
-    def __init__(self, embedding_vectors, token: str):
+    def __init__(self, embedding_vectors, token: str, embedclass: str = None):
         self.embedding_vectors = embedding_vectors
         self.token = token
 
@@ -14,6 +24,7 @@ class TextEmbedding:
     def from_file(cls, embedding_path, token = None):
         if(token is None):
             token = findBetween(embedding_path, '<', '>', True)
+        embedclass = getClassFromFilename(embedding_path)
         learned_embeds = torch.load(embedding_path, map_location="cpu")
         if ('string_to_param' in learned_embeds):  # .pt embedding
             string_to_token = learned_embeds['string_to_token']
@@ -31,7 +42,7 @@ class TextEmbedding:
                 embedding_vectors = [embedding_vector]
             else:
                 embedding_vectors = embedding_vector
-        return cls(embedding_vectors, token)
+        return cls(embedding_vectors, token, embedclass)
 
 
     def add_to_model(self, text_encoder, tokenizer):
@@ -51,7 +62,8 @@ class TextEmbedding:
 class TextEmbeddings:
     def __init__(self, base: str):
         self.base: str = base
-        self.embeddings: Dict[str, TextEmbedding] = {}
+        self.embeddings: Dict[str, TextEmbedding] = {} # Map of token to embedding
+        self.modifiers: Dict[str, list[str]] = {} # dictionary of prompt modifiers
 
     def load_directory(self, path: str, base: str):
         print(f'Loading text embeddings for base {base} from path {path}')
@@ -62,7 +74,11 @@ class TextEmbeddings:
     def load_file(self, path: str, token: str = None):
         embedding = TextEmbedding.from_file(path, token)
         self.embeddings[embedding.token] = embedding
+        if(embedding.embedclass not in self.modifiers):
+            self.modifiers[embedding.embedclass] = []
+        self.modifiers[embedding.embedclass].append(embedding.token)
         print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embedding_vectors)} vectors")
+        return embedding
 
     def add_to_model(self, text_encoder, tokenizer):
         for embedding in self.embeddings.values():
