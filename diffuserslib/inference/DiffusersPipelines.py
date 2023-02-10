@@ -180,6 +180,8 @@ class DiffusersPipelines:
         if(self.pipelineTextToImage is not None and self.pipelineTextToImage.preset.modelid == model):
             return
         print(f"Creating text to image pipeline from model {model}")
+        self.pipelineTextToImage = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = self.createArgs(preset)
         if(custom_pipeline is not None and custom_pipeline != ''):
@@ -197,6 +199,8 @@ class DiffusersPipelines:
         if(self.pipelineImageToImage is not None and self.pipelineImageToImage.preset.modelid == model):
             return
         print(f"Creating image to image pipeline from model {model}")
+        self.pipelineImageToImage = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = self.createArgs(preset)
         pipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
@@ -209,6 +213,8 @@ class DiffusersPipelines:
         if(self.pipelineDepthToImage is not None and self.pipelineDepthToImage.preset.modelid == model):
             return
         print(f"Creating depth to image pipeline from model {model}")
+        self.pipelineDepthToImage = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = self.createArgs(preset)
         pipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
@@ -221,6 +227,8 @@ class DiffusersPipelines:
         if(self.pipelineInpainting is not None and self.pipelineInpainting.preset.modelid == model):
             return
         print(f"Creating inpainting pipeline from model {model}")
+        self.pipelineInpainting = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = self.createArgs(preset)
         pipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
@@ -230,9 +238,11 @@ class DiffusersPipelines:
 
 
     def createImageVariationPipeline(self, model=DEFAULT_IMAGEVARIATION_MODEL):
-        if(self.pipelineInstructPixToPix is not None and self.pipelineInstructPixToPix.preset.modelid == model):
+        if(self.pipelineImageVariation is not None and self.pipelineInstructPixToPix.preset.modelid == model):
             return
         print(f"Creating image variation pipeline from model {model}")
+        self.pipelineImageVariation = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = self.createArgs(preset)
         pipeline = StableDiffusionImageVariationPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
@@ -245,6 +255,8 @@ class DiffusersPipelines:
         if(self.pipelineInstructPixToPix is not None and self.pipelineInstructPixToPix.preset.modelid == model):
             return
         print(f"Creating instruct pix to pix pipeline from model {model}")
+        self.pipelineInstructPixToPix = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = self.createArgs(preset)
         pipeline = StableDiffusionInstructPix2PixPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
@@ -257,6 +269,8 @@ class DiffusersPipelines:
         if(self.pipelineUpscale is not None and self.pipelineUpscale.preset.modelid == model):
             return
         print(f"Creating upscale pipeline from model {model}")
+        self.pipelineUpscale = None
+        torch.cuda.empty_cache()
         preset = self.getModel(model)
         args = {}
         args['torch_dtype'] = torch.float16
