@@ -1,5 +1,6 @@
 from .SceneDef import Scene
 from .Transforms import *
+from .TransformsDiffusion import *
 from ..FileUtils import getPathsFiles
 from ..inference.DiffusersPipelines import DiffusersPipelines
 from ..StringUtils import padNumber
@@ -23,11 +24,10 @@ class SceneRenderer():
     def renderFrames(self, scene:Scene):
         outdir = f"{self.ouputfolder}/{scene.name}"
         Path(outdir).mkdir(parents=True, exist_ok=True)
-        self.createTransform(scene)
+        self.createTransforms(scene)
         currentframe = scene.initimage
-        for frame, time in enumerate(self.transform.frametimings_diff):
-            currentframe = self.runTransform(currentframe=currentframe)
-            currentframe = self.runDiffusion(scene=scene, currentframe=currentframe)
+        for frame in range(0, scene.length):
+            currentframe = self.runTransforms(currentframe=currentframe)
             currentframe.save(f"{outdir}/{padNumber(frame+1, 5)}.png")
 
 
@@ -41,13 +41,18 @@ class SceneRenderer():
         video.release()
 
 
-    def createTransform(self, scene: Scene):
-        transformClass = str_to_class(f"{scene.transform.type}Transform")
-        self.transform = transformClass.from_params(scene.length, scene.transform)
+    def createTransforms(self, scene: Scene):
+        self.transforms = []
+        for transformparams in scene.transforms:
+            transformClass = str_to_class(f"{transformparams.type}Transform")
+            transformparams.params['pipelines'] = self.pipelines
+            self.transforms.append(transformClass.from_params(scene.length, transformparams))
 
 
-    def runTransform(self, currentframe):
-        return self.transform(currentframe)
+    def runTransforms(self, currentframe):
+        for transform in self.transforms:
+            currentframe = transform(currentframe)
+        return currentframe
 
                 
     def runDiffusion(self, scene: Scene, currentframe):

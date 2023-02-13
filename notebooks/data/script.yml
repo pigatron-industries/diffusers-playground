@@ -2,14 +2,32 @@ params:
   cfg: 9
   strength: 0.1  
   negprompt: ugly
+
 scenes:
-  - scene: 1_a_dog   # will output images into a folder with this name
+
+  - scene: 1_dog   # will output images into a folder with this name
     length: 30       # scene length in frames
-    diffusion:
-      type: outpaint  # type of diffusion, if transform leaves empty space then outpainting can fill it in
-      prompt: a dog
-    transform: 
-      type: Zoom
-      interpolation: Linear
-      factor: 0.5       # zoom 0.5x over 30 frames
-      
+    transforms:
+      - type: ImageToImage
+        prompt: a dog
+        strength: 0.1
+      - type: Zoom
+        interpolation: Linear
+        factor: 0.5       # zoom 0.5x over 30 frames
+      - type: Outpaint
+        prompt: a dog
+
+  - scene: 2_dog-to-cat
+    length: 30       
+    transforms:
+      - type: PromptInterpolation   # keep seed constant while interpolating text embedding
+        prompt: 
+          - a dog
+          - a cat
+
+  - scene: 3_cat
+    length: 30       
+    transforms:
+      type: NoiseInterpolation  # interpolate between latent noise generated from 2 seeds
+      prompt: a cat
+      seed: [1, 2]

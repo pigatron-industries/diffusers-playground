@@ -23,23 +23,23 @@ class Transform:
         self.frametimings = [self.interpolation(x) for x in frame_positions]
         self.frametimings_diff = [self.frametimings[i+1] - self.frametimings[i] for i in range(len(self.frametimings) - 1)]
 
-    @classmethod
-    def from_params(cls, length, transformParams:TransformParams):
-        timingClass = str_to_class(f"{transformParams.timing}Interpolation")
-        return cls(length, timingClass(), **transformParams.params)
-
-
-class ZoomTransform(Transform):
-    def __init__(self, length, timing, xcentre=0, ycentre=0, zoom=1):
-        super().__init__(length, timing)
-        self.xcentre = xcentre
-        self.ycentre = ycentre
-        self.zoom = zoom
-
     def __call__(self, image):
         outimage = self.transform(image)
         self.frame = self.frame + 1
         return outimage
+
+    @classmethod
+    def from_params(cls, length, transformParams:TransformParams):
+        timingClass = str_to_class(f"{transformParams.timing}Interpolation")
+        return cls(length=length, timing=timingClass(), **transformParams.params)
+
+
+class ZoomTransform(Transform):
+    def __init__(self, length, timing, xcentre=0, ycentre=0, zoom=1, **kwargs):
+        super().__init__(length, timing)
+        self.xcentre = xcentre
+        self.ycentre = ycentre
+        self.zoom = zoom
 
     def transform(self, image):
         image = pilToCv2(image)
@@ -53,17 +53,12 @@ class ZoomTransform(Transform):
 
 
 class RotateTransform(Transform):
-    def __init__(self, length, timing, xcentre=0, ycentre=0, angle=0, zoom=1):
+    def __init__(self, length, timing, xcentre=0, ycentre=0, angle=0, zoom=1, **kwargs):
         super().__init__(length, timing)
         self.xcentre = xcentre
         self.ycentre = ycentre
         self.zoom = zoom
         self.angle = angle
-
-    def __call__(self, image):
-        outimage = self.transform(image)
-        self.frame = self.frame + 1
-        return outimage
 
     def transform(self, image):
         image = pilToCv2(image)
