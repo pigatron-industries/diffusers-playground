@@ -1,3 +1,4 @@
+from typing import List
 
 
 class TransformParams():
@@ -8,7 +9,7 @@ class TransformParams():
         
 
 class Scene():
-    def __init__(self, name: str, initimage, length: int, transforms:list[TransformParams]):
+    def __init__(self, name: str, initimage, length: int, transforms:List[TransformParams]):
         self.name = name
         self.initimage = initimage
         self.keepinit = True           # specify whether to keep init image as first frame
