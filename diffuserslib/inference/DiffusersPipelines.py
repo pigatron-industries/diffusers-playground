@@ -14,7 +14,7 @@ from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, Stabl
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
-from ..DiffusersModelPresets import DiffusersModelList
+from ..DiffusersModelPresets import DiffusersModelList, DiffusersModel
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
 
@@ -39,7 +39,7 @@ def str_to_class(str):
 
 
 class DiffusersPipeline:
-    def __init__(self, preset, pipeline):
+    def __init__(self, preset:DiffusersModel, pipeline:DiffusionPipeline):
         self.preset = preset
         self.pipeline = pipeline
 

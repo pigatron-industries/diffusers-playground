@@ -11,3 +11,8 @@ def findBetween(text, start, end, includetags=False):
     else:
         return None
 
+
+def padNumber(number, length):
+    number_str = str(number)
+    number_of_zeros = length - len(number_str)
+    return '0' * number_of_zeros + number_str

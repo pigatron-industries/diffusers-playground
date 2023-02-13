@@ -18,3 +18,6 @@ from .batch.ArgumentsRandom import *
 from .geometry.GeometryPipeline import *
 from .geometry.GeometryTasks import *
 from .geometry.GeometryPipelineFactory import *
+
+from .animation.SceneDef import *
+from .animation.SceneRenderer import *

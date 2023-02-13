@@ -82,7 +82,6 @@ class Symmetrize(GeometryTask):
 
 
 class Spiralize(GeometryTask):
-    """ horizontal, vertical, or rotation """
     def __init__(self, rotation=180, steps=4, zoom=2):
         self.args = {
             "rotation": rotation,

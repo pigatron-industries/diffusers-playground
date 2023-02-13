@@ -1,0 +1,15 @@
+params:
+  cfg: 9
+  strength: 0.1  
+  negprompt: ugly
+scenes:
+  - scene: 1_a_dog   # will output images into a folder with this name
+    length: 30       # scene length in frames
+    diffusion:
+      type: outpaint  # type of diffusion, if transform leaves empty space then outpainting can fill it in
+      prompt: a dog
+    transform: 
+      type: Zoom
+      interpolation: Linear
+      factor: 0.5       # zoom 0.5x over 30 frames
+      

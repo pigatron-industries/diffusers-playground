@@ -102,3 +102,11 @@ def applyColourCorrection(fromimage, toimage):
 
     outimage = blendLayers(outimage, toimage, BlendType.LUMINOSITY)
     return outimage
+
+
+def pilToCv2(pil_image):
+    return np.array(pil_image.convert("RGBA"))
+
+
+def cv2ToPil(cv2_image):
+    return Image.fromarray(cv2_image, "RGBA")
