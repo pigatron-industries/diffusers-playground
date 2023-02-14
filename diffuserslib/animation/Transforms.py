@@ -1,4 +1,3 @@
-from .SceneDef import TransformParams, Scene
 from .Interpolation import *
 import sys
 from ..ImageUtils import cv2ToPil, pilToCv2
@@ -9,9 +8,8 @@ def str_to_class(str):
     return getattr(sys.modules[__name__], str)
 
 
-
 class Transform:
-    def __init__(self, length, interpolation:InterpolationFunction):
+    def __init__(self, length, interpolation:InterpolationFunction=LinearInterpolation()):
         self.length = length
         self.interpolation = interpolation
         self.frame = 0
@@ -28,15 +26,10 @@ class Transform:
         self.frame = self.frame + 1
         return outimage
 
-    @classmethod
-    def from_params(cls, length, transformParams:TransformParams):
-        timingClass = str_to_class(f"{transformParams.timing}Interpolation")
-        return cls(length=length, timing=timingClass(), **transformParams.params)
-
 
 class ZoomTransform(Transform):
-    def __init__(self, length, timing, xcentre=0, ycentre=0, zoom=1, **kwargs):
-        super().__init__(length, timing)
+    def __init__(self, length, interpolation:InterpolationFunction=LinearInterpolation(), xcentre=0, ycentre=0, zoom=1, **kwargs):
+        super().__init__(length, interpolation)
         self.xcentre = xcentre
         self.ycentre = ycentre
         self.zoom = zoom
@@ -53,8 +46,8 @@ class ZoomTransform(Transform):
 
 
 class RotateTransform(Transform):
-    def __init__(self, length, timing, xcentre=0, ycentre=0, angle=0, zoom=1, **kwargs):
-        super().__init__(length, timing)
+    def __init__(self, length, interpolation:InterpolationFunction=LinearInterpolation(), xcentre=0, ycentre=0, angle=0, zoom=1, **kwargs):
+        super().__init__(length, interpolation)
         self.xcentre = xcentre
         self.ycentre = ycentre
         self.zoom = zoom

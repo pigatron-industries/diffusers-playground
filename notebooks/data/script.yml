@@ -3,9 +3,9 @@ params:
   strength: 0.1  
   negprompt: ugly
 
-scenes:
+sequences:
 
-  - scene: 1_dog   # will output images into a folder with this name
+  - name: 1_dog   # will output images into a folder with this name
     length: 30       # scene length in frames
     transforms:
       - type: ImageToImage
@@ -17,7 +17,7 @@ scenes:
       - type: Outpaint
         prompt: a dog
 
-  - scene: 2_dog-to-cat
+  - name: 2_dog-to-cat
     length: 30       
     transforms:
       - type: PromptInterpolation   # keep seed constant while interpolating text embedding
@@ -25,9 +25,9 @@ scenes:
           - a dog
           - a cat
 
-  - scene: 3_cat
+  - name: 3_cat
     length: 30       
     transforms:
-      type: NoiseInterpolation  # interpolate between latent noise generated from 2 seeds
-      prompt: a cat
-      seed: [1, 2]
+      - type: SeedInterpolation  # interpolate between latent noise generated from 2 seeds
+        prompt: a cat
+        seed: [1, 2]

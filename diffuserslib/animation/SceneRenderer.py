@@ -1,9 +1,10 @@
-from .SceneDef import Scene
+from .SceneDef import Scene, Sequence
 from .Transforms import *
 from .TransformsDiffusion import *
 from ..FileUtils import getPathsFiles
 from ..inference.DiffusersPipelines import DiffusersPipelines
 from ..StringUtils import padNumber
+from typing import List
 from pathlib import Path
 import sys
 
@@ -18,16 +19,15 @@ class SceneRenderer():
     def __init__(self, ouputfolder:str, pipelines:DiffusersPipelines):
         self.ouputfolder = ouputfolder
         self.pipelines = pipelines
-        self.transform:Transform = None
 
 
-    def renderFrames(self, scene:Scene):
-        outdir = f"{self.ouputfolder}/{scene.name}"
+    def renderSequenceFrames(self, sequence:Sequence, initimage):
+        outdir = f"{self.ouputfolder}/{sequence.name}"
         Path(outdir).mkdir(parents=True, exist_ok=True)
-        self.createTransforms(scene)
-        currentframe = scene.initimage
-        for frame in range(0, scene.length):
-            currentframe = self.runTransforms(currentframe=currentframe)
+        currentframe = initimage
+        for frame in range(0, sequence.length):
+            for transform in sequence.transforms:
+                currentframe = transform(currentframe)
             currentframe.save(f"{outdir}/{padNumber(frame+1, 5)}.png")
 
 
@@ -39,20 +39,6 @@ class SceneRenderer():
                 image = cv2.imread(framepath)
                 video.write(image)
         video.release()
-
-
-    def createTransforms(self, scene: Scene):
-        self.transforms = []
-        for transformparams in scene.transforms:
-            transformClass = str_to_class(f"{transformparams.type}Transform")
-            transformparams.params['pipelines'] = self.pipelines
-            self.transforms.append(transformClass.from_params(scene.length, transformparams))
-
-
-    def runTransforms(self, currentframe):
-        for transform in self.transforms:
-            currentframe = transform(currentframe)
-        return currentframe
 
                 
     def runDiffusion(self, scene: Scene, currentframe):
