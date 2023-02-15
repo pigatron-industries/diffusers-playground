@@ -13,13 +13,21 @@ class Transform:
         self.length = length
         self.interpolation = interpolation
         self.frame = 0
-        self.calcTimings()
+        if(interpolation is not None):
+            self.calcTimings()
 
     def calcTimings(self):
         step_size = 1 / self.length
         frame_positions = [i*step_size for i in range(self.length+1)]
         self.frametimings = [self.interpolation(x) for x in frame_positions]
         self.frametimings_diff = [self.frametimings[i+1] - self.frametimings[i] for i in range(len(self.frametimings) - 1)]
+
+    def getFrameTimeDiff(self):
+        """ Git time difference between current frame and previous frame, as a fraction of the whole transform """
+        if(self.frame > 0):
+            return self.frametimings_diff[self.frame-1]
+        else:
+            return 0
 
     def __call__(self, image):
         outimage = self.transform(image)
@@ -37,7 +45,7 @@ class ZoomTransform(Transform):
     def transform(self, image):
         image = pilToCv2(image)
         height, width = image.shape[:2]
-        frame_zoom = self.zoom ** (self.frametimings_diff[self.frame])
+        frame_zoom = self.zoom ** self.getFrameTimeDiff()
         frame_xcentre = (width/2)*self.xcentre + (width/2)
         frame_ycentre = (height/2)*self.ycentre + (height/2)
         rotation_matrix = cv2.getRotationMatrix2D((frame_xcentre, frame_ycentre), 0, frame_zoom)
@@ -56,8 +64,8 @@ class RotateTransform(Transform):
     def transform(self, image):
         image = pilToCv2(image)
         height, width = image.shape[:2]
-        frame_zoom = self.zoom ** (self.frametimings_diff[self.frame])
-        frame_angle = self.angle * self.frametimings_diff[self.frame]
+        frame_zoom = self.zoom ** self.getFrameTimeDiff()
+        frame_angle = self.angle * self.getFrameTimeDiff()
         frame_xcentre = (width/2)*self.xcentre + (width/2)
         frame_ycentre = (height/2)*self.ycentre + (height/2)
         rotation_matrix = cv2.getRotationMatrix2D((frame_xcentre, frame_ycentre), frame_angle, frame_zoom)

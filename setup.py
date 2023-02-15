@@ -4,7 +4,7 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=False):
+def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=False, rife=False):
     runcmd(['mkdir -p workspace'], True)
     os.chdir("workspace")
     runcmd(['mkdir -p models'], True)
@@ -23,6 +23,9 @@ def setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=False
     if(diffuserScripts):
         runcmd(['pip', 'install', '-e', 'git+https://github.com/huggingface/diffusers#egg=diffusers'])
 
+    if(rife):
+        runcmd(['pip', 'install', '-e', 'git+https://github.com/hzwer/Practical-RIFE.git#egg=rife'])
+
     os.chdir("..")
     if(colab):
         runcmd(['pip', 'install', '-r', 'requirements_colab.txt'])
@@ -31,5 +34,5 @@ def setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=False
 
 
 if __name__ == "__main__":
-    setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=True)
+    setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=True, rife=True)
 
