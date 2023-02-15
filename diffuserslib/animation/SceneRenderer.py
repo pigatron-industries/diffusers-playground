@@ -13,25 +13,24 @@ def str_to_class(str):
 
 
 class SceneRenderer():
-    def __init__(self, inputfolder:str, ouputfolder:str, pipelines:DiffusersPipelines):
-        self.ouputfolder = ouputfolder
-        self.inputfolder = inputfolder
+    def __init__(self, pipelines:DiffusersPipelines):
         self.pipelines = pipelines
 
 
-    def renderSequenceFrames(self, sequence:Sequence):
-        outdir = f"{self.ouputfolder}/{sequence.name}"
-        Path(outdir).mkdir(parents=True, exist_ok=True)
+    def renderSceneFrames(self, scene:Scene):
+        outputdir = f"{scene.inputdir}/output"
+        self.renderSequenceFrames(scene.sequences[0], outputdir)
 
-        if(sequence.initimage is not None):
-            currentframe = Image.open(f"{self.inputfolder}/{sequence.initimage}")
-        else:
-            currentframe = None
+
+    def renderSequenceFrames(self, sequence:Sequence, outputdir:str):
+        seqoutdir = f"{outputdir}/{sequence.name}"
+        Path(seqoutdir).mkdir(parents=True, exist_ok=True)
+        currentframe = sequence.initimage
 
         for frame in range(0, sequence.length+1):
             for transform in sequence.transforms:
                 currentframe = transform(currentframe)
-            currentframe.save(f"{outdir}/{padNumber(frame, 5)}.png")
+            currentframe.save(f"{seqoutdir}/{padNumber(frame, 5)}.png")
 
 
     def renderVideo(self):
