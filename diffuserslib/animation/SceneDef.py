@@ -6,6 +6,12 @@ from .Transforms import *
 from .TransformsDiffusion import *
 from .TransformsInit import *
 
+
+def addDefaultParams(dict, defaults):
+    for key in defaults:
+        if (key not in dict):
+            dict[key] = defaults[key]
+    return dict
         
 
 class Sequence():
@@ -29,6 +35,7 @@ class Scene():
     def from_file(cls, filename, pipelines):
         inputdir = os.path.dirname(filename)
         filedata = yaml.safe_load(open(filename, "r"))
+        defaults = filedata['defaults']
         sequences = []
         for sequence in filedata['sequences']:
             transforms = []
@@ -38,7 +45,7 @@ class Scene():
                 transform['inputdir'] = inputdir
                 transform['transforms'] = cls._load_subtransforms(transform)
                 transform['interpolation'] = cls._load_interpolation(transform)
-                # TODO transfer default params to transform
+                addDefaultParams(transform, defaults)
                 transforms.append(loadObject(transform, "Transform"))
             sequence['transforms'] = transforms
             sequence['inputdir'] = inputdir

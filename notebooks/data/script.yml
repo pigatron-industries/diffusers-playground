@@ -1,4 +1,5 @@
-params:
+defaults :
+
   cfg: 9
   strength: 0.1  
   negprompt: ugly
@@ -11,7 +12,7 @@ sequences:
     transforms:
       - type: Rotate
         interpolation: Linear
-        angle: 90       # rotate 90 over 5 frames
+        angle: 90       # rotate 90 over 5 frames 
       # - type: Outpaint
       #   prompt: a dog
       - type: ImageToImage

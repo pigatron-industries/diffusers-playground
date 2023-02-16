@@ -20,6 +20,7 @@ class SceneRenderer():
     def renderSceneFrames(self, scene:Scene):
         outputdir = f"{scene.inputdir}/output"
         self.renderSequenceFrames(scene.sequences[0], outputdir)
+        self.renderVideo(outputdir)
 
 
     def renderSequenceFrames(self, sequence:Sequence, outputdir:str):
@@ -33,10 +34,10 @@ class SceneRenderer():
             currentframe.save(f"{seqoutdir}/{padNumber(frame, 5)}.png")
 
 
-    def renderVideo(self):
+    def renderVideo(self, framesdir):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video = cv2.VideoWriter(f"{self.ouputfolder}/video.mp4", fourcc, 30.0, (512, 512))
-        for scenepath, scene in getPathsFiles(f"{self.ouputfolder}/*/"):
+        video = cv2.VideoWriter(f"{framesdir}/video.mp4", fourcc, 30.0, (512, 512))
+        for scenepath, scene in getPathsFiles(f"{framesdir}/*/"):
             for framepath, framefile in getPathsFiles(f"{scenepath}/*.png"):
                 image = cv2.imread(framepath)
                 video.write(image)
