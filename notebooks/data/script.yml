@@ -8,7 +8,9 @@ sequences:
 
   - name: rotate   # will output images into a folder with this name
     length: 5       # scene length in frames
-    initimage: rabbit.png
+    init: 
+      - type: InitImage
+        image: rabbit.png
     transforms:
       - type: Rotate
         interpolation: Linear
@@ -33,7 +35,7 @@ sequences:
         strength: 0.1
 
   - name: 2_prompt
-    length: 30       
+    length: 30
     transforms:
       - type: PromptInterpolation   # keep seed constant while interpolating text embedding
         prompt: 
@@ -41,7 +43,7 @@ sequences:
           - a cat
 
   - name: 3_seed
-    length: 30       
+    length: 30
     transforms:
       - type: SeedInterpolation  # interpolate between latent noise generated from 2 seeds
         prompt: a cat

@@ -5,14 +5,14 @@ from PIL import Image
 
 
 class InitTransform(Transform):
-    def __init__(self, length, interpolation, width, height, transforms:List[Transform], **kwargs):
+    def __init__(self, length, interpolation, width, height, transforms:List[Transform]=None, **kwargs):
         super().__init__(length, interpolation)
         self.transforms = transforms
         self.context = GraphicsContext((width, height))
 
 
 class InitImageTransform(InitTransform):
-    def __init__(self, length, inputdir:str, image:str, transforms:List[Transform], **kwargs):
+    def __init__(self, length, inputdir:str, image:str, transforms:List[Transform]=None, **kwargs):
         print(transforms)
         self.image = Image.open(f"{inputdir}/{image}")
         super().__init__(length=length, interpolation=None, width=self.image.width, height=self.image.height, transforms=transforms)

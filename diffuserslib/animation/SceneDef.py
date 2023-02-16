@@ -15,43 +15,34 @@ def addDefaultParams(dict, defaults):
         
 
 class Sequence():
-    def __init__(self, name:str, length:int, transforms:List[Transform], initimage:str=None, inputdir:str=None):
+    def __init__(self, name:str, length:int, transforms:List[Transform], init:List[Transform]=None, inputdir:str=None):
         self.name = name
         self.length = length
-        if(initimage is not None):
-            self.initimage = Image.open(f"{inputdir}/{initimage}")
-        else:
-            self.initimage = None
+        self.init = init
         self.transforms = transforms
 
-
-class Scene():
-    def __init__(self, sequences:List[Sequence], inputdir:str):
-        self.sequences = sequences
-        self.inputdir = inputdir
-
-
     @classmethod
-    def from_file(cls, filename, pipelines):
-        inputdir = os.path.dirname(filename)
-        filedata = yaml.safe_load(open(filename, "r"))
-        defaults = filedata['defaults']
-        sequences = []
-        for sequence in filedata['sequences']:
-            transforms = []
-            for transform in sequence['transforms']:
-                transform['length'] = sequence['length']
-                transform['pipelines'] = pipelines
-                transform['inputdir'] = inputdir
-                transform['transforms'] = cls._load_subtransforms(transform)
-                transform['interpolation'] = cls._load_interpolation(transform)
+    def from_params(cls, params, defaults):
+        # initial frame transform
+        inittransforms = []
+        if('init' in params):
+            for transform in params['init']:
+                transform['length'] = 1
                 addDefaultParams(transform, defaults)
-                transforms.append(loadObject(transform, "Transform"))
-            sequence['transforms'] = transforms
-            sequence['inputdir'] = inputdir
-            sequences.append(Sequence(**sequence))
-        return Scene(sequences=sequences, inputdir=inputdir)
+                inittransforms.append(loadObject(transform, "Transform"))
+            params['init'] = inittransforms
+        # animation transforms
+        transforms = []
+        for transform in params['transforms']:
+            addDefaultParams(transform, defaults)
+            transform['length'] = params['length']
+            transform['transforms'] = cls._load_subtransforms(transform)
+            transform['interpolation'] = cls._load_interpolation(transform)
+            transforms.append(loadObject(transform, "Transform"))
+        params['transforms'] = transforms
 
+        params['inputdir'] = defaults['inputdir']
+        return cls(**params)
 
     @classmethod
     def _load_subtransforms(cls, transform):
@@ -75,6 +66,26 @@ class Scene():
             return loadObject(interpolation, "Interpolation")
         else:
             return None
+
+
+
+class Scene():
+    def __init__(self, sequences:List[Sequence], inputdir:str):
+        self.sequences = sequences
+        self.inputdir = inputdir
+
+    @classmethod
+    def from_file(cls, filename, pipelines):
+        inputdir = os.path.dirname(filename)
+        filedata = yaml.safe_load(open(filename, "r"))
+        defaults = filedata['defaults']
+        defaults['inputdir'] = inputdir
+        defaults['pipelines'] = pipelines
+        sequences = []
+        for sequence in filedata['sequences']:
+            sequences.append(Sequence.from_params(sequence, defaults))
+        return Scene(sequences=sequences, inputdir=inputdir)
+
 
 
 def loadObject(params, classPostfix):

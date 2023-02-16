@@ -26,7 +26,10 @@ class SceneRenderer():
     def renderSequenceFrames(self, sequence:Sequence, outputdir:str):
         seqoutdir = f"{outputdir}/{sequence.name}"
         Path(seqoutdir).mkdir(parents=True, exist_ok=True)
-        currentframe = sequence.initimage
+
+        currentframe = None # todo initialise with last frame of previous sequence by default
+        for inittransform in sequence.init:
+            currentframe = inittransform(currentframe)
 
         for frame in range(0, sequence.length+1):
             for transform in sequence.transforms:
