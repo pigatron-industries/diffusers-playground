@@ -10,6 +10,8 @@ class InitTransform(Transform):
     def __init__(self, length, width, height, interpolation=LinearInterpolation(), transforms:List[Transform]=None, **kwargs):
         super().__init__(length, interpolation)
         self.transforms = transforms
+        self.width = width
+        self.height = height
         self.context = GraphicsContext((width, height))
 
 
@@ -30,10 +32,8 @@ class InitImageTransform(InitTransform):
 
 class InitTextToImageTransform(InitTransform):
     def __init__(self, pipelines:DiffusersPipelines, length, width, height, prompt="", negprompt="", cfgscale=9, steps=0.1, scheduler=None, seed=None, **kwargs):
-        super().__init__(length=length)
+        super().__init__(length=length, width=width, height=height)
         self.pipelines = pipelines
-        self.width = width
-        self.height = height
         self.prompt = prompt
         self.negprompt = negprompt
         self.cfgscale = cfgscale
