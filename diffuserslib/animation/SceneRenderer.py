@@ -20,7 +20,7 @@ class SceneRenderer():
     def renderSceneFrames(self, scene:Scene):
         outputdir = f"{scene.inputdir}/output"
         self.renderSequenceFrames(scene.sequences[0], outputdir)
-        self.renderVideo(outputdir)
+        self.renderVideo(outputdir, scene.width, scene.height, scene.fps)
 
 
     def renderSequenceFrames(self, sequence:Sequence, outputdir:str):
