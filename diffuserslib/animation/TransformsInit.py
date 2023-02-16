@@ -29,9 +29,11 @@ class InitImageTransform(InitTransform):
 
 
 class InitTextToImageTransform(InitTransform):
-    def __init__(self, pipelines:DiffusersPipelines, length, prompt="", negprompt="", cfgscale=9, steps=0.1, scheduler=None, seed=None, **kwargs):
+    def __init__(self, pipelines:DiffusersPipelines, length, width, height, prompt="", negprompt="", cfgscale=9, steps=0.1, scheduler=None, seed=None, **kwargs):
         super().__init__(length=length)
         self.pipelines = pipelines
+        self.width = width
+        self.height = height
         self.prompt = prompt
         self.negprompt = negprompt
         self.cfgscale = cfgscale
@@ -40,5 +42,5 @@ class InitTextToImageTransform(InitTransform):
         self.seed = seed
 
     def transform(self, image):
-        image, seed = self.pipelines.textToImage(inimage=image, prompt=self.prompt, negprompt=self.negprompt, steps=self.steps, scale=self.cfgscale, seed=self.seed, scheduler=self.scheduler)
+        image, seed = self.pipelines.textToImage(width=self.width, height=self.height, prompt=self.prompt, negprompt=self.negprompt, steps=self.steps, scale=self.cfgscale, seed=self.seed, scheduler=self.scheduler)
         return image
