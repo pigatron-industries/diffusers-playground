@@ -1,5 +1,8 @@
 defaults :
 
+  width: 512
+  height: 512
+  fps: 15
   cfg: 9
   strength: 0.1  
   negprompt: ugly

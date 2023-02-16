@@ -37,9 +37,9 @@ class SceneRenderer():
             currentframe.save(f"{seqoutdir}/{padNumber(frame, 5)}.png")
 
 
-    def renderVideo(self, framesdir):
+    def renderVideo(self, framesdir, width, height, fps):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video = cv2.VideoWriter(f"{framesdir}/video.mp4", fourcc, 30.0, (512, 512))
+        video = cv2.VideoWriter(f"{framesdir}/video.mp4", fourcc, fps, (width, height))
         for scenepath, scene in getPathsFiles(f"{framesdir}/*/"):
             for framepath, framefile in getPathsFiles(f"{scenepath}/*.png"):
                 image = cv2.imread(framepath)

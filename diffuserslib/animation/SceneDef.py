@@ -70,9 +70,12 @@ class Sequence():
 
 
 class Scene():
-    def __init__(self, sequences:List[Sequence], inputdir:str):
+    def __init__(self, sequences:List[Sequence], inputdir:str, width, height, fps, **kwargs):
         self.sequences = sequences
         self.inputdir = inputdir
+        self.width = width
+        self.height = height
+        self.fps = fps
 
     @classmethod
     def from_file(cls, filename, pipelines):
@@ -84,7 +87,7 @@ class Scene():
         sequences = []
         for sequence in filedata['sequences']:
             sequences.append(Sequence.from_params(sequence, defaults))
-        return Scene(sequences=sequences, inputdir=inputdir)
+        return Scene(sequences=sequences, **defaults)
 
 
 
