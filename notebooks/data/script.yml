@@ -6,7 +6,8 @@ defaults :
 
 sequences:
 
-  - name: rotate   # will output images into a folder with this name
+# Initialise first frame with an image, then do a frame by frame transform to get subsequent frames
+  - name: 1_initimage_transform   # will output images into a folder with this name
     length: 5       # scene length in frames
     init: 
       - type: InitImage
@@ -21,7 +22,8 @@ sequences:
         prompt: a dog
         strength: 0.1
 
-  - name: frameinit
+# Initialise each frame with an image which is also transofmred with each frame
+  - name: 2_initframe_transform
     length: 5
     transforms:
       - type: InitImage     # start with new image for each frame instead of feeding previous frame back
