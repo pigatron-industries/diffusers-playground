@@ -33,7 +33,7 @@ class OutpaintTransform(Transform):
 
     def transform(self, image):
         maskimage = alphaToMask(image)
-        image, seed = compositedInpaint(self.pipelines, initmage=image, maskimage=maskimage, prompt=self.prompt, negprompt=self.negprompt, steps=self.steps, scale=self.cfgscale, seed=self.seed, scheduler=self.scheduler)
+        image, seed = compositedInpaint(self.pipelines, initimage=image, maskimage=maskimage, prompt=self.prompt, negprompt=self.negprompt, steps=self.steps, scale=self.cfgscale, seed=self.seed, scheduler=self.scheduler)
         return image
 
 
