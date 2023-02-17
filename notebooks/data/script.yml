@@ -39,7 +39,17 @@ sequences:
         prompt: a dog
         strength: 0.1
 
-  - name: 2_prompt
+  - name: 3_translate
+    length: 5
+    init: 
+      - type: InitImage
+        image: rabbit.png
+    transforms:
+      - type: Translate
+        interpolation: Linear
+        xtranslate: 1
+
+  - name: 4_prompt
     length: 30
     transforms:
       - type: PromptInterpolation   # keep seed constant while interpolating text embedding
@@ -47,7 +57,7 @@ sequences:
           - a dog
           - a cat
 
-  - name: 3_seed
+  - name: 5_seed
     length: 30
     transforms:
       - type: SeedInterpolation  # interpolate between latent noise generated from 2 seeds

@@ -3,6 +3,7 @@ import sys
 from ..ImageUtils import cv2ToPil, pilToCv2
 from PIL import Image
 import cv2
+import numpy as np
 
 def str_to_class(str):
     return getattr(sys.modules[__name__], str)
@@ -74,3 +75,19 @@ class RotateTransform(Transform):
         rotation_matrix = cv2.getRotationMatrix2D((frame_xcentre, frame_ycentre), frame_angle, frame_zoom)
         zoomed_image = cv2.warpAffine(image, rotation_matrix, (width, height), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0,0))
         return cv2ToPil(zoomed_image)
+
+
+class TranslateTransform(Transform):
+    def __init__(self, length, interpolation:InterpolationFunction=LinearInterpolation(), xtranslate=0, ytranslate=0, **kwargs):
+        super().__init__(length, interpolation)
+        self.xtranslate = xtranslate
+        self.ytranslate = ytranslate
+
+    def transform(self, image):
+        image = pilToCv2(image)
+        height, width = image.shape[:2]
+        frame_xtranslate = self.xtranslate * self.getFrameTimeDiff() * width
+        frame_ytranslate = self.ytranslate * self.getFrameTimeDiff() * height
+        translation_matrix = np.float32([[1, 0, frame_xtranslate], [0, 1, frame_ytranslate]])
+        translated_image = cv2.warpAffine(image, translation_matrix, (width, height), borderMode=cv2.BORDER_CONSTANT, borderValue=(0,0,0,0))
+        return cv2ToPil(translated_image)
