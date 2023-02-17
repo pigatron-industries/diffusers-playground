@@ -5,6 +5,7 @@ from ..inference.DiffusersPipelines import DiffusersPipelines
 from ..StringUtils import padNumber
 from typing import List
 from pathlib import Path
+import glob
 import sys
 
 
@@ -19,17 +20,30 @@ class SceneRenderer():
         self.pipelines = pipelines
 
 
-    def renderSceneFrames(self, scene:Scene, sequence = 0, resumeFrame=0):
+    def renderSceneFrames(self, scene:Scene, sequenceIndexes = None, resumeFrame = 0):
+        if(sequenceIndexes is None):
+            sequenceIndexes = range(0, len(scene.sequences))
         outputdir = f"{scene.inputdir}/output"
-        self.renderSequenceFrames(scene.sequences[sequence], outputdir, resumeFrame)
+        prevFrame = None
+        for i, sequence in enumerate(scene.sequences):
+            if(i in sequenceIndexes):
+                prevFrame = self.renderSequenceFrames(sequence, outputdir, resumeFrame, prevFrame)
+                resumeFrame = 0
+            else:
+                prevSequenceFiles = sorted(glob.glob(f"{outputdir}/{sequence.name}/*.png"))
+                if(len(prevSequenceFiles)>0):
+                    prevFrame = Image.open(prevSequenceFiles[-1])
+                else:
+                    prevFrame = None
+
         self.renderVideo(outputdir, scene.width, scene.height, scene.fps)
 
 
-    def renderSequenceFrames(self, sequence:Sequence, outputdir:str, resumeFrame=0):
+    def renderSequenceFrames(self, sequence:Sequence, outputdir:str, resumeFrame=0, prevFrame=None):
         seqoutdir = f"{outputdir}/{sequence.name}"
         Path(seqoutdir).mkdir(parents=True, exist_ok=True)
 
-        currentframe = None # TODO initialise with last frame of previous sequence by default
+        currentframe = prevFrame
         if(resumeFrame > 0):
             # open frame image to resume from
             currentframe = Image.open(f"{seqoutdir}/{padNumber(resumeFrame-1, self.FRAME_NUM_PADDING)}.png")
@@ -45,6 +59,8 @@ class SceneRenderer():
             for transform in sequence.transforms:
                 currentframe = transform(currentframe)
             currentframe.save(f"{seqoutdir}/{padNumber(frame, self.FRAME_NUM_PADDING)}.png")
+
+        return currentframe
 
 
     def renderVideo(self, framesdir, width, height, fps):
