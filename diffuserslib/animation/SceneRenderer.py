@@ -13,28 +13,38 @@ def str_to_class(str):
 
 
 class SceneRenderer():
+    FRAME_NUM_PADDING = 5
+
     def __init__(self, pipelines:DiffusersPipelines):
         self.pipelines = pipelines
 
 
-    def renderSceneFrames(self, scene:Scene):
+    def renderSceneFrames(self, scene:Scene, sequence = 0, resumeFrame=0):
         outputdir = f"{scene.inputdir}/output"
-        self.renderSequenceFrames(scene.sequences[0], outputdir)
+        self.renderSequenceFrames(scene.sequences[sequence], outputdir, resumeFrame)
         self.renderVideo(outputdir, scene.width, scene.height, scene.fps)
 
 
-    def renderSequenceFrames(self, sequence:Sequence, outputdir:str):
+    def renderSequenceFrames(self, sequence:Sequence, outputdir:str, resumeFrame=0):
         seqoutdir = f"{outputdir}/{sequence.name}"
         Path(seqoutdir).mkdir(parents=True, exist_ok=True)
 
-        currentframe = None # todo initialise with last frame of previous sequence by default
-        for inittransform in sequence.init:
-            currentframe = inittransform(currentframe)
+        currentframe = None # TODO initialise with last frame of previous sequence by default
+        if(resumeFrame > 0):
+            # open frame image to resume from
+            currentframe = Image.open(f"{seqoutdir}/{padNumber(resumeFrame-1, self.FRAME_NUM_PADDING)}.png")
+            for transform in sequence.transforms:
+                transform.setFrame(resumeFrame)
+        else:
+            # run transforms for initial frame
+            for inittransform in sequence.init:
+                currentframe = inittransform(currentframe)
 
-        for frame in range(0, sequence.length+1):
+        for frame in range(resumeFrame, sequence.length+1):
+            print(f"Rendering frame {frame} / {sequence.length}")
             for transform in sequence.transforms:
                 currentframe = transform(currentframe)
-            currentframe.save(f"{seqoutdir}/{padNumber(frame, 5)}.png")
+            currentframe.save(f"{seqoutdir}/{padNumber(frame, self.FRAME_NUM_PADDING)}.png")
 
 
     def renderVideo(self, framesdir, width, height, fps):

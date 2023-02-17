@@ -14,6 +14,11 @@ class InitTransform(Transform):
         self.height = height
         self.context = GraphicsContext((width, height))
 
+    def setFrame(self, frame):
+        self.frame = frame
+        for transform in self.transforms:
+            transform.setFrame(frame)
+
 
 class InitImageTransform(InitTransform):
     def __init__(self, length, inputdir:str, image:str, transforms:List[Transform]=None, **kwargs):

@@ -22,6 +22,9 @@ class Transform:
         self.frametimings = [self.interpolation(x) for x in frame_positions]
         self.frametimings_diff = [self.frametimings[i+1] - self.frametimings[i] for i in range(len(self.frametimings) - 1)]
 
+    def setFrame(self, frame):
+        self.frame = frame
+
     def getFrameTimeDiff(self):
         """ Git time difference between current frame and previous frame, as a fraction of the whole transform """
         if(self.frame > 0):
