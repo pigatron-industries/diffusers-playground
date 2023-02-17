@@ -50,27 +50,22 @@ class DiffusersModelList:
 
 
 
-def getHuggingFacePresetsList():
+def getImageModelPresetsList():
     presets = DiffusersModelList()
-
     # 2.1 768
     #                model                                  base                           revision phrase            vae   autocast
     presets.addModel('stabilityai/stable-diffusion-2-1',    DiffusersBaseModel.sd_2_1_768, 'fp16',  None,             None, False)
-
     # 2.1 512
     #                model                                    base                           fp16    phrase            vae
     presets.addModel('stabilityai/stable-diffusion-2-1-base', DiffusersBaseModel.sd_2_1_512, 'fp16', None,             None)
-
     # 2.0 768
     #                model                                  base                           fp16    phrase            vae
     presets.addModel('stabilityai/stable-diffusion-2',      DiffusersBaseModel.sd_2_0_768, 'fp16', None,             None)
     presets.addModel('nitrosocke/redshift-diffusion-768',   DiffusersBaseModel.sd_2_0_768, None,   'redshift style', None)
-
     # 2.0 512
     #                model                                  base                           fp16    phrase            vae
     presets.addModel('stabilityai/stable-diffusion-2-base', DiffusersBaseModel.sd_2_0_512, 'fp16', None,             None)
     presets.addModel('nitrosocke/Future-Diffusion',         DiffusersBaseModel.sd_2_0_512, None,   'future style',   None)
-
     # 1.5
     #                model                                            base                       fp16    phrase                vae
     presets.addModel('runwayml/stable-diffusion-v1-5',                DiffusersBaseModel.sd_1_5, 'fp16', None,                 AUTOENCODER_MODEL_1_5)
@@ -86,10 +81,26 @@ def getHuggingFacePresetsList():
     presets.addModel('wavymulder/Analog-Diffusion',                   DiffusersBaseModel.sd_1_5, None,   'analog style',       AUTOENCODER_MODEL_1_5)
     presets.addModel('dreamlike-art/dreamlike-diffusion-1.0',         DiffusersBaseModel.sd_1_5, None,   'dreamlikeart',       AUTOENCODER_MODEL_1_5)
     presets.addModel('prompthero/openjourney',                        DiffusersBaseModel.sd_1_5, None,   'mdjrny-v4 style',    AUTOENCODER_MODEL_1_5)
-
     # 1.4 image variations
     presets.addModel('lambdalabs/sd-image-variations-diffusers',      DiffusersBaseModel.sd_1_4, 'v2.0', None,                 None)
     # instruct pix 2 pix
     presets.addModel('timbrooks/instruct-pix2pix',                    DiffusersBaseModel.sd_1_5, None,   None,                 None)
 
+    return presets
+
+
+def getInpaintModelPresetsList():
+    presets = DiffusersModelList()
+    # 2.1 512
+    #                model                                        base                           fp16     phrase vae
+    presets.addModel('stabilityai/stable-diffusion-2-inpainting', DiffusersBaseModel.sd_2_0_512, 'fp16',  None,  None)
+    # 1.5
+    #                model                                    base                               fp16     phrase vae
+    presets.addModel('runwayml/stable-diffusion-inpainting',  DiffusersBaseModel.sd_1_5,         'fp16',  None,  AUTOENCODER_MODEL_1_5)
+    return presets
+
+
+def getControlModelPresetsList():
+    presets = DiffusersModelList()
+    presets.addModel('takuma104/control_sd15_canny', DiffusersBaseModel.sd_1_5, 'fp16',  None,  None)
     return presets

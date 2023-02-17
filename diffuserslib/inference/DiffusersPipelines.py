@@ -6,6 +6,7 @@ from typing import Dict
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, 
                         StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
                         StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
+                        # StableDiffusionControlNetPipeline,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -20,8 +21,9 @@ from ..FileUtils import getPathsFiles
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
-DEFAULT_DEPTHTOIMAGE_MODEL = 'stabilityai/stable-diffusion-2-depth'
 DEFAULT_INPAINT_MODEL = 'runwayml/stable-diffusion-inpainting'
+DEFAULT_CONTROLNET_MODEL = 'takuma104/control_sd15_canny'
+DEFAULT_DEPTHTOIMAGE_MODEL = 'stabilityai/stable-diffusion-2-depth'
 DEFAULT_IMAGEVARIATION_MODEL = 'lambdalabs/sd-image-variations-diffusers'
 DEFAULT_INSTRUCTPIXTOPIX_MODEL = 'timbrooks/instruct-pix2pix'
 DEFAULT_UPSCALE_MODEL = 'stabilityai/stable-diffusion-x4-upscaler'
@@ -69,25 +71,45 @@ class DiffusersPipelines:
 
         self.pipelineTextToImage: DiffusersPipeline = None
         self.pipelineImageToImage: DiffusersPipeline = None
-        self.pipelineDepthToImage: DiffusersPipeline = None
         self.pipelineInpainting: DiffusersPipeline = None
+        self.pipelineControlNet: DiffusersPipeline = None
+        self.pipelineDepthToImage: DiffusersPipeline = None
         self.pipelineImageVariation: DiffusersPipeline = None
         self.pipelineInstructPixToPix: DiffusersPipeline = None
         self.pipelineUpscale: DiffusersPipeline = None
 
         self.vae = None
         self.baseModelData: Dict[str, BaseModelData] = {}
-        self.presets: DiffusersModelList = DiffusersModelList()
+
+        self.presetsImage: DiffusersModelList = DiffusersModelList()
+        self.presetsInpaint: DiffusersModelList = DiffusersModelList()
+        self.presetsControl: DiffusersModelList = DiffusersModelList()
+        self.presetsMisc: DiffusersModelList = DiffusersModelList()
 
 
-    def addPresets(self, presets):
-        self.presets.addModels(presets)
+    def addPresetsImage(self, presets):
+        self.presetsImage.addModels(presets)
 
-    
-    def addPreset(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+    def addPresetsInpaint(self, presets):
+        self.presetsInpaint.addModels(presets)
+
+    def addPresetsControl(self, presets):
+        self.presetsControl.addModels(presets)
+
+    def addPresetImage(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
-        self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+        self.presetsImage.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+
+    def addPresetInpaint(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+        if(modelpath == None and location == 'local'):
+            modelpath = self.localmodelpath + '/' + modelid
+        self.presetsInpaint.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+
+    def addPresetControl(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+        if(modelpath == None and location == 'local'):
+            modelpath = self.localmodelpath + '/' + modelid
+        self.presetsControl.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
 
     def getModifierDict(self, base):
@@ -155,8 +177,8 @@ class DiffusersPipelines:
         return args
 
 
-    def getModel(self, modelid):
-        preset = self.presets.getModel(modelid)
+    def getModel(self, modelid, modelList:DiffusersModelList):
+        preset = modelList.getModel(modelid)
         if(preset.location == 'url' and preset.modelpath.startswith('http')):
             localmodelpath = self.localmodelcache + '/' + modelid
             if (not os.path.isdir(localmodelpath)):
@@ -182,7 +204,7 @@ class DiffusersPipelines:
         print(f"Creating text to image pipeline from model {model}")
         self.pipelineTextToImage = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model)
+        preset = self.getModel(model, self.presetsImage)
         args = self.createArgs(preset)
         if(custom_pipeline is not None and custom_pipeline != ''):
             args['custom_pipeline'] = custom_pipeline
@@ -201,26 +223,12 @@ class DiffusersPipelines:
         print(f"Creating image to image pipeline from model {model}")
         self.pipelineImageToImage = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model)
+        preset = self.getModel(model, self.presetsImage)
         args = self.createArgs(preset)
         pipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
         self.pipelineImageToImage = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineImageToImage)
-
-
-    def createDepthToImagePipeline(self, model=DEFAULT_DEPTHTOIMAGE_MODEL):
-        if(self.pipelineDepthToImage is not None and self.pipelineDepthToImage.preset.modelid == model):
-            return
-        print(f"Creating depth to image pipeline from model {model}")
-        self.pipelineDepthToImage = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model)
-        args = self.createArgs(preset)
-        pipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineDepthToImage = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineDepthToImage)
 
 
     def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
@@ -229,12 +237,41 @@ class DiffusersPipelines:
         print(f"Creating inpainting pipeline from model {model}")
         self.pipelineInpainting = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model)
+        preset = self.getModel(model, self.presetsInpaint)
         args = self.createArgs(preset)
         pipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
         self.pipelineInpainting = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineInpainting)
+
+
+    def createControlNetPipeline(self, model=DEFAULT_CONTROLNET_MODEL):
+        # WORK IN PROGRESS
+        if(self.pipelineControlNet is not None and self.pipelineControlNet.preset.modelid == model):
+            return
+        print(f"Creating control net pipeline from model {model}")
+        self.pipelineControlNet = None
+        torch.cuda.empty_cache()
+        preset = self.getModel(model, self.presetsControl)
+        args = self.createArgs(preset)
+        pipeline = StableDiffusionControlNetPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        pipeline.enable_attention_slicing()
+        self.pipelineControlNet = DiffusersPipeline(preset, pipeline)
+        self.addTextEmbeddingsToPipeline(self.pipelineControlNet)
+
+
+    def createDepthToImagePipeline(self, model=DEFAULT_DEPTHTOIMAGE_MODEL):
+        if(self.pipelineDepthToImage is not None and self.pipelineDepthToImage.preset.modelid == model):
+            return
+        print(f"Creating depth to image pipeline from model {model}")
+        self.pipelineDepthToImage = None
+        torch.cuda.empty_cache()
+        preset = self.getModel(model, self.presetsMisc)
+        args = self.createArgs(preset)
+        pipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        pipeline.enable_attention_slicing()
+        self.pipelineDepthToImage = DiffusersPipeline(preset, pipeline)
+        self.addTextEmbeddingsToPipeline(self.pipelineDepthToImage)
 
 
     def createImageVariationPipeline(self, model=DEFAULT_IMAGEVARIATION_MODEL):
@@ -243,7 +280,7 @@ class DiffusersPipelines:
         print(f"Creating image variation pipeline from model {model}")
         self.pipelineImageVariation = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model)
+        preset = self.getModel(model, self.presetsMisc)
         args = self.createArgs(preset)
         pipeline = StableDiffusionImageVariationPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
@@ -257,7 +294,7 @@ class DiffusersPipelines:
         print(f"Creating instruct pix to pix pipeline from model {model}")
         self.pipelineInstructPixToPix = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model)
+        preset = self.getModel(model, self.presetsMisc)
         args = self.createArgs(preset)
         pipeline = StableDiffusionInstructPix2PixPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
@@ -271,7 +308,7 @@ class DiffusersPipelines:
         print(f"Creating upscale pipeline from model {model}")
         self.pipelineUpscale = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model)
+        preset = self.getModel(model, self.presetsMisc)
         args = {}
         args['torch_dtype'] = torch.float16
         if(preset.fp16):
@@ -315,19 +352,6 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineDepthToImage is None):
-            raise Exception('depth to image pipeline not loaded')
-        inimage = inimage.convert("RGB")
-        prompt = self.processPrompt(prompt, self.pipelineDepthToImage)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineDepthToImage)
-        with torch.autocast(self.inferencedevice):
-            image = self.pipelineDepthToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, generator=generator).images[0]
-        return image, seed
-
-
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, **kwargs):
         if (self.pipelineInpainting is None):
             raise Exception('inpainting pipeline not loaded')
@@ -339,6 +363,33 @@ class DiffusersPipelines:
             outimage = self.pipelineInpainting.pipeline(prompt, image=initimage.convert("RGB"), mask_image=maskimage.convert("RGB"), width=initimage.width, height=initimage.height,
                                                negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
         return outimage, seed
+
+
+    def controlnet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, **kwargs):
+        # WORK IN PROGRESS
+        if (self.pipelineInpainting is None):
+            raise Exception('control net pipeline not loaded')
+        prompt = self.processPrompt(prompt, self.pipelineInpainting)
+        generator, seed = self.createGenerator(seed)
+        if(scheduler is not None):
+            self.loadScheduler(scheduler, self.pipelineInpainting)
+        with torch.autocast(self.inferencedevice):
+            outimage = self.pipelineInpainting.pipeline(prompt=prompt, controlnet_hint=initimage.convert("RGB"), negative_prompt=negprompt, 
+                                                        num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
+        return outimage, seed
+
+
+    def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, **kwargs):
+        if (self.pipelineDepthToImage is None):
+            raise Exception('depth to image pipeline not loaded')
+        inimage = inimage.convert("RGB")
+        prompt = self.processPrompt(prompt, self.pipelineDepthToImage)
+        generator, seed = self.createGenerator(seed)
+        if(scheduler is not None):
+            self.loadScheduler(scheduler, self.pipelineDepthToImage)
+        with torch.autocast(self.inferencedevice):
+            image = self.pipelineDepthToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, generator=generator).images[0]
+        return image, seed
 
 
     def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, **kwargs):
