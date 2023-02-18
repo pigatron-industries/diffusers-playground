@@ -33,7 +33,13 @@ class DiffusersView(FlaskView):
 
     @route("/api/models", methods=["GET"])
     def models(self):
-        models = [model.toDict() for model in self.pipelines.presetsImage.models.values()]
+        if(request.args["type"] == "inpaint"):
+            presets = self.pipelines.presetsInpaint
+        elif(request.args["type"] == "control"):
+            presets = self.pipelines.presetsControl
+        else:
+            presets = self.pipelines.presetsImage
+        models = [model.toDict() for model in presets.models.values()]
         return jsonify(models)
 
 
@@ -301,7 +307,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, **kwargs):
+    def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, model=None, **kwargs):
         try:
             print('=== upscale ===')
             initimage = base64DecodeImage(initimage)

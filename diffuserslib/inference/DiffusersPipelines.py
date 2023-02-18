@@ -11,7 +11,8 @@ from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, Stabl
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
-                        ScoreSdeVeScheduler, IPNDMScheduler, )
+                        ScoreSdeVeScheduler, IPNDMScheduler, 
+                        UNet2DConditionModel)
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
@@ -86,6 +87,11 @@ class DiffusersPipelines:
         self.presetsControl: DiffusersModelList = DiffusersModelList()
         self.presetsMisc: DiffusersModelList = DiffusersModelList()
 
+    def loadPresetFile(self, filepath):
+        self.presetsImage = DiffusersModelList.from_file(filepath, 'image')
+        self.presetsImage = DiffusersModelList.from_file(filepath, 'inpaint')
+        self.presetsImage = DiffusersModelList.from_file(filepath, 'controlnet')
+        self.presetsImage = DiffusersModelList.from_file(filepath, 'misc')
 
     def addPresetsImage(self, presets):
         self.presetsImage.addModels(presets)
@@ -245,16 +251,28 @@ class DiffusersPipelines:
         self.addTextEmbeddingsToPipeline(self.pipelineInpainting)
 
 
-    def createControlNetPipeline(self, model=DEFAULT_CONTROLNET_MODEL):
-        # WORK IN PROGRESS
+    def createControlNetPipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=DEFAULT_CONTROLNET_MODEL):
+        # WORK IN PROGRESS - untested
         if(self.pipelineControlNet is not None and self.pipelineControlNet.preset.modelid == model):
             return
         print(f"Creating control net pipeline from model {model}")
         self.pipelineControlNet = None
         torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsControl)
+        controlpreset = self.getModel(model, self.presetsControl)
+        preset = self.getModel(model, self.presetsImage)
         args = self.createArgs(preset)
-        pipeline = StableDiffusionControlNetPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+
+        controlnet = UNet2DConditionModel.from_pretrained(controlpreset.modelpath, subfolder="controlnet", torch_dtype=torch.float16)
+        diffusionpipeline = DiffusionPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        pipeline = StableDiffusionControlNetPipeline(vae=diffusionpipeline.vae, 
+                                                     text_encoder=diffusionpipeline.text_encoder, 
+                                                     tokenizer=diffusionpipeline.tokenizer,
+                                                     controlnet=controlnet,
+                                                     unet=diffusionpipeline.unet,
+                                                     scheduler=diffusionpipeline.scheduler,
+                                                     safety_checker=diffusionpipeline.safety_checker,
+                                                     feature_extractor=diffusionpipeline.feature_extractor
+                   ).to(self.device)
         pipeline.enable_attention_slicing()
         self.pipelineControlNet = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineControlNet)
@@ -414,9 +432,12 @@ class DiffusersPipelines:
         return outimage, seed
 
 
-    def upscale(self, inimage, prompt, scheduler=None):
-        if (self.pipelineUpscale is None):
-            raise Exception('upscale pipeline not loaded')
+    def upscale(self, inimage, prompt, scheduler=None, model=None):
+        if (self.pipelineUpscale is None and model is None):
+            model = DEFAULT_UPSCALE_MODEL
+        if(model is not None and model != ""):
+            print(f'Model: {model}')
+            self.createUpscalePipeline(model)
         prompt = self.processPrompt(prompt, self.pipelineUpscale)
         inimage = inimage.convert("RGB")
         if(scheduler is not None):

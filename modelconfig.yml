@@ -1,0 +1,77 @@
+
+image:
+  - base: sd_2_1_768
+    models:
+      - id: stabilityai/stable-diffusion-2-1  # official
+        revision: fp16
+        autocast: false
+  - base: sd_2_1_512
+    models:
+      - id: stabilityai/stable-diffusion-2-1-base  # official
+        revision: fp16
+  - base: sd_1_5
+    models:
+      - id: runwayml/stable-diffusion-v1-5  # official
+        revision: fp16
+      - id: Aybeeceedee/knollingcase
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: knollingcase
+      - id: dreamlike-art/dreamlike-diffusion-1.0
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: dreamlikeart
+      - id: dreamlike-art/dreamlike-photoreal-2.0
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: dreamlikeart
+      - id: Fictiverse/Stable_Diffusion_PaperCut_Model
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: papercut
+      - id: Fictiverse/Stable_Diffusion_Microscopic_model
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: microscopic
+      - id: hassanblend/HassanBlend1.5.1.2
+        vae: stabilityai/sd-vae-ft-mse
+      - id: johnslegers/hasdx
+        vae: stabilityai/sd-vae-ft-mse
+      - id: nitrosocke/redshift-diffusion
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: redshift style
+      - id: plasmo/woolitize
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: woolitize
+        revision: fp16
+      - id: prompthero/openjourney
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: mdjrny-v4 style
+      - id: SG161222/Realistic_Vision_V1.3
+        vae: stabilityai/sd-vae-ft-mse
+      - id: wavymulder/Analog-Diffusion
+        vae: stabilityai/sd-vae-ft-mse
+        phrase: analog style
+      - id: XpucT/Deliberate
+        vae: stabilityai/sd-vae-ft-mse
+
+inpaint:
+  - base: sd_2_0_512
+    models:
+      - id: stabilityai/stable-diffusion-2-inpainting
+        revision: fp16
+  - base: sd_1_5
+    models:
+      - id: runwayml/stable-diffusion-inpainting
+        vae: stabilityai/sd-vae-ft-mse
+        revision: fp16
+
+controlnet:
+  - base: sd_1_5
+    models:
+      - id: takuma104/control_sd15_canny
+      - id: takuma104/control_sd15_openpose
+
+misc:
+  - base: sd_1_5
+    models:
+      - id: timbrooks/instruct-pix2pix
+  - base: sd_1_4
+    models:
+      - id: lambdalabs/sd-image-variations-diffusers
+        revision: v2.0
