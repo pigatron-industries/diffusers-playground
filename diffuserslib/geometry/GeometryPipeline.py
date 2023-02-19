@@ -18,8 +18,8 @@ class GraphicsContext():
         return self.image.crop(self.viewport)
 
     def calcSize(self):
-        self.size = (self.image.width, self.image.height)
-        self.viewport = (self.oversize, self.oversize, self.oversize+self.image.width, self.oversize+self.image.height)
+        self.size = (self.image.width-self.oversize*2, self.image.height-self.oversize*2)
+        self.viewport = (self.oversize, self.oversize, self.oversize+self.size[0], self.oversize+self.size[1])
 
 
 class GeometryPipeline():
