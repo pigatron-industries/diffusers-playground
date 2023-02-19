@@ -14,6 +14,11 @@ class GraphicsContext():
         self.viewport = (oversize, oversize, oversize+size[0], oversize+size[1])
         self.offset = (oversize, oversize)
 
+    def setViewportImage(self, image):
+        self.image = Image.new("RGBA", size=(image.width+self.oversize*2, image.height+self.oversize*2))
+        self.image.paste(image, self.offset)
+        self.calcSize()
+
     def getViewportImage(self):
         return self.image.crop(self.viewport)
 

@@ -18,7 +18,7 @@ class RandomPositionArgument(Argument):
         return (random.randint(left, right), random.randint(top, bottom))
 
 
-class DrawImageTask(GeometryTask):
+class InitImageTask(GeometryTask):
     def __init__(self, image):
         # We add all arguments to an args dictionary, 
         # some of them may be instances of Argument class which decides what the actual argument should be when it's ready to be used
@@ -29,7 +29,7 @@ class DrawImageTask(GeometryTask):
     def __call__(self, context):
         # evaluateArguments decides which argument values to use at runtime
         args = evaluateArguments(self.args, context=context)
-        context.image.paste(args["image"], context.offset)
+        context.setViewportImage(args["image"])
         return context
 
 
