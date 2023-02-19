@@ -115,9 +115,7 @@ class SimpleTransformTask(GeometryTask):
         elif(args["type"] == "rotate180"):
             modimage = context.image.transpose(Image.ROTATE_180)
         elif(args["type"] == "rotate90"):
-            print(context.image.size)
             modimage = context.image.transpose(Image.ROTATE_90)
-            print(modimage.size)
         elif(args["type"] == "rotate270"):
             modimage = context.image.transpose(Image.ROTATE_270)
         else:
