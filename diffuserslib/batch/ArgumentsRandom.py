@@ -123,7 +123,7 @@ class RandomImage(Argument):
     def __init__(self, filelist):
         self.filelist = filelist
 
-    def __call__(self):
+    def __call__(self, **kwargs):
         file = random.choice(self.filelist)
         image = Image.open(file)
         image.filename = file
@@ -137,7 +137,7 @@ class RandomImageSelection(Argument):
         filelist = glob.glob(f'{directory}/*.png')
         return cls(filelist)
 
-    def __init__(self, filelist, width, height, rotate, crop):
+    def __init__(self, filelist, width, height, rotate, crop, **kwargs):
         self.filelist = filelist
 
     def __call__(self):
