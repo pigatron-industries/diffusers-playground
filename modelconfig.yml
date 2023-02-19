@@ -28,6 +28,8 @@ image:
       - id: Fictiverse/Stable_Diffusion_Microscopic_model
         vae: stabilityai/sd-vae-ft-mse
         phrase: microscopic
+      - id: hassanblend/HassanBlend1.4
+        vae: stabilityai/sd-vae-ft-mse
       - id: hassanblend/HassanBlend1.5.1.2
         vae: stabilityai/sd-vae-ft-mse
       - id: johnslegers/hasdx

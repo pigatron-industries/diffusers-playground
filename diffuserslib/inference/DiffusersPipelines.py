@@ -89,9 +89,9 @@ class DiffusersPipelines:
 
     def loadPresetFile(self, filepath):
         self.presetsImage = DiffusersModelList.from_file(filepath, 'image')
-        self.presetsImage = DiffusersModelList.from_file(filepath, 'inpaint')
-        self.presetsImage = DiffusersModelList.from_file(filepath, 'controlnet')
-        self.presetsImage = DiffusersModelList.from_file(filepath, 'misc')
+        self.presetsInpaint = DiffusersModelList.from_file(filepath, 'inpaint')
+        self.presetsControl = DiffusersModelList.from_file(filepath, 'controlnet')
+        self.presetsMisc = DiffusersModelList.from_file(filepath, 'misc')
 
     def addPresetsImage(self, presets):
         self.presetsImage.addModels(presets)
