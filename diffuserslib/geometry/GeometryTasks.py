@@ -18,6 +18,21 @@ class RandomPositionArgument(Argument):
         return (random.randint(left, right), random.randint(top, bottom))
 
 
+class DrawImage(GeometryTask):
+    def __init__(self, image):
+        # We add all arguments to an args dictionary, 
+        # some of them may be instances of Argument class which decides what the actual argument should be when it's ready to be used
+        self.args = {
+            "image": image
+        }
+
+    def __call__(self, context):
+        # evaluateArguments decides which argument values to use at runtime
+        args = evaluateArguments(self.args, context=context)
+        context.image.alpha_composite(args["image"], context.offset)
+        return context
+
+
 class DrawRegularShape(GeometryTask):
     def __init__(self, position=RandomPositionArgument(), size=64, sides=4, rotation=0, fill="black"):
         self.args = {
@@ -78,6 +93,36 @@ class Symmetrize(GeometryTask):
         else:
             return context
         context.image.alpha_composite(modimage, (0, 0))
+        return context
+
+
+class SimpleTransform(GeometryTask):
+    """ 
+        type = none, fliphorizontal, flipvertical, rotate90, rotate180, rotate270 
+        rotate90 and rotate270 also swap viewport dimensions
+    """
+    def __init__(self, type="fliphorizontal"):
+        self.args = {
+            "type": type
+        }
+
+    def __call__(self, context):
+        args = evaluateArguments(self.args, context=context)
+        if(args["type"] == "fliphorizontal"):
+            modimage = ImageOps.flip(context.image)
+        elif(args["type"] == "flipvertical"):
+            modimage = ImageOps.mirror(context.image)
+        elif(args["type"] == "rotate180"):
+            modimage = context.image.rotate(180)
+        elif(args["type"] == "rotate90"):
+            modimage = context.image.rotate(90)
+            context.calcSize()
+        elif(args["type"] == "rotate270"):
+            modimage = context.image.rotate(270)
+            context.calcSize()
+        else:
+            return context
+        context.image = modimage
         return context
 
 

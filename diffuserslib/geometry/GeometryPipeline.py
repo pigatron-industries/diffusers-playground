@@ -9,12 +9,17 @@ class GeometryTask():
 class GraphicsContext():
     def __init__(self, size, oversize=256):
         self.image = Image.new("RGBA", size=(size[0]+oversize*2, size[1]+oversize*2))
+        self.oversize = oversize
+        self.size = size
         self.viewport = (oversize, oversize, oversize+size[0], oversize+size[1])
         self.offset = (oversize, oversize)
-        self.size = size
 
     def getViewportImage(self):
         return self.image.crop(self.viewport)
+
+    def calcSize(self):
+        self.size = (self.image.width, self.image.height)
+        self.viewport = (self.oversize, self.oversize, self.oversize+self.image.width, self.oversize+self.image.height)
 
 
 class GeometryPipeline():

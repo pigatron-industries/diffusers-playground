@@ -1,8 +1,14 @@
 from .GeometryPipeline import GeometryPipeline
-from .GeometryTasks import DrawRegularShape, DrawCheckerboard, Symmetrize, Spiralize, RandomPositionArgument
+from .GeometryTasks import *
 from .. import RandomNumberArgument, RandomChoiceArgument
 
 import math
+
+
+def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "flipvertical", "rotate90", "rotate180", "rotate270", "none"])):
+    geometry = GeometryPipeline(size=image.size)
+    geometry.addTask(ImageDraw(image))
+    geometry.addTask(SimpleTransform(type=transform))
 
 
 def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
