@@ -18,7 +18,7 @@ class RandomPositionArgument(Argument):
         return (random.randint(left, right), random.randint(top, bottom))
 
 
-class DrawImage(GeometryTask):
+class DrawImageTask(GeometryTask):
     def __init__(self, image):
         # We add all arguments to an args dictionary, 
         # some of them may be instances of Argument class which decides what the actual argument should be when it's ready to be used
@@ -96,7 +96,7 @@ class Symmetrize(GeometryTask):
         return context
 
 
-class SimpleTransform(GeometryTask):
+class SimpleTransformTask(GeometryTask):
     """ 
         type = none, fliphorizontal, flipvertical, rotate90, rotate180, rotate270 
         rotate90 and rotate270 also swap viewport dimensions

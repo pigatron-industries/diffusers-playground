@@ -7,8 +7,8 @@ import math
 
 def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "flipvertical", "rotate90", "rotate180", "rotate270", "none"])):
     geometry = GeometryPipeline(size=image.size)
-    geometry.addTask(ImageDraw(image))
-    geometry.addTask(SimpleTransform(type=transform))
+    geometry.addTask(DrawImageTask(image))
+    geometry.addTask(SimpleTransformTask(type=transform))
     return geometry
 
 
