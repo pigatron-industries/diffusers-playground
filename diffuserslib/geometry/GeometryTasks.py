@@ -113,16 +113,17 @@ class SimpleTransformTask(GeometryTask):
         elif(args["type"] == "flipvertical"):
             modimage = ImageOps.mirror(context.image)
         elif(args["type"] == "rotate180"):
-            modimage = context.image.rotate(180)
+            modimage = context.image.transpose(Image.ROTATE_180)
         elif(args["type"] == "rotate90"):
-            modimage = context.image.rotate(90, expand=1)
-            context.calcSize()
+            print(context.image.size)
+            modimage = context.image.transpose(Image.ROTATE_90)
+            print(modimage.size)
         elif(args["type"] == "rotate270"):
-            modimage = context.image.rotate(270, expand=1)
-            context.calcSize()
+            modimage = context.image.transpose(Image.ROTATE_270)
         else:
             return context
         context.image = modimage
+        context.calcSize()
         return context
 
 
