@@ -9,6 +9,7 @@ def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "fl
     geometry = GeometryPipeline(size=image.size)
     geometry.addTask(ImageDraw(image))
     geometry.addTask(SimpleTransform(type=transform))
+    return geometry
 
 
 def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
