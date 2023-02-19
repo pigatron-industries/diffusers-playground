@@ -38,6 +38,6 @@ class GeometryPipeline():
         context = GraphicsContext(size=initargs["size"])
         for task in self.tasks:
             task(context)
-        background = Image.new("RGBA", size=initargs["size"], color=initargs["background"])
+        background = Image.new("RGBA", size=context.size, color=initargs["background"])
         background.alpha_composite(context.getViewportImage(), (0, 0))
         return background
