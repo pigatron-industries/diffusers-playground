@@ -339,9 +339,11 @@ class DiffusersPipelines:
 
     #=============== INFERENCE ==============
 
-    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineTextToImage is None):
-            raise Exception('text to image pipeline not loaded')
+    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, **kwargs):
+        if (self.pipelineTextToImage is None and model is None):
+            model = DEFAULT_TEXTTOIMAGE_MODEL
+        if(model is not None and model != ""):
+            self.createTextToImagePipeline(model)
         prompt = self.processPrompt(prompt, self.pipelineTextToImage)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
@@ -354,9 +356,11 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineImageToImage is None):
-            raise Exception('image to image pipeline not loaded')
+    def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, **kwargs):
+        if (self.pipelineImageToImage is None and model is None):
+            model = DEFAULT_TEXTTOIMAGE_MODEL
+        if(model is not None and model != ""):
+            self.createImageToImagePipeline(model)
         inimage = inimage.convert("RGB")
         prompt = self.processPrompt(prompt, self.pipelineImageToImage)
         generator, seed = self.createGenerator(seed)
@@ -370,9 +374,11 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineInpainting is None):
-            raise Exception('inpainting pipeline not loaded')
+    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
+        if (self.pipelineInpainting is None and model is None):
+            model = DEFAULT_INPAINT_MODEL
+        if(model is not None and model != ""):
+            self.createInpaintPipeline(model)
         prompt = self.processPrompt(prompt, self.pipelineInpainting)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
@@ -383,10 +389,12 @@ class DiffusersPipelines:
         return outimage, seed
 
 
-    def controlnet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, **kwargs):
+    def controlnet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
         # WORK IN PROGRESS
-        if (self.pipelineInpainting is None):
-            raise Exception('control net pipeline not loaded')
+        if (self.pipelineControlNet is None and model is None):
+            model = DEFAULT_CONTROLNET_MODEL
+        if(model is not None and model != ""):
+            self.createControlNetPipeline(model)
         prompt = self.processPrompt(prompt, self.pipelineInpainting)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
@@ -397,9 +405,11 @@ class DiffusersPipelines:
         return outimage, seed
 
 
-    def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineDepthToImage is None):
-            raise Exception('depth to image pipeline not loaded')
+    def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
+        if (self.pipelineDepthToImage is None and model is None):
+            model = DEFAULT_DEPTHTOIMAGE_MODEL
+        if(model is not None and model != ""):
+            self.createDepthToImagePipeline(model)
         inimage = inimage.convert("RGB")
         prompt = self.processPrompt(prompt, self.pipelineDepthToImage)
         generator, seed = self.createGenerator(seed)
@@ -410,9 +420,11 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineImageVariation is None):
-            raise Exception('image variation pipeline not loaded')
+    def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
+        if (self.pipelineImageVariation is None and model is None):
+            model = DEFAULT_IMAGEVARIATION_MODEL
+        if(model is not None and model != ""):
+            self.createImageVariationPipeline(model)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.pipelineImageVariation)
@@ -421,9 +433,11 @@ class DiffusersPipelines:
         return outimage, seed
 
 
-    def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, **kwargs):
-        if (self.pipelineInstructPixToPix is None):
-            raise Exception('image instruct pix to pix not loaded')
+    def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
+        if (self.pipelineInstructPixToPix is None and model is None):
+            model = DEFAULT_INSTRUCTPIXTOPIX_MODEL
+        if(model is not None and model != ""):
+            self.createInstructPixToPixPipeline(model)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, self.pipelineInstructPixToPix)

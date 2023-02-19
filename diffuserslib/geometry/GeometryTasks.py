@@ -29,7 +29,7 @@ class DrawImageTask(GeometryTask):
     def __call__(self, context):
         # evaluateArguments decides which argument values to use at runtime
         args = evaluateArguments(self.args, context=context)
-        context.image.alpha_composite(args["image"], context.offset)
+        context.image.paste(args["image"], context.offset)
         return context
 
 
