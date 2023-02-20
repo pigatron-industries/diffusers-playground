@@ -21,3 +21,5 @@ from .geometry.GeometryPipelineFactory import *
 
 from .animation.SceneDef import *
 from .animation.SceneRenderer import *
+
+from .interface.BatchNotebookInterface import *
