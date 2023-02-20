@@ -219,6 +219,7 @@ class DiffusersPipelines:
             args['clip_model'] = self.clip_model
         pipeline = DiffusionPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineTextToImage = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineTextToImage)
 
@@ -233,6 +234,7 @@ class DiffusersPipelines:
         args = self.createArgs(preset)
         pipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineImageToImage = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineImageToImage)
 
@@ -247,6 +249,7 @@ class DiffusersPipelines:
         args = self.createArgs(preset)
         pipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineInpainting = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineInpainting)
 
@@ -288,6 +291,7 @@ class DiffusersPipelines:
         args = self.createArgs(preset)
         pipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineDepthToImage = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineDepthToImage)
 
@@ -302,6 +306,7 @@ class DiffusersPipelines:
         args = self.createArgs(preset)
         pipeline = StableDiffusionImageVariationPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineImageVariation = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineImageVariation)
 
@@ -316,6 +321,7 @@ class DiffusersPipelines:
         args = self.createArgs(preset)
         pipeline = StableDiffusionInstructPix2PixPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineInstructPixToPix = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineInstructPixToPix)
 
@@ -333,6 +339,7 @@ class DiffusersPipelines:
             args['revision'] = 'fp16'
         pipeline = StableDiffusionUpscalePipeline.from_pretrained(self.upscalePreset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_model_cpu_offload()
         self.pipelineUpscale = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelineUpscale)
 
