@@ -33,12 +33,12 @@ class DiffusersView(FlaskView):
 
     @route("/api/models", methods=["GET"])
     def models(self):
-        if(request.args["type"] == "inpaint"):
-            presets = self.pipelines.presetsInpaint
-        elif(request.args["type"] == "control"):
-            presets = self.pipelines.presetsControl
-        else:
-            presets = self.pipelines.presetsImage
+        presets = self.pipelines.presetsImage
+        if("type" in request.args):
+          if(request.args["type"] == "inpaint"):
+              presets = self.pipelines.presetsInpaint
+          elif(request.args["type"] == "control"):
+              presets = self.pipelines.presetsControl
         models = [model.toDict() for model in presets.models.values()]
         return jsonify(models)
 
