@@ -42,3 +42,10 @@ class BatchNotebookInterface:
     def onChange(self, change):
         if (change['type'] == 'change' and change['name'] == 'value'):
             self.setWidgetVisibility()
+
+
+    def getParams(self):
+        params = {}
+        params['type'] = self.type_dropdown.value
+        params['model'] = self.model_dropdown.value
+        return params
