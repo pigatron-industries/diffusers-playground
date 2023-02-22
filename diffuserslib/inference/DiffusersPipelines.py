@@ -261,7 +261,7 @@ class DiffusersPipelines:
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
         pipeline = self.createPipeline(StableDiffusionDepth2ImgPipeline, model, self.presetsImage, DEFAULT_DEPTHTOIMAGE_MODEL)
         inimage = inimage.convert("RGB")
-        return self.inference(prompt=prompt, image=inimage, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, pipeline=pipeline, seed=seed)
+        return self.inference(prompt=prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, pipeline=pipeline, seed=seed)
 
 
     def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
