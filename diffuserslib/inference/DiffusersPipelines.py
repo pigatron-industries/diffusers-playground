@@ -3,8 +3,8 @@ import random
 import os
 import sys
 from typing import Dict
-from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, 
-                        StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
+from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
+                        StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
                         StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
                         # StableDiffusionControlNetPipeline,
                         # Schedulers
@@ -19,6 +19,7 @@ from .TextEmbedding import TextEmbeddings
 from ..DiffusersModelPresets import DiffusersModelList, DiffusersModel
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
+from ..StringUtils import mergeDicts
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -70,6 +71,7 @@ class DiffusersPipelines:
         else:
             self.common_modifierdict = common_modifierdict
 
+        self.pipelines: Dict[str,DiffusersPipeline] = {}
         self.pipelineTextToImage: DiffusersPipeline = None
         self.pipelineImageToImage: DiffusersPipeline = None
         self.pipelineInpainting: DiffusersPipeline = None
@@ -204,51 +206,23 @@ class DiffusersPipelines:
 
     #=============== LOAD PIPELINES ==============
 
-    def createTextToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=None):
-        if(self.pipelineTextToImage is not None and self.pipelineTextToImage.preset.modelid == model):
-            return
-        print(f"Creating text to image pipeline from model {model}")
-        self.pipelineTextToImage = None
+    def createPipeline(self, cls, model, presets, default, **kwargs):
+        if(cls.__name__ not in self.pipelines and (model is None or model == "")):
+            model = default
+        if(model is None or model == ""):
+            return self.pipelines[cls.__name__]
+        if (cls.__name__ in self.pipelines and self.pipelines[cls.__name__].preset.modelid == model):
+            return self.pipelines[cls.__name__]
+        print(f"Creating {cls.__name__} pipeline from model {model}")
         torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsImage)
+        preset = self.getModel(model, presets)
         args = self.createArgs(preset)
-        if(custom_pipeline is not None and custom_pipeline != ''):
-            args['custom_pipeline'] = custom_pipeline
-        if(custom_pipeline == 'clip_guided_stable_diffusion'):
-            args['feature_extractor'] = self.feature_extractor
-            args['clip_model'] = self.clip_model
-        pipeline = DiffusionPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
+        args = mergeDicts(args, kwargs)
+        pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
-        self.pipelineTextToImage = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineTextToImage)
-
-
-    def createImageToImagePipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL):
-        if(self.pipelineImageToImage is not None and self.pipelineImageToImage.preset.modelid == model):
-            return
-        print(f"Creating image to image pipeline from model {model}")
-        self.pipelineImageToImage = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsImage)
-        args = self.createArgs(preset)
-        pipeline = StableDiffusionImg2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineImageToImage = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineImageToImage)
-
-
-    def createInpaintPipeline(self, model=DEFAULT_INPAINT_MODEL):
-        if(self.pipelineInpainting is not None and self.pipelineInpainting.preset.modelid == model):
-            return
-        print(f"Creating inpainting pipeline from model {model}")
-        self.pipelineInpainting = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsInpaint)
-        args = self.createArgs(preset)
-        pipeline = StableDiffusionInpaintPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineInpainting = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineInpainting)
+        self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
+        self.addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
+        return self.pipelines[cls.__name__]
 
 
     def createControlNetPipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=DEFAULT_CONTROLNET_MODEL):
@@ -278,115 +252,38 @@ class DiffusersPipelines:
         self.addTextEmbeddingsToPipeline(self.pipelineControlNet)
 
 
-    def createDepthToImagePipeline(self, model=DEFAULT_DEPTHTOIMAGE_MODEL):
-        if(self.pipelineDepthToImage is not None and self.pipelineDepthToImage.preset.modelid == model):
-            return
-        print(f"Creating depth to image pipeline from model {model}")
-        self.pipelineDepthToImage = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsMisc)
-        args = self.createArgs(preset)
-        pipeline = StableDiffusionDepth2ImgPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineDepthToImage = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineDepthToImage)
-
-
-    def createImageVariationPipeline(self, model=DEFAULT_IMAGEVARIATION_MODEL):
-        if(self.pipelineImageVariation is not None and self.pipelineInstructPixToPix.preset.modelid == model):
-            return
-        print(f"Creating image variation pipeline from model {model}")
-        self.pipelineImageVariation = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsMisc)
-        args = self.createArgs(preset)
-        pipeline = StableDiffusionImageVariationPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineImageVariation = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineImageVariation)
-
-
-    def createInstructPixToPixPipeline(self, model=DEFAULT_INSTRUCTPIXTOPIX_MODEL):
-        if(self.pipelineInstructPixToPix is not None and self.pipelineInstructPixToPix.preset.modelid == model):
-            return
-        print(f"Creating instruct pix to pix pipeline from model {model}")
-        self.pipelineInstructPixToPix = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsMisc)
-        args = self.createArgs(preset)
-        pipeline = StableDiffusionInstructPix2PixPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineInstructPixToPix = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineInstructPixToPix)
-
-
-    def createUpscalePipeline(self, model=DEFAULT_UPSCALE_MODEL):
-        if(self.pipelineUpscale is not None and self.pipelineUpscale.preset.modelid == model):
-            return
-        print(f"Creating upscale pipeline from model {model}")
-        self.pipelineUpscale = None
-        torch.cuda.empty_cache()
-        preset = self.getModel(model, self.presetsMisc)
-        args = {}
-        args['torch_dtype'] = torch.float16
-        if(preset.fp16):
-            args['revision'] = 'fp16'
-        pipeline = StableDiffusionUpscalePipeline.from_pretrained(self.upscalePreset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineUpscale = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineUpscale)
-
-
     #=============== INFERENCE ==============
 
+    def inference(self, pipeline, prompt, seed, scheduler=None, **kwargs):
+        prompt = self.processPrompt(prompt, pipeline)
+        generator, seed = self.createGenerator(seed)
+        if(scheduler is not None):
+            self.loadScheduler(scheduler, pipeline)
+        if(pipeline.preset.autocast):
+            with torch.autocast(self.inferencedevice):
+                image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
+        else:
+            image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
+        return image, seed
+
+
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, **kwargs):
-        if (self.pipelineTextToImage is None and model is None):
-            model = DEFAULT_TEXTTOIMAGE_MODEL
-        if(model is not None and model != ""):
-            self.createTextToImagePipeline(model)
-        prompt = self.processPrompt(prompt, self.pipelineTextToImage)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineTextToImage)
-        if(self.pipelineTextToImage.preset.autocast):
-            with torch.autocast(self.inferencedevice):
-                image = self.pipelineTextToImage.pipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
-        else:
-            image = self.pipelineTextToImage.pipeline(prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, generator=generator).images[0]
-        return image, seed
+        pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline="lpw_stable_diffusion")
+        return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, pipeline=pipeline, seed=seed)
 
 
-    def imageToImage(self, inimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, **kwargs):
-        if (self.pipelineImageToImage is None and model is None):
-            model = DEFAULT_TEXTTOIMAGE_MODEL
-        if(model is not None and model != ""):
-            self.createImageToImagePipeline(model)
-        inimage = inimage.convert("RGB")
-        prompt = self.processPrompt(prompt, self.pipelineImageToImage)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineImageToImage)
-        if(self.pipelineImageToImage.preset.autocast):
-            with torch.autocast(self.inferencedevice):
-                image = self.pipelineImageToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
-        else:
-            image = self.pipelineImageToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, generator=generator).images[0]
-        return image, seed
+    def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, **kwargs):        
+        pipeline = self.createPipeline(StableDiffusionImg2ImgPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
+        initimage = initimage.convert("RGB")
+        return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, pipeline=pipeline, seed=seed)
 
 
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        if (self.pipelineInpainting is None and model is None):
-            model = DEFAULT_INPAINT_MODEL
-        if(model is not None and model != ""):
-            self.createInpaintPipeline(model)
-        prompt = self.processPrompt(prompt, self.pipelineInpainting)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineInpainting)
-        with torch.autocast(self.inferencedevice):
-            outimage = self.pipelineInpainting.pipeline(prompt, image=initimage.convert("RGB"), mask_image=maskimage.convert("RGB"), width=initimage.width, height=initimage.height,
-                                               negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        return outimage, seed
+        pipeline = self.createPipeline(StableDiffusionInpaintPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
+        initimage = initimage.convert("RGB")
+        maskimage = maskimage.convert("RGB")
+        return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
+                            negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
 
 
     def controlnet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
@@ -406,56 +303,21 @@ class DiffusersPipelines:
 
 
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
-        if (self.pipelineDepthToImage is None and model is None):
-            model = DEFAULT_DEPTHTOIMAGE_MODEL
-        if(model is not None and model != ""):
-            self.createDepthToImagePipeline(model)
+        pipeline = self.createPipeline(StableDiffusionDepth2ImgPipeline, model, self.presetsImage, DEFAULT_DEPTHTOIMAGE_MODEL)
         inimage = inimage.convert("RGB")
-        prompt = self.processPrompt(prompt, self.pipelineDepthToImage)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineDepthToImage)
-        with torch.autocast(self.inferencedevice):
-            image = self.pipelineDepthToImage.pipeline(prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, generator=generator).images[0]
-        return image, seed
+        return self.inference(prompt=prompt, image=inimage, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, pipeline=pipeline, seed=seed)
 
 
     def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        if (self.pipelineImageVariation is None and model is None):
-            model = DEFAULT_IMAGEVARIATION_MODEL
-        if(model is not None and model != ""):
-            self.createImageVariationPipeline(model)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineImageVariation)
-        with torch.autocast(self.inferencedevice):
-            outimage = self.pipelineImageVariation.pipeline(image=initimage.convert("RGB"), width=initimage.width, height=initimage.height, num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        return outimage, seed
+        pipeline = self.createPipeline(StableDiffusionImageVariationPipeline, model, self.presetsImage, DEFAULT_IMAGEVARIATION_MODEL)
+        return self.inference(image=initimage.convert("RGB"), width=initimage.width, height=initimage.height, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
 
 
     def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        if (self.pipelineInstructPixToPix is None and model is None):
-            model = DEFAULT_INSTRUCTPIXTOPIX_MODEL
-        if(model is not None and model != ""):
-            self.createInstructPixToPixPipeline(model)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineInstructPixToPix)
-        with torch.autocast(self.inferencedevice):
-            outimage = self.pipelineInstructPixToPix.pipeline(prompt, image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        return outimage, seed
+        pipeline = self.createPipeline(StableDiffusionInstructPix2PixPipeline, model, self.presetsImage, DEFAULT_INSTRUCTPIXTOPIX_MODEL)
+        return self.inference(prompt, image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
 
 
     def upscale(self, inimage, prompt, scheduler=None, model=None):
-        if (self.pipelineUpscale is None and model is None):
-            model = DEFAULT_UPSCALE_MODEL
-        if(model is not None and model != ""):
-            print(f'Model: {model}')
-            self.createUpscalePipeline(model)
-        prompt = self.processPrompt(prompt, self.pipelineUpscale)
-        inimage = inimage.convert("RGB")
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineUpscale)
-        with torch.autocast(self.inferencedevice):
-            image = self.pipelineUpscale.pipeline(image=inimage, prompt=prompt).images[0]
-        return image
+        pipeline = self.createPipeline(StableDiffusionUpscalePipeline, model, self.presetsImage, DEFAULT_UPSCALE_MODEL)
+        return self.inference(image=inimage, prompt=prompt, pipeline=pipeline)

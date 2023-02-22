@@ -1,7 +1,7 @@
 from PIL import Image
 import math, random
 from ..ImageUtils import createMask, compositeImages, applyColourCorrection
-from .DiffusersPipelines import MAX_SEED
+from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
 from huggingface_hub import login
 
 from IPython.display import display
@@ -11,7 +11,7 @@ def loginHuggingFace(token):
     login(token=token)
 
 
-def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128, callback=None):
+def tiledImageToImage(pipelines:DiffusersPipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=640, tileheight=640, overlap=128, model=None, callback=None):
     if(seed is None):
         seed = random.randint(0, MAX_SEED)
     
@@ -45,7 +45,7 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
                 image_slice = initimg.crop((x, y, x+tilewidth, y+tileheight))
 
             image_slice = image_slice.convert("RGB")
-            imageout_slice, _ = pipelines.imageToImage(image_slice, prompt, negprompt, strength, scale, seed, scheduler)
+            imageout_slice, _ = pipelines.imageToImage(initimage=image_slice, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
             imageout_slice = applyColourCorrection(image_slice, imageout_slice)
             
             if(overlap >= 0):
@@ -65,19 +65,19 @@ def tiledImageToImage(pipelines, initimg, prompt, negprompt, strength, scale, sc
     return merged_image, seed
 
 
-def tiledImageToImageOffset(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0, callback=None):
+def tiledImageToImageOffset(pipelines:DiffusersPipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
+                            tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0, model=None, callback=None):
     # creates a new image slightly bigger than original image to allow tiling to start at negative offset
     offsetimage = Image.new(initimg.mode, (initimg.width-offsetx, initimg.height-offsety))
     offsetimage.paste(initimg, (-offsetx, -offsety, -offsetx+initimg.width, -offsety+initimg.height))
     outimage, seed = tiledImageToImage(pipelines=pipelines, initimg=offsetimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, 
-                                       scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback)
+                                       scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, model=model, callback=callback)
     image = outimage.crop((-offsetx, -offsety, outimage.width, outimage.height))
     return image, seed
 
 
-def tiledImageToImageCentred(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                            tilewidth=640, tileheight=640, overlap=128, alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, callback=None):
+def tiledImageToImageCentred(pipelines:DiffusersPipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
+                            tilewidth=640, tileheight=640, overlap=128, alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, model=None, callback=None):
     # find top left of initial centre tile 
     offsetx = offsetx + int(initimg.width/2)
     offsety = offsety + int(initimg.height/2)
@@ -97,12 +97,12 @@ def tiledImageToImageCentred(pipelines, initimg, prompt, negprompt, strength, sc
         offsety = offsety - (tileheight-overlap)
 
     return tiledImageToImageOffset(pipelines, initimg=initimg, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, 
-                            tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, callback=callback)
+                            tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, model=model, callback=callback)
 
 
-def compositedInpaint(pipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3):
+def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
-    outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed)
+    outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model)
     outimage = compositeImages(outimage, initimage, maskimage, maskDilation=maskDilation, maskFeather=maskFeather)
     return outimage, usedseed
 
@@ -145,15 +145,15 @@ def tiledInpaint(pipelines, initimg, maskimg, prompt, negprompt, scale, steps=50
     return merged_image, seed
 
 
-def tiledImageToImageInpaintSeams(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=512, tileheight=512, overlap=-64):
+def tiledImageToImageInpaintSeams(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, tilewidth=512, tileheight=512, overlap=-64, model=None):
     # use negative overlap to leave gaps between tiles
     tiledImageToImageOffset(pipelines, initimg=initimg, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, 
-                            tilewidth=tilewidth, tileheight=tileheight, overlap=-overlap, offsetx=0, offsety=0)
+                            tilewidth=tilewidth, tileheight=tileheight, overlap=-overlap, offsetx=0, offsety=0, model=model)
     pass
 
 
 def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                               tilewidth=640, tileheight=640, overlap=128, passes=2, strengthMult=0.5, callback=None):
+                               tilewidth=640, tileheight=640, overlap=128, passes=2, strengthMult=0.5, model=None, callback=None):
     offsetEven = (0, 0)
     offsetOdd = (-int((tilewidth - overlap)/2), -int((tileheight - overlap)/2))
     image = initimg
@@ -164,7 +164,7 @@ def tiledImageToImageMultipass(pipelines, initimg, prompt, negprompt, strength, 
         else:
             offset = offsetOdd
         image, usedseed = tiledImageToImageOffset(pipelines, initimg=image, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, 
-                                                  seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offset[0], offsety=offset[1], callback=callback)
+                                                  seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offset[0], offsety=offset[1], model=model, callback=callback)
         strength = strength * strengthMult
 
     return image, usedseed

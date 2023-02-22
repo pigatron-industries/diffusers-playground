@@ -16,3 +16,9 @@ def padNumber(number, length):
     number_str = str(number)
     number_of_zeros = length - len(number_str)
     return '0' * number_of_zeros + number_str
+
+
+def mergeDicts(dict1, dict2):
+    for key in dict2:
+        dict1[key] = dict2[key]
+    return dict1
