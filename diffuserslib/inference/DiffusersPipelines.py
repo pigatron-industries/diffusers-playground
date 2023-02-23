@@ -6,7 +6,6 @@ from typing import Dict
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
                         StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
-                        # StableDiffusionControlNetPipeline,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -225,33 +224,6 @@ class DiffusersPipelines:
         return self.pipelines[cls.__name__]
 
 
-    def createControlNetPipeline(self, model=DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=DEFAULT_CONTROLNET_MODEL):
-        # WORK IN PROGRESS - untested
-        if(self.pipelineControlNet is not None and self.pipelineControlNet.preset.modelid == model):
-            return
-        print(f"Creating control net pipeline from model {model}")
-        self.pipelineControlNet = None
-        torch.cuda.empty_cache()
-        controlpreset = self.getModel(model, self.presetsControl)
-        preset = self.getModel(model, self.presetsImage)
-        args = self.createArgs(preset)
-
-        controlnet = UNet2DConditionModel.from_pretrained(controlpreset.modelpath, subfolder="controlnet", torch_dtype=torch.float16)
-        diffusionpipeline = DiffusionPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline = StableDiffusionControlNetPipeline(vae=diffusionpipeline.vae, 
-                                                     text_encoder=diffusionpipeline.text_encoder, 
-                                                     tokenizer=diffusionpipeline.tokenizer,
-                                                     controlnet=controlnet,
-                                                     unet=diffusionpipeline.unet,
-                                                     scheduler=diffusionpipeline.scheduler,
-                                                     safety_checker=diffusionpipeline.safety_checker,
-                                                     feature_extractor=diffusionpipeline.feature_extractor
-                   ).to(self.device)
-        pipeline.enable_attention_slicing()
-        self.pipelineControlNet = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelineControlNet)
-
-
     #=============== INFERENCE ==============
 
     def inference(self, pipeline, prompt, seed, scheduler=None, **kwargs):
@@ -285,14 +257,13 @@ class DiffusersPipelines:
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
-                              negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
+                            negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
 
 
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
         pipeline = self.createPipeline(StableDiffusionDepth2ImgPipeline, model, self.presetsImage, DEFAULT_DEPTHTOIMAGE_MODEL)
         inimage = inimage.convert("RGB")
-        return self.inference(prompt=prompt, image=inimage, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
-                              num_inference_steps=steps, pipeline=pipeline, seed=seed, scheduler=scheduler)
+        return self.inference(prompt=prompt, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, pipeline=pipeline, seed=seed)
 
 
     def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
