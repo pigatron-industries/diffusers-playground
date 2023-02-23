@@ -269,13 +269,15 @@ class DiffusersPipelines:
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, **kwargs):
         pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline="lpw_stable_diffusion")
-        return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, width=width, height=height, pipeline=pipeline, seed=seed)
+        return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
+                              width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, **kwargs):        
         pipeline = self.createPipeline(StableDiffusionImg2ImgPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
         initimage = initimage.convert("RGB")
-        return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, pipeline=pipeline, seed=seed)
+        return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
+                              pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
@@ -283,41 +285,27 @@ class DiffusersPipelines:
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
-                            negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
-
-
-    def controlnet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        # WORK IN PROGRESS
-        if (self.pipelineControlNet is None and model is None):
-            model = DEFAULT_CONTROLNET_MODEL
-        if(model is not None and model != ""):
-            self.createControlNetPipeline(model)
-        prompt = self.processPrompt(prompt, self.pipelineInpainting)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, self.pipelineInpainting)
-        with torch.autocast(self.inferencedevice):
-            outimage = self.pipelineInpainting.pipeline(prompt=prompt, controlnet_hint=initimage.convert("RGB"), negative_prompt=negprompt, 
-                                                        num_inference_steps=steps, guidance_scale=scale, generator=generator).images[0]
-        return outimage, seed
+                              negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
         pipeline = self.createPipeline(StableDiffusionDepth2ImgPipeline, model, self.presetsImage, DEFAULT_DEPTHTOIMAGE_MODEL)
         inimage = inimage.convert("RGB")
-        return self.inference(prompt=prompt, image=inimage, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, num_inference_steps=steps, pipeline=pipeline, seed=seed)
+        return self.inference(prompt=prompt, image=inimage, image=inimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
+                              num_inference_steps=steps, pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
         pipeline = self.createPipeline(StableDiffusionImageVariationPipeline, model, self.presetsImage, DEFAULT_IMAGEVARIATION_MODEL)
-        return self.inference(image=initimage.convert("RGB"), width=initimage.width, height=initimage.height, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
+        return self.inference(image=initimage.convert("RGB"), width=initimage.width, height=initimage.height, num_inference_steps=steps, 
+                              guidance_scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
         pipeline = self.createPipeline(StableDiffusionInstructPix2PixPipeline, model, self.presetsImage, DEFAULT_INSTRUCTPIXTOPIX_MODEL)
-        return self.inference(prompt, image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed)
+        return self.inference(prompt, image=initimage.convert("RGB"), num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def upscale(self, inimage, prompt, scheduler=None, model=None):
         pipeline = self.createPipeline(StableDiffusionUpscalePipeline, model, self.presetsImage, DEFAULT_UPSCALE_MODEL)
-        return self.inference(image=inimage, prompt=prompt, pipeline=pipeline)
+        return self.inference(image=inimage, prompt=prompt, pipeline=pipeline, scheduler=scheduler)
