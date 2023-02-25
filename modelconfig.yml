@@ -46,6 +46,8 @@ image:
         phrase: mdjrny-v4 style
       - id: SG161222/Realistic_Vision_V1.3
         vae: stabilityai/sd-vae-ft-mse
+      - id: SY573M404/f222-diffusers
+        vae: stabilityai/sd-vae-ft-mse
       - id: wavymulder/Analog-Diffusion
         vae: stabilityai/sd-vae-ft-mse
         phrase: analog style
