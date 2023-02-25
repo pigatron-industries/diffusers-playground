@@ -97,7 +97,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"txt2img", "error":e.message }
+            self.job.status = { "status":"error", "action":"txt2img", "error":str(e) }
             raise e
 
 
@@ -121,7 +121,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"img2img", "error":e.message }
+            self.job.status = { "status":"error", "action":"img2img", "error":str(e) }
             raise e
 
 
@@ -144,7 +144,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"depth2img", "error":e.message }
+            self.job.status = { "status":"error", "action":"depth2img", "error":str(e) }
             raise e
 
 
@@ -164,7 +164,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"imagevariation", "error":e.message }
+            self.job.status = { "status":"error", "action":"imagevariation", "error":str(e) }
             raise e
 
 
@@ -185,7 +185,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"instructpix2pix", "error":e.message }
+            self.job.status = { "status":"error", "action":"instructpix2pix", "error":str(e) }
             raise e
 
 
@@ -221,7 +221,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"img2imgTiled", "error":e.message }
+            self.job.status = { "status":"error", "action":"img2imgTiled", "error":str(e) }
             raise e
 
 
@@ -250,7 +250,7 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"inpaint", "error":e.message }
+            self.job.status = { "status":"error", "action":"inpaint", "error":str(e) }
             raise e
 
 
@@ -275,5 +275,5 @@ class DiffusersView(FlaskView):
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"upscale", "error":e.message }
+            self.job.status = { "status":"error", "action":"upscale", "error":str(e) }
             raise e
