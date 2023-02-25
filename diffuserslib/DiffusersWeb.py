@@ -113,7 +113,7 @@ class DiffusersView(FlaskView):
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = self.pipelines.imageToImage(initimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
-                outimage = applyColourCorrection(initimage, outimage)
+                # outimage = applyColourCorrection(initimage, outimage)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -243,7 +243,7 @@ class DiffusersView(FlaskView):
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
-                outimage = applyColourCorrection(initimage, outimage)
+                # outimage = applyColourCorrection(initimage, outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
