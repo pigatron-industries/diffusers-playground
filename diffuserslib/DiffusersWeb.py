@@ -230,7 +230,6 @@ class DiffusersView(FlaskView):
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
-            print(f'Height: {initimage.height}, Width: {initimage.width}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
             initimage = base64DecodeImage(initimage)
