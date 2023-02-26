@@ -253,7 +253,7 @@ class DiffusersPipelines:
 
 
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionInpaintPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
+        pipeline = self.createPipeline(StableDiffusionInpaintPipeline, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL)
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
