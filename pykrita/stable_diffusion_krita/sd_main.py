@@ -266,7 +266,7 @@ fields = {
     'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'depth2img':       ['prompt', 'negprompt', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
-    'inpaint':         ['prompt', 'negprompt', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
     'imagevariation':  ['steps', 'seed', 'scale', 'num', 'image', 'scheduler'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
@@ -308,7 +308,7 @@ class SDDialog(QDialog):
         if('model' in actionfields):
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
-            models = getModels()
+            models = getModels(action)
             modelids = [model["modelid"] for model in models]
             modelids.sort()
             self.model.addItems(modelids)
@@ -629,10 +629,10 @@ def base64ToQImage(data):
      return imagen
 
 
-def getModels():
+def getModels(type):
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")
-    endpoint+="/api/models"
+    endpoint+=f"/api/models?type={type}"
     headers = {
         "Accept": "application/json",
     } 
@@ -1063,6 +1063,7 @@ def Inpaint():
         data=SDConfig.dlgData
         p.action="inpaint"
         p.negprompt = data["negprompt"]
+        p.model = data["model"]
         p.steps=data["steps"]
         p.seed=data["seed"]
         p.num=data["num"]
