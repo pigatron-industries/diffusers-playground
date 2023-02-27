@@ -44,7 +44,7 @@ class ImageTools():
         inimage.save(infile)
 
         from upscale import Upscale
-        upscale = Upscale(model = "4x_remacri.pth", input=Path("input"), output=Path("output"))
+        upscale = Upscale(model = model, input=Path("input"), output=Path("output"))
         upscale.run()
 
         outimage = Image.open(outfile)
