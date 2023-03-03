@@ -44,13 +44,15 @@ image:
       - id: prompthero/openjourney
         vae: stabilityai/sd-vae-ft-mse
         phrase: mdjrny-v4 style
-      - id: SG161222/Realistic_Vision_V1.3
+      - id: SG161222/Realistic_Vision_V1.3_Fantasy.ai
         vae: stabilityai/sd-vae-ft-mse
       - id: SY573M404/f222-diffusers
         vae: stabilityai/sd-vae-ft-mse
       - id: wavymulder/Analog-Diffusion
         vae: stabilityai/sd-vae-ft-mse
         phrase: analog style
+      - id: windwhinny/chilloutmix
+        vae: stabilityai/sd-vae-ft-mse
       - id: XpucT/Deliberate
         vae: stabilityai/sd-vae-ft-mse
 
