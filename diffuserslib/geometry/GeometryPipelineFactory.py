@@ -14,7 +14,7 @@ def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "fl
 
 def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
                           symmetry=RandomChoiceArgument(["horizontal", "vertical", "rotation", "none"])):
-    geometry = GeometryPipeline(size=size, background=background)
+    geometry = GeometryPipeline(size=size)
     for i in range(shapes):
         geometry.addTask(DrawRegularShape(
             position=RandomPositionArgument(), 
@@ -22,14 +22,13 @@ def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black
             sides=sides,
             fill=foreground
         ))
-    geometry.addTask(Symmetrize(
-        type=symmetry
-    ))
+    geometry.addTask(Symmetrize(type=symmetry))
+    geometry.addTask(FillBackgroundTask(background = background))
     return geometry
 
 
 def spiralGeometryPipeline(size=(512, 512), background="white", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1, rotation=360, steps=8, zoom=4):
-    geometry = GeometryPipeline(size=size, background=background)
+    geometry = GeometryPipeline(size=size)
     for i in range(shapes):
         geometry.addTask(DrawRegularShape(
             position=RandomPositionArgument(), 
@@ -39,6 +38,7 @@ def spiralGeometryPipeline(size=(512, 512), background="white", sides=RandomNumb
     geometry.addTask(Spiralize(
         rotation = rotation, steps = steps, zoom = zoom
     ))
+    geometry.addTask(FillBackgroundTask(background = background))
     return geometry
 
 
@@ -58,6 +58,7 @@ def checkerboardGeometryPipeline(size=(512, 512), background="white", foreground
             (math.ceil(size[0]/16), math.ceil(size[0]/16)),
             (math.ceil(size[0]/16), math.ceil(size[0]/32))
         ])
-    geometry = GeometryPipeline(size=size, background=background)
+    geometry = GeometryPipeline(size=size)
     geometry.addTask(DrawCheckerboard(size = blocksize, start = start, fill=foreground))
+    geometry.addTask(FillBackgroundTask(background = background))
     return geometry

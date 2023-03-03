@@ -28,10 +28,9 @@ class GraphicsContext():
 
 
 class GeometryPipeline():
-    def __init__(self, size=(512, 512), background="white"):
+    def __init__(self, size=(512, 512)):
         self.initargs = {
-            "size": size,
-            "background": background
+            "size": size
         }
         self.tasks = []
 
@@ -43,6 +42,6 @@ class GeometryPipeline():
         context = GraphicsContext(size=initargs["size"])
         for task in self.tasks:
             task(context)
-        background = Image.new("RGBA", size=context.size, color=initargs["background"])
-        background.alpha_composite(context.getViewportImage(), (0, 0))
-        return background
+        # background = Image.new("RGBA", size=context.size, color=initargs["background"])
+        # background.alpha_composite(context.getViewportImage(), (0, 0))
+        return context.getViewportImage()
