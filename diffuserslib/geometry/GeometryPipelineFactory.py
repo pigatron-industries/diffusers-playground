@@ -1,5 +1,5 @@
 from .GeometryPipeline import GeometryPipeline
-from .GeometryTasks import *
+from .TasksGeometry import *
 from .. import RandomNumberArgument, RandomChoiceArgument
 
 import math

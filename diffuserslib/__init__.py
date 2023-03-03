@@ -16,7 +16,7 @@ from .batch.ArgumentsBatch import *
 from .batch.ArgumentsRandom import *
 
 from .geometry.GeometryPipeline import *
-from .geometry.GeometryTasks import *
+from .geometry.TasksGeometry import *
 from .geometry.GeometryPipelineFactory import *
 
 from .animation.SceneDef import *
