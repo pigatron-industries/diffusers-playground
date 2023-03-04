@@ -35,6 +35,19 @@ class RandomChoiceArgument(Argument):
         return random.choice(self.list)
 
 
+class RandomPositionArgument(Argument):
+    """ Get a random position in an image """
+    def __init__(self, border_width = 32):
+        self.border_width = border_width
+
+    def __call__(self, context):
+        left = self.border_width
+        top = self.border_width
+        right = context.size[0] - self.border_width
+        bottom = context.size[1] - self.border_width
+        return (random.randint(left, right), random.randint(top, bottom))
+
+
 class RandomPromptProcessor(Argument):
     """ Randomise parts of a text prompt 
             randomise from list of items in prompt between brackets 

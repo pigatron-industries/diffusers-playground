@@ -1,7 +1,6 @@
 from .Transforms import Transform
 from .Interpolation import LinearInterpolation
 from ..inference import DiffusersPipelines
-from ..geometry import GraphicsContext
 from typing import List
 from PIL import Image
 
@@ -12,7 +11,7 @@ class InitTransform(Transform):
         self.transforms = transforms
         self.width = width
         self.height = height
-        self.context = GraphicsContext((width, height))
+        # self.context = GraphicsContext((width, height))
 
     def setFrame(self, frame):
         self.frame = frame

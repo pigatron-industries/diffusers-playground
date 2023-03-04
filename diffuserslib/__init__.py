@@ -15,12 +15,13 @@ from .batch.BatchRunner import *
 from .batch.ArgumentsBatch import *
 from .batch.ArgumentsRandom import *
 
-from .geometry.GeometryPipeline import *
-from .geometry.GeometryPipelineFactory import *
-from .geometry.TasksGeometry import *
-from .geometry.TasksFilters import *
-
 from .animation.SceneDef import *
 from .animation.SceneRenderer import *
 
 from .interface.BatchNotebookInterface import *
+
+from .processing.ImageProcessor import *
+from .processing.TransformProcessors import *
+from .processing.FilterProcessors import *
+from .processing.GeometryProcessors import *
+from .processing.ProcessingPipelineFactory import *

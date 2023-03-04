@@ -1,44 +1,45 @@
-from .GeometryPipeline import GeometryPipeline
-from .TasksGeometry import *
-from .. import RandomNumberArgument, RandomChoiceArgument
+from .ImageProcessor import ImageProcessorPipeline, InitImageProcessor, FillBackgroundProcessor
+from .TransformProcessors import SimpleTransformProcessor, SymmetrizeProcessor, SpiralizeProcessor
+from .GeometryProcessors import DrawRegularShapeProcessor, DrawCheckerboardProcessor
+from .. import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument
 
 import math
 
 
 def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "flipvertical", "rotate90", "rotate180", "rotate270", "none"])):
-    geometry = GeometryPipeline()
-    geometry.addTask(InitImageTask(image))
-    geometry.addTask(SimpleTransformTask(type=transform))
+    geometry = ImageProcessorPipeline()
+    geometry.addTask(InitImageProcessor(image))
+    geometry.addTask(SimpleTransformProcessor(type=transform))
     return geometry
 
 
 def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
                           symmetry=RandomChoiceArgument(["horizontal", "vertical", "rotation", "none"])):
-    geometry = GeometryPipeline(size=size)
+    geometry = ImageProcessorPipeline(size=size)
     for i in range(shapes):
-        geometry.addTask(DrawRegularShape(
+        geometry.addTask(DrawRegularShapeProcessor(
             position=RandomPositionArgument(), 
             size=RandomNumberArgument(minsize, maxsize),
             sides=sides,
             fill=foreground
         ))
-    geometry.addTask(Symmetrize(type=symmetry))
-    geometry.addTask(FillBackgroundTask(background = background))
+    geometry.addTask(SymmetrizeProcessor(type=symmetry))
+    geometry.addTask(FillBackgroundProcessor(background = background))
     return geometry
 
 
 def spiralGeometryPipeline(size=(512, 512), background="white", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1, rotation=360, steps=8, zoom=4):
-    geometry = GeometryPipeline(size=size)
+    geometry = ImageProcessorPipeline(size=size)
     for i in range(shapes):
-        geometry.addTask(DrawRegularShape(
+        geometry.addTask(DrawRegularShapeProcessor(
             position=RandomPositionArgument(), 
             size=RandomNumberArgument(minsize, maxsize),
             sides=sides
         ))
-    geometry.addTask(Spiralize(
+    geometry.addTask(SpiralizeProcessor(
         rotation = rotation, steps = steps, zoom = zoom
     ))
-    geometry.addTask(FillBackgroundTask(background = background))
+    geometry.addTask(FillBackgroundProcessor(background = background))
     return geometry
 
 
@@ -58,7 +59,7 @@ def checkerboardGeometryPipeline(size=(512, 512), background="white", foreground
             (math.ceil(size[0]/16), math.ceil(size[0]/16)),
             (math.ceil(size[0]/16), math.ceil(size[0]/32))
         ])
-    geometry = GeometryPipeline(size=size)
-    geometry.addTask(DrawCheckerboard(size = blocksize, start = start, fill=foreground))
-    geometry.addTask(FillBackgroundTask(background = background))
+    geometry = ImageProcessorPipeline(size=size)
+    geometry.addTask(DrawCheckerboardProcessor(size = blocksize, start = start, fill=foreground))
+    geometry.addTask(FillBackgroundProcessor(background = background))
     return geometry

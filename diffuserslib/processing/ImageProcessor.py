@@ -1,12 +1,12 @@
+from PIL import Image
 from .. import evaluateArguments
-from PIL import Image, ImageDraw
 
 
-class GeometryTask():
+class ImageProcessor():
     pass
 
 
-class GraphicsContext():
+class ImageContext():
     def __init__(self, size, oversize=256):
         self.image = Image.new("RGBA", size=(size[0]+oversize*2, size[1]+oversize*2))
         self.oversize = oversize
@@ -27,7 +27,7 @@ class GraphicsContext():
         self.viewport = (self.oversize, self.oversize, self.oversize+self.size[0], self.oversize+self.size[1])
 
 
-class GeometryPipeline():
+class ImageProcessorPipeline():
     def __init__(self, size=(512, 512)):
         self.initargs = {
             "size": size
@@ -39,9 +39,37 @@ class GeometryPipeline():
 
     def __call__(self):
         initargs = evaluateArguments(self.initargs)
-        context = GraphicsContext(size=initargs["size"])
+        context = ImageContext(size=initargs["size"])
         for task in self.tasks:
             task(context)
-        # background = Image.new("RGBA", size=context.size, color=initargs["background"])
-        # background.alpha_composite(context.getViewportImage(), (0, 0))
         return context.getViewportImage()
+
+
+
+class InitImageProcessor(ImageProcessor):
+    def __init__(self, image):
+        # We add all arguments to an args dictionary, 
+        # some of them may be instances of Argument class which decides what the actual argument should be when it's ready to be used
+        self.args = {
+            "image": image
+        }
+
+    def __call__(self, context):
+        # evaluateArguments decides which argument values to use at runtime
+        args = evaluateArguments(self.args, context=context)
+        context.setViewportImage(args["image"])
+        return context
+    
+
+class FillBackgroundProcessor(ImageProcessor):
+    def __init__(self, background="white"):
+        self.args = {
+            "background": background
+        }
+
+    def __call__(self, context):
+        args = evaluateArguments(self.args, context=context)
+        background = Image.new("RGBA", size=context.image.size, color=args["background"])
+        background.alpha_composite(context.image, (0, 0))
+        context.image = background
+        return context
