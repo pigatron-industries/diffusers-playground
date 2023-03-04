@@ -47,7 +47,11 @@ def checkerboardGeometryPipeline(size=(512, 512), background="white", foreground
     if(blocksize is None):
         blocksize = RandomChoiceArgument([
             #  aspect ratio dependent
+            (math.ceil(size[0]/1), math.ceil(size[1]/2)), 
+            (math.ceil(size[0]/2), math.ceil(size[1]/1)), 
             (math.ceil(size[0]/2), math.ceil(size[1]/2)), 
+            (math.ceil(size[0]/1), math.ceil(size[1]/3)), 
+            (math.ceil(size[0]/3), math.ceil(size[1]/1)), 
             (math.ceil(size[0]/3), math.ceil(size[1]/3)), 
             (math.ceil(size[0]/4), math.ceil(size[1]/4)),
             # square
