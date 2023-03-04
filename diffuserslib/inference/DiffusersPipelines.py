@@ -209,7 +209,8 @@ class DiffusersPipelines:
         preset = self.getModel(model, presets)
         args = self.createArgs(preset)
         args = mergeDicts(args, kwargs)
-        pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+        pipeline = cls.from_pretrained(preset.modelpath, **args)
+        pipeline.enable_model_cpu_offload()
         pipeline.enable_attention_slicing()
         pipeline.enable_xformers_memory_efficient_attention()
         self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
@@ -236,22 +237,23 @@ class DiffusersPipelines:
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
         pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline="lpw_stable_diffusion")
         return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
-                              width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler)
+                              width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, **kwargs):        
+    def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):        
         pipeline = self.createPipeline(StableDiffusionImg2ImgPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
         initimage = initimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler)
+                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
+    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
         pipeline = self.createPipeline(StableDiffusionInpaintPipeline, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL)
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
-                              negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
+                              negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, 
+                              scheduler=scheduler, tiling=tiling)
 
 
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
