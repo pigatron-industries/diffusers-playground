@@ -49,6 +49,7 @@ SDConfig.load(SDConfig)
 class SDParameters:
     "This is Stable Diffusion Parameter Class"     
     model = None
+    control_model = None
     prompt = ""
     negprompt = ""
     steps = 0
@@ -264,7 +265,7 @@ class ModifierDialog(QDialog):
 fields = {
     'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'scheduler'],
     'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'scale', 'seed', 'num', 'image', 'scheduler'],
-    'depth2img':       ['prompt', 'negprompt', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'controlnet':      ['prompt', 'negprompt', 'model', 'control_model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
     'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
@@ -314,6 +315,16 @@ class SDDialog(QDialog):
             self.model.addItems(modelids)
             self.model.setCurrentText(data.get("model", "runwayml/stable-diffusion-v1-5"))
             formLayout.addWidget(self.model)
+
+        if('control_model' in actionfields):
+            formLayout.addWidget(QLabel("Control Model"))
+            self.control_model = QComboBox()
+            control_models = getModels("control")
+            modelids = [control_model["modelid"] for control_model in control_models]
+            modelids.sort()
+            self.control_model.addItems(modelids)
+            self.control_model.setCurrentText(data.get("control_model", "lllyasviel/sd-controlnet-canny"))
+            formLayout.addWidget(self.control_model)
 
         if('negprompt' in actionfields):
             formLayout.addWidget(QLabel("Negative"))
@@ -457,6 +468,8 @@ class SDDialog(QDialog):
             SDConfig.dlgData["scheduler"]=self.scheduler.currentText()
         if('model' in actionfields):
             SDConfig.dlgData["model"]=self.model.currentText()
+        if('control_model' in actionfields):
+            SDConfig.dlgData["control_model"]=self.control_model.currentText()
         if('num' in actionfields):
             SDConfig.dlgData["num"]=int(self.num.value())
         if('strength' in actionfields):
@@ -658,6 +671,7 @@ def runSD(params: SDParameters):
         method = params.tile_method
     j = { 
         'model': params.model,
+        'controlmodel': params.control_model,
         'prompt': params.prompt,
         'negprompt': params.negprompt,
         'initimage': params.image64,
@@ -813,7 +827,7 @@ def ImageToImage():
         runSD(p)
 
 
-def DepthToImage():
+def ControlNet():
     s=getSelection()
     if (s==None):   
         return    
@@ -824,7 +838,7 @@ def DepthToImage():
     image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
     image64 = base64EncodeImage(image)
     
-    dlg = SDDialog("depth2img",image)
+    dlg = SDDialog("controlnet",image)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -833,7 +847,9 @@ def DepthToImage():
         p.prompt=getFullPrompt(dlg)
         if not p.prompt: return
         data=SDConfig.dlgData
-        p.action="depth2img"
+        p.action="controlnet"
+        p.model = data["model"]
+        p.control_model = data["control_model"]
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]
@@ -841,7 +857,6 @@ def DepthToImage():
         p.scale=data["scale"]
         p.scheduler=data["scheduler"]
         p.image64=image64
-        p.strength=data["strength"]
         runSD(p)
 
 

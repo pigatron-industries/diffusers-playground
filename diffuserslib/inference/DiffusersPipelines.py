@@ -43,10 +43,10 @@ def str_to_class(str):
 
 
 class DiffusersPipeline:
-    def __init__(self, preset:DiffusersModel, pipeline:DiffusionPipeline, controlModel:str = None):
+    def __init__(self, preset:DiffusersModel, pipeline:DiffusionPipeline, controlmodel:str = None):
         self.preset = preset
         self.pipeline = pipeline
-        self.controlModel = controlModel
+        self.controlmodel = controlmodel
 
 
 class BaseModelData:
@@ -219,18 +219,18 @@ class DiffusersPipelines:
         self.addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
     
-    def createControlNetPipeline(self, model, presets, default, controlModel, **kwargs):
+    def createControlNetPipeline(self, model, presets, default, controlmodel, **kwargs):
         if("StableDiffusionControlNetPipeline" not in self.pipelines and (model is None or model == "")):
             model = default
         if(model is None or model == ""):
             return self.pipelines["StableDiffusionControlNetPipeline"]
         if("StableDiffusionControlNetPipeline" in self.pipelines and 
            self.pipelines["StableDiffusionControlNetPipeline"].preset.modelid == model and 
-           self.pipelines["StableDiffusionControlNetPipeline"].controlModel == controlModel):
+           self.pipelines["StableDiffusionControlNetPipeline"].controlmodel == controlmodel):
             return self.pipelines["StableDiffusionControlNetPipeline"]
-        controlnet = ControlNetModel.from_pretrained(controlModel, torch_dtype=torch.float16)
+        controlnet = ControlNetModel.from_pretrained(controlmodel, torch_dtype=torch.float16)
         pipeline = self.createPipeline(StableDiffusionControlNetPipeline, model, presets, default, controlnet=controlnet)
-        pipeline.controlModel = controlModel
+        pipeline.controlmodel = controlmodel
         return pipeline
 
 
@@ -263,8 +263,8 @@ class DiffusersPipelines:
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def controlNet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlModel=None, tiling=False, **kwargs):
-        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlModel)
+    def controlNet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
+        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel)
         return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 

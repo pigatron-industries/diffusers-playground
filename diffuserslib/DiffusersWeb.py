@@ -125,7 +125,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def controlNetRun(self, initimage, seed=None, prompt="", negprompt="", steps=20, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def controlnetRun(self, initimage, seed=None, prompt="", negprompt="", steps=20, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodel=None, batch=1, **kwargs):
         try:
             print('=== controlnet ===')
             print(f'Prompt: {prompt}')
@@ -136,7 +136,7 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.controlNet(initimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                outimage, usedseed = self.pipelines.controlNet(initimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodel)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
