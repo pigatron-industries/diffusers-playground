@@ -228,7 +228,8 @@ class DiffusersPipelines:
            self.pipelines["StableDiffusionControlNetPipeline"].preset.modelid == model and 
            self.pipelines["StableDiffusionControlNetPipeline"].controlmodel == controlmodel):
             return self.pipelines["StableDiffusionControlNetPipeline"]
-        del self.pipelines["StableDiffusionControlNetPipeline"]
+        if("StableDiffusionControlNetPipeline" in self.pipelines):
+            del self.pipelines["StableDiffusionControlNetPipeline"]
         controlnet = ControlNetModel.from_pretrained(controlmodel, torch_dtype=torch.float16)
         pipeline = self.createPipeline(StableDiffusionControlNetPipeline, model, presets, default, controlnet=controlnet)
         pipeline.controlmodel = controlmodel
