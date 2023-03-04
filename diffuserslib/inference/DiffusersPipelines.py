@@ -71,14 +71,6 @@ class DiffusersPipelines:
             self.common_modifierdict = common_modifierdict
 
         self.pipelines: Dict[str,DiffusersPipeline] = {}
-        self.pipelineTextToImage: DiffusersPipeline = None
-        self.pipelineImageToImage: DiffusersPipeline = None
-        self.pipelineInpainting: DiffusersPipeline = None
-        self.pipelineControlNet: DiffusersPipeline = None
-        self.pipelineDepthToImage: DiffusersPipeline = None
-        self.pipelineImageVariation: DiffusersPipeline = None
-        self.pipelineInstructPixToPix: DiffusersPipeline = None
-        self.pipelineUpscale: DiffusersPipeline = None
 
         self.vae = None
         self.baseModelData: Dict[str, BaseModelData] = {}
@@ -219,6 +211,7 @@ class DiffusersPipelines:
         args = mergeDicts(args, kwargs)
         pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
         pipeline.enable_attention_slicing()
+        pipeline.enable_xformers_memory_efficient_attention()
         self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
@@ -226,11 +219,12 @@ class DiffusersPipelines:
 
     #=============== INFERENCE ==============
 
-    def inference(self, pipeline, prompt, seed, scheduler=None, **kwargs):
+    def inference(self, pipeline:DiffusersPipeline, prompt, seed, scheduler=None, tiling=False, **kwargs):
         prompt = self.processPrompt(prompt, pipeline)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler, pipeline)
+        pipeline.pipeline.vae.enable_tiling(tiling)
         if(pipeline.preset.autocast):
             with torch.autocast(self.inferencedevice):
                 image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
@@ -239,7 +233,7 @@ class DiffusersPipelines:
         return image, seed
 
 
-    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, **kwargs):
+    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
         pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline="lpw_stable_diffusion")
         return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler)
