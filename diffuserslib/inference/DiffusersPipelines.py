@@ -6,12 +6,13 @@ from typing import Dict
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
                         StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
+                        ControlNetModel, StableDiffusionControlNetPipeline,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, 
-                        UNet2DConditionModel)
+                        UNet2DConditionModel, UniPCMultistepScheduler)
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
@@ -42,9 +43,10 @@ def str_to_class(str):
 
 
 class DiffusersPipeline:
-    def __init__(self, preset:DiffusersModel, pipeline:DiffusionPipeline):
+    def __init__(self, preset:DiffusersModel, pipeline:DiffusionPipeline, controlModel:str = None):
         self.preset = preset
         self.pipeline = pipeline
+        self.controlModel = controlModel
 
 
 class BaseModelData:
@@ -59,7 +61,7 @@ class BaseModelData:
 
 class DiffusersPipelines:
 
-    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None):
+    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None, custom_pipeline = None):
         self.localmodelpath: str = localmodelpath
         self.localmodelcache: str = getModelsDir()
         self.device: str = device
@@ -69,6 +71,7 @@ class DiffusersPipelines:
             self.common_modifierdict = {}
         else:
             self.common_modifierdict = common_modifierdict
+        self.custom_pipeline = custom_pipeline;
 
         self.pipelines: Dict[str,DiffusersPipeline] = {}
 
@@ -164,18 +167,6 @@ class DiffusersPipelines:
         pipeline.pipeline.scheduler = schedulerClass.from_config(pipeline.pipeline.scheduler.config)
 
 
-    def createArgs(self, preset):
-        args = {}
-        args['torch_dtype'] = torch.float16
-        if (not self.safety_checker):
-            args['safety_checker'] = None
-        if(preset.revision is not None):
-            args['revision'] = preset.revision
-        if(preset.vae is not None):
-            args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        return args
-
-
     def getModel(self, modelid, modelList:DiffusersModelList):
         preset = modelList.getModel(modelid)
         if(preset.location == 'url' and preset.modelpath.startswith('http')):
@@ -197,6 +188,17 @@ class DiffusersPipelines:
 
     #=============== LOAD PIPELINES ==============
 
+    def createArgs(self, preset):
+        args = {}
+        args['torch_dtype'] = torch.float16
+        if (not self.safety_checker):
+            args['safety_checker'] = None
+        if(preset.revision is not None):
+            args['revision'] = preset.revision
+        if(preset.vae is not None):
+            args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
+        return args
+
     def createPipeline(self, cls, model, presets, default, **kwargs):
         if(cls.__name__ not in self.pipelines and (model is None or model == "")):
             model = default
@@ -216,6 +218,20 @@ class DiffusersPipelines:
         self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
         self.addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
+    
+    def createControlNetPipeline(self, model, presets, default, controlModel, **kwargs):
+        if("StableDiffusionControlNetPipeline" not in self.pipelines and (model is None or model == "")):
+            model = default
+        if(model is None or model == ""):
+            return self.pipelines["StableDiffusionControlNetPipeline"]
+        if("StableDiffusionControlNetPipeline" in self.pipelines and 
+           self.pipelines["StableDiffusionControlNetPipeline"].preset.modelid == model and 
+           self.pipelines["StableDiffusionControlNetPipeline"].controlModel == controlModel):
+            return self.pipelines["StableDiffusionControlNetPipeline"]
+        controlnet = ControlNetModel.from_pretrained(controlModel, torch_dtype=torch.float16)
+        pipeline = self.createPipeline(StableDiffusionControlNetPipeline, model, presets, default, controlnet=controlnet)
+        pipeline.controlModel = controlModel
+        return pipeline
 
 
     #=============== INFERENCE ==============
@@ -235,7 +251,7 @@ class DiffusersPipelines:
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline="lpw_stable_diffusion")
+        pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=self.custom_pipeline)
         return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
@@ -244,6 +260,12 @@ class DiffusersPipelines:
         pipeline = self.createPipeline(StableDiffusionImg2ImgPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
         initimage = initimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
+                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+
+
+    def controlNet(self, initimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlModel=None, tiling=False, **kwargs):
+        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlModel)
+        return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 

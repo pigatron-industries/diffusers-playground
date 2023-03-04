@@ -405,6 +405,7 @@ class SDDialog(QDialog):
                 # 'KDPM2AncestralDiscreteScheduler',
                 # 'KDPM2DiscreteScheduler', 
                 'LMSDiscreteScheduler', 
+                'UniPCMultistepScheduler'
             ])
             self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
             formLayout.addWidget(self.scheduler)

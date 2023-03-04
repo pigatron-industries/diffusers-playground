@@ -125,6 +125,29 @@ class DiffusersView(FlaskView):
             raise e
 
 
+    def controlNetRun(self, initimage, seed=None, prompt="", negprompt="", steps=20, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+        try:
+            print('=== controlnet ===')
+            print(f'Prompt: {prompt}')
+            print(f'Negative: {negprompt}')
+            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
+
+            initimage = base64DecodeImage(initimage)
+            outputimages = []
+            for i in range(0, batch):
+                self.updateProgress(f"Running", batch, i)
+                outimage, usedseed = self.pipelines.controlNet(initimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                display(outimage)
+                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+
+            self.job.status = { "status":"finished", "action":"controlnet", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"controlnet", "error":str(e) }
+            raise e
+
+
     def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, steps=50, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== depth2img ===')

@@ -76,8 +76,14 @@ inpaint:
 controlnet:
   - base: sd_1_5
     models:
-      - id: takuma104/control_sd15_canny
-      - id: takuma104/control_sd15_openpose
+      - id: lllyasviel/sd-controlnet-canny
+      - id: lllyasviel/sd-controlnet-depth
+      - id: lllyasviel/sd-controlnet-hed
+      - id: lllyasviel/sd-controlnet-mlsd
+      - id: lllyasviel/sd-controlnet-normal
+      - id: lllyasviel/sd-controlnet-openpose
+      - id: lllyasviel/sd-controlnet-scribble
+      - id: lllyasviel/sd-controlnet-seg
 
 misc:
   - base: sd_1_5
