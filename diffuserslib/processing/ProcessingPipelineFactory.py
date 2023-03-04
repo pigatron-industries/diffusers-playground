@@ -29,13 +29,15 @@ def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black
     return geometry
 
 
-def spiralGeometryPipeline(size=(512, 512), background="white", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1, rotation=360, steps=8, zoom=4):
+def spiralGeometryPipeline(size=(512, 512), background="white", fill="black", outline=None, sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1, rotation=360, steps=8, zoom=4):
     geometry = ImageProcessorPipeline(size=size)
     for i in range(shapes):
         geometry.addTask(DrawRegularShapeProcessor(
             position=RandomPositionArgument(), 
             size=RandomNumberArgument(minsize, maxsize),
-            sides=sides
+            sides=sides,
+            fill=fill,
+            outline=outline
         ))
     geometry.addTask(SpiralizeProcessor(
         rotation = rotation, steps = steps, zoom = zoom
