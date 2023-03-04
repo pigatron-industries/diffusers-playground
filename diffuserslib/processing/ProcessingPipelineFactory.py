@@ -13,7 +13,7 @@ def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "fl
     return geometry
 
 
-def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
+def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black", outline=None, sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1,
                           symmetry=RandomChoiceArgument(["horizontal", "vertical", "rotation", "none"])):
     geometry = ImageProcessorPipeline(size=size)
     for i in range(shapes):
@@ -21,7 +21,8 @@ def shapeGeometryPipeline(size=(512, 512), background="white", foreground="black
             position=RandomPositionArgument(), 
             size=RandomNumberArgument(minsize, maxsize),
             sides=sides,
-            fill=foreground
+            fill=foreground,
+            outline=outline
         ))
     geometry.addTask(SymmetrizeProcessor(type=symmetry))
     geometry.addTask(FillBackgroundProcessor(background = background))
