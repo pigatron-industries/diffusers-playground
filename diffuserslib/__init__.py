@@ -22,6 +22,7 @@ from .interface.BatchNotebookInterface import *
 
 from .processing.ImageProcessor import *
 from .processing.TransformProcessors import *
+from .processing.TransformerProcessors import *
 from .processing.FilterProcessors import *
 from .processing.GeometryProcessors import *
 from .processing.ProcessingPipelineFactory import *

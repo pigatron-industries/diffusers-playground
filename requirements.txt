@@ -6,6 +6,7 @@ xformers
 accelerate
 ftfy
 torchvision
+controlnet-aux
 ipywidgets
 
 # diffusers conversion script

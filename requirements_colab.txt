@@ -5,6 +5,7 @@ transformers
 xformers
 accelerate
 ftfy
+controlnet-aux
 
 # diffusers conversion script
 OmegaConf
