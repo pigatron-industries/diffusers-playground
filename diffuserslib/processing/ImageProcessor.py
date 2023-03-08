@@ -1,5 +1,5 @@
 from PIL import Image
-from .. import evaluateArguments
+from ..batch import evaluateArguments
 
 
 class ImageProcessor():
@@ -28,10 +28,11 @@ class ImageContext():
 
 
 class ImageProcessorPipeline():
-    def __init__(self, size=(512, 512)):
+    def __init__(self, size=(512, 512), oversize=256):
         self.initargs = {
             "size": size
         }
+        self.oversize = oversize
         self.tasks = []
 
     def addTask(self, task):
@@ -39,7 +40,7 @@ class ImageProcessorPipeline():
 
     def __call__(self):
         initargs = evaluateArguments(self.initargs)
-        context = ImageContext(size=initargs["size"])
+        context = ImageContext(size=initargs["size"], oversize=self.oversize)
         for task in self.tasks:
             task(context)
         return context.getViewportImage()

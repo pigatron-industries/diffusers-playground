@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import *
 from krita import *
 from . import sd_main
+
+
 class SDDocker(DockWidget):
 
     def __init__(self):
@@ -30,10 +32,10 @@ class SDDocker(DockWidget):
         h_layout2.addWidget(btnTiledImg2Img) 
         mainWidget.layout().addLayout(h_layout2)
 
-        btnImageVariation = QPushButton("Image Variation", mainWidget)
+        btnPreprocess = QPushButton("Preprocess", mainWidget)
         btnInstructPix2Pix = QPushButton("Instruct Pix 2 Pix", mainWidget)
         h_layout3 = QHBoxLayout()
-        h_layout3.addWidget(btnImageVariation) 
+        h_layout3.addWidget(btnPreprocess) 
         h_layout3.addWidget(btnInstructPix2Pix)
         mainWidget.layout().addLayout(h_layout3)
 
@@ -55,7 +57,7 @@ class SDDocker(DockWidget):
         # btnFaceEnhance.clicked.connect(sd_main.FaceEnhance)
         btnTiledImg2Img.clicked.connect(sd_main.TiledImageToImage)
 
-        btnImageVariation.clicked.connect(sd_main.ImageVariation)
+        btnPreprocess.clicked.connect(sd_main.Preprocess)
         btnInstructPix2Pix.clicked.connect(sd_main.InstructPixToPix)
 
         btnConfig.clicked.connect(sd_main.Config)

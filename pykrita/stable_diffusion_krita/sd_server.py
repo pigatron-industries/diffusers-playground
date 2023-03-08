@@ -74,7 +74,8 @@ def getServerDataAsync(action, data):
 
 
 
-def getServerData(action, reqData):
+def getServerData(action, data):
+    reqData = json.dumps(data).encode("utf-8")
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")
     endpoint+="/api/"

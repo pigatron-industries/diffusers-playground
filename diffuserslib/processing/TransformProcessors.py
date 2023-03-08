@@ -1,5 +1,5 @@
 from .ImageProcessor import ImageProcessor
-from .. import evaluateArguments
+from ..batch import evaluateArguments
 
 from PIL import Image, ImageOps
 

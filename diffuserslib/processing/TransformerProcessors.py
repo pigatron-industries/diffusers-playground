@@ -1,5 +1,5 @@
 from .ImageProcessor import ImageProcessor
-from .. import evaluateArguments
+from ..batch import evaluateArguments
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image
 from controlnet_aux import HEDdetector, MLSDdetector, OpenposeDetector

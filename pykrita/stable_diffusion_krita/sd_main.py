@@ -75,6 +75,7 @@ class SDParameters:
     tile_overlap = None
     tile_alignmentx = None
     tile_alignmenty = None
+    process = None
 
 
 def createSlider(dialog,layout,value,min,max,steps,divider):
@@ -656,7 +657,7 @@ def getModels(type):
     return json.loads(res)
 
 
-def runSD(params: SDParameters):
+def runSD(params: SDParameters, asynchronous=True):
     # dramatic interface change needed!
     Colab=True
     if (SDConfig.type=="Local"): Colab=False
@@ -695,11 +696,16 @@ def runSD(params: SDParameters):
         'tileheight': params.tile_height,
         'tileoverlap': params.tile_overlap,
         'tilealignmentx': params.tile_alignmentx,
-        'tilealignmenty': params.tile_alignmenty
+        'tilealignmenty': params.tile_alignmenty,
+        'process': params.process
     }    
 
     print(j)
-    res=getServerDataAsync(params.action, j)
+    if (asynchronous):
+        res=getServerDataAsync(params.action, j)
+    else:
+        res=getServerData(params.action, j)
+
     if not res: return    
     response=json.loads(res)
     # print(response)
@@ -720,32 +726,7 @@ def runSD(params: SDParameters):
     else:
         imageResultDialog(images,params)
     return images
-
-
-def getDocument():
-    d = Application.activeDocument()
-    if (d==None):  
-        errorMessage("Please add a document", "Needs document with a layer and selection.")
-    return d
-
-def getLayer():
-    d = getDocument()
-    if (d==None):  
-        return
-    n = d.activeNode()
-    if(n.type()!="paintlayer"):
-        errorMessage("Select a paint layer",  "Selected layer must be a paint layer.")
-        return
-    return n
-
-def getSelection():
-    d = getDocument()
-    if (d==None): 
-        return
-    s = d.selection()
-    if (s==None):  
-        errorMessage("Please make a selection", "Operation runs on a selection only. Please use rectangle select tool.")
-    return s      
+   
 
 def getFullPrompt(dlg):
     modifiers=""
@@ -861,17 +842,7 @@ def ControlNet():
 
 
 def TiledImageToImage():
-    doc = getDocument()
-    layer = getLayer()
-    if (layer==None):   
-        return  
-    selection = doc.selection()
-    if(selection is None):
-        data = layer.pixelData(0, 0, doc.width(), doc.height())
-        image = QImage(data.data(),doc.width(),doc.height(),QImage.Format_RGBA8888).rgbSwapped()
-    else:
-        data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
-        image = QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
+    image = getSelectionOrLayer();
     image64 = base64EncodeImage(image)
     
     dlg = SDDialog("img2imgTiled",image)
@@ -903,19 +874,8 @@ def TiledImageToImage():
 
 
 def Upscale(): 
-    doc = getDocument()
-    layer = getLayer()
-    if (layer==None):   
-        return  
-    selection = doc.selection()
-    if(selection is None):
-        data = layer.pixelData(0, 0, doc.width(), doc.height())
-        image = QImage(data.data(),doc.width(),doc.height(),QImage.Format_RGBA8888).rgbSwapped()
-    else:
-        data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
-        image = QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
+    image = getSelectionOrLayer();
     image64 = base64EncodeImage(image)
-    
     dlg = SDDialog("upscale", image)
     dlg.resize(900,200)
 
@@ -938,32 +898,15 @@ def Upscale():
         runSD(params)
 
 
-def ImageVariation():
-    s=getSelection()
-    if (s==None):   
-        return    
-    n = getLayer()
-    if (n==None):   
-        return  
-    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
-    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+def Preprocess():
+    image = getSelectionOrLayer();
     image64 = base64EncodeImage(image)
     
-    dlg = SDDialog("imagevariation", image)
-    dlg.resize(900,200)
-
-    if dlg.exec():
-        dlg.setDlgData()
-        p = SDParameters()
-        data=SDConfig.dlgData
-        p.action="imagevariation"
-        p.steps=data["steps"]
-        p.seed=data["seed"]
-        p.num=data["num"]
-        p.scale=data["scale"]
-        p.scheduler=data["scheduler"]
-        p.image64=image64
-        runSD(p)
+    p = SDParameters()
+    p.action="preprocess"
+    p.process="PoseDetection"
+    p.image64=image64
+    runSD(p, asynchronous=False)
 
 
 def InstructPixToPix():

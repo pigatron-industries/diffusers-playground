@@ -1,5 +1,5 @@
 from .ImageProcessor import ImageProcessor
-from .. import RandomPositionArgument, evaluateArguments
+from ..batch import RandomPositionArgument, evaluateArguments
 
 from PIL import ImageDraw
 

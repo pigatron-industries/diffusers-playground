@@ -1,5 +1,5 @@
 from .ImageProcessor import ImageProcessor
-from .. import evaluateArguments
+from ..batch import evaluateArguments
 from ..ImageUtils import cv2ToPil, pilToCv2
 
 from PIL import ImageEnhance, ImageFilter

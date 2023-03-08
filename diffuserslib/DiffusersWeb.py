@@ -5,9 +5,14 @@ from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
+from .processing.TransformerProcessors import *
+from .processing.ProcessingPipelineFactory import initImage
 import json
 
 from IPython.display import display, clear_output
+
+def str_to_class(str):
+    return getattr(sys.modules[__name__], str)
 
 
 class DiffusersJob():
@@ -294,6 +299,26 @@ class DiffusersView(FlaskView):
                 outputimages.append({ "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"upscale", "images": outputimages }
+            return self.job.status
+
+        except Exception as e:
+            self.job.status = { "status":"error", "action":"upscale", "error":str(e) }
+            raise e
+        
+
+    def preprocessRun(self, initimage, process, **kwargs):
+        try:
+            print('=== preprocess ===')
+            print(f'Process: {process}')
+
+            initimage = base64DecodeImage(initimage)
+            processor = str_to_class(process + 'Processor')()
+            
+            pipeline = initImage(initimage)
+            pipeline.addTask(processor)
+            outimage = pipeline()
+
+            self.job.status = { "status":"finished", "action":"preprocess", "images": [{"image":base64EncodeImage(outimage)}] }
             return self.job.status
 
         except Exception as e:
