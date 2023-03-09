@@ -80,10 +80,15 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
         endy = args["endy"]
         if endx is None:
             endx = context.viewport[2]-1
+        elif endx < 0:
+            endx = context.viewport[2]+endx
         else:
             endx = endx + context.offset[0]
+
         if endy is None:
             endy = context.viewport[3]-1
+        elif endy < 0:
+            endy = context.viewport[3]+endy
         else:
             endy = endy + context.offset[1]
 
