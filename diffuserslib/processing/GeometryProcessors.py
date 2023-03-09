@@ -96,7 +96,6 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
 
         draw = ImageDraw.Draw(context.image)
         rect = [startx, starty, endx, endy]
-        draw.rectangle(rect, fill=args["fill"], outline=args["outline"])
 
         for i in range(args["iterations"]):
             rect_one, rect_two = self.splitRectangle(rect, ratio, direction)
