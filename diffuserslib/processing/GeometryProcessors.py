@@ -3,6 +3,11 @@ from ..batch import RandomPositionArgument, evaluateArguments
 
 from PIL import ImageDraw
 
+x1 = 0
+y1 = 1
+x2 = 2
+y2 = 3
+
 
 class DrawRegularShapeProcessor(ImageProcessor):
     def __init__(self, position=RandomPositionArgument(), size=64, sides=4, rotation=0, fill="black", outline=None):
@@ -48,7 +53,7 @@ class DrawCheckerboardProcessor(ImageProcessor):
 
 
 class DrawGeometricSpiralProcessor(ImageProcessor):
-    def __init__(self, startx = 0, starty = 0, endx = None, endy = None, outline="white", fill="black", ratio = 1/1.618033988749895, iterations=7, direction="right"):
+    def __init__(self, startx = 0, starty = 0, endx = None, endy = None, outline="white", fill="black", ratio = 1/1.618033988749895, iterations=7, direction="right", turn="clockwise"):
         self.args = {
             "startx": startx,
             "starty": starty,
@@ -58,7 +63,8 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
             "outline": outline,
             "ratio": ratio,
             "iterations": iterations,
-            "direction": direction
+            "direction": direction,
+            "turn": turn
         }
 
     def __call__(self, context:ImageContext):
@@ -76,31 +82,49 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
             endy = context.viewport[3]-1
         else:
             endy = endy + context.offset[1]
-        draw = ImageDraw.Draw(context.image)
 
+        if(args["turn"] == "clockwise"):
+            directions = ["right", "down", "left", "up"]
+        else:
+            directions = ["right", "up", "left", "down"]
+        direction = args["direction"]
+        directionIndex = directions.index(direction)
+
+        draw = ImageDraw.Draw(context.image)
         rect = [startx, starty, endx, endy]
         draw.rectangle(rect, fill=args["fill"], outline=args["outline"])
 
-        direction = args["direction"]
         for i in range(args["iterations"]):
             rect_one, rect_two = self.splitRectangle(rect, ratio, direction)
             draw.rectangle(rect_one, fill=args["fill"], outline=args["outline"])
+            rect = rect_two
+            directionIndex = (directionIndex + 1) % 4
+            direction = directions[directionIndex]
             
         return context
-    
+
     
     def splitRectangle(self, rect, ratio, direction):
         if(direction == "right"):
-            rect_left_width = (rect[2]-rect[0]) * ratio
-            rect_left = [rect[0], rect[1], rect[0]+rect_left_width, rect[3]]
-            rect_right = [rect_left[2], rect[1], rect[2], rect[3]]
+            rect_left_width = (rect[x2]-rect[x1]) * ratio
+            rect_left = [rect[x1], rect[y1], rect[x1]+rect_left_width, rect[y2]]
+            rect_right = [rect_left[x2], rect[y1], rect[x2], rect[y2]]
             return rect_left, rect_right
         if(direction == "left"):
-            rect_left_width = (rect[2]-rect[0]) * (1-ratio)
-            rect_left = [rect[0], rect[1], rect[0]+rect_left_width, rect[3]]
-            rect_right = [rect_left[2], rect[1], rect[2], rect[3]]
+            rect_left_width = (rect[x2]-rect[x1]) * (1-ratio)
+            rect_left = [rect[x1], rect[y1], rect[x1]+rect_left_width, rect[y2]]
+            rect_right = [rect_left[x2], rect[y1], rect[x2], rect[y2]]
             return rect_right, rect_left
-
+        if(direction == "down"):
+            rect_top_height = (rect[y2]-rect[y1]) * ratio
+            rect_top = [rect[x1], rect[y1], rect[x2], rect[y1]+rect_top_height]
+            rect_bottom = [rect[x1], rect_top[y2], rect[x2], rect[y2]]
+            return rect_top, rect_bottom
+        if(direction == "up"):
+            rect_top_height = (rect[y2]-rect[y1]) * (1-ratio)
+            rect_top = [rect[x1], rect[y1], rect[x2], rect[y1]+rect_top_height]
+            rect_bottom = [rect[x1], rect_top[y2], rect[x2], rect[y2]]
+            return rect_bottom, rect_top
 
 
 class DrawJuliaSetProcessor(ImageProcessor):
