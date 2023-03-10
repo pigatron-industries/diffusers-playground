@@ -1,6 +1,5 @@
 import numpy as np
-
-from .BatchRunner import BatchArgument
+from .Argument import BatchArgument
 
 
 

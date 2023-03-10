@@ -12,8 +12,10 @@ from .inference.DiffusersUtils import *
 from .inference.TextEmbedding import *
 
 from .batch.BatchRunner import *
-from .batch.ArgumentsBatch import *
-from .batch.ArgumentsRandom import *
+from .batch.argument.Argument import *
+from .batch.argument.ArgumentsBatch import *
+from .batch.argument.ArgumentsRandom import *
+from .batch.argument.RandomPromptProcessor import *
 
 from .animation.SceneDef import *
 from .animation.SceneRenderer import *

@@ -7,13 +7,6 @@ import ipywidgets as widgets
 import functools
 
 
-class Argument:
-    pass  
-
-class BatchArgument:
-    pass
-
-
 def mergeDict(d1, d2):
     dict = d1
     for key in d2.keys():
