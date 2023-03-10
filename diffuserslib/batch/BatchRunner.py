@@ -6,6 +6,8 @@ from IPython.display import display
 import ipywidgets as widgets
 import functools
 
+from .argument.Argument import BatchArgument
+
 
 def mergeDict(d1, d2):
     dict = d1
