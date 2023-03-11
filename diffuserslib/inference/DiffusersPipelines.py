@@ -2,6 +2,7 @@ import torch
 import random
 import os
 import sys
+import gc
 from typing import Dict
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
@@ -207,12 +208,15 @@ class DiffusersPipelines:
         if (cls.__name__ in self.pipelines and self.pipelines[cls.__name__].preset.modelid == model):
             return self.pipelines[cls.__name__]
         print(f"Creating {cls.__name__} pipeline from model {model}")
+        if (cls.__name__ in self.pipelines):
+            del self.pipelines[cls.__name__]
+        gc.collect()
         torch.cuda.empty_cache()
         preset = self.getModel(model, presets)
         args = self.createArgs(preset)
         args = mergeDicts(args, kwargs)
-        pipeline = cls.from_pretrained(preset.modelpath, **args)
-        pipeline.enable_model_cpu_offload()
+        pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+        # pipeline.enable_model_cpu_offload()
         pipeline.enable_attention_slicing()
         pipeline.enable_xformers_memory_efficient_attention()
         self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
