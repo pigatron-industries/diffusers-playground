@@ -31,18 +31,17 @@ class DiffusersLORA(LORA):
 
 class StableDiffusionLORA(LORA):
 
-    def __init__(self, state_dict, weight = 1):
+    def __init__(self, lora_path, state_dict, weight = 1):
+        self.lora_path = lora_path
         self.state_dict = state_dict
         self.weight = weight
 
     @classmethod
     def from_file(cls, lora_path, device, weight = 1):
         state_dict = load_file(lora_path, device=device)
-        return cls(state_dict, weight)
+        return cls(lora_path, state_dict, weight)
 
     def add_to_model(self, pipeline):
-        print("weight")
-        print(self.weight)
         visited = []
         for key in self.state_dict:
 

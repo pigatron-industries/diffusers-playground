@@ -166,6 +166,7 @@ class DiffusersPipelines:
 
     def _addLORAToPipeline(self, pipeline: DiffusersPipeline):
         if (pipeline.preset.base in self.baseModelData and self.baseModelData[pipeline.preset.base].lora is not None):
+            print("Loading LORA")
             self.baseModelData[pipeline.preset.base].lora.add_to_model(pipeline.pipeline)
 
 
