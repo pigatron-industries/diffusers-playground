@@ -17,6 +17,7 @@ from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, Stabl
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
+from .LORA import LORA
 from ..DiffusersModelPresets import DiffusersModelList, DiffusersModel
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
@@ -51,9 +52,10 @@ class DiffusersPipeline:
 
 
 class BaseModelData:
-    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None):  #: Dict[str, list[str]]
+    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None, lora = None):  #: Dict[str, list[str]]
         self.base : str = base
         self.textembeddings : TextEmbeddings = textembeddings
+        self.lora = lora
         if (modifierdict is None):
             self.modifierdict = {}
         else:
@@ -123,23 +125,28 @@ class DiffusersPipelines:
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
         self.vae = AutoencoderKL.from_pretrained(model)
+
+    def getBaseModelData(self, base):
+        if base not in self.baseModelData:
+            self.baseModelData[base] = BaseModelData(base, TextEmbeddings(base))
+        return self.baseModelData[base]
             
+
+    #=============== TEXT EMBEDDING ==============
 
     def loadTextEmbeddings(self, directory):
         for path, base in getPathsFiles(f"{directory}/*/"):
-            if base not in self.baseModelData:
-                self.baseModelData[base] = BaseModelData(base, TextEmbeddings(base))
-            self.baseModelData[base].textembeddings.load_directory(path, base)
-            self.baseModelData[base].modifierdict = self.baseModelData[base].textembeddings.modifiers
+            base = self.getBaseModelData(base)
+            base.textembeddings.load_directory(path, base)
+            base.modifierdict = self.baseModelData[base].textembeddings.modifiers
 
 
     def loadTextEmbedding(self, path, base, token=None):
-        if base not in self.baseModelData:
-            self.baseModelData[base] = BaseModelData(base, TextEmbeddings(base))
-        self.baseModelData[base].textembeddings.load_file(path, token)
+        base = self.getBaseModelData(base)
+        base.textembeddings.load_file(path, token)
 
 
-    def addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipeline):
+    def _addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipeline):
         if (pipeline.preset.base in self.baseModelData):
             self.baseModelData[pipeline.preset.base].textembeddings.add_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer)
 
@@ -150,6 +157,19 @@ class DiffusersPipelines:
             prompt = self.baseModelData[pipeline.preset.base].textembeddings.process_prompt(prompt)
         return prompt
 
+
+    #=============== LORA ==============
+
+    def loadLORA(self, lora_path, base, weight=1):
+        base = self.getBaseModelData(base)
+        base.lora = LORA.from_file(lora_path, self.device, weight)
+
+    def _addLORAToPipeline(self, pipeline: DiffusersPipeline):
+        if (pipeline.preset.base in self.baseModelData and self.baseModelData[pipeline.preset.base].lora is not None):
+            self.baseModelData[pipeline.preset.base].lora.add_to_model(pipeline.pipeline)
+
+
+    #===============  ==============
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
         self.feature_extractor = CLIPFeatureExtractor.from_pretrained(model)
@@ -218,9 +238,10 @@ class DiffusersPipelines:
         pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
         # pipeline.enable_model_cpu_offload()
         pipeline.enable_attention_slicing()
-        pipeline.enable_xformers_memory_efficient_attention()
+        # pipeline.enable_xformers_memory_efficient_attention()
         self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
-        self.addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
+        self._addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
+        self._addLORAToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
     
     def createControlNetPipeline(self, model, presets, default, controlmodel, **kwargs):
