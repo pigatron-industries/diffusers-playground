@@ -136,9 +136,9 @@ class DiffusersPipelines:
 
     def loadTextEmbeddings(self, directory):
         for path, base in getPathsFiles(f"{directory}/*/"):
-            base = self.getBaseModelData(base)
-            base.textembeddings.load_directory(path, base)
-            base.modifierdict = self.baseModelData[base].textembeddings.modifiers
+            baseModelData = self.getBaseModelData(base)
+            baseModelData.textembeddings.load_directory(path, base)
+            baseModelData.modifierdict = baseModelData.textembeddings.modifiers
 
 
     def loadTextEmbedding(self, path, base, token=None):
