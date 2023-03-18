@@ -16,6 +16,14 @@ image:
       - id: Aybeeceedee/knollingcase
         vae: stabilityai/sd-vae-ft-mse
         phrase: knollingcase
+      - id: darkstorm2150/Protogen_v2.2_Official_Release
+        vae: stabilityai/sd-vae-ft-mse
+      - id: darkstorm2150/Protogen_x3.4_Official_Release
+        vae: stabilityai/sd-vae-ft-mse
+      - id: darkstorm2150/Protogen_x5.3_Official_Release
+        vae: stabilityai/sd-vae-ft-mse
+      - id: darkstorm2150/Protogen_x5.8_Official_Release
+        vae: stabilityai/sd-vae-ft-mse
       - id: dreamlike-art/dreamlike-diffusion-1.0
         vae: stabilityai/sd-vae-ft-mse
         phrase: dreamlikeart
