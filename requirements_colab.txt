@@ -1,9 +1,9 @@
 # diffusers
 huggingface_hub
-diffusers
-transformers
+diffusers==0.14.0
+transformers==4.27.1
 xformers
-accelerate
+accelerate==0.17.0
 ftfy
 controlnet-aux
 
