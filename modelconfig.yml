@@ -8,7 +8,7 @@ image:
   - base: sd_2_1_512
     models:
       - id: stabilityai/stable-diffusion-2-1-base  # official
-        revision: fp16
+        autocast: false
   - base: sd_1_5
     models:
       - id: runwayml/stable-diffusion-v1-5  # official

@@ -212,11 +212,12 @@ class DiffusersPipelines:
 
     def createArgs(self, preset):
         args = {}
-        args['torch_dtype'] = torch.float16
         if (not self.safety_checker):
             args['safety_checker'] = None
         if(preset.revision is not None):
             args['revision'] = preset.revision
+            if(preset.revision == 'fp16'):
+                args['torch_dtype'] = torch.float16
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
         return args
@@ -270,11 +271,11 @@ class DiffusersPipelines:
         if(scheduler is not None):
             self.loadScheduler(scheduler, pipeline)
         pipeline.pipeline.vae.enable_tiling(tiling)
-        if(pipeline.preset.autocast):
-            with torch.autocast(self.inferencedevice):
-                image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
-        else:
-            image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
+        # if(pipeline.preset.autocast):
+        #     with torch.autocast(self.inferencedevice):
+        #         image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
+        # else:
+        image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
         return image, seed
 
 
