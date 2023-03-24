@@ -271,11 +271,11 @@ class DiffusersPipelines:
         if(scheduler is not None):
             self.loadScheduler(scheduler, pipeline)
         pipeline.pipeline.vae.enable_tiling(tiling)
-        # if(pipeline.preset.autocast):
-        #     with torch.autocast(self.inferencedevice):
-        #         image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
-        # else:
-        image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
+        if(pipeline.preset.autocast): # TODO figure out why autocast is needed for 1.5 models in cuda but not mac
+            with torch.autocast(self.inferencedevice):
+                image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
+        else:
+            image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
         return image, seed
 
 
