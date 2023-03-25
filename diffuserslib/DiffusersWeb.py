@@ -6,6 +6,7 @@ from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImag
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
 from .ImageTools import ImageTools
 from .processing.TransformerProcessors import *
+from .processing.FilterProcessors import *
 from .processing.ProcessingPipelineFactory import initImage
 import json
 
