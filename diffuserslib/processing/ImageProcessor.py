@@ -74,3 +74,39 @@ class FillBackgroundProcessor(ImageProcessor):
         background.alpha_composite(context.image, (0, 0))
         context.image = background
         return context
+    
+
+class ResizeProcessor(ImageProcessor):
+    def __init__(self, type="stretch", size = (512, 768), halign="centre", valign="centre", fill="black"):
+        self.args = {
+            "type": type,
+            "size": size,
+            "halign": halign,
+            "valign": valign,
+            "fill": fill
+        }
+
+    def __call__(self, context):
+        args = evaluateArguments(self.args, context=context)
+        image = context.getViewportImage()
+
+        if(args["type"] == "stretch"):
+            newimage = image.resize(args["size"], resample=Image.Resampling.LANCZOS)
+        else:
+            newimage = Image.new("RGBA", size=(args["size"][0], args["size"][1]), color=args["fill"])
+            if (args["halign"] == "left"):
+                x = 0
+            elif (args["halign"] == "right"):
+                x = newimage.width - image.width
+            else:
+                x = int((newimage.width - image.width)/2)
+            if (args["valign"] == "top"):
+                y = 0
+            elif (args["valign"] == "bottom"):
+                y = newimage.height - image.height
+            else:
+                y = int((newimage.height - image.height)/2)
+            newimage.paste(image, (x, y))
+
+        context.setViewportImage(newimage)
+        return context

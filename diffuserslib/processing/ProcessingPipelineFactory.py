@@ -1,4 +1,4 @@
-from .ImageProcessor import ImageProcessorPipeline, InitImageProcessor, FillBackgroundProcessor
+from .ImageProcessor import ImageProcessorPipeline, InitImageProcessor, FillBackgroundProcessor, ResizeProcessor
 from .TransformProcessors import SimpleTransformProcessor, SymmetrizeProcessor, SpiralizeProcessor
 from .GeometryProcessors import DrawRegularShapeProcessor, DrawCheckerboardProcessor
 from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument
@@ -16,6 +16,16 @@ def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "fl
     pipeline = ImageProcessorPipeline()
     pipeline.addTask(InitImageProcessor(image))
     pipeline.addTask(SimpleTransformProcessor(type=transform))
+    return pipeline
+
+
+def transformResize(image, transform=RandomChoiceArgument(["fliphorizontal", "flipvertical", "rotate90", "rotate180", "rotate270", "none"]),
+                    resizetype=RandomChoiceArgument(["resize", "extend"]), size=RandomChoiceArgument([(512, 768), (768, 512)]),
+                    halign=RandomChoiceArgument(["left", "right", "centre"]), valign=RandomChoiceArgument(["top", "bottom", "centre"]), fill="black"):
+    pipeline = ImageProcessorPipeline()
+    pipeline.addTask(InitImageProcessor(image))
+    pipeline.addTask(SimpleTransformProcessor(type=transform))
+    pipeline.addTask(ResizeProcessor(type=resizetype, size=size, fill=fill, halign=halign, valign=valign))
     return pipeline
 
 
