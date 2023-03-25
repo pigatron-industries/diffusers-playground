@@ -139,13 +139,13 @@ class SDConfigDialog(QDialog):
 
         h_layout_width=QHBoxLayout()
         h_layout_width.addWidget(QLabel('Width:'))
-        self.width=createSlider(self, h_layout_width, SDConfig.width, 256, 1024, 64, 1)      
+        self.width=createSlider(self, h_layout_width, SDConfig.width, 256, 1536, 64, 1)      
         h_layout_width.addWidget(self.width)
         self.layout.addLayout(h_layout_width)
 
         h_layout_height=QHBoxLayout()
         h_layout_height.addWidget(QLabel('Height:'))
-        self.height=createSlider(self, h_layout_height, SDConfig.height, 256, 1024, 64, 1)
+        self.height=createSlider(self, h_layout_height, SDConfig.height, 256, 1536, 64, 1)
         h_layout_height.addWidget(self.height)
         self.layout.addLayout(h_layout_height)
 
@@ -272,6 +272,7 @@ fields = {
     'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
     'imagevariation':  ['steps', 'seed', 'scale', 'num', 'image', 'scheduler'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'preprocess':      ['process', 'image']
 }
 
 
@@ -422,6 +423,22 @@ class SDDialog(QDialog):
             self.scheduler.setCurrentText(data.get("scheduler","DPMSolverMultistepScheduler"))
             formLayout.addWidget(self.scheduler)
 
+        if('process' in actionfields):
+            process_label = QLabel("Process")
+            formLayout.addWidget(process_label)  
+            self.process = QComboBox()
+            self.process.addItems([
+                'DepthEstimation',
+                'NormalEstimation',
+                'EdgeDetection',
+                'CannyEdge',
+                'StraightLineDetection',
+                'PoseDetection',
+                'Segmentation'
+            ])
+            self.process.setCurrentText(data.get("process","DepthEstimation"))
+            formLayout.addWidget(self.process)
+
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
 
@@ -487,6 +504,8 @@ class SDDialog(QDialog):
         if('upscale_method' in actionfields):
             SDConfig.dlgData["upscale_amount"]=int(self.upscale_amount.value())
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
+        if('process' in actionfields):
+            SDConfig.dlgData["process"]=self.process.currentText()
         SDConfig.save(SDConfig)
 
 
@@ -901,12 +920,17 @@ def Upscale():
 def Preprocess():
     image = getSelectionOrLayer();
     image64 = base64EncodeImage(image)
-    
-    p = SDParameters()
-    p.action="preprocess"
-    p.process="PoseDetection"
-    p.image64=image64
-    runSD(p, asynchronous=False)
+    dlg = SDDialog("preprocess",image)
+    dlg.resize(900,200)
+
+    if dlg.exec():
+        dlg.setDlgData()
+        p = SDParameters()
+        data=SDConfig.dlgData
+        p.action="preprocess"
+        p.process=data["process"]
+        p.image64=image64
+        runSD(p)
 
 
 def InstructPixToPix():
