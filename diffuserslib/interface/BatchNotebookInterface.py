@@ -4,10 +4,11 @@ import ipywidgets as widgets
 from IPython.display import display
 
 class BatchNotebookInterface:
-    def __init__(self, pipelines:DiffusersPipeline):
+    def __init__(self, pipelines:DiffusersPipeline, output_dir):
         self.pipelines = pipelines
+        self.output_dir = output_dir
 
-        self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image"], value="Text to image")
+        self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
         self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
         self.initimagetype_dropdown = self.dropdown(label="Init Image:", options=["Image Single", "Image Folder", "Generated"], value="Image Single")
         self.prompt_text = self.textarea(label="Prompt:", value="")
@@ -151,4 +152,6 @@ class BatchNotebookInterface:
     
     def run(self, button):
         params = self.getParams()
+        if(self.type_dropdown.value == "Image to image"):
+            batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
         print(params)

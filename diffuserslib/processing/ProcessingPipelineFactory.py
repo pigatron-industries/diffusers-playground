@@ -20,7 +20,7 @@ def simpleTransform(image, transform=RandomChoiceArgument(["fliphorizontal", "fl
 
 
 def transformResize(image, transform=RandomChoiceArgument(["fliphorizontal", "flipvertical", "rotate90", "rotate180", "rotate270", "none"]),
-                    resizetype=RandomChoiceArgument(["resize", "extend"]), size=RandomChoiceArgument([(512, 768), (768, 512)]),
+                    resizetype=RandomChoiceArgument(["stretch", "extend"]), size=RandomChoiceArgument([(512, 768), (768, 512)]),
                     halign=RandomChoiceArgument(["left", "right", "centre"]), valign=RandomChoiceArgument(["top", "bottom", "centre"]), fill="black"):
     pipeline = ImageProcessorPipeline()
     pipeline.addTask(InitImageProcessor(image))
