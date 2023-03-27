@@ -1,7 +1,7 @@
-from ..batch import BatchRunner
+from ..batch import BatchRunner, RandomNumberArgument
 from ..inference import DiffusersPipeline
 import ipywidgets as widgets
-from IPython.display import display
+from IPython.display import display, clear_output
 
 class BatchNotebookInterface:
     def __init__(self, pipelines:DiffusersPipeline, output_dir):
@@ -21,8 +21,8 @@ class BatchNotebookInterface:
         self.strength_slider = self.floatSlider(label='Strength:', value=0.5, min=0, max=1, step=0.01)
         self.seed_text = self.intText(label='Seed:', value=None)
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
-        self.run_button = widgets.Button(description="Run")
-        self.run_button.on_click(self.run)
+
+        # TODO sampler, tiling, apply RandomPromptProcessor with modifier dict
 
         self.setWidgetVisibility()
         display(self.type_dropdown, 
@@ -37,8 +37,7 @@ class BatchNotebookInterface:
                 self.steps_slider,
                 self.strength_slider,
                 self.seed_text,
-                self.batchsize_slider,
-                self.run_button
+                self.batchsize_slider
         )
 
 
@@ -146,12 +145,14 @@ class BatchNotebookInterface:
         if(self.seed_text.value > 0):
             params['seed'] = self.seed_text.value
         else:
-            params['seed'] = None
+            params['seed'] = RandomNumberArgument(0, 4294967295)
 
         return params
     
-    def run(self, button):
+    def run(self):
         params = self.getParams()
-        if(self.type_dropdown.value == "Image to image"):
+        if(self.type_dropdown.value == "Text to image"):
+            batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
+        elif(self.type_dropdown.value == "Image to image"):
             batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
-        print(params)
+        batch.run()
