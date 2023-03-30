@@ -4,7 +4,7 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=False, rife=False, openpose=False):
+def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=False, rife=False, nafnet=False):
     runcmd(['mkdir -p workspace'], True)
     os.chdir("workspace")
     runcmd(['mkdir -p models'], True)
@@ -26,8 +26,8 @@ def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=Fal
     if(rife):
         runcmd(['pip', 'install', '-e', 'git+https://github.com/hzwer/Practical-RIFE.git#egg=rife'])
 
-    if(openpose):
-        runcmd(['pip', 'install', '-e', 'https://github.com/CMU-Perceptual-Computing-Lab/openpose.git'])
+    if(nafnet):
+        runcmd(['pip', 'install', '-e', 'git+https://github.com/megvii-research/NAFNet#egg=nafnet'])
 
     os.chdir("..")
     if(colab):
@@ -37,5 +37,5 @@ def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=Fal
 
 
 if __name__ == "__main__":
-    setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=True, rife=True, openpose=True)
+    setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=True, rife=True, nafnet=True)
 

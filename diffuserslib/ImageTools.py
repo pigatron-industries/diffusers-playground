@@ -33,6 +33,7 @@ class ImageTools():
         addToolPath("esrgan")
         addToolPath("blip")
         addToolPath("clip-interrogator")
+        addToolPath("nafnet")
 
 
     def upscaleEsrgan(self, inimage, scale=4, model="remacri", cpu=False):
@@ -52,6 +53,13 @@ class ImageTools():
             outimage = outimage.resize((inimage.width*scale, inimage.height*scale))
         os.chdir(prevcwd)
         return outimage
+
+
+    def deblurr(self, inimage):
+        prevcwd = os.getcwd()
+        chdirWorkspaceDirectory("nafnet")
+        infile = "input/work.png"
+        outfile = "output/work.png"
 
 
     def loadClipInterrogator(self, model = DEFAULT_CLIP_MODEL):
