@@ -1,4 +1,4 @@
-from ..batch import BatchRunner, RandomNumberArgument
+from ..batch import BatchRunner, RandomNumberArgument, RandomPromptProcessor
 from ..inference import DiffusersPipeline
 import ipywidgets as widgets
 from IPython.display import display, clear_output
@@ -15,14 +15,15 @@ class BatchNotebookInterface:
         self.shuffle_checkbox = self.checkbox(label="Shuffle", value=False)
         self.negprompt_text = self.textarea(label="Neg Prompt:", value="")
         self.width_slider = self.intSlider(label='Width:', value=512, min=256, max=1024, step=64)
-        self.height_slider = self.intSlider(label='Height:', value=512, min=256, max=1024, step=64)
+        self.height_slider = self.intSlider(label='Height:', value=768, min=256, max=1024, step=64)
         self.scale_slider = self.floatSlider(label='Guidance:', value=9, min=1, max=20, step=0.1)
         self.steps_slider = self.intSlider(label='Steps:', value=40, min=5, max=100, step=5)
         self.strength_slider = self.floatSlider(label='Strength:', value=0.5, min=0, max=1, step=0.01)
+        self.scheduler_dropdown = self.dropdown(label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
+                                                                           'EulerAncestralDiscreteScheduler', 'EulerDiscreteScheduler',
+                                                                           'LMSDiscreteScheduler', 'UniPCMultistepScheduler'], value="EulerDiscreteScheduler")
         self.seed_text = self.intText(label='Seed:', value=None)
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
-
-        # TODO sampler, tiling, apply RandomPromptProcessor with modifier dict
 
         self.setWidgetVisibility()
         display(self.type_dropdown, 
@@ -36,6 +37,7 @@ class BatchNotebookInterface:
                 self.scale_slider,
                 self.steps_slider,
                 self.strength_slider,
+                self.scheduler_dropdown,
                 self.seed_text,
                 self.batchsize_slider
         )
@@ -130,11 +132,12 @@ class BatchNotebookInterface:
         params = {}
         params['type'] = self.type_dropdown.value
         params['model'] = self.model_dropdown.value
-        params['prompt'] = self.prompt_text.value
+        params['prompt'] = RandomPromptProcessor(dict, self.prompt_text.value)
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
         params['height'] = self.width_slider.value
         params['scale'] = self.scale_slider.value
+        params['scheduler'] = self.scheduler_dropdown.value
         params['batch'] = self.batchsize_slider.value
 
         if(self.type_dropdown.value == "Image to image"):
@@ -149,6 +152,7 @@ class BatchNotebookInterface:
 
         return params
     
+
     def run(self):
         params = self.getParams()
         if(self.type_dropdown.value == "Text to image"):
