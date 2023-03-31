@@ -135,7 +135,7 @@ class BatchNotebookInterface:
         params['prompt'] = RandomPromptProcessor(dict, self.prompt_text.value)
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
-        params['height'] = self.width_slider.value
+        params['height'] = self.height_slider.value
         params['scale'] = self.scale_slider.value
         params['scheduler'] = self.scheduler_dropdown.value
         params['batch'] = self.batchsize_slider.value
