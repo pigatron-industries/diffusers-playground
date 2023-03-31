@@ -44,9 +44,11 @@ class ImageTools():
         model = f'4x_{model}.pth'
         inimage.save(infile)
 
-        from upscale import Upscale
-        upscale = Upscale(model = model, input=Path("input"), output=Path("output"))
-        upscale.run()
+        runcmd([f'python upscale.py {model}'], True)       
+
+        # from upscale import Upscale
+        # upscale = Upscale(model = model, input=Path("input"), output=Path("output"))
+        # upscale.run()
 
         outimage = Image.open(outfile)
         if (scale != 4):
