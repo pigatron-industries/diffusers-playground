@@ -18,11 +18,6 @@ def addToolPath(subfolder):
     sys.path.append(dir)
 
 
-def runcmd(cmd, shell=False):
-    print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
-
-
-
 class ImageTools():
     def __init__(self):
         self.addToolPaths()
@@ -44,7 +39,7 @@ class ImageTools():
         model = f'4x_{model}.pth'
         inimage.save(infile)
 
-        runcmd([f'python upscale.py {model}'], True)       
+        subprocess.call(f'python upscale.py {model} --cpu', shell=True)    
 
         # from upscale import Upscale
         # upscale = Upscale(model = model, input=Path("input"), output=Path("output"))
