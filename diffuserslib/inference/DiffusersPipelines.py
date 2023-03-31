@@ -64,7 +64,7 @@ class BaseModelData:
 
 class DiffusersPipelines:
 
-    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None, custom_pipeline = None):
+    def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None, custom_pipeline = None, cache_dir = None):
         self.localmodelpath: str = localmodelpath
         self.localmodelcache: str = getModelsDir()
         self.device: str = device
@@ -74,7 +74,8 @@ class DiffusersPipelines:
             self.common_modifierdict = {}
         else:
             self.common_modifierdict = common_modifierdict
-        self.custom_pipeline = custom_pipeline;
+        self.custom_pipeline = custom_pipeline
+        self.cache_dir = cache_dir
 
         self.pipelines: Dict[str,DiffusersPipeline] = {}
 
@@ -220,6 +221,8 @@ class DiffusersPipelines:
                 args['torch_dtype'] = torch.float16
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
+        if(self.cache_dir is not None):
+            args['cache_dir'] = self.cache_dir
         return args
 
     def createPipeline(self, cls, model, presets, default, **kwargs):
