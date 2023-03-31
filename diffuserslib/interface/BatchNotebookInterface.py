@@ -6,9 +6,10 @@ import os
 from IPython.display import display, clear_output
 
 class BatchNotebookInterface:
-    def __init__(self, pipelines:DiffusersPipeline, output_dir, save_file='batch_params.pkl'):
+    def __init__(self, pipelines:DiffusersPipeline, output_dir, modifier_dict=None, save_file='batch_params.pkl'):
         self.pipelines = pipelines
         self.output_dir = output_dir
+        self.modifier_dict = modifier_dict
         self.save_file = save_file
 
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
@@ -137,7 +138,7 @@ class BatchNotebookInterface:
         params['type'] = self.type_dropdown.value
         params['model'] = self.model_dropdown.value
         params['init_prompt'] = self.prompt_text.value
-        params['prompt'] = RandomPromptProcessor(dict, self.prompt_text.value)
+        params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
         params['height'] = self.height_slider.value
