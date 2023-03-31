@@ -13,4 +13,4 @@ def startWebServer(ngrok_token = None, port = 5000):
         app.config["BASE_URL"] = public_url
         print(" * ngrok tunnel \"{}\" -> \"http://127.0.0.1:{}\"".format(public_url, port))
 
-    app.run(port=port)
+    app.run(port=port, host="0.0.0.0")
