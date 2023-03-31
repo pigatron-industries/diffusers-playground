@@ -129,6 +129,8 @@ dmypy.json
 .pyre/
 
 workspace/
+notebooks/*.ipynb
+
 **/output
 cache/
 .DS_Store
