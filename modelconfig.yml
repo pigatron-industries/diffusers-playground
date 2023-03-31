@@ -3,7 +3,6 @@ image:
   - base: sd_2_1_768
     models:
       - id: stabilityai/stable-diffusion-2-1  # official
-        revision: fp16
         autocast: false
   - base: sd_2_1_512
     models:
@@ -48,7 +47,6 @@ image:
       - id: plasmo/woolitize
         vae: stabilityai/sd-vae-ft-mse
         phrase: woolitize
-        revision: fp16
       - id: prompthero/openjourney
         vae: stabilityai/sd-vae-ft-mse
         phrase: mdjrny-v4 style
