@@ -1,12 +1,15 @@
 from ..batch import BatchRunner, RandomNumberArgument, RandomPromptProcessor
 from ..inference import DiffusersPipeline
 import ipywidgets as widgets
+import pickle 
+import os
 from IPython.display import display, clear_output
 
 class BatchNotebookInterface:
-    def __init__(self, pipelines:DiffusersPipeline, output_dir):
+    def __init__(self, pipelines:DiffusersPipeline, output_dir, save_file='batch_params.pkl'):
         self.pipelines = pipelines
         self.output_dir = output_dir
+        self.save_file = save_file
 
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
         self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
@@ -26,6 +29,7 @@ class BatchNotebookInterface:
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
         self.setWidgetVisibility()
+        self.loadParams()
         display(self.type_dropdown, 
                 self.model_dropdown, 
                 self.initimagetype_dropdown, 
@@ -132,6 +136,7 @@ class BatchNotebookInterface:
         params = {}
         params['type'] = self.type_dropdown.value
         params['model'] = self.model_dropdown.value
+        params['init_prompt'] = self.prompt_text.value
         params['prompt'] = RandomPromptProcessor(dict, self.prompt_text.value)
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
@@ -153,8 +158,34 @@ class BatchNotebookInterface:
         return params
     
 
-    def run(self):
+    def setParams(self, params):        
+        self.type_dropdown.value = params['type']
+        self.model_dropdown.value = params['model']
+        self.prompt_text.value = params['init_prompt']
+        self.negprompt_text.value = params['negprompt']
+        self.width_slider.value = params['width']
+        self.height_slider.value = params['height']
+        self.scale_slider.value = params['scale']
+        self.scheduler_dropdown.value = params['scheduler']
+        self.batchsize_slider.value = params['batch']
+
+
+    def saveParams(self):
         params = self.getParams()
+        with open(self.save_file, 'wb') as f:
+            pickle.dump(params, f)
+        return params
+
+
+    def loadParams(self):
+        if(os.path.isfile(self.save_file)):
+            with open(self.save_file, 'rb') as f:
+                params = pickle.load(f)
+                self.setParams(params)
+    
+
+    def run(self):
+        params = self.saveParams()
         if(self.type_dropdown.value == "Text to image"):
             batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
         elif(self.type_dropdown.value == "Image to image"):

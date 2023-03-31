@@ -130,6 +130,7 @@ dmypy.json
 
 workspace/
 notebooks/*.ipynb
+*.pkl
 
 **/output
 cache/
