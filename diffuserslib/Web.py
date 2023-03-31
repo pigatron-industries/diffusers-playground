@@ -2,8 +2,7 @@ from .DiffusersWeb import DiffusersView
 from flask import Flask
 
 
-def startWebServer(ngrok_token = None):
-    port = 5000
+def startWebServer(ngrok_token = None, port = 5000):
     app = Flask(__name__)
     DiffusersView.register(app)
 
