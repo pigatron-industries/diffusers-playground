@@ -1,4 +1,4 @@
-import os, sys
+import sys
 
 def setPathLocalNotebook():
     sys.path.append('..')

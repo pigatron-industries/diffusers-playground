@@ -12,7 +12,7 @@ image:
   - base: sd_1_5
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
-        revision: fp16
+        vae: stabilityai/sd-vae-ft-mse
       - id: Aybeeceedee/knollingcase
         vae: stabilityai/sd-vae-ft-mse
         phrase: knollingcase
