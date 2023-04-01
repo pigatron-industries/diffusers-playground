@@ -61,7 +61,6 @@ class BatchNotebookInterface:
     def updateWidgets(self):
         if(self.model_dropdown.value is not None):
             self.lora_dropdown.options = [None] + self.pipelines.getLORAList(self.model_dropdown.value)
-            print(self.lora_dropdown.options)
 
         if(self.lora_dropdown.value is not None):
             self.loraweight_text.layout.visibility = 'visible'
@@ -146,7 +145,7 @@ class BatchNotebookInterface:
         params = self.saveParams()
         if(self.lora_dropdown.value is not None):
             self.pipelines.useLORAs([LORAUse(params['lora'], params['lora_weight'])])
-            
+
         if(self.type_dropdown.value == "Text to image"):
             batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
         elif(self.type_dropdown.value == "Image to image"):
