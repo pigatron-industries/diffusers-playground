@@ -145,6 +145,8 @@ class BatchNotebookInterface:
         params = self.saveParams()
         if(self.lora_dropdown.value is not None):
             self.pipelines.useLORAs([LORAUse(params['lora'], params['lora_weight'])])
+        else:
+            self.pipelines.useLORAs([])
 
         if(self.type_dropdown.value == "Text to image"):
             batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
