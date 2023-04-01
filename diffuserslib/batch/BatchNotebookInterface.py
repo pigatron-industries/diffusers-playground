@@ -99,7 +99,7 @@ class BatchNotebookInterface:
 
         if(self.type_dropdown.value != "Text to image"):
             params['processingpipeline'] = self.processingpipeline_dropdown.value
-            params['initimage'] = self.processing_pipelines[self.initimagefile_text.value]
+            params['initimage'] = self.processing_pipelines[self.processingpipeline_dropdown.value]
 
         if(self.type_dropdown.value == "Image to image"):
             params['strength'] = self.strength_slider.value
