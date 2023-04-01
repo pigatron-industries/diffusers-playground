@@ -191,6 +191,11 @@ class DiffusersPipelines:
             self.pipelines.clear()
 
 
+    def getLORAList(self, model):
+        base = self.presetsImage.models[model].base
+        return list(self.getBaseModelData(base).loras.keys())
+
+
     def _addLORAsToPipeline(self, pipeline: DiffusersPipeline):
         for lora_use in self.lora_use:
             self._addLORAToPipeline(pipeline, lora_use.name, lora_use.weight)

@@ -1,5 +1,5 @@
 from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor
-from ..inference import DiffusersPipeline
+from ..inference import DiffusersPipeline, LORAUse
 import ipywidgets as widgets
 import pickle 
 import os
@@ -7,7 +7,7 @@ from IPython.display import display, clear_output
 
 class BatchNotebookInterface:
     def __init__(self, pipelines:DiffusersPipeline, output_dir, modifier_dict=None, save_file='batch_params.pkl'):
-        self.pipelines = pipelines
+        self.pipelines:DiffusersPipeline = pipelines
         self.output_dir = output_dir
         self.modifier_dict = modifier_dict
         self.save_file = save_file
@@ -22,6 +22,8 @@ class BatchNotebookInterface:
         self.initimagetype_dropdown = self.dropdown(label="Init Image:", options=["Image Single", "Image Folder", "Generated"], value="Image Single")
 
         self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
+        self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
+        self.loraweight_text = self.floatText(label="LORA weight:", value=1)
         self.prompt_text = self.textarea(label="Prompt:", value="")
         self.shuffle_checkbox = self.checkbox(label="Shuffle", value=False)
         self.negprompt_text = self.textarea(label="Neg Prompt:", value="")
@@ -36,11 +38,11 @@ class BatchNotebookInterface:
         self.seed_text = self.intText(label='Seed:', value=None)
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
-        self.setWidgetVisibility()
-        self.loadParams()
         display(self.type_dropdown, 
                 self.initimagetype_dropdown, 
                 self.model_dropdown, 
+                self.lora_dropdown,
+                self.loraweight_text,
                 self.prompt_text, 
                 self.shuffle_checkbox,
                 self.negprompt_text, 
@@ -53,7 +55,107 @@ class BatchNotebookInterface:
                 self.seed_text,
                 self.batchsize_slider
         )
+        self.loadParams()
 
+
+    def updateWidgets(self):
+        if(self.model_dropdown.value is not None):
+            self.lora_dropdown.options = [None] + self.pipelines.getLORAList(self.model_dropdown.value)
+            print(self.lora_dropdown.options)
+
+        if(self.lora_dropdown.value is not None):
+            self.loraweight_text.layout.visibility = 'visible'
+        else:
+            self.loraweight_text.layout.visibility = 'hidden'
+
+        if(self.type_dropdown.value == "Image to image"):
+            self.initimagetype_dropdown.layout.visibility = 'visible'
+            self.strength_slider.layout.visibility = 'visible'
+            self.steps_slider.layout.visibility = 'hidden'
+        else:
+            self.initimagetype_dropdown.layout.visibility = 'hidden'
+            self.strength_slider.layout.visibility = 'hidden'
+            self.steps_slider.layout.visibility = 'visible'
+
+    
+    def onChange(self, change):
+        if (change['type'] == 'change' and change['name'] == 'value'):
+            self.updateWidgets()
+
+
+    def getParams(self):
+        params = {}
+        params['type'] = self.type_dropdown.value
+        params['model'] = self.model_dropdown.value
+        params['lora'] = self.lora_dropdown.value
+        params['lora_weight'] = self.loraweight_text.value
+        params['init_prompt'] = self.prompt_text.value
+        params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
+        params['negprompt'] = self.negprompt_text.value
+        params['width'] = self.width_slider.value
+        params['height'] = self.height_slider.value
+        params['scale'] = self.scale_slider.value
+        params['scheduler'] = self.scheduler_dropdown.value
+        params['batch'] = self.batchsize_slider.value
+
+        if(self.type_dropdown.value == "Image to image"):
+            params['strength'] = self.strength_slider.value
+        else:
+            params['steps'] = self.steps_slider.value
+
+        if(self.seed_text.value > 0):
+            params['seed'] = self.seed_text.value
+        else:
+            params['seed'] = RandomNumberArgument(0, 4294967295)
+
+        return params
+    
+
+    def setParams(self, params):        
+        self.type_dropdown.value = params['type']
+        self.model_dropdown.value = params['model']
+        self.lora_dropdown.value = params['lora']
+        self.loraweight_text.value = params['lora_weight']
+        self.prompt_text.value = params['init_prompt']
+        self.negprompt_text.value = params['negprompt']
+        self.width_slider.value = params['width']
+        self.height_slider.value = params['height']
+        self.scale_slider.value = params['scale']
+        self.scheduler_dropdown.value = params['scheduler']
+        self.batchsize_slider.value = params['batch']
+        self.updateWidgets()
+
+
+    def saveParams(self):
+        params = self.getParams()
+        with open(self.save_file, 'wb') as f:
+            pickle.dump(params, f)
+        return params
+
+
+    def loadParams(self):
+        if(os.path.isfile(self.save_file)):
+            with open(self.save_file, 'rb') as f:
+                params = pickle.load(f)
+                self.setParams(params)
+        else:
+            self.updateWidgets()
+    
+
+    def run(self):
+        params = self.saveParams()
+        if(self.lora_dropdown.value is not None):
+            self.pipelines.useLORAs([LORAUse(params['lora'], params['lora_weight'])])
+            
+        if(self.type_dropdown.value == "Text to image"):
+            batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
+        elif(self.type_dropdown.value == "Image to image"):
+            batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
+        batch.run()
+
+
+
+    # ============== widget helpers =============
 
     def intText(self, label, value):
         inttext = widgets.IntText(
@@ -63,6 +165,15 @@ class BatchNotebookInterface:
         )
         inttext.observe(self.onChange)
         return inttext
+    
+    def floatText(self, label, value):
+        floattext = widgets.FloatText(
+            value=value,
+            description=label,
+            disabled=False
+        )
+        floattext.observe(self.onChange)
+        return floattext
 
     def intSlider(self, label, value, min, max, step):
         slider = widgets.IntSlider(
@@ -122,80 +233,3 @@ class BatchNotebookInterface:
         )
         checkbox.observe(self.onChange)
         return checkbox
-
-
-    def setWidgetVisibility(self):
-        if(self.type_dropdown.value == "Image to image"):
-            self.initimagetype_dropdown.layout.visibility = 'visible'
-            self.strength_slider.layout.visibility = 'visible'
-            self.steps_slider.layout.visibility = 'hidden'
-        else:
-            self.initimagetype_dropdown.layout.visibility = 'hidden'
-            self.strength_slider.layout.visibility = 'hidden'
-            self.steps_slider.layout.visibility = 'visible'
-
-    
-    def onChange(self, change):
-        if (change['type'] == 'change' and change['name'] == 'value'):
-            self.setWidgetVisibility()
-
-
-    def getParams(self):
-        params = {}
-        params['type'] = self.type_dropdown.value
-        params['model'] = self.model_dropdown.value
-        params['init_prompt'] = self.prompt_text.value
-        params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
-        params['negprompt'] = self.negprompt_text.value
-        params['width'] = self.width_slider.value
-        params['height'] = self.height_slider.value
-        params['scale'] = self.scale_slider.value
-        params['scheduler'] = self.scheduler_dropdown.value
-        params['batch'] = self.batchsize_slider.value
-
-        if(self.type_dropdown.value == "Image to image"):
-            params['strength'] = self.strength_slider.value
-        else:
-            params['steps'] = self.steps_slider.value
-
-        if(self.seed_text.value > 0):
-            params['seed'] = self.seed_text.value
-        else:
-            params['seed'] = RandomNumberArgument(0, 4294967295)
-
-        return params
-    
-
-    def setParams(self, params):        
-        self.type_dropdown.value = params['type']
-        self.model_dropdown.value = params['model']
-        self.prompt_text.value = params['init_prompt']
-        self.negprompt_text.value = params['negprompt']
-        self.width_slider.value = params['width']
-        self.height_slider.value = params['height']
-        self.scale_slider.value = params['scale']
-        self.scheduler_dropdown.value = params['scheduler']
-        self.batchsize_slider.value = params['batch']
-
-
-    def saveParams(self):
-        params = self.getParams()
-        with open(self.save_file, 'wb') as f:
-            pickle.dump(params, f)
-        return params
-
-
-    def loadParams(self):
-        if(os.path.isfile(self.save_file)):
-            with open(self.save_file, 'rb') as f:
-                params = pickle.load(f)
-                self.setParams(params)
-    
-
-    def run(self):
-        params = self.saveParams()
-        if(self.type_dropdown.value == "Text to image"):
-            batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
-        elif(self.type_dropdown.value == "Image to image"):
-            batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
-        batch.run()
