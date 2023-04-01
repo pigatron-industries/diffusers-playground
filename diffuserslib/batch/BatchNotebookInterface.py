@@ -215,7 +215,7 @@ class BatchNotebookInterface:
             description=label,
             orientation='horizontal',
             readout=True,
-            readout_format='.1f',
+            readout_format='.01f',
             layout={'width': INTERFACE_WIDTH}
         )
         slider.observe(self.onChange)
