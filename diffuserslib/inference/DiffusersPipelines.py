@@ -186,8 +186,8 @@ class DiffusersPipelines:
 
 
     def useLORAs(self, lora_use = []):
-        self.lora_use = lora_use
         if (set(lora_use) != set(self.lora_use)):
+            self.lora_use = lora_use
             self.pipelines.clear()
 
 
