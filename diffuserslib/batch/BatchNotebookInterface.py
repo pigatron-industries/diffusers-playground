@@ -1,4 +1,4 @@
-from ..batch import BatchRunner, RandomNumberArgument, RandomPromptProcessor
+from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor
 from ..inference import DiffusersPipeline
 import ipywidgets as widgets
 import pickle 
