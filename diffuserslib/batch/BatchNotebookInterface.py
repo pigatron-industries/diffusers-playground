@@ -1,5 +1,6 @@
-from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor
+from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor, RandomImage
 from ..inference import DiffusersPipeline, LORAUse
+from ..processing import simpleTransform
 import ipywidgets as widgets
 import pickle 
 import os
@@ -8,20 +9,17 @@ from IPython.display import display, clear_output
 INTERFACE_WIDTH = '900px'
 
 class BatchNotebookInterface:
-    def __init__(self, pipelines:DiffusersPipeline, output_dir, modifier_dict=None, save_file='batch_params.pkl'):
+    def __init__(self, pipelines:DiffusersPipeline, output_dir, modifier_dict=None, save_file='batch_params.pkl', processing_pipelines={}):
         self.pipelines:DiffusersPipeline = pipelines
         self.output_dir = output_dir
         self.modifier_dict = modifier_dict
         self.save_file = save_file
-        self.initProcessingPipelines = {
-            "image_file": {},
-            "image_folder": {},
-            "generate_geometry": {}
-        }
+        self.processing_pipelines = processing_pipelines
 
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
 
-        self.initimagetype_dropdown = self.dropdown(label="Init Image:", options=["Image Single", "Image Folder", "Generated"], value="Image Single")
+        #  Init images
+        self.processingpipeline_dropdown = self.dropdown(label="Processing:", options=list(processing_pipelines.keys()), value=None)
 
         self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
         self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
@@ -41,7 +39,7 @@ class BatchNotebookInterface:
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
         display(self.type_dropdown, 
-                self.initimagetype_dropdown, 
+                self.processingpipeline_dropdown,
                 self.model_dropdown, 
                 self.lora_dropdown,
                 self.loraweight_text,
@@ -69,14 +67,14 @@ class BatchNotebookInterface:
         else:
             self.loraweight_text.layout.visibility = 'hidden'
 
-        if(self.type_dropdown.value == "Image to image"):
-            self.initimagetype_dropdown.layout.visibility = 'visible'
-            self.strength_slider.layout.visibility = 'visible'
-            self.steps_slider.layout.visibility = 'hidden'
-        else:
-            self.initimagetype_dropdown.layout.visibility = 'hidden'
+        if(self.type_dropdown.value == "Text to image"):
+            self.processingpipeline_dropdown.layout.visibility = 'hidden'
             self.strength_slider.layout.visibility = 'hidden'
             self.steps_slider.layout.visibility = 'visible'
+        else:
+            self.processingpipeline_dropdown.layout.visibility = 'visible'
+            self.strength_slider.layout.visibility = 'visible'
+            self.steps_slider.layout.visibility = 'hidden'
 
     
     def onChange(self, change):
@@ -99,6 +97,10 @@ class BatchNotebookInterface:
         params['scheduler'] = self.scheduler_dropdown.value
         params['batch'] = self.batchsize_slider.value
 
+        if(self.type_dropdown.value != "Text to image"):
+            params['processingpipeline'] = self.processingpipeline_dropdown.value
+            params['initimage'] = self.processing_pipelines[self.initimagefile_text.value]
+
         if(self.type_dropdown.value == "Image to image"):
             params['strength'] = self.strength_slider.value
         else:
@@ -114,6 +116,7 @@ class BatchNotebookInterface:
 
     def setParams(self, params):        
         self.type_dropdown.value = params['type']
+        self.processingpipeline_dropdown.value = params['processingpipeline']
         self.model_dropdown.value = params['model']
         self.lora_dropdown.value = params['lora']
         self.loraweight_text.value = params['lora_weight']
@@ -159,6 +162,16 @@ class BatchNotebookInterface:
 
 
     # ============== widget helpers =============
+
+    def text(self, label, value):
+        text = widgets.Text(
+            value=value,
+            description=label,
+            disabled=False,
+            layout={'width': INTERFACE_WIDTH}
+        )
+        text.observe(self.onChange)
+        return text
 
     def intText(self, label, value):
         inttext = widgets.IntText(
