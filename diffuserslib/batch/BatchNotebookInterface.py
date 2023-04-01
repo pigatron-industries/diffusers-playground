@@ -5,6 +5,8 @@ import pickle
 import os
 from IPython.display import display, clear_output
 
+INTERFACE_WIDTH = '900px'
+
 class BatchNotebookInterface:
     def __init__(self, pipelines:DiffusersPipeline, output_dir, modifier_dict=None, save_file='batch_params.pkl'):
         self.pipelines:DiffusersPipeline = pipelines
@@ -186,7 +188,7 @@ class BatchNotebookInterface:
             orientation='horizontal',
             readout=True,
             readout_format='d',
-            layout={'width': '500px'}
+            layout={'width': INTERFACE_WIDTH}
         )
         slider.observe(self.onChange)
         return slider
@@ -201,7 +203,7 @@ class BatchNotebookInterface:
             orientation='horizontal',
             readout=True,
             readout_format='.1f',
-            layout={'width': '500px'}
+            layout={'width': INTERFACE_WIDTH}
         )
         slider.observe(self.onChange)
         return slider
@@ -211,7 +213,7 @@ class BatchNotebookInterface:
             options=options,
             description=label,
             value=value,
-            layout={'width': '500px'}
+            layout={'width': INTERFACE_WIDTH}
         )
         dropdown.observe(self.onChange)
         return dropdown
@@ -220,7 +222,7 @@ class BatchNotebookInterface:
         textarea = widgets.Textarea(
             value=value,
             description=label,
-            layout={'width': '500px'}
+            layout={'width': INTERFACE_WIDTH, 'height': '100px'}
         )
         textarea.observe(self.onChange)
         return textarea
