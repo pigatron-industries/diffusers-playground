@@ -46,7 +46,7 @@ class DiffusersModelList:
             modeldata = filedata[key]
             for basedata in modeldata:
                 for model in basedata['models']:
-                    print(model)
+                    # print(model)
                     if (model.get('autocast') != 'false'):
                         autocast = True
                     else:

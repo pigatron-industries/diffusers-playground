@@ -5,45 +5,50 @@ import os
 LORA_PREFIX_UNET = 'lora_unet'
 LORA_PREFIX_TEXT_ENCODER = 'lora_te'
 
+class LORAUse:
+    def __init__(self, name, weight):
+        self.name = name
+        self.weight = weight
+
+    def __hash__(self):
+        return hash(self.name + str(self.weight))
+
+    def __eq__(self,other):
+        return self.name == other.name and self.weight== other.weight
+
+
 class LORA:
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
 
     @classmethod
-    def from_file(cls, lora_path, device = "cuda", weight = 1):
-        if(os.path.isdir(lora_path)):
-            return DiffusersLORA.from_file(lora_path)
+    def from_file(cls, name, path):
+        if(os.path.isdir(path)):
+            return DiffusersLORA(name, path)
         else:
-            return StableDiffusionLORA.from_file(lora_path, device, weight)
+            return StableDiffusionLORA(name, path)
+        
+    def add_to_model(self, pipeline, weight = 1, device="cuda"):
+        pass
 
 
 class DiffusersLORA(LORA):
-
-    def __init__(self, lora_path):
-        self.lora_path = lora_path
-
-    @classmethod
-    def from_file(cls, lora_path):
-        return cls(lora_path)
+    def __init__(self, name, path):
+        super().__init__(name, path)
     
-    def add_to_model(self, pipeline, weight = 1):
+    def add_to_model(self, pipeline, weight = 1, device="cuda"):
         pipeline.unet.load_attn_procs(self.lora_path)
-    
 
 
 class StableDiffusionLORA(LORA):
+    def __init__(self, name, path):
+        super().__init__(name, path)
 
-    def __init__(self, lora_path, state_dict, weight = 1):
-        self.lora_path = lora_path
-        self.state_dict = state_dict
-        self.weight = weight
-
-    @classmethod
-    def from_file(cls, lora_path, device, weight = 1):
-        state_dict = load_file(lora_path, device=device)
-        return cls(lora_path, state_dict, weight)
-
-    def add_to_model(self, pipeline):
+    def add_to_model(self, pipeline, weight = 1, device="cuda"):
+        state_dict = load_file(self.path, device=device)
         visited = []
-        for key in self.state_dict:
+        for key in state_dict:
 
             # as we have set the alpha beforehand, so just skip
             if '.alpha' in key or key in visited:
@@ -81,14 +86,14 @@ class StableDiffusionLORA(LORA):
                 pair_keys.append(key.replace('lora_up', 'lora_down'))
 
             # update weight
-            if len(self.state_dict[pair_keys[0]].shape) == 4:
-                weight_up = self.state_dict[pair_keys[0]].squeeze(3).squeeze(2).to(torch.float32)
-                weight_down = self.state_dict[pair_keys[1]].squeeze(3).squeeze(2).to(torch.float32)
-                curr_layer.weight.data += self.weight * torch.mm(weight_up, weight_down).unsqueeze(2).unsqueeze(3)
+            if len(state_dict[pair_keys[0]].shape) == 4:
+                weight_up = state_dict[pair_keys[0]].squeeze(3).squeeze(2).to(torch.float32)
+                weight_down = state_dict[pair_keys[1]].squeeze(3).squeeze(2).to(torch.float32)
+                curr_layer.weight.data += weight * torch.mm(weight_up, weight_down).unsqueeze(2).unsqueeze(3)
             else:
-                weight_up = self.state_dict[pair_keys[0]].to(torch.float32)
-                weight_down = self.state_dict[pair_keys[1]].to(torch.float32)
-                curr_layer.weight.data += self.weight * torch.mm(weight_up, weight_down)
+                weight_up = state_dict[pair_keys[0]].to(torch.float32)
+                weight_down = state_dict[pair_keys[1]].to(torch.float32)
+                curr_layer.weight.data += weight * torch.mm(weight_up, weight_down)
 
             # update visited list
             for item in pair_keys:

@@ -17,7 +17,7 @@ from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, Stabl
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
-from .LORA import LORA
+from .LORA import LORA, LORAUse
 from ..DiffusersModelPresets import DiffusersModelList, DiffusersModel
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
@@ -52,10 +52,10 @@ class DiffusersPipeline:
 
 
 class BaseModelData:
-    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None, lora = None):  #: Dict[str, list[str]]
+    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None):  #: Dict[str, list[str]]
         self.base : str = base
         self.textembeddings : TextEmbeddings = textembeddings
-        self.lora = lora
+        self.loras = {}
         if (modifierdict is None):
             self.modifierdict = {}
         else:
@@ -63,7 +63,6 @@ class BaseModelData:
 
 
 class DiffusersPipelines:
-
     def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None, custom_pipeline = None, cache_dir = None):
         self.localmodelpath: str = localmodelpath
         self.localmodelcache: str = getModelsDir()
@@ -76,6 +75,7 @@ class DiffusersPipelines:
             self.common_modifierdict = common_modifierdict
         self.custom_pipeline = custom_pipeline
         self.cache_dir = cache_dir
+        self.lora_use = []
 
         self.pipelines: Dict[str,DiffusersPipeline] = {}
 
@@ -87,30 +87,37 @@ class DiffusersPipelines:
         self.presetsControl: DiffusersModelList = DiffusersModelList()
         self.presetsMisc: DiffusersModelList = DiffusersModelList()
 
+
     def loadPresetFile(self, filepath):
         self.presetsImage = DiffusersModelList.from_file(filepath, 'image')
         self.presetsInpaint = DiffusersModelList.from_file(filepath, 'inpaint')
         self.presetsControl = DiffusersModelList.from_file(filepath, 'controlnet')
         self.presetsMisc = DiffusersModelList.from_file(filepath, 'misc')
 
+
     def addPresetsImage(self, presets):
         self.presetsImage.addModels(presets)
+
 
     def addPresetsInpaint(self, presets):
         self.presetsInpaint.addModels(presets)
 
+
     def addPresetsControl(self, presets):
         self.presetsControl.addModels(presets)
+
 
     def addPresetImage(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
         self.presetsImage.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
+
     def addPresetInpaint(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
         self.presetsInpaint.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+
 
     def addPresetControl(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
@@ -126,6 +133,7 @@ class DiffusersPipelines:
 
     def loadAutoencoder(self, model = DEFAULT_AUTOENCODER_MODEL):
         self.vae = AutoencoderKL.from_pretrained(model)
+
 
     def getBaseModelData(self, base):
         if base not in self.baseModelData:
@@ -161,14 +169,37 @@ class DiffusersPipelines:
 
     #=============== LORA ==============
 
-    def loadLORA(self, lora_path, base, weight=1):
-        base = self.getBaseModelData(base)
-        base.lora = LORA.from_file(lora_path, self.device, weight)
+    def loadLORAs(self, directory):
+        for path, base in getPathsFiles(f"{directory}/*/"):
+            baseModelData = self.getBaseModelData(base)
+            for lora_path, lora_file in getPathsFiles(f"{path}/*"):
+                if (lora_file.endswith('.bin') or lora_file.endswith('.safetensors')):
+                    print(f"Adding available LORA file: {lora_file}")
+                    lora = LORA.from_file(lora_file, lora_path)
+                    baseModelData.loras[lora_file] = lora
 
-    def _addLORAToPipeline(self, pipeline: DiffusersPipeline):
-        if (pipeline.preset.base in self.baseModelData and self.baseModelData[pipeline.preset.base].lora is not None):
-            print("Loading LORA")
-            self.baseModelData[pipeline.preset.base].lora.add_to_model(pipeline.pipeline)
+
+    def loadLORA(self, lora_path, base):
+        baseModelData = self.getBaseModelData(base)
+        lora = LORA.from_file(lora_path, lora_path)
+        baseModelData.loras[lora_path] = lora
+
+
+    def useLORAs(self, lora_use = []):
+        self.lora_use = lora_use
+        if (set(lora_use) != set(self.lora_use)):
+            self.pipelines.clear()
+
+
+    def _addLORAsToPipeline(self, pipeline: DiffusersPipeline):
+        for lora_use in self.lora_use:
+            self._addLORAToPipeline(pipeline, lora_use.name, lora_use.weight)
+
+
+    def _addLORAToPipeline(self, pipeline: DiffusersPipeline, lora_name, weight=1):
+        if (pipeline.preset.base in self.baseModelData and lora_name in self.baseModelData[pipeline.preset.base].loras):
+            print(f"Loading LORA {lora_name}")
+            self.baseModelData[pipeline.preset.base].loras[lora_name].add_to_model(pipeline.pipeline, weight=weight, device=self.device)
 
 
     #===============  ==============
@@ -224,6 +255,7 @@ class DiffusersPipelines:
         if(self.cache_dir is not None):
             args['cache_dir'] = self.cache_dir
         return args
+    
 
     def createPipeline(self, cls, model, presets, default, **kwargs):
         if(cls.__name__ not in self.pipelines and (model is None or model == "")):
@@ -240,14 +272,16 @@ class DiffusersPipelines:
         preset = self.getModel(model, presets)
         args = self.createArgs(preset)
         args = mergeDicts(args, kwargs)
+
         pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
         # pipeline.enable_model_cpu_offload()
         pipeline.enable_attention_slicing()
         # pipeline.enable_xformers_memory_efficient_attention()
         self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
         self._addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
-        self._addLORAToPipeline(self.pipelines[cls.__name__])
+        self._addLORAsToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
+    
     
     def createControlNetPipeline(self, model, presets, default, controlmodel, **kwargs):
         if("StableDiffusionControlNetPipeline" not in self.pipelines and (model is None or model == "")):

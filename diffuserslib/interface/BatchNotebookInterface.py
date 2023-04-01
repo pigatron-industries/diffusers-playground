@@ -11,10 +11,17 @@ class BatchNotebookInterface:
         self.output_dir = output_dir
         self.modifier_dict = modifier_dict
         self.save_file = save_file
+        self.initProcessingPipelines = {
+            "image_file": {},
+            "image_folder": {},
+            "generate_geometry": {}
+        }
 
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
-        self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
+
         self.initimagetype_dropdown = self.dropdown(label="Init Image:", options=["Image Single", "Image Folder", "Generated"], value="Image Single")
+
+        self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
         self.prompt_text = self.textarea(label="Prompt:", value="")
         self.shuffle_checkbox = self.checkbox(label="Shuffle", value=False)
         self.negprompt_text = self.textarea(label="Neg Prompt:", value="")
@@ -32,8 +39,8 @@ class BatchNotebookInterface:
         self.setWidgetVisibility()
         self.loadParams()
         display(self.type_dropdown, 
-                self.model_dropdown, 
                 self.initimagetype_dropdown, 
+                self.model_dropdown, 
                 self.prompt_text, 
                 self.shuffle_checkbox,
                 self.negprompt_text, 
