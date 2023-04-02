@@ -75,17 +75,17 @@ class BatchNotebookInterface:
 
         if(self.type_dropdown.value == "Text to image"):
             self.processingpipeline_dropdown.layout.visibility = 'hidden'
+            self.processinginput_dropdown.layout.visibility = 'hidden'
             self.strength_slider.layout.visibility = 'hidden'
             self.steps_slider.layout.visibility = 'visible'
         else:
             self.processingpipeline_dropdown.layout.visibility = 'visible'
             self.strength_slider.layout.visibility = 'visible'
             self.steps_slider.layout.visibility = 'hidden'
-
-        if(self.processingpipeline_dropdown.value is not None and self.processing_pipelines[self.processingpipeline_dropdown.value].requireInputImage()):
-            self.processinginput_dropdown.layout.visibility = 'visible'
-        else:
-            self.processinginput_dropdown.layout.visibility = 'hidden'
+            if(self.processingpipeline_dropdown.value is not None and self.processing_pipelines[self.processingpipeline_dropdown.value].requireInputImage()):
+                self.processinginput_dropdown.layout.visibility = 'visible'
+            else:
+                self.processinginput_dropdown.layout.visibility = 'hidden'
 
     
     def onChange(self, change):
