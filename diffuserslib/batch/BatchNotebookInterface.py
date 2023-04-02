@@ -183,6 +183,8 @@ class BatchNotebookInterface:
         self.width_slider.value = params.get('width', 512)
         self.height_slider.value = params.get('height', 512)
         self.scale_slider.value = params.get('scale', 9.0)
+        self.steps_slider.value = params.get('steps', 40)
+        self.strength_slider.value = params.get('strength', 0.5)
         self.scheduler_dropdown.value = params.get('scheduler', 'EulerDiscreteScheduler')
         self.batchsize_slider.value = params.get('batch', 10)
         self.updateWidgets()
