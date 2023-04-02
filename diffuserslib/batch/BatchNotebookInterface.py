@@ -98,6 +98,7 @@ class BatchNotebookInterface:
         params['type'] = self.type_dropdown.value
         params['model'] = self.model_dropdown.value
         params['init_prompt'] = self.prompt_text.value
+        params['shuffle'] = self.shuffle_checkbox.value
         params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
