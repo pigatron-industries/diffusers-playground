@@ -299,7 +299,7 @@ class DiffusersPipelines:
             return self.pipelines["StableDiffusionControlNetPipeline"]
         if("StableDiffusionControlNetPipeline" in self.pipelines):
             del self.pipelines["StableDiffusionControlNetPipeline"]
-        controlnet = ControlNetModel.from_pretrained(controlmodel, torch_dtype=torch.float16)
+        controlnet = ControlNetModel.from_pretrained(controlmodel)
         pipeline = self.createPipeline(StableDiffusionControlNetPipeline, model, presets, default, controlnet=controlnet)
         pipeline.controlmodel = controlmodel
         return pipeline
