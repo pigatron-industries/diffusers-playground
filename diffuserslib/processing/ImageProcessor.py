@@ -8,11 +8,15 @@ class ImageProcessor():
 
 class ImageContext():
     def __init__(self, size, oversize=256):
-        self.image = Image.new("RGBA", size=(size[0]+oversize*2, size[1]+oversize*2))
         self.oversize = oversize
         self.size = size
-        self.viewport = (oversize, oversize, oversize+size[0], oversize+size[1])
         self.offset = (oversize, oversize)
+        if(size is not None):
+            self.viewport = (oversize, oversize, oversize+size[0], oversize+size[1])
+            self.image = Image.new("RGBA", size=(size[0]+oversize*2, size[1]+oversize*2))
+        else:
+            self.viewport = (oversize, oversize, oversize, oversize)
+            self.image = None
 
     def setViewportImage(self, image):
         self.image = Image.new("RGBA", size=(image.width+self.oversize*2, image.height+self.oversize*2))

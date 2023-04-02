@@ -131,19 +131,19 @@ class BatchNotebookInterface:
     
 
     def setParams(self, params):        
-        self.type_dropdown.value = params['type']
-        self.processingpipeline_dropdown.value = params['processingpipeline']
-        self.processinginput_dropdown.value = params['processinginput']
-        self.model_dropdown.value = params['model']
-        self.lora_dropdown.value = params['lora']
-        self.loraweight_text.value = params['lora_weight']
-        self.prompt_text.value = params['init_prompt']
-        self.negprompt_text.value = params['negprompt']
-        self.width_slider.value = params['width']
-        self.height_slider.value = params['height']
-        self.scale_slider.value = params['scale']
-        self.scheduler_dropdown.value = params['scheduler']
-        self.batchsize_slider.value = params['batch']
+        self.type_dropdown.value = params.get('type', 'Text to image')
+        self.processingpipeline_dropdown.value = params.get('processingpipeline', None)
+        self.processinginput_dropdown.value = params.get('processinginput', None)
+        self.model_dropdown.value = params.get('model', None)
+        self.lora_dropdown.value = params.get('lora', None)
+        self.loraweight_text.value = params.get('lora_weight', 1)
+        self.prompt_text.value = params.get('init_prompt', '')
+        self.negprompt_text.value = params.get('negprompt', '')
+        self.width_slider.value = params.get('width', 512)
+        self.height_slider.value = params.get('height', 512)
+        self.scale_slider.value = params.get('scale', 9.0)
+        self.scheduler_dropdown.value = params.get('scheduler', 'EulerDiscreteScheduler')
+        self.batchsize_slider.value = params.get('batch', 10)
         self.updateWidgets()
 
 
