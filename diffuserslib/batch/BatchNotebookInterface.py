@@ -1,17 +1,21 @@
 from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor, RandomImage
 from ..inference import DiffusersPipeline, LORAUse
-from ..processing import simpleTransform
+from ..FileUtils import getLeafFolders
+from ..processing import ImageProcessorPipeline
 import ipywidgets as widgets
 import pickle 
 import os
+from typing import List, Dict
 from IPython.display import display, clear_output
 
 INTERFACE_WIDTH = '900px'
 
 class BatchNotebookInterface:
-    def __init__(self, pipelines:DiffusersPipeline, output_dir, modifier_dict=None, save_file='batch_params.pkl', processing_pipelines={}):
-        self.pipelines:DiffusersPipeline = pipelines
+    def __init__(self, pipelines:DiffusersPipeline, output_dir:str, modifier_dict=None, save_file:str='batch_params.pkl', 
+                 processing_pipelines:Dict[str, ImageProcessorPipeline]={}, input_dirs:List[str]=[]):
+        self.pipelines = pipelines
         self.output_dir = output_dir
+        self.input_dirs = input_dirs
         self.modifier_dict = modifier_dict
         self.save_file = save_file
         self.processing_pipelines = processing_pipelines
@@ -20,6 +24,7 @@ class BatchNotebookInterface:
 
         #  Init images
         self.processingpipeline_dropdown = self.dropdown(label="Processing:", options=list(processing_pipelines.keys()), value=None)
+        self.processinginput_dropdown = self.dropdown(label="Input:", options=input_dirs, value=None)
 
         self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
         self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
@@ -40,6 +45,7 @@ class BatchNotebookInterface:
 
         display(self.type_dropdown, 
                 self.processingpipeline_dropdown,
+                self.processinginput_dropdown,
                 self.model_dropdown, 
                 self.lora_dropdown,
                 self.loraweight_text,
@@ -76,6 +82,11 @@ class BatchNotebookInterface:
             self.strength_slider.layout.visibility = 'visible'
             self.steps_slider.layout.visibility = 'hidden'
 
+        if(self.processingpipeline_dropdown.value is not None and self.processing_pipelines[self.processingpipeline_dropdown.value].requireInputImage()):
+            self.processinginput_dropdown.layout.visibility = 'visible'
+        else:
+            self.processinginput_dropdown.layout.visibility = 'hidden'
+
     
     def onChange(self, change):
         if (change['type'] == 'change' and change['name'] == 'value'):
@@ -86,8 +97,6 @@ class BatchNotebookInterface:
         params = {}
         params['type'] = self.type_dropdown.value
         params['model'] = self.model_dropdown.value
-        params['lora'] = self.lora_dropdown.value
-        params['lora_weight'] = self.loraweight_text.value
         params['init_prompt'] = self.prompt_text.value
         params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
         params['negprompt'] = self.negprompt_text.value
@@ -97,9 +106,16 @@ class BatchNotebookInterface:
         params['scheduler'] = self.scheduler_dropdown.value
         params['batch'] = self.batchsize_slider.value
 
+        if(self.lora_dropdown.value is not None):
+            params['lora'] = self.lora_dropdown.value
+            params['lora_weight'] = self.loraweight_text.value
+
         if(self.type_dropdown.value != "Text to image"):
             params['processingpipeline'] = self.processingpipeline_dropdown.value
             params['initimage'] = self.processing_pipelines[self.processingpipeline_dropdown.value]
+            if(self.processing_pipelines[self.processingpipeline_dropdown.value].requireInputImage()):
+                params['processinginput'] = self.processinginput_dropdown.value
+                params['initimage'].setInputImage(RandomImage.fromDirectory(self.processinginput_dropdown.value))
 
         if(self.type_dropdown.value == "Image to image"):
             params['strength'] = self.strength_slider.value
@@ -117,6 +133,7 @@ class BatchNotebookInterface:
     def setParams(self, params):        
         self.type_dropdown.value = params['type']
         self.processingpipeline_dropdown.value = params['processingpipeline']
+        self.processinginput_dropdown.value = params['processinginput']
         self.model_dropdown.value = params['model']
         self.lora_dropdown.value = params['lora']
         self.loraweight_text.value = params['lora_weight']
@@ -142,8 +159,7 @@ class BatchNotebookInterface:
             with open(self.save_file, 'rb') as f:
                 params = pickle.load(f)
                 self.setParams(params)
-        else:
-            self.updateWidgets()
+        self.updateWidgets()
     
 
     def run(self):

@@ -28,12 +28,18 @@ class ImageContext():
 
 
 class ImageProcessorPipeline():
-    def __init__(self, size=(512, 512), oversize=256):
+    def __init__(self, size=None, oversize=256):
         self.initargs = {
             "size": size
         }
         self.oversize = oversize
         self.tasks = []
+
+    def requireInputImage(self):
+        return self.initargs["size"] is None
+    
+    def setInputImage(self, image):
+        self.tasks[0].setImage(image)
 
     def addTask(self, task):
         self.tasks.append(task)
@@ -54,6 +60,9 @@ class InitImageProcessor(ImageProcessor):
         self.args = {
             "image": image
         }
+
+    def setImage(self, image):
+        self.args["image"] = image
 
     def __call__(self, context):
         # evaluateArguments decides which argument values to use at runtime
