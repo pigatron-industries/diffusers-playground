@@ -7,7 +7,7 @@ import pickle
 import os
 from typing import List, Dict
 from functools import partial
-from IPython.display import display, clear_output
+from IPython.display import HTML, display, clear_output
 
 INTERFACE_WIDTH = '900px'
 
@@ -40,7 +40,7 @@ class BatchNotebookInterface:
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
 
         # Control Net
-        self.controlmodel_dropdown = self.dropdown(label="Control Net:", options=list(pipelines.presetsControl.models.keys()), value=None)
+        self.controlmodel_dropdown = self.dropdown(label="Control Model:", options=list(pipelines.presetsControl.models.keys()), value=None)
 
         #  Init images
         self.generationpipeline_dropdown = self.dropdown(label="Generation:", options=list(generation_pipelines.keys()), value=None)
@@ -64,7 +64,12 @@ class BatchNotebookInterface:
         self.seed_text = self.intText(label='Seed:', value=None)
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
-        display(self.type_dropdown, 
+        html = HTML('''<style>
+                        .widget-label { min-width: 20ex !important; }
+                    </style>''')
+
+        display(html, 
+                self.type_dropdown, 
                 self.controlmodel_dropdown,
                 self.generationpipeline_dropdown,
                 self.generationinput_dropdown,
@@ -100,17 +105,20 @@ class BatchNotebookInterface:
             self.generationpipeline_dropdown.layout.visibility = 'hidden'
             self.generationinput_dropdown.layout.visibility = 'hidden'
             self.preprocessing_dropdown.layout.visibility = 'hidden'
-            self.strength_slider.layout.visibility = 'hidden'
-            self.steps_slider.layout.visibility = 'visible'
         else:
             self.generationpipeline_dropdown.layout.visibility = 'visible'
             self.preprocessing_dropdown.layout.visibility = 'visible'
-            self.strength_slider.layout.visibility = 'visible'
-            self.steps_slider.layout.visibility = 'hidden'
             if(self.generationpipeline_dropdown.value is not None and self.generation_pipelines[self.generationpipeline_dropdown.value].requireInputImage()):
                 self.generationinput_dropdown.layout.visibility = 'visible'
             else:
                 self.generationinput_dropdown.layout.visibility = 'hidden'
+
+        if(self.type_dropdown.value == "Image to image"):
+            self.strength_slider.layout.visibility = 'visible'
+            self.steps_slider.layout.visibility = 'hidden'
+        else:
+            self.strength_slider.layout.visibility = 'hidden'
+            self.steps_slider.layout.visibility = 'visible'
 
         if(self.type_dropdown.value == "Control Net"):
             self.controlmodel_dropdown.layout.visibility = 'visible'
