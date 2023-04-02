@@ -158,7 +158,7 @@ class BatchNotebookInterface:
         else:
             params['steps'] = self.steps_slider.value
 
-        if(self.model_dropdown.value == "Control Net"):
+        if(self.type_dropdown.value == "Control Net"):
             params['controlmodel'] = self.controlmodel_dropdown.value
 
         if(self.seed_text.value > 0):
