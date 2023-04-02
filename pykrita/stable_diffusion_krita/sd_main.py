@@ -139,13 +139,13 @@ class SDConfigDialog(QDialog):
 
         h_layout_width=QHBoxLayout()
         h_layout_width.addWidget(QLabel('Width:'))
-        self.width=createSlider(self, h_layout_width, SDConfig.width, 256, 1536, 64, 1)      
+        self.width=createSlider(self, h_layout_width, SDConfig.width, 256, 2048, 64, 1)      
         h_layout_width.addWidget(self.width)
         self.layout.addLayout(h_layout_width)
 
         h_layout_height=QHBoxLayout()
         h_layout_height.addWidget(QLabel('Height:'))
-        self.height=createSlider(self, h_layout_height, SDConfig.height, 256, 1536, 64, 1)
+        self.height=createSlider(self, h_layout_height, SDConfig.height, 256, 2048, 64, 1)
         h_layout_height.addWidget(self.height)
         self.layout.addLayout(h_layout_height)
 
@@ -445,7 +445,10 @@ class SDDialog(QDialog):
         if('image' in actionfields):
             imgLabel=QLabel()        
             self.layout.addWidget(imgLabel) 
-            imgLabel.setPixmap(QPixmap.fromImage(image))  
+            if(image.height() > 1024 or image.width() > 1024):
+                imgLabel.setPixmap(QPixmap.fromImage(image).scaled(1024,1024,Qt.KeepAspectRatio))
+            else:
+                imgLabel.setPixmap(QPixmap.fromImage(image))
         self.setLayout(self.layout)
 
     # TODO replace with common createSlider 
