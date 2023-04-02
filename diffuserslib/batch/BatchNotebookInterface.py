@@ -1,32 +1,53 @@
 from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor, RandomImage
-from ..inference import DiffusersPipeline, LORAUse
+from ..inference import DiffusersPipelines, LORAUse
 from ..FileUtils import getLeafFolders
-from ..processing import ImageProcessorPipeline
+from ..processing import *
 import ipywidgets as widgets
 import pickle 
 import os
 from typing import List, Dict
+from functools import partial
 from IPython.display import display, clear_output
 
 INTERFACE_WIDTH = '900px'
 
+DEFAULT_PREPROCESSORS = {
+    'canny edge detection': CannyEdgeProcessor,
+    'holistically nested edge detection': EdgeDetectionProcessor,
+    'straight line detection': StraightLineDetectionProcessor,
+    'pose detection': PoseDetectionProcessor,
+    'depth estimation': DepthEstimationProcessor,
+    'normal estimation': NormalEstimationProcessor,
+    'segmentation': SegmentationProcessor,
+    'monochrome': partial(SaturationProcessor, saturation=0),
+    'blur': partial(GaussianBlurProcessor, radius=2),
+    'noise': partial(GaussianNoiseProcessor, sigma=10),
+}
+
 class BatchNotebookInterface:
-    def __init__(self, pipelines:DiffusersPipeline, output_dir:str, modifier_dict=None, save_file:str='batch_params.pkl', 
-                 processing_pipelines:Dict[str, ImageProcessorPipeline]={}, input_dirs:List[str]=[]):
+    def __init__(self, pipelines:DiffusersPipelines, output_dir:str, modifier_dict=None, save_file:str='batch_params.pkl', 
+                 generation_pipelines:Dict[str, ImageProcessorPipeline]={}, 
+                 preprocessing_pipelines:Dict[str, ImageProcessor]=DEFAULT_PREPROCESSORS, 
+                 input_dirs:List[str]=[]):
         self.pipelines = pipelines
         self.output_dir = output_dir
         self.input_dirs = input_dirs
         self.modifier_dict = modifier_dict
         self.save_file = save_file
-        self.processing_pipelines = processing_pipelines
+        self.generation_pipelines = generation_pipelines
+        self.preprocessing_pipelines = preprocessing_pipelines
 
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
 
-        #  Init images
-        self.processingpipeline_dropdown = self.dropdown(label="Processing:", options=list(processing_pipelines.keys()), value=None)
-        self.processinginput_dropdown = self.dropdown(label="Input:", options=input_dirs, value=None)
+        # Control Net
+        self.controlmodel_dropdown = self.dropdown(label="Control Net:", options=list(pipelines.presetsControl.models.keys()), value=None)
 
-        self.model_dropdown = self.dropdown(label="Model:", options=pipelines.presetsImage.models.keys(), value=None)
+        #  Init images
+        self.generationpipeline_dropdown = self.dropdown(label="Generation:", options=list(generation_pipelines.keys()), value=None)
+        self.generationinput_dropdown = self.dropdown(label="Input:", options=input_dirs, value=None)
+        self.preprocessing_dropdown = self.dropdown(label="Preprocessor:", options=[None]+list(self.preprocessing_pipelines.keys()), value=None)
+
+        self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presetsImage.models.keys()), value=None)
         self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
         self.loraweight_text = self.floatText(label="LORA weight:", value=1)
         self.prompt_text = self.textarea(label="Prompt:", value="")
@@ -44,8 +65,10 @@ class BatchNotebookInterface:
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
         display(self.type_dropdown, 
-                self.processingpipeline_dropdown,
-                self.processinginput_dropdown,
+                self.controlmodel_dropdown,
+                self.generationpipeline_dropdown,
+                self.generationinput_dropdown,
+                self.preprocessing_dropdown,
                 self.model_dropdown, 
                 self.lora_dropdown,
                 self.loraweight_text,
@@ -74,18 +97,25 @@ class BatchNotebookInterface:
             self.loraweight_text.layout.visibility = 'hidden'
 
         if(self.type_dropdown.value == "Text to image"):
-            self.processingpipeline_dropdown.layout.visibility = 'hidden'
-            self.processinginput_dropdown.layout.visibility = 'hidden'
+            self.generationpipeline_dropdown.layout.visibility = 'hidden'
+            self.generationinput_dropdown.layout.visibility = 'hidden'
+            self.preprocessing_dropdown.layout.visibility = 'hidden'
             self.strength_slider.layout.visibility = 'hidden'
             self.steps_slider.layout.visibility = 'visible'
         else:
-            self.processingpipeline_dropdown.layout.visibility = 'visible'
+            self.generationpipeline_dropdown.layout.visibility = 'visible'
+            self.preprocessing_dropdown.layout.visibility = 'visible'
             self.strength_slider.layout.visibility = 'visible'
             self.steps_slider.layout.visibility = 'hidden'
-            if(self.processingpipeline_dropdown.value is not None and self.processing_pipelines[self.processingpipeline_dropdown.value].requireInputImage()):
-                self.processinginput_dropdown.layout.visibility = 'visible'
+            if(self.generationpipeline_dropdown.value is not None and self.generation_pipelines[self.generationpipeline_dropdown.value].requireInputImage()):
+                self.generationinput_dropdown.layout.visibility = 'visible'
             else:
-                self.processinginput_dropdown.layout.visibility = 'hidden'
+                self.generationinput_dropdown.layout.visibility = 'hidden'
+
+        if(self.type_dropdown.value == "Control Net"):
+            self.controlmodel_dropdown.layout.visibility = 'visible'
+        else:
+            self.controlmodel_dropdown.layout.visibility = 'hidden'
 
     
     def onChange(self, change):
@@ -112,16 +142,24 @@ class BatchNotebookInterface:
             params['lora_weight'] = self.loraweight_text.value
 
         if(self.type_dropdown.value != "Text to image"):
-            params['processingpipeline'] = self.processingpipeline_dropdown.value
-            params['initimage'] = self.processing_pipelines[self.processingpipeline_dropdown.value]
-            if(self.processing_pipelines[self.processingpipeline_dropdown.value].requireInputImage()):
-                params['processinginput'] = self.processinginput_dropdown.value
-                params['initimage'].setInputImage(RandomImage.fromDirectory(self.processinginput_dropdown.value))
+            params['generationpipeline'] = self.generationpipeline_dropdown.value
+            self.preprocessing_dropdown.layout.visibility = 'visible'
+            params['initimage'] = self.generation_pipelines[self.generationpipeline_dropdown.value]
+            if(self.preprocessing_dropdown.value is not None):
+                preprocessor = self.preprocessing_pipelines[self.preprocessing_dropdown.value]
+                params['preprocessor'] = self.preprocessing_dropdown.value
+                params['initimage'].addTask(preprocessor())
+            if(self.generation_pipelines[self.generationpipeline_dropdown.value].requireInputImage()):
+                params['generationinput'] = self.generationinput_dropdown.value
+                params['initimage'].setInputImage(RandomImage.fromDirectory(self.generationinput_dropdown.value))
 
         if(self.type_dropdown.value == "Image to image"):
             params['strength'] = self.strength_slider.value
         else:
             params['steps'] = self.steps_slider.value
+
+        if(self.model_dropdown.value == "Control Net"):
+            params['controlmodel'] = self.controlmodel_dropdown.value
 
         if(self.seed_text.value > 0):
             params['seed'] = self.seed_text.value
@@ -133,8 +171,10 @@ class BatchNotebookInterface:
 
     def setParams(self, params):        
         self.type_dropdown.value = params.get('type', 'Text to image')
-        self.processingpipeline_dropdown.value = params.get('processingpipeline', None)
-        self.processinginput_dropdown.value = params.get('processinginput', None)
+        self.controlmodel_dropdown.value = params.get('controlmodel', None)
+        self.generationpipeline_dropdown.value = params.get('generationpipeline', None)
+        self.generationinput_dropdown.value = params.get('generationinput', None)
+        self.preprocessing_dropdown.value = params.get('preprocessor', None)
         self.model_dropdown.value = params.get('model', None)
         self.lora_dropdown.value = params.get('lora', None)
         self.loraweight_text.value = params.get('lora_weight', 1)
@@ -174,6 +214,8 @@ class BatchNotebookInterface:
             batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
         elif(self.type_dropdown.value == "Image to image"):
             batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
+        elif(self.type_dropdown.value == "Control Net"):
+            batch = BatchRunner(self.pipelines.controlNet, params, params['batch'], self.output_dir)
         batch.run()
 
 
