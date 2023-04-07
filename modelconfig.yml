@@ -4,6 +4,8 @@ image:
     models:
       - id: stabilityai/stable-diffusion-2-1  # official
         autocast: false
+      - id: stablediffusionapi/illuminati-diffusion
+        autocast: false
   - base: sd_2_1_512
     models:
       - id: stabilityai/stable-diffusion-2-1-base  # official
@@ -88,6 +90,12 @@ controlnet:
       - id: lllyasviel/sd-controlnet-openpose
       - id: lllyasviel/sd-controlnet-scribble
       - id: lllyasviel/sd-controlnet-seg
+  - base: sd_2_1_512
+      - id: thibaud/controlnet-sd21-canny-diffusers
+      - id: thibaud/controlnet-sd21-depth-diffusers
+      - id: thibaud/controlnet-sd21-hed-diffusers
+      - id: thibaud/controlnet-sd21-openpose-diffusers
+      - id: thibaud/controlnet-sd21-scribble-diffusers
 
 misc:
   - base: sd_1_5

@@ -40,6 +40,7 @@ class BatchNotebookInterface:
         self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
 
         # Control Net
+        # TODO filter list to only show control nets for selected base model
         self.controlmodel_dropdown = self.dropdown(label="Control Model:", options=list(pipelines.presetsControl.models.keys()), value=None)
 
         #  Init images
