@@ -314,7 +314,7 @@ class SDDialog(QDialog):
             models = getModels(action)
             modelids = [model["modelid"] for model in models]
             modelids.sort()
-            self.model.addItems(modelids)
+            self.model.addItems([""] + modelids)
             self.model.setCurrentText(data.get("model", "runwayml/stable-diffusion-v1-5"))
             formLayout.addWidget(self.model)
 
@@ -338,7 +338,7 @@ class SDDialog(QDialog):
             upscalemethod_label=QLabel("Upscale method")
             formLayout.addWidget(upscalemethod_label)
             self.upscale_method = QComboBox()
-            self.upscale_method.addItems(['laczos3', 'esrgan/lollypop', 'esrgan/remacri', 'stable-diffusion'])
+            self.upscale_method.addItems(['laczos3', 'esrgan/lollypop', 'esrgan/remacri', 'esrgan/UltraSharp', 'stable-diffusion'])
             self.upscale_method.setCurrentText(data.get("upscale_method","esrgan/remacri"))
             formLayout.addWidget(self.upscale_method)
             upscale_label = QLabel("Upscale amount")
