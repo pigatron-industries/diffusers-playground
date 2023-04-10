@@ -6,35 +6,26 @@ from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionAr
 import math
 
 
-class ProcessingPipelineBuilder():
-    def __init__(self, pipeline):
-        self.pipeline = pipeline
-
-
-    def __call__(self):
-        return self.pipeline()
+class ProcessingPipelineBuilder(ImageProcessorPipeline):
+    def __init__(self, size=None, oversize=0):
+        super().__init__(size, oversize)
 
 
     @classmethod
     def fromImage(cls, image):
-        pipeline = ImageProcessorPipeline(oversize=0)
+        pipeline = cls(oversize=0)
         pipeline.addTask(InitImageProcessor(image=image))
-        return cls(pipeline)
+        return pipeline
     
 
     @classmethod
     def fromBlank(cls, size=RandomChoiceArgument([(512, 768), (768, 512), (512, 512)])):
-        pipeline = ImageProcessorPipeline(size=size)
-        return cls(pipeline)
-    
-
-    def addTask(self, task):
-        self.pipeline.addTask(task)
-        return self
-    
+        pipeline = cls(size=size)
+        return pipeline
+        
 
     def fillBackground(self, background = "black"):
-        self.pipeline.addTask(FillBackgroundProcessor(background = background))
+        self.addTask(FillBackgroundProcessor(background = background))
         return self
     
 
@@ -43,26 +34,26 @@ class ProcessingPipelineBuilder():
                         turn=RandomChoiceArgument(["clockwise", "anticlockwise"]),
                         draw=RandomChoiceArgument([(False, True), (True, True), (True, False)]),
                         ratio = 1/1.618033988749895):
-        self.pipeline.addTask(DrawGeometricSpiralProcessor(iterations = iterations, 
+        self.addTask(DrawGeometricSpiralProcessor(iterations = iterations, 
                                                     direction = direction, turn=turn,
                                                     draw=draw, outline=outline, fill=fill, ratio=ratio))
         return self
 
 
     def simpleTransform(self, transform=RandomChoiceArgument(["fliphorizontal", "flipvertical", "rotate90", "rotate180", "rotate270", "none"])):
-        self.pipeline.addTask(SimpleTransformProcessor(type=transform))
+        self.addTask(SimpleTransformProcessor(type=transform))
         return self
 
 
     def resize(self, resizetype=RandomChoiceArgument(["stretch", "extend"]), size=RandomChoiceArgument([(512, 768), (768, 512)]),
                         halign=RandomChoiceArgument(["left", "right", "centre"]), valign=RandomChoiceArgument(["top", "bottom", "centre"]), fill="black"):
-        self.pipeline.addTask(ResizeProcessor(type=resizetype, size=size, fill=fill, halign=halign, valign=valign))
+        self.addTask(ResizeProcessor(type=resizetype, size=size, fill=fill, halign=halign, valign=valign))
         return self
 
 
     def drawShapeGeometry(self, foreground="black", outline=None, sides=RandomNumberArgument(3, 6), minsize=32, maxsize=256, shapes=1):
         for i in range(shapes):
-            self.pipeline.addTask(DrawRegularShapeProcessor(
+            self.addTask(DrawRegularShapeProcessor(
                 position=RandomPositionArgument(), 
                 size=RandomNumberArgument(minsize, maxsize),
                 sides=sides,
@@ -73,12 +64,12 @@ class ProcessingPipelineBuilder():
     
 
     def symmetrize(self, symmetry=RandomChoiceArgument(["horizontal", "vertical", "rotation", "none"])):
-        self.pipeline.addTask(SymmetrizeProcessor(type=symmetry))
+        self.addTask(SymmetrizeProcessor(type=symmetry))
         return self
 
 
     def spiralize(self, rotation=360, steps=8, zoom=4):
-        self.pipeline.addTask(SpiralizeProcessor(rotation = rotation, steps = steps, zoom = zoom))
+        self.addTask(SpiralizeProcessor(rotation = rotation, steps = steps, zoom = zoom))
         return self
     
 
@@ -102,7 +93,7 @@ class ProcessingPipelineBuilder():
                 (math.ceil(size[0]/16), math.ceil(size[0]/16)),
                 (math.ceil(size[0]/16), math.ceil(size[0]/32))
             ])
-        self.pipeline.addTask(DrawCheckerboardProcessor(size = blocksize, start = start, fill=foreground))
-        self.pipeline.addTask(FillBackgroundProcessor(background = background))
+        self.addTask(DrawCheckerboardProcessor(size = blocksize, start = start, fill=foreground))
+        self.addTask(FillBackgroundProcessor(background = background))
         return self
 
