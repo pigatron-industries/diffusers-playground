@@ -55,13 +55,10 @@ class DrawCheckerboardProcessor(ImageProcessor):
 
 
 class DrawGeometricSpiralProcessor(ImageProcessor):
-    def __init__(self, startx = 0, starty = 0, endx = None, endy = None, outline="white", fill="black", ratio = 1/1.618033988749895, iterations=7, direction="right", turn="clockwise", 
+    def __init__(self, rect = (0, 0, 1, 1), outline="white", fill="black", ratio = 1/1.618033988749895, iterations=7, direction="right", turn="clockwise", 
                  draw = (True, True)):
         self.args = {
-            "startx": startx,
-            "starty": starty,
-            "endx": endx,
-            "endy": endy,
+            "rect": rect,
             "fill": fill,
             "outline": outline,
             "ratio": ratio,
@@ -74,23 +71,12 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
     def __call__(self, context:ImageContext):
         args = evaluateArguments(self.args, context=context)
         ratio = args["ratio"]
-        startx = args["startx"] + context.offset[0]
-        starty = args["starty"] + context.offset[1]
-        endx = args["endx"]
-        endy = args["endy"]
-        if endx is None:
-            endx = context.viewport[2]-1
-        elif endx < 0:
-            endx = context.viewport[2]+endx
-        else:
-            endx = endx + context.offset[0]
-
-        if endy is None:
-            endy = context.viewport[3]-1
-        elif endy < 0:
-            endy = context.viewport[3]+endy
-        else:
-            endy = endy + context.offset[1]
+        inrect = args["rect"]
+        startx = inrect[0] * context.size[0] + context.offset[0]
+        starty = inrect[1] * context.size[1] + context.offset[1]
+        endx = inrect[2] * context.size[0] + context.offset[0]
+        endy = inrect[3] * context.size[1] + context.offset[1]
+        rect = [startx, starty, endx, endy]
 
         if(args["turn"] == "clockwise"):
             directions = ["right", "down", "left", "up"]
@@ -100,7 +86,6 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
         directionIndex = directions.index(direction)
 
         draw = ImageDraw.Draw(context.image)
-        rect = [startx, starty, endx, endy]
 
         for i in range(args["iterations"]):
             rect_one, rect_two = self.splitRectangle(rect, ratio, direction)

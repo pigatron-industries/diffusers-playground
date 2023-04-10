@@ -33,10 +33,11 @@ class ProcessingPipelineBuilder(ImageProcessorPipeline):
                         direction = RandomChoiceArgument(["up", "down", "left", "right"]),
                         turn=RandomChoiceArgument(["clockwise", "anticlockwise"]),
                         draw=RandomChoiceArgument([(False, True), (True, True), (True, False)]),
-                        ratio = 1/1.618033988749895):
+                        ratio = 1/1.618033988749895, rect = (0, 0, 1, 1)):
         self.addTask(DrawGeometricSpiralProcessor(iterations = iterations, 
                                                     direction = direction, turn=turn,
-                                                    draw=draw, outline=outline, fill=fill, ratio=ratio))
+                                                    draw = draw, outline = outline, fill = fill, ratio = ratio, 
+                                                    rect = rect))
         return self
 
 
