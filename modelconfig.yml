@@ -52,7 +52,7 @@ image:
       - id: prompthero/openjourney
         vae: stabilityai/sd-vae-ft-mse
         phrase: mdjrny-v4 style
-      - id: SG161222/Realistic_Vision_V1.3
+      - id: SG161222/Realistic_Vision_V1.2
         vae: stabilityai/sd-vae-ft-mse
       - id: SG161222/Realistic_Vision_V1.3
         vae: stabilityai/sd-vae-ft-mse
