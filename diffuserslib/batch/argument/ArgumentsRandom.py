@@ -52,7 +52,7 @@ class RandomImage(Argument):
     @classmethod
     def fromDirectory(cls, directory):
         if os.path.isdir(directory):
-            filelist = glob.glob(f'{directory}/*.png')
+            filelist = glob.glob(f'{directory}/*.png') + glob.glob(f'{directory}/*.jpg') + glob.glob(f'{directory}/*.jpeg')
         else:
             filelist = directory
         return cls(filelist)
@@ -71,7 +71,7 @@ class RandomImageSelection(Argument):
 
     @classmethod
     def fromDirectory(cls, directory):
-        filelist = glob.glob(f'{directory}/*.png')
+        filelist = glob.glob(f'{directory}/*.png') + glob.glob(f'{directory}/*.jpg') + glob.glob(f'{directory}/*.jpeg')
         return cls(filelist)
 
     def __init__(self, filelist, width, height, rotate, crop, **kwargs):
