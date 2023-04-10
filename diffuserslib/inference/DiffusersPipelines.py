@@ -288,7 +288,7 @@ class DiffusersPipelines:
         return self.pipelines[cls.__name__]
     
     
-    def createControlNetPipeline(self, model, presets, default, controlmodel, **kwargs):
+    def createControlNetPipeline(self, model, presets, default, controlmodel, cls=StableDiffusionControlNetPipeline, **kwargs):
         if("StableDiffusionControlNetPipeline" not in self.pipelines and (model is None or model == "")):
             model = default
         if(model is None or model == ""):
@@ -300,7 +300,7 @@ class DiffusersPipelines:
         if("StableDiffusionControlNetPipeline" in self.pipelines):
             del self.pipelines["StableDiffusionControlNetPipeline"]
         controlnet = ControlNetModel.from_pretrained(controlmodel)
-        pipeline = self.createPipeline(StableDiffusionControlNetPipeline, model, presets, default, controlnet=controlnet)
+        pipeline = self.createPipeline(cls, model, presets, default, controlnet=controlnet, **kwargs)
         pipeline.controlmodel = controlmodel
         return pipeline
 
@@ -315,6 +315,7 @@ class DiffusersPipelines:
         pipeline.pipeline.vae.enable_tiling(tiling)
         if(pipeline.preset.autocast): # TODO figure out why autocast is needed for 1.5 models in cuda but not mac
             with torch.autocast(self.inferencedevice):
+                print(kwargs)
                 image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
         else:
             image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
@@ -338,6 +339,14 @@ class DiffusersPipelines:
         pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel)
         initimage = initimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
+                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+    
+
+    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
+        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
+        initimage = initimage.convert("RGB")
+        controlimage = controlimage.convert("RGB")
+        return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
