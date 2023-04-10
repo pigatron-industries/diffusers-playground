@@ -1,5 +1,6 @@
 import random
 import glob
+import os
 from PIL import Image
 from .Argument import Argument
 
@@ -50,7 +51,10 @@ class RandomImage(Argument):
 
     @classmethod
     def fromDirectory(cls, directory):
-        filelist = glob.glob(f'{directory}/*.png')
+        if os.path.isdir(directory):
+            filelist = glob.glob(f'{directory}/*.png')
+        else:
+            filelist = directory
         return cls(filelist)
 
     def __init__(self, filelist):

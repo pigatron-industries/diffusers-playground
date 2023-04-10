@@ -7,7 +7,7 @@ from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, apply
 from .ImageTools import ImageTools
 from .processing.TransformerProcessors import *
 from .processing.FilterProcessors import *
-from .processing.ProcessingPipelineFactory import initImage
+from .processing.ProcessingPipelineFactory import ProcessingPipelineBuilder
 import json
 
 from IPython.display import display, clear_output
@@ -315,8 +315,8 @@ class DiffusersView(FlaskView):
             initimage = base64DecodeImage(initimage)
             processor = str_to_class(process + 'Processor')()
             
-            pipeline = initImage(initimage)
-            pipeline.addTask(processor)
+            pipeline = ProcessingPipelineBuilder.fromImage(initimage)
+            pipeline.pipeline.addTask(processor)
             outimage = pipeline()
 
             self.job.status = { "status":"finished", "action":"preprocess", "images": [{"image":base64EncodeImage(outimage)}] }
