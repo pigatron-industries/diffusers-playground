@@ -38,6 +38,8 @@ class ImageTools():
         outfile = "output/work.png"
         model = f'4x_{model}.pth'
         inimage.save(infile)
+        if os.path.exists(outfile):
+            os.remove(outfile)
 
         subprocess.call(f'python upscale.py {model} --cpu', shell=True)    
 
