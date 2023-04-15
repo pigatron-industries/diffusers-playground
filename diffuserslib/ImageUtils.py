@@ -33,7 +33,7 @@ def alphaToMask(image, smooth=False):
             else:
                 if (a < 255):
                     maskimage.putpixel((x, y), (255, 255, 255))
-    return maskimage;
+    return maskimage
 
 
 def invertAlpha(image, target):
