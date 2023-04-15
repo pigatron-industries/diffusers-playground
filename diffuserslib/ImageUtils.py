@@ -110,3 +110,54 @@ def pilToCv2(pil_image):
 
 def cv2ToPil(cv2_image):
     return Image.fromarray(cv2_image, "RGBA")
+
+
+def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overlap=128, callback=None):
+    xslices = math.ceil((initimg.width) / (tilewidth-overlap))
+    yslices = math.ceil((initimg.height) / (tileheight-overlap))
+    totalslices = xslices * yslices
+    slicesdone = 0
+    print(f'Processing {xslices} x {yslices} slices')
+    if(callback is not None):
+        callback("Running", totalslices, slicesdone)
+
+    if(overlap >= 0):
+        merged_image = initimg.convert("RGBA")
+    else:
+        # if overlap is negative create new transparent image to leave gaps between tiles
+        merged_image = Image.new("RGBA", size=initimg.size, color=(255, 255, 255, 0))
+
+    # split into slices
+    for yslice in range(yslices):
+        for xslice in range(xslices):
+            top = (yslice == 0)
+            bottom = (yslice == yslices-1)
+            left = (xslice == 0)
+            right = (xslice == xslices-1)
+            x = (xslice * (tilewidth - overlap))
+            y = (yslice * (tileheight - overlap))
+            
+            if(overlap >= 0):
+                image_slice = merged_image.crop((x, y, x+tilewidth, y+tileheight))
+            else:
+                image_slice = initimg.crop((x, y, x+tilewidth, y+tileheight))
+
+            image_slice = image_slice.convert("RGB")
+            imageout_slice = processor(initimage=image_slice)
+            # imageout_slice = applyColourCorrection(image_slice, imageout_slice)
+            
+            if(overlap >= 0):
+                mask = createMask(tilewidth, tileheight, overlap/2, top, bottom, left, right)
+                imr, img, imb, _ = imageout_slice.split()
+                mmr, mmg, mmb, mma = mask.split()
+                finished_slice = Image.merge('RGBA', [imr, img, imb, mma])  # we want the RGB from the original, but the transparency from the mask
+            else:
+                finished_slice = imageout_slice.convert("RGBA")
+
+            merged_image.alpha_composite(finished_slice, (x, y))
+
+            if(callback is not None):
+                slicesdone = slicesdone + 1
+                callback("Running", totalslices, slicesdone)
+
+    return merged_image
