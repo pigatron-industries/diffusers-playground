@@ -170,7 +170,7 @@ def load_model(filename: str, device = "cuda"):
         model = SRVGGNetCompact(num_in_ch=3, num_out_ch=3, num_feat=64, num_conv=num_conv, upscale=4, act_type='prelu')
         model.load_state_dict(state_dict)
         model.eval()
-        return model
+        return model.to(device)
 
     if "body.0.rdb1.conv1.weight" in state_dict and "conv_first.weight" in state_dict:
         nb = 6 if "RealESRGAN_x4plus_anime_6B" in filename else 23
@@ -186,5 +186,5 @@ def load_model(filename: str, device = "cuda"):
     model.load_state_dict(state_dict)
     model.eval()
 
-    return model
+    return model.to(device)
 
