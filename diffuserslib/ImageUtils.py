@@ -1,10 +1,11 @@
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from io import BytesIO
 from skimage import exposure
 from blendmodes.blend import blendLayers, BlendType
 import numpy as np
 import base64
 import cv2
+import math
 
 from IPython.display import display
 
@@ -72,7 +73,7 @@ def createMask(width, height, overlap, top=False, bottom=False, left=False, righ
     alpha_gradient = ImageDraw.Draw(alpha)
     a = 0
     i = 0
-    shape = ((width, height), (0,0))
+    shape = ((0,0), (width, height))
     while i < overlap:
         alpha_gradient.rectangle(shape, fill = a)
         i += 1
@@ -81,7 +82,7 @@ def createMask(width, height, overlap, top=False, bottom=False, left=False, righ
         y1 = 0 if top else i
         x2 = width if right else width-i
         y2 = height if bottom else height-i
-        shape = ((x2, y2), (x1,y1))
+        shape = ((x1, y1), (x2, y2))
 
     mask = Image.new('RGBA', (width, height), color=0)
     mask.putalpha(alpha)
@@ -112,9 +113,9 @@ def cv2ToPil(cv2_image):
     return Image.fromarray(cv2_image, "RGBA")
 
 
-def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overlap=128, callback=None):
-    xslices = math.ceil((initimg.width) / (tilewidth-overlap))
-    yslices = math.ceil((initimg.height) / (tileheight-overlap))
+def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overlap=128, reduceEdges = False, scale=1, callback=None):
+    xslices = math.ceil((initimg.width-overlap) / (tilewidth-overlap))
+    yslices = math.ceil((initimg.height-overlap) / (tileheight-overlap))
     totalslices = xslices * yslices
     slicesdone = 0
     print(f'Processing {xslices} x {yslices} slices')
@@ -123,9 +124,10 @@ def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overl
 
     if(overlap >= 0):
         merged_image = initimg.convert("RGBA")
+        merged_image = merged_image.resize((initimg.width*scale, initimg.height*scale), resample=Image.BICUBIC)
     else:
         # if overlap is negative create new transparent image to leave gaps between tiles
-        merged_image = Image.new("RGBA", size=initimg.size, color=(255, 255, 255, 0))
+        merged_image = Image.new("RGBA", size=(initimg.width*scale, initimg.height*scale), color=(255, 255, 255, 0))
 
     # split into slices
     for yslice in range(yslices):
@@ -134,27 +136,41 @@ def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overl
             bottom = (yslice == yslices-1)
             left = (xslice == 0)
             right = (xslice == xslices-1)
-            x = (xslice * (tilewidth - overlap))
-            y = (yslice * (tileheight - overlap))
-            
-            if(overlap >= 0):
-                image_slice = merged_image.crop((x, y, x+tilewidth, y+tileheight))
-            else:
-                image_slice = initimg.crop((x, y, x+tilewidth, y+tileheight))
+            xleft = (xslice * (tilewidth - overlap))
+            ytop = (yslice * (tileheight - overlap))
+            xright = xleft + tilewidth
+            ybottom = ytop + tileheight
+            if(reduceEdges):
+                if(bottom):
+                    ybottom = initimg.height
+                if(right):
+                    xright = initimg.width
 
+            if(overlap >= 0 and scale == 1): 
+                # if possible take slice from merged image to include overlapped portions
+                image_slice = merged_image.crop((xleft, ytop, xright, ybottom))
+            else:
+                image_slice = initimg.crop((xleft, ytop, xright, ybottom))
+
+            # process image tile
             image_slice = image_slice.convert("RGB")
-            imageout_slice = processor(initimage=image_slice)
+            imageout_slice = processor(image_slice)
+            display(imageout_slice)
             # imageout_slice = applyColourCorrection(image_slice, imageout_slice)
             
+            # merge image tile back into output image
             if(overlap >= 0):
-                mask = createMask(tilewidth, tileheight, overlap/2, top, bottom, left, right)
+                mask = createMask(tilewidth*scale, tileheight*scale, overlap/2, top, bottom, left, right)
+                imageout_slice = imageout_slice.convert("RGBA")
+                if(imageout_slice.width != mask.width or imageout_slice.height != mask.height):
+                    imageout_slice = ImageOps.expand(imageout_slice, border=(0, 0, mask.width-imageout_slice.width, mask.height-imageout_slice.height), fill=(0, 0, 0, 0))
                 imr, img, imb, _ = imageout_slice.split()
                 mmr, mmg, mmb, mma = mask.split()
                 finished_slice = Image.merge('RGBA', [imr, img, imb, mma])  # we want the RGB from the original, but the transparency from the mask
             else:
                 finished_slice = imageout_slice.convert("RGBA")
 
-            merged_image.alpha_composite(finished_slice, (x, y))
+            merged_image.alpha_composite(finished_slice, (xleft*scale, ytop*scale))
 
             if(callback is not None):
                 slicesdone = slicesdone + 1

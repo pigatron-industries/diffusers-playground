@@ -1,56 +1,50 @@
 import os, subprocess, sys
 from PIL import Image
 from pathlib import Path
+from .ESRGAN_upscaler import ESRGANUpscaler
 
 DEFAULT_CLIP_MODEL = "ViT-L-14/openai"
 
 
 def chdirWorkspaceDirectory(subfolder):
     filepath = os.path.dirname(os.path.realpath(__file__))
-    dir = os.path.normpath(os.path.join(filepath, "../workspace/src/" + subfolder))
+    dir = os.path.normpath(os.path.join(filepath, "../../workspace/src/" + subfolder))
+    os.chdir(dir)
+
+
+def chdirRootDirectory(subfolder = ""):
+    filepath = os.path.dirname(os.path.realpath(__file__))
+    dir = os.path.normpath(os.path.join(filepath, "../../" + subfolder))
     os.chdir(dir)
 
 
 def addToolPath(subfolder):
     filepath = os.path.dirname(os.path.realpath(__file__))
-    dir = os.path.normpath(os.path.join(filepath, "../workspace/src/" + subfolder))
+    dir = os.path.normpath(os.path.join(filepath, "../../workspace/src/" + subfolder))
     print(f"toolpath: {dir}")
     sys.path.append(dir)
 
 
 class ImageTools():
-    def __init__(self):
+    def __init__(self, device = 'cuda'):
         self.addToolPaths()
+        self.device = device
         self.clipInterrogator = None
 
 
     def addToolPaths(self):
-        addToolPath("esrgan")
         addToolPath("blip")
         addToolPath("clip-interrogator")
         addToolPath("nafnet")
 
 
-    def upscaleEsrgan(self, inimage, scale=4, model="remacri", cpu=False):
-        prevcwd = os.getcwd()
-        chdirWorkspaceDirectory("esrgan")
-        infile = "input/work.png"
-        outfile = "output/work.png"
-        model = f'4x_{model}.pth'
-        inimage.save(infile)
-        if os.path.exists(outfile):
-            os.remove(outfile)
-
-        subprocess.call(f'python upscale.py {model} --cpu', shell=True)    
-
-        # from upscale import Upscale
-        # upscale = Upscale(model = model, input=Path("input"), output=Path("output"))
-        # upscale.run()
-
-        outimage = Image.open(outfile)
+    def upscaleEsrgan(self, inimage, scale=4, model="remacri", tilewidth=512+64, tileheight=512+64, overlap=64):
+        chdirRootDirectory()
+        upscaler = ESRGANUpscaler(f'models/esrgan/4x_{model}.pth', device=self.device)
+        outimage = upscaler.upscaleTiled(inimage, scale=scale, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap)
+        # outimage = upscaler.upscale(inimage)
         if (scale != 4):
             outimage = outimage.resize((inimage.width*scale, inimage.height*scale))
-        os.chdir(prevcwd)
         return outimage
 
 

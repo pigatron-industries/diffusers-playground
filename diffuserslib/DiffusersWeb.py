@@ -4,7 +4,7 @@ from threading import Thread
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
-from .ImageTools import ImageTools
+from .imagetools.ImageTools import ImageTools
 from .processing.TransformerProcessors import *
 from .processing.FilterProcessors import *
 from .processing.ProcessingPipelineFactory import ProcessingPipelineBuilder

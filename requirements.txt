@@ -29,6 +29,5 @@ timm
 fairscale
 
 # esrgan
+lmdb
 opencv-python
-typer
-rich

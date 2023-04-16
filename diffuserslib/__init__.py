@@ -1,7 +1,7 @@
 from .DiffusersModelPresets import *
 from .DiffusersWeb import *
 from .TrainTextEmbedding import *
-from .ImageTools import *
+from .imagetools.ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
 from .FileUtils import *
@@ -28,3 +28,5 @@ from .processing.TransformerProcessors import *
 from .processing.FilterProcessors import *
 from .processing.GeometryProcessors import *
 from .processing.ProcessingPipelineFactory import *
+
+from .imagetools.ImageTools import *

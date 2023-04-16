@@ -4,17 +4,11 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=False, rife=False, nafnet=False):
+def setup(colab=False, clipInterrogator=False, diffuserScripts=False, rife=False, nafnet=False):
     runcmd(['mkdir -p workspace'], True)
     os.chdir("workspace")
     runcmd(['mkdir -p models'], True)
     runcmd('pwd')
-
-    if(esrgan):
-        runcmd(['pip', 'install', '-e', 'git+https://github.com/joeyballentine/ESRGAN.git#egg=esrgan'])
-        runcmd(['cp ../models/esrgan/* src/esrgan/models'], True)
-        runcmd(['rm src/esrgan/input/*'], True)
-        runcmd(['rm src/esrgan/output/*'], True)
 
     if(clipInterrogator):
         runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/BLIP.git@lib#egg=blip'])
@@ -37,5 +31,5 @@ def setup(colab=False, esrgan=False, clipInterrogator=False, diffuserScripts=Fal
 
 
 if __name__ == "__main__":
-    setup(colab=False, esrgan=True, clipInterrogator=True, diffuserScripts=True, rife=True, nafnet=True)
+    setup(colab=False, clipInterrogator=True, diffuserScripts=True, rife=True, nafnet=True)
 
