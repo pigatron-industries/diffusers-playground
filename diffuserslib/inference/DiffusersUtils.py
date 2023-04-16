@@ -20,7 +20,7 @@ def tiledImageToImage(pipelines:DiffusersPipelines, initimg, prompt, negprompt, 
         image, _ = pipelines.imageToImage(initimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, scheduler=scheduler, seed=seed, model=model)
         return image
     
-    return tiledImageProcessor(imageToImage, initimg, tilewidth, tileheight, overlap, callback)
+    return tiledImageProcessor(imageToImage, initimg, tilewidth, tileheight, overlap, callback), seed
 
 
 def tiledImageToImageOffset(pipelines:DiffusersPipelines, initimg, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
