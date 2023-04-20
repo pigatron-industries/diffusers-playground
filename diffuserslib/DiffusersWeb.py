@@ -142,7 +142,7 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.controlNet(initimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodel)
+                outimage, usedseed = self.pipelines.controlNet(controlimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodel)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
