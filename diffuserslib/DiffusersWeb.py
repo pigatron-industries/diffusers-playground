@@ -118,6 +118,8 @@ class DiffusersView(FlaskView):
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
+            print(f'Control Models: {controlmodels}')
+            print(f'Control Images: {len(controlimages)}')
 
             controlimages = base64DecodeImages(controlimages)
             outputimages = []
@@ -126,7 +128,9 @@ class DiffusersView(FlaskView):
                 if(len(controlimages) == 1):
                     outimage, usedseed = self.pipelines.imageToImage(initimage=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 else:
-                    outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=controlimages[0], controlimage=controlimages.pop(0), prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
+                    initimage=controlimages[0]
+                    controlimages.pop(0)
+                    outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 

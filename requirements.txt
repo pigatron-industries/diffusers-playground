@@ -1,6 +1,6 @@
 # diffusers
 huggingface_hub
-diffusers==0.14.0
+diffusers==0.15.1
 transformers==4.27.2
 # xformers
 accelerate==0.17.1
