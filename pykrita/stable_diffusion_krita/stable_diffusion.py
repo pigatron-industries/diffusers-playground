@@ -14,11 +14,9 @@ class SDDocker(DockWidget):
 
         btnTxt2Txt = QPushButton("Txt 2 Img", mainWidget)
         btnImg2Img = QPushButton("Img 2 Img", mainWidget)
-        btnControlNet = QPushButton("Control Net", mainWidget)
         h_layout1 = QHBoxLayout()
         h_layout1.addWidget(btnTxt2Txt) 
         h_layout1.addWidget(btnImg2Img)
-        h_layout1.addWidget(btnControlNet)   
         mainWidget.layout().addLayout(h_layout1)
 
         btnUpscale = QPushButton("Upscale", mainWidget)
@@ -50,7 +48,6 @@ class SDDocker(DockWidget):
 
         btnTxt2Txt.clicked.connect(sd_main.TxtToImage)
         btnImg2Img.clicked.connect(sd_main.ImageToImage)
-        btnControlNet.clicked.connect(sd_main.ControlNet)
         btnInpaint.clicked.connect(sd_main.Inpaint)
         btnUpscale.clicked.connect(sd_main.Upscale)
         btnTiledImg2Img.clicked.connect(sd_main.TiledImageToImage)

@@ -56,13 +56,15 @@ def createRequest(params):
         method = params.tile_method
 
     # move init image to front of image list
+    controlmodels = params.controlmodels
     if(params.images64 is not None and len(params.images64) > 0):
-        if(params.controlmodels.count(INIT_IMAGE_MODEL) > 1):
+        controlmodels = params.controlmodels.copy()
+        if(controlmodels.count(INIT_IMAGE_MODEL) > 1):
             raise Exception("Multiple init images found in image list")
         try:
-            initIndex = params.controlmodels.index(INIT_IMAGE_MODEL)
+            initIndex = controlmodels.index(INIT_IMAGE_MODEL)
             params.images64.insert(0, params.images64.pop(initIndex))
-            params.controlmodels.pop(initIndex)
+            controlmodels.pop(initIndex)
         except ValueError:
             pass
 
@@ -71,7 +73,7 @@ def createRequest(params):
         'prompt': params.prompt,
         'negprompt': params.negprompt,
         'controlimages': params.images64,
-        'controlmodels': params.controlmodels,
+        'controlmodels': controlmodels,
         'steps':params.steps,
         'scheduler':params.scheduler,
         'mask_blur': SDConfig.inpaint_mask_blur,
@@ -98,7 +100,6 @@ def createRequest(params):
 
 
 def getServerDataAsync(action, params):
-    print(params.controlmodels)
     if(action == "img2img" and INIT_IMAGE_MODEL not in params.controlmodels):
         action = "txt2img"
 

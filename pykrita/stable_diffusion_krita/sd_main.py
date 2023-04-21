@@ -235,7 +235,6 @@ class ModifierDialog(QDialog):
 fields = {
     'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'scheduler'],
     'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'scale', 'seed', 'num', 'image', 'scheduler'],
-    'controlnet':      ['prompt', 'negprompt', 'model', 'control_model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
     'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
@@ -286,13 +285,6 @@ class SDDialog(QDialog):
             self.model.addItems([""] + modelids)
             self.model.setCurrentText(data.get("model", "runwayml/stable-diffusion-v1-5"))
             formLayout.addWidget(self.model)
-
-        if('control_model' in actionfields):
-            formLayout.addWidget(QLabel("Control Model"))
-            self.control_model = QComboBox()
-            self.control_model.addItems(controlmodelids)
-            self.control_model.setCurrentText(data.get("control_model", "lllyasviel/sd-controlnet-canny"))
-            formLayout.addWidget(self.control_model)
 
         if('negprompt' in actionfields):
             formLayout.addWidget(QLabel("Negative"))
@@ -408,6 +400,9 @@ class SDDialog(QDialog):
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
 
+        print("SDDialog.__init__")
+        print(data["controlmodels"])
+
         if('image' in actionfields):
             control_models = getModels("control")
             self.controlmodelids = [control_model["modelid"] for control_model in control_models]
@@ -507,6 +502,8 @@ class SDDialog(QDialog):
             SDConfig.dlgData["controlmodels"] = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
                 SDConfig.dlgData["controlmodels"].append(control_model_dropdown.currentText())
+            print("setDlgData")
+            print(SDConfig.dlgData["controlmodels"])
         SDConfig.save(SDConfig)
 
 
@@ -767,31 +764,9 @@ def ImageToImage():
         p.images64=images64
         p.controlmodels = data["controlmodels"]
         p.strength=data["strength"]
-        runSD(p)
 
-
-def ControlNet():
-    images = getLayerSelections()
-    images64 = base64EncodeImages(images)
-    dlg = SDDialog("controlnet", images)
-    dlg.resize(900,200)
-
-    if dlg.exec():
-        dlg.setDlgData()
-        p = SDParameters()
-        p.prompt=getFullPrompt(dlg)
-        if not p.prompt: return
-        data=SDConfig.dlgData
-        p.action="controlnet"
-        p.model = data["model"]
-        p.control_model = data["control_model"]
-        p.negprompt = data["negprompt"]
-        p.steps=data["steps"]
-        p.seed=data["seed"]
-        p.num=data["num"]
-        p.scale=data["scale"]
-        p.scheduler=data["scheduler"]
-        p.images64=images64
+        print("ImageToImage")
+        print(p.controlmodels)
         runSD(p)
 
 
@@ -837,16 +812,10 @@ def Upscale():
         dlg.setDlgData()
         params = SDParameters()
         params.prompt=getFullPrompt(dlg)
-        # if not params.prompt: return
         data=SDConfig.dlgData
         params.action = "upscale"
-        # params.steps = data["steps"]
-        # params.seed = data["seed"]
         params.num = 1
-        # params.scale = data["scale"]
         params.images64 = images64
-        # params.strength = data["strength"]
-        # p.scheduler=data["scheduler"]
         params.upscale_amount = data["upscale_amount"]
         params.upscale_method = data["upscale_method"]
         runSD(params)
