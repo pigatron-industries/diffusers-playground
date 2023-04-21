@@ -416,17 +416,20 @@ class SDDialog(QDialog):
             self.control_model_dropdowns = []
             tabs = QTabWidget()
             for i, image in enumerate(images):
-                self.addImageTab(tabs, image, i)
+                self.addImageTab(tabs, image, i, data)
             self.layout.addWidget(tabs)
 
         self.setLayout(self.layout)
 
 
-    def addImageTab(self, tabs, image, i):
+    def addImageTab(self, tabs, image, i, data):
         tabWidget = QWidget()
         tabLayout = QVBoxLayout()      
         control_model_dropdown = QComboBox()
         control_model_dropdown.addItems(self.controlmodelids)
+        savedvalue = data.get("controlmodels", [INIT_IMAGE_MODEL])
+        if i < len(savedvalue):
+            control_model_dropdown.setCurrentText(savedvalue[i])
         self.control_model_dropdowns.append(control_model_dropdown)
         imgLabel = QLabel()
         imgLabel.setPixmap(self.maxSizePixmap(image, (1024, 1024)))

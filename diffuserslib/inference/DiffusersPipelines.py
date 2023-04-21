@@ -342,7 +342,7 @@ class DiffusersPipelines:
 
     def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
         pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel)
-        initimage = initimage.convert("RGB")
+        controlimage = controlimage.convert("RGB")
         return self.inference(prompt=prompt, image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
     

@@ -30,7 +30,8 @@ class SDConfig:
         "tile_overlap": 128,
         "tile_alignmentx": "tile_centred",
         "tile_alignmenty": "tile_centred",
-        "process": ""
+        "process": "",
+        "controlmodels": []
     }
 
 

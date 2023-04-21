@@ -98,6 +98,10 @@ def createRequest(params):
 
 
 def getServerDataAsync(action, params):
+    print(params.controlmodels)
+    if(action == "img2img" and INIT_IMAGE_MODEL not in params.controlmodels):
+        action = "txt2img"
+
     data = createRequest(params)
     reqData = json.dumps(data).encode("utf-8")
     endpoint=SDConfig.url

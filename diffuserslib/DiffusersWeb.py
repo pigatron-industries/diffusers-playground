@@ -91,6 +91,7 @@ class DiffusersView(FlaskView):
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
+            print(f'Control Models: {controlmodels}')
 
             controlimages = base64DecodeImages(controlimages)
             outputimages = []
