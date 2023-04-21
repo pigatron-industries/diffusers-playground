@@ -234,7 +234,7 @@ class ModifierDialog(QDialog):
 
 fields = {
     'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'scheduler'],
-    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
     'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
@@ -341,7 +341,6 @@ class SDDialog(QDialog):
 
         if('steps' in actionfields):
             steps_label=QLabel("Steps")
-            steps_label.setToolTip("more steps = slower but often better quality. Recommendation start with lower step like 15 and update in image overview with higher one like 50")
             formLayout.addWidget(steps_label)        
             self.steps=self.addSlider(formLayout,data["steps"],1,250,5,1)
 
@@ -400,9 +399,6 @@ class SDDialog(QDialog):
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
 
-        print("SDDialog.__init__")
-        print(data["controlmodels"])
-
         if('image' in actionfields):
             control_models = getModels("control")
             self.controlmodelids = [control_model["modelid"] for control_model in control_models]
@@ -422,6 +418,7 @@ class SDDialog(QDialog):
         tabLayout = QVBoxLayout()      
         control_model_dropdown = QComboBox()
         control_model_dropdown.addItems(self.controlmodelids)
+        control_model_dropdown.currentIndexChanged.connect(self.controlModelChanged)
         savedvalue = data.get("controlmodels", [INIT_IMAGE_MODEL])
         if i < len(savedvalue):
             control_model_dropdown.setCurrentText(savedvalue[i])
@@ -432,6 +429,18 @@ class SDDialog(QDialog):
         tabLayout.addWidget(imgLabel)
         tabWidget.setLayout(tabLayout)
         tabs.addTab(tabWidget, f"Image {i}")
+
+    
+    def controlModelChanged(self, index):
+        action = "txt2img"
+        for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
+            if (control_model_dropdown.getCurrentText() == INIT_IMAGE_MODEL):
+                action = "img2img"
+                break
+        print("controlModelChanged", action)
+
+        
+                
 
 
     def maxSizePixmap(self, image, max_size):
@@ -502,8 +511,6 @@ class SDDialog(QDialog):
             SDConfig.dlgData["controlmodels"] = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
                 SDConfig.dlgData["controlmodels"].append(control_model_dropdown.currentText())
-            print("setDlgData")
-            print(SDConfig.dlgData["controlmodels"])
         SDConfig.save(SDConfig)
 
 
@@ -764,9 +771,6 @@ def ImageToImage():
         p.images64=images64
         p.controlmodels = data["controlmodels"]
         p.strength=data["strength"]
-
-        print("ImageToImage")
-        print(p.controlmodels)
         runSD(p)
 
 
@@ -872,6 +876,7 @@ def getParametersForAction(action, data):
 def Inpaint():    
     images = getLayerSelections()
     images64 = base64EncodeImages(images)
+    image = images[0]
 
     foundTrans=False
     foundPixel=False
@@ -890,12 +895,9 @@ def Inpaint():
     if (foundPixel==False):
         errorMessage("No  pixels found","Maybe wrong layer selected? Choose one with some content n it.")
         return        
-    data = QByteArray()
-    ba=data.toBase64()
-    DataAsString=str(ba,"ascii")
     SDConfig.load(SDConfig)
     image = image.scaled(384, 384, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # preview smaller
-    dlg = SDDialog("inpaint",image)
+    dlg = SDDialog("inpaint",images) 
     dlg.resize(900,200)
 
     if dlg.exec():

@@ -251,7 +251,7 @@ class DiffusersView(FlaskView):
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-            controlimage = base64DecodeImage(controlimages)[0]
+            controlimage = base64DecodeImages(controlimages)[0]
             if maskimage is None:
                 maskimage = alphaToMask(controlimage)
             else:
