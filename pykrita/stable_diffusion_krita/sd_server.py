@@ -8,8 +8,97 @@ import time
 import json
 
 
+class SDParameters:
+    "This is Stable Diffusion Parameter Class"     
+    model = None
+    control_model = None
+    prompt = ""
+    negprompt = ""
+    steps = 0
+    seed = 0
+    num =0
+    strength=1.0
+    scale=0.5
+    seedList =["","","",""]
+    imageDialog = None
+    regenerate = False
+    images64 = []
+    controlmodels = []
+    maskImage64=""
+    scheduler="DPMSolverMultistepScheduler"
+    inpaint_mask_blur=4
+    inpaint_mask_content="latent noise" 
+    action="txt2img"
+    strength = 1 
+    upscale_amount = 1
+    upscale_method = None
+    tile_method = None
+    tile_width = None
+    tile_height = None
+    tile_overlap = None
+    tile_alignmentx = None
+    tile_alignmenty = None
+    process = None
 
-def getServerDataAsync(action, data):
+
+INIT_IMAGE_MODEL = "Init Image"
+
+
+def createRequest(params):
+    if (not params.seed): 
+        seed=None
+    else: 
+        seed=int(params.seed)
+    method = None
+    if(params.upscale_method is not None):
+        method = params.upscale_method
+    elif(params.tile_method is not None):
+        method = params.tile_method
+
+    # move init image to front of image list
+    if(params.images64 is not None and len(params.images64) > 0):
+        if(params.controlmodels.count(INIT_IMAGE_MODEL) > 1):
+            raise Exception("Multiple init images found in image list")
+        try:
+            initIndex = params.controlmodels.index(INIT_IMAGE_MODEL)
+            params.images64.insert(0, params.images64.pop(initIndex))
+            params.controlmodels.pop(initIndex)
+        except ValueError:
+            pass
+
+    request = { 
+        'model': params.model,
+        'prompt': params.prompt,
+        'negprompt': params.negprompt,
+        'controlimages': params.images64,
+        'controlmodels': params.controlmodels,
+        'steps':params.steps,
+        'scheduler':params.scheduler,
+        'mask_blur': SDConfig.inpaint_mask_blur,
+        'use_gfpgan': False,
+        'batch': params.num,
+        'scale': params.scale,
+        'strength': params.strength,
+        'seed':seed,
+        'height':SDConfig.height,
+        'width':SDConfig.width,
+        'method': method,
+        'amount': params.upscale_amount,
+        'upscale_overlap':64,
+        'inpaint_full_res':True,
+        'inpainting_mask_invert': 0,
+        'tilewidth': params.tile_width,
+        'tileheight': params.tile_height,
+        'tileoverlap': params.tile_overlap,
+        'tilealignmentx': params.tile_alignmentx,
+        'tilealignmenty': params.tile_alignmenty,
+        'process': params.process
+    }    
+    return request
+
+
+def getServerDataAsync(action, params):
+    data = createRequest(params)
     reqData = json.dumps(data).encode("utf-8")
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")
@@ -74,7 +163,8 @@ def getServerDataAsync(action, data):
 
 
 
-def getServerData(action, data):
+def getServerData(action, params):
+    data = createRequest(params)
     reqData = json.dumps(data).encode("utf-8")
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")

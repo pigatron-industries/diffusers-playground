@@ -46,37 +46,6 @@ class ModifierData:
 
 SDConfig.load(SDConfig)
 
-class SDParameters:
-    "This is Stable Diffusion Parameter Class"     
-    model = None
-    control_model = None
-    prompt = ""
-    negprompt = ""
-    steps = 0
-    seed = 0
-    num =0
-    strength=1.0
-    scale=0.5
-    seedList =["","","",""]
-    imageDialog = None
-    regenerate = False
-    image64=""
-    maskImage64=""
-    scheduler="DPMSolverMultistepScheduler"
-    inpaint_mask_blur=4
-    inpaint_mask_content="latent noise" 
-    action="txt2img"
-    strength = 1 
-    upscale_amount = 1
-    upscale_method = None
-    tile_method = None
-    tile_width = None
-    tile_height = None
-    tile_overlap = None
-    tile_alignmentx = None
-    tile_alignmenty = None
-    process = None
-
 
 def createSlider(dialog,layout,value,min,max,steps,divider):
     h_layout =  QHBoxLayout()
@@ -278,7 +247,7 @@ fields = {
 
 # default dialog for image generation: txt2img, img2img and inpainting
 class SDDialog(QDialog):
-    def __init__(self,action,image):
+    def __init__(self, action, images):
         super().__init__(None)
         SDConfig.dlgData["action"]=action
         data=SDConfig.dlgData
@@ -321,10 +290,7 @@ class SDDialog(QDialog):
         if('control_model' in actionfields):
             formLayout.addWidget(QLabel("Control Model"))
             self.control_model = QComboBox()
-            control_models = getModels("control")
-            modelids = [control_model["modelid"] for control_model in control_models]
-            modelids.sort()
-            self.control_model.addItems(modelids)
+            self.control_model.addItems(controlmodelids)
             self.control_model.setCurrentText(data.get("control_model", "lllyasviel/sd-controlnet-canny"))
             formLayout.addWidget(self.control_model)
 
@@ -443,13 +409,38 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.buttonBox)
 
         if('image' in actionfields):
-            imgLabel=QLabel()        
-            self.layout.addWidget(imgLabel) 
-            if(image.height() > 1024 or image.width() > 1024):
-                imgLabel.setPixmap(QPixmap.fromImage(image).scaled(1024,1024,Qt.KeepAspectRatio))
-            else:
-                imgLabel.setPixmap(QPixmap.fromImage(image))
+            control_models = getModels("control")
+            self.controlmodelids = [control_model["modelid"] for control_model in control_models]
+            self.controlmodelids.sort()
+            self.controlmodelids.insert(0, INIT_IMAGE_MODEL)
+            self.control_model_dropdowns = []
+            tabs = QTabWidget()
+            for i, image in enumerate(images):
+                self.addImageTab(tabs, image, i)
+            self.layout.addWidget(tabs)
+
         self.setLayout(self.layout)
+
+
+    def addImageTab(self, tabs, image, i):
+        tabWidget = QWidget()
+        tabLayout = QVBoxLayout()      
+        control_model_dropdown = QComboBox()
+        control_model_dropdown.addItems(self.controlmodelids)
+        self.control_model_dropdowns.append(control_model_dropdown)
+        imgLabel = QLabel()
+        imgLabel.setPixmap(self.maxSizePixmap(image, (1024, 1024)))
+        tabLayout.addWidget(control_model_dropdown)
+        tabLayout.addWidget(imgLabel)
+        tabWidget.setLayout(tabLayout)
+        tabs.addTab(tabWidget, f"Image {i}")
+
+
+    def maxSizePixmap(self, image, max_size):
+        if image.width() > max_size[0] or image.height() > max_size[1]:
+            return QPixmap.fromImage(image).scaled(max_size[0], max_size[1], Qt.KeepAspectRatio)
+        else:
+            return QPixmap.fromImage(image)
 
     # TODO replace with common createSlider 
     def addSlider(self,layout,value,min,max,steps,divider):
@@ -509,6 +500,10 @@ class SDDialog(QDialog):
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
         if('process' in actionfields):
             SDConfig.dlgData["process"]=self.process.currentText()
+        if('image' in actionfields):
+            SDConfig.dlgData["controlmodels"] = []
+            for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
+                SDConfig.dlgData["controlmodels"].append(control_model_dropdown.currentText())
         SDConfig.save(SDConfig)
 
 
@@ -680,55 +675,13 @@ def getModels(type):
 
 
 def runSD(params: SDParameters, asynchronous=True):
-    # dramatic interface change needed!
-    Colab=True
-    if (SDConfig.type=="Local"): Colab=False
-    if (not params.seed): seed=None
-    else: seed=int(params.seed)
-    inpainting_fill_options= ['fill', 'original', 'latent noise', 'latent nothing',"g-diffusion"]
-    inpainting_fill=inpainting_fill_options.index(SDConfig.inpaint_mask_content)
-    method = None
-    if(params.upscale_method is not None):
-        method = params.upscale_method
-    elif(params.tile_method is not None):
-        method = params.tile_method
-    j = { 
-        'model': params.model,
-        'controlmodel': params.control_model,
-        'prompt': params.prompt,
-        'negprompt': params.negprompt,
-        'initimage': params.image64,
-        'steps':params.steps,
-        'scheduler':params.scheduler,
-        'mask_blur': SDConfig.inpaint_mask_blur,
-        'inpainting_fill':inpainting_fill,
-        'use_gfpgan': False,
-        'batch': params.num,
-        'scale': params.scale,
-        'strength': params.strength,
-        'seed':seed,
-        'height':SDConfig.height,
-        'width':SDConfig.width,
-        'method': method,
-        'amount': params.upscale_amount,
-        'upscale_overlap':64,
-        'inpaint_full_res':True,
-        'inpainting_mask_invert': 0,
-        'tilewidth': params.tile_width,
-        'tileheight': params.tile_height,
-        'tileoverlap': params.tile_overlap,
-        'tilealignmentx': params.tile_alignmentx,
-        'tilealignmenty': params.tile_alignmenty,
-        'process': params.process
-    }    
-
-    print(j)
     if (asynchronous):
-        res=getServerDataAsync(params.action, j)
+        res=getServerDataAsync(params.action, params)
     else:
-        res=getServerData(params.action, j)
+        res=getServerData(params.action, params)
 
-    if not res: return    
+    if not res: 
+        return    
     response=json.loads(res)
     # print(response)
     num = len(response["images"])
@@ -789,10 +742,9 @@ def TxtToImage():
 
 
 def ImageToImage():
-    image = getLayerSelection()
-    image64 = base64EncodeImage(image)
-    
-    dlg = SDDialog("img2img",image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
+    dlg = SDDialog("img2img",images)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -809,16 +761,16 @@ def ImageToImage():
         p.num=data["num"]
         p.scale=data["scale"]
         p.scheduler=data["scheduler"]
-        p.image64=image64
+        p.images64=images64
+        p.controlmodels = data["controlmodels"]
         p.strength=data["strength"]
         runSD(p)
 
 
 def ControlNet():
-    image = getLayerSelection()
-    image64 = base64EncodeImage(image)
-    
-    dlg = SDDialog("controlnet",image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
+    dlg = SDDialog("controlnet", images)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -836,15 +788,15 @@ def ControlNet():
         p.num=data["num"]
         p.scale=data["scale"]
         p.scheduler=data["scheduler"]
-        p.image64=image64
+        p.images64=images64
         runSD(p)
 
 
 def TiledImageToImage():
-    image = getLayerSelection();
-    image64 = base64EncodeImage(image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
     
-    dlg = SDDialog("img2imgTiled",image)
+    dlg = SDDialog("img2imgTiled", images)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -861,7 +813,7 @@ def TiledImageToImage():
         p.num=1
         p.scale=data["scale"]
         p.scheduler=data["scheduler"]
-        p.image64=image64
+        p.images64=images64
         p.strength=data["strength"]
         p.tile_method=data["tile_method"]
         p.tile_width=data["tile_width"]
@@ -873,9 +825,9 @@ def TiledImageToImage():
 
 
 def Upscale(): 
-    image = getLayerSelection();
-    image64 = base64EncodeImage(image)
-    dlg = SDDialog("upscale", image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
+    dlg = SDDialog("upscale", images)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -889,7 +841,7 @@ def Upscale():
         # params.seed = data["seed"]
         params.num = 1
         # params.scale = data["scale"]
-        params.image64 = image64
+        params.images64 = images64
         # params.strength = data["strength"]
         # p.scheduler=data["scheduler"]
         params.upscale_amount = data["upscale_amount"]
@@ -898,9 +850,9 @@ def Upscale():
 
 
 def Preprocess():
-    image = getLayerSelection();
-    image64 = base64EncodeImage(image)
-    dlg = SDDialog("preprocess",image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
+    dlg = SDDialog("preprocess", images)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -909,15 +861,15 @@ def Preprocess():
         data=SDConfig.dlgData
         p.action="preprocess"
         p.process=data["process"]
-        p.image64=image64
+        p.images64=images64
         runSD(p)
 
 
 def InstructPixToPix():
-    image=getLayerSelection()
-    image64 = base64EncodeImage(image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
     
-    dlg = SDDialog("instructpix2pix",image)
+    dlg = SDDialog("instructpix2pix", images)
     dlg.resize(900,200)
 
     if dlg.exec():
@@ -931,7 +883,7 @@ def InstructPixToPix():
         p.num=data["num"]
         p.scale=data["scale"]
         p.scheduler=data["scheduler"]
-        p.image64=image64
+        p.images64=images64
         runSD(p)
 
 
@@ -946,8 +898,8 @@ def getParametersForAction(action, data):
 
 
 def Inpaint():    
-    image = getLayerSelection()
-    image64 = base64EncodeImage(image)
+    images = getLayerSelections()
+    images64 = base64EncodeImages(images)
 
     foundTrans=False
     foundPixel=False
@@ -989,7 +941,7 @@ def Inpaint():
         p.scale=data["scale"]
         p.strength=data["strength"]
         p.scheduler=data["scheduler"]
-        p.image64=image64
+        p.images64=images64
         runSD(p)
 
 # config dialog

@@ -53,10 +53,7 @@ class SDDocker(DockWidget):
         btnControlNet.clicked.connect(sd_main.ControlNet)
         btnInpaint.clicked.connect(sd_main.Inpaint)
         btnUpscale.clicked.connect(sd_main.Upscale)
-
-        # btnFaceEnhance.clicked.connect(sd_main.FaceEnhance)
         btnTiledImg2Img.clicked.connect(sd_main.TiledImageToImage)
-
         btnPreprocess.clicked.connect(sd_main.Preprocess)
         btnInstructPix2Pix.clicked.connect(sd_main.InstructPixToPix)
 

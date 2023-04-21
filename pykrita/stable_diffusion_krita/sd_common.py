@@ -42,20 +42,21 @@ def getSelection():
     return s   
 
 
-def getLayerSelection():
+def getLayerSelections():
     doc = getDocument()
     layers = getLayer()
     if (layers==None or len(layers)==0):
         return  
-    layer = layers[0]
     selection = doc.selection()
-    if(selection is None):
-        data = layer.pixelData(0, 0, doc.width(), doc.height())
-        image = QImage(data.data(),doc.width(),doc.height(),QImage.Format_RGBA8888).rgbSwapped()
-    else:
-        data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
-        image = QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
-    return image
+    images = []
+    for layer in layers:
+        if(selection is None):
+            data = layer.pixelData(0, 0, doc.width(), doc.height())
+            images.append(QImage(data.data(),doc.width(),doc.height(),QImage.Format_RGBA8888).rgbSwapped())
+        else:
+            data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
+            images.append(QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped())
+    return images
 
 
 def base64EncodeImage(image):
@@ -65,3 +66,10 @@ def base64EncodeImage(image):
     ba=data.toBase64()
     image64=str(ba,"ascii")
     return image64
+
+
+def base64EncodeImages(images):
+    images64 = []
+    for image in images:
+        images64.append(base64EncodeImage(image))
+    return images64

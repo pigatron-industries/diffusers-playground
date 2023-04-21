@@ -2,8 +2,8 @@ from flask import request, jsonify
 from flask_classful import FlaskView, route
 from threading import Thread
 from .inference.DiffusersPipelines import *
-from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledInpaint, tiledImageToImageInpaintSeams, compositedInpaint
-from .ImageUtils import base64EncodeImage, base64DecodeImage, alphaToMask, applyColourCorrection
+from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledImageToImageInpaintSeams, compositedInpaint
+from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
 from .imagetools.ImageTools import ImageTools
 from .processing.TransformerProcessors import *
 from .processing.FilterProcessors import *
@@ -85,17 +85,21 @@ class DiffusersView(FlaskView):
         self.job.status['done'] = done
 
     
-    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, batch=1, **kwargs):
+    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, controlimages=None, controlmodels=None, batch=1, **kwargs):
         try:
             print('=== txt2img ===')
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
 
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed, model=model)
+                if(controlimages is None or len(controlimages) == 0):
+                    outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed, model=model)
+                else:
+                    outimage, usedseed = self.pipelines.textToImageControlNet(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed, model=model, controlimage=controlimages, controlmodel=controlmodels)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -107,19 +111,21 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def img2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def img2imgRun(self, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlimages=None, controlmodels=None, batch=1, **kwargs):
         try:
             print('=== img2img ===')
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.imageToImage(initimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
-                # outimage = applyColourCorrection(initimage, outimage)
+                if(len(controlimages) == 1):
+                    outimage, usedseed = self.pipelines.imageToImage(initimage=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                else:
+                    outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=controlimages[0], controlimage=controlimages.pop(0), prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -131,41 +137,18 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def controlnetRun(self, initimage, seed=None, prompt="", negprompt="", steps=20, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodel=None, batch=1, **kwargs):
-        try:
-            print('=== controlnet ===')
-            print(f'Prompt: {prompt}')
-            print(f'Negative: {negprompt}')
-            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
-
-            initimage = base64DecodeImage(initimage)
-            outputimages = []
-            for i in range(0, batch):
-                self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.controlNet(controlimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodel)
-                display(outimage)
-                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
-
-            self.job.status = { "status":"finished", "action":"controlnet", "images": outputimages }
-            return self.job.status
-
-        except Exception as e:
-            self.job.status = { "status":"error", "action":"controlnet", "error":str(e) }
-            raise e
-
-
-    def depth2imgRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.5, scale=9, steps=50, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def depth2imgRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.5, scale=9, steps=50, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== depth2img ===')
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.depthToImage(inimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, steps=steps, seed=seed, scheduler=scheduler, model=model)
+                outimage, usedseed = self.pipelines.depthToImage(inimage=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, steps=steps, seed=seed, scheduler=scheduler, model=model)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -177,16 +160,16 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def imagevariationRun(self, initimage, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def imagevariationRun(self, controlimages, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== imagevar ===')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.imageVariation(initimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                outimage, usedseed = self.pipelines.imageVariation(initimage=controlimages[0], steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"imagevariation", "images": outputimages }
@@ -197,17 +180,17 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def instructpix2pixRun(self, initimage, prompt, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def instructpix2pixRun(self, controlimages, prompt, seed=None, steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== instructpix2pix ===')
             print(f'Prompt: {prompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = self.pipelines.instructPixToPix(prompt=prompt, initimage=initimage, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                outimage, usedseed = self.pipelines.instructPixToPix(prompt=prompt, initimage=controlimages[0], steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"instructpix2pix", "images": outputimages }
@@ -218,7 +201,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def img2imgTiledRun(self, initimage, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
+    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
                         method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
@@ -228,20 +211,20 @@ class DiffusersView(FlaskView):
             print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
             print(f'Method: {method}, Tile width: {tilewidth}, Tile height: {tileheight}, Tile Overlap: {tileoverlap}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImage(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if (method=="singlepass"):
-                    outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
                                                                   alignmentx=tilealignmentx, alignmenty=tilealignmenty, model=model, callback=self.updateProgress)
                 elif (method=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
                                                                     passes=2, strengthMult=0.5, model=model, callback=self.updateProgress)
                 elif (method=="inpaint_seams"):
-                    outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=initimage, prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                        scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, 
                                                                        model=model, overlap=tileoverlap)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -254,23 +237,23 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def inpaintRun(self, initimage, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
         try:
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimage = base64DecodeImage(controlimages)[0]
             if maskimage is None:
-                maskimage = alphaToMask(initimage)
+                maskimage = alphaToMask(controlimage)
             else:
                 maskimage = base64DecodeImage(maskimage)
 
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                outimage, usedseed = compositedInpaint(self.pipelines, initimage=controlimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -282,21 +265,21 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def upscaleRun(self, initimage, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, model=None, **kwargs):
+    def upscaleRun(self, controlimages, method="esrgan/remacri", amount=4, prompt="", scheduler="EulerDiscreteScheduler", batch=1, model=None, **kwargs):
         try:
             print('=== upscale ===')
             print(f'Method: {method}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if(method == "stable-difusion"):
-                    outimage = self.pipelines.upscale(inimage=initimage, prompt=prompt, scheduler=scheduler, model=model)
+                    outimage = self.pipelines.upscale(inimage=controlimages[0], prompt=prompt, scheduler=scheduler, model=model)
                 elif(method.startswith("esrgan")):
-                    outimage = self.tools.upscaleEsrgan(initimage, scale=amount, model=method.split('/')[1])
+                    outimage = self.tools.upscaleEsrgan(controlimages[0], scale=amount, model=method.split('/')[1])
                 else:
-                    outimage = self.tools.upscaleEsrgan(initimage, scale=amount)
+                    outimage = self.tools.upscaleEsrgan(controlimages[0], scale=amount)
                 outputimages.append({ "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"upscale", "images": outputimages }
@@ -307,15 +290,15 @@ class DiffusersView(FlaskView):
             raise e
         
 
-    def preprocessRun(self, initimage, process, **kwargs):
+    def preprocessRun(self, controlimages, process, **kwargs):
         try:
             print('=== preprocess ===')
             print(f'Process: {process}')
 
-            initimage = base64DecodeImage(initimage)
+            controlimages = base64DecodeImages(controlimages)
             processor = str_to_class(process + 'Processor')()
             
-            pipeline = ProcessingPipelineBuilder.fromImage(initimage)
+            pipeline = ProcessingPipelineBuilder.fromImage(controlimages[0])
             pipeline.pipeline.addTask(processor)
             outimage = pipeline()
 
