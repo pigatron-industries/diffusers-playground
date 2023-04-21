@@ -299,7 +299,7 @@ class DiffusersView(FlaskView):
             processor = str_to_class(process + 'Processor')()
             
             pipeline = ProcessingPipelineBuilder.fromImage(controlimages[0])
-            pipeline.pipeline.addTask(processor)
+            pipeline.addTask(processor)
             outimage = pipeline()
 
             self.job.status = { "status":"finished", "action":"preprocess", "images": [{"image":base64EncodeImage(outimage)}] }
