@@ -340,21 +340,6 @@ class DiffusersPipelines:
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel)
-        controlimage = controlimage.convert("RGB")
-        return self.inference(prompt=prompt, image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
-    
-
-    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
-        initimage = initimage.convert("RGB")
-        controlimage = controlimage.convert("RGB")
-        return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
-
-
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
         pipeline = self.createPipeline(StableDiffusionInpaintPipeline, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL)
         initimage = initimage.convert("RGB")
@@ -362,6 +347,28 @@ class DiffusersPipelines:
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
                               negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, 
                               scheduler=scheduler, tiling=tiling)
+    
+
+    def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
+        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel)
+        # if controlimage is a list
+        if(isinstance(controlimage, list)):
+            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
+        else:
+            controlimage = controlimage.convert("RGB")
+        return self.inference(prompt=prompt, image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
+                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+    
+
+    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
+        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
+        initimage = initimage.convert("RGB")
+        if(isinstance(controlimage, list)):
+            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
+        else:
+            controlimage = controlimage.convert("RGB")
+        return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
+                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
