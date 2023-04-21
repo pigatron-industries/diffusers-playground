@@ -122,14 +122,16 @@ class DiffusersView(FlaskView):
             print(f'Control Images: {len(controlimages)}')
 
             controlimages = base64DecodeImages(controlimages)
+            if(len(controlimages) > 1):
+                initimage = controlimages[0]
+                controlimages.pop(0)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if(len(controlimages) == 1):
                     outimage, usedseed = self.pipelines.imageToImage(initimage=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 else:
-                    initimage=controlimages[0]
-                    controlimages.pop(0)
                     outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
