@@ -53,6 +53,7 @@ class RandomImage(Argument):
     def fromDirectory(cls, directory):
         if os.path.isdir(directory):
             filelist = glob.glob(f'{directory}/*.png') + glob.glob(f'{directory}/*.jpg') + glob.glob(f'{directory}/*.jpeg')
+            print(f'Found {len(filelist)} images in {directory}')
         else:
             filelist = directory
         return cls(filelist)

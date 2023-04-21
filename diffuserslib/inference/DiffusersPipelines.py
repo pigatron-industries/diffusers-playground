@@ -299,7 +299,12 @@ class DiffusersPipelines:
             return self.pipelines["StableDiffusionControlNetPipeline"]
         if("StableDiffusionControlNetPipeline" in self.pipelines):
             del self.pipelines["StableDiffusionControlNetPipeline"]
-        controlnet = ControlNetModel.from_pretrained(controlmodel)
+        if(isinstance(controlmodel, list)):
+            controlnet = []
+            for cmodel in controlmodel:
+                controlnet.append(ControlNetModel.from_pretrained(cmodel))
+        else:
+            controlnet = ControlNetModel.from_pretrained(controlmodel)
         pipeline = self.createPipeline(cls, model, presets, default, controlnet=controlnet, **kwargs)
         pipeline.controlmodel = controlmodel
         return pipeline
@@ -342,11 +347,11 @@ class DiffusersPipelines:
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
-    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
+    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
         pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
         initimage = initimage.convert("RGB")
         controlimage = controlimage.convert("RGB")
-        return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
+        return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 

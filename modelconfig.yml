@@ -88,14 +88,19 @@ inpaint:
 controlnet:
   - base: sd_1_5
     models:
-      - id: lllyasviel/sd-controlnet-canny
-      - id: lllyasviel/sd-controlnet-depth
-      - id: lllyasviel/sd-controlnet-hed
-      - id: lllyasviel/sd-controlnet-mlsd
-      - id: lllyasviel/sd-controlnet-normal
-      - id: lllyasviel/sd-controlnet-openpose
-      - id: lllyasviel/sd-controlnet-scribble
-      - id: lllyasviel/sd-controlnet-seg
+      - id: lllyasviel/control_v11p_sd15_canny
+      - id: lllyasviel/control_v11f1p_sd15_depth
+      - id: lllyasviel/control_v11p_sd15_inpaint
+      - id: lllyasviel/control_v11p_sd15_lineart
+      - id: lllyasviel/control_v11p_sd15_mlsd
+      - id: lllyasviel/control_v11p_sd15_normalbae
+      - id: lllyasviel/control_v11p_sd15_openpose
+      - id: lllyasviel/control_v11p_sd15_scribble
+      - id: lllyasviel/control_v11p_sd15_seg
+      - id: lllyasviel/control_v11p_sd15_softedge
+      - id: lllyasviel/control_v11e_sd15_shuffle
+      - id: lllyasviel/control_v11u_sd15_tile
+     
   - base: sd_2_1_512
     models:
       - id: thibaud/controlnet-sd21-canny-diffusers

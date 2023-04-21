@@ -24,6 +24,51 @@ DEFAULT_PREPROCESSORS = {
     'noise': partial(GaussianNoiseProcessor, sigma=10),
 }
 
+INIT_IMAGE = "Init Image"
+
+
+class InitImageWidgets:
+    def __init__(self, interface, includeInitImage = False):
+        self.interface = interface
+        if (includeInitImage):
+            model_options = [INIT_IMAGE]+list(interface.pipelines.presetsControl.models.keys())
+        else:
+            model_options = list(interface.pipelines.presetsControl.models.keys())
+        self.model_dropdown = interface.dropdown(label="Control Model:", options=model_options, value=INIT_IMAGE if includeInitImage else None)
+        self.generation_dropdown = interface.dropdown(label="Generation:", options=list(interface.generation_pipelines.keys()), value=None)
+        self.input_dropdown = interface.dropdown(label="Input:", options=interface.input_dirs, value=None)
+        self.preprocessor_dropdown = interface.dropdown(label="Preprocessor:", options=[None]+list(interface.preprocessing_pipelines.keys()), value=None)
+
+    def display(self):
+        display(self.model_dropdown,
+                self.generation_dropdown,
+                self.input_dropdown,
+                self.preprocessor_dropdown,
+                widgets.HTML("<span>&nbsp;</span>"))
+        
+    def hide(self):
+        self.model_dropdown.layout.display = 'none'
+        self.generation_dropdown.layout.display = 'none'
+        self.input_dropdown.layout.display = 'none'
+        self.preprocessor_dropdown.layout.display = 'none'
+
+    def show(self):
+        self.model_dropdown.layout.display = 'block'
+        self.generation_dropdown.layout.display = 'block'
+        self.input_dropdown.layout.display = 'block'
+        self.preprocessor_dropdown.layout.display = 'block'
+
+    def createGenerationPipeline(self):
+        if(self.generation_dropdown.value is not None):
+            pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
+            if(self.preprocessor_dropdown.value is not None):
+                preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
+                pipeline.addTask(preprocessor())
+            if(pipeline.requireInputImage()):
+                pipeline.setInputImage(RandomImage.fromDirectory(self.input_dropdown.value))
+            return pipeline
+
+
 class BatchNotebookInterface:
     def __init__(self, pipelines:DiffusersPipelines, output_dir:str, modifier_dict=None, save_file:str='batch_params.pkl', 
                  generation_pipelines:Dict[str, ImageProcessorPipeline]={}, 
@@ -37,17 +82,17 @@ class BatchNotebookInterface:
         self.generation_pipelines = generation_pipelines
         self.preprocessing_pipelines = preprocessing_pipelines
 
-        self.type_dropdown = self.dropdown(label="Type:", options=["Text to image", "Image to image", "Control Net"], value="Text to image")
-
-        # Control Net
-        # TODO filter list to only show control nets for selected base model
-        self.controlmodel_dropdown = self.dropdown(label="Control Model:", options=list(pipelines.presetsControl.models.keys()), value=None)
-
         #  Init images
-        self.generationpipeline_dropdown = self.dropdown(label="Generation:", options=list(generation_pipelines.keys()), value=None)
-        self.generationinput_dropdown = self.dropdown(label="Input:", options=input_dirs, value=None)
-        self.preprocessing_dropdown = self.dropdown(label="Preprocessor:", options=[None]+list(self.preprocessing_pipelines.keys()), value=None)
+        self.initimages_num = self.intSlider(label='Input Images:', value=0, min=0, max=4, step=1)
 
+        # use an array of widgets instead
+        self.initimage_widgets = []
+        self.initimage_widgets.append(InitImageWidgets(self, includeInitImage=True))
+        self.initimage_widgets.append(InitImageWidgets(self))
+        self.initimage_widgets.append(InitImageWidgets(self))
+        self.initimage_widgets.append(InitImageWidgets(self))
+
+        #  Config
         self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presetsImage.models.keys()), value=None)
         self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
         self.loraweight_text = self.floatText(label="LORA weight:", value=1)
@@ -69,15 +114,15 @@ class BatchNotebookInterface:
                         .widget-label { min-width: 20ex !important; }
                     </style>''')
 
-        display(html, 
-                self.type_dropdown, 
-                self.controlmodel_dropdown,
-                self.generationpipeline_dropdown,
-                self.generationinput_dropdown,
-                self.preprocessing_dropdown,
-                self.model_dropdown, 
+        display(html,
+                self.initimages_num,
+                widgets.HTML("<span>&nbsp;</span>"))
+        for initimage_w in self.initimage_widgets:
+            initimage_w.display()
+        display(self.model_dropdown, 
                 self.lora_dropdown,
                 self.loraweight_text,
+                widgets.HTML("<span>&nbsp;</span>"),
                 self.prompt_text, 
                 self.shuffle_checkbox,
                 self.negprompt_text, 
@@ -94,37 +139,26 @@ class BatchNotebookInterface:
 
 
     def updateWidgets(self):
+        for i, initimage_w in enumerate(self.initimage_widgets):
+            if(i < self.initimages_num.value):
+                initimage_w.show()
+            else:
+                initimage_w.hide()
+
         if(self.model_dropdown.value is not None):
             self.lora_dropdown.options = [None] + self.pipelines.getLORAList(self.model_dropdown.value)
 
         if(self.lora_dropdown.value is not None):
-            self.loraweight_text.layout.visibility = 'visible'
+            self.loraweight_text.layout.display = 'flex'
         else:
-            self.loraweight_text.layout.visibility = 'hidden'
+            self.loraweight_text.layout.display = 'none'
 
-        if(self.type_dropdown.value == "Text to image"):
-            self.generationpipeline_dropdown.layout.visibility = 'hidden'
-            self.generationinput_dropdown.layout.visibility = 'hidden'
-            self.preprocessing_dropdown.layout.visibility = 'hidden'
+        if(self.initimages_num.value > 0 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+            self.strength_slider.layout.display = 'flex'
+            self.steps_slider.layout.display = 'none'
         else:
-            self.generationpipeline_dropdown.layout.visibility = 'visible'
-            self.preprocessing_dropdown.layout.visibility = 'visible'
-            if(self.generationpipeline_dropdown.value is not None and self.generation_pipelines[self.generationpipeline_dropdown.value].requireInputImage()):
-                self.generationinput_dropdown.layout.visibility = 'visible'
-            else:
-                self.generationinput_dropdown.layout.visibility = 'hidden'
-
-        if(self.type_dropdown.value == "Image to image"):
-            self.strength_slider.layout.visibility = 'visible'
-            self.steps_slider.layout.visibility = 'hidden'
-        else:
-            self.strength_slider.layout.visibility = 'hidden'
-            self.steps_slider.layout.visibility = 'visible'
-
-        if(self.type_dropdown.value == "Control Net"):
-            self.controlmodel_dropdown.layout.visibility = 'visible'
-        else:
-            self.controlmodel_dropdown.layout.visibility = 'hidden'
+            self.strength_slider.layout.display = 'none'
+            self.steps_slider.layout.display = 'flex'
 
     
     def onChange(self, change):
@@ -134,7 +168,6 @@ class BatchNotebookInterface:
 
     def getParams(self):
         params = {}
-        params['type'] = self.type_dropdown.value
         params['model'] = self.model_dropdown.value
         params['init_prompt'] = self.prompt_text.value
         params['shuffle'] = self.shuffle_checkbox.value
@@ -150,25 +183,30 @@ class BatchNotebookInterface:
             params['lora'] = self.lora_dropdown.value
             params['lora_weight'] = self.loraweight_text.value
 
-        if(self.type_dropdown.value != "Text to image"):
-            params['generationpipeline'] = self.generationpipeline_dropdown.value
-            self.preprocessing_dropdown.layout.visibility = 'visible'
-            params['initimage'] = self.generation_pipelines[self.generationpipeline_dropdown.value]
-            if(self.preprocessing_dropdown.value is not None):
-                preprocessor = self.preprocessing_pipelines[self.preprocessing_dropdown.value]
-                params['preprocessor'] = self.preprocessing_dropdown.value
-                params['initimage'].addTask(preprocessor())
-            if(self.generation_pipelines[self.generationpipeline_dropdown.value].requireInputImage()):
-                params['generationinput'] = self.generationinput_dropdown.value
-                params['initimage'].setInputImage(RandomImage.fromDirectory(self.generationinput_dropdown.value))
+        params['initimages_num'] = self.initimages_num.value
 
-        if(self.type_dropdown.value == "Image to image"):
+        for i, initimage_w in enumerate(self.initimage_widgets):
+            if(i >= self.initimages_num.value):
+                break
+            params[f'initimage{i}_model'] = initimage_w.model_dropdown.value
+            params[f'initimage{i}_generation'] = initimage_w.generation_dropdown.value
+            params[f'initimage{i}_input'] = initimage_w.input_dropdown.value
+            params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
+            pipeline = initimage_w.createGenerationPipeline()
+            if(initimage_w.model_dropdown.value == INIT_IMAGE):
+                params['initimage'] = pipeline
+            else:
+                if('controlimage' not in params):
+                    params['controlimage'] = []
+                if('controlmodel' not in params):
+                    params['controlmodel'] = []
+                params['controlimage'].append(pipeline)
+                params['controlmodel'].append(initimage_w.model_dropdown.value)
+
+        if(self.initimages_num.value > 0 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
             params['strength'] = self.strength_slider.value
         else:
             params['steps'] = self.steps_slider.value
-
-        if(self.type_dropdown.value == "Control Net"):
-            params['controlmodel'] = self.controlmodel_dropdown.value
 
         if(self.seed_text.value > 0):
             params['seed'] = self.seed_text.value
@@ -178,24 +216,31 @@ class BatchNotebookInterface:
         return params
     
 
-    def setParams(self, params):        
-        self.type_dropdown.value = params.get('type', 'Text to image')
-        self.controlmodel_dropdown.value = params.get('controlmodel', None)
-        self.generationpipeline_dropdown.value = params.get('generationpipeline', None)
-        self.generationinput_dropdown.value = params.get('generationinput', None)
-        self.preprocessing_dropdown.value = params.get('preprocessor', None)
-        self.model_dropdown.value = params.get('model', None)
-        self.lora_dropdown.value = params.get('lora', None)
-        self.loraweight_text.value = params.get('lora_weight', 1)
-        self.prompt_text.value = params.get('init_prompt', '')
-        self.negprompt_text.value = params.get('negprompt', '')
-        self.width_slider.value = params.get('width', 512)
-        self.height_slider.value = params.get('height', 512)
-        self.scale_slider.value = params.get('scale', 9.0)
-        self.steps_slider.value = params.get('steps', 40)
-        self.strength_slider.value = params.get('strength', 0.5)
-        self.scheduler_dropdown.value = params.get('scheduler', 'EulerDiscreteScheduler')
-        self.batchsize_slider.value = params.get('batch', 10)
+    def setParams(self, params):
+        try:
+            self.initimages_num.value = params.get('initimages_num', 0)
+            for i, initimage_w in enumerate(self.initimage_widgets):
+                initimage_w.model_dropdown.value = params.get(f'initimage{i}_model', None)
+                initimage_w.generation_dropdown.value = params.get(f'initimage{i}_generation', None)
+                initimage_w.input_dropdown.value = params.get(f'initimage{i}_input', None)
+                initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
+
+            self.model_dropdown.value = params.get('model', None)
+            self.lora_dropdown.value = params.get('lora', None)
+            self.loraweight_text.value = params.get('lora_weight', 1)
+            self.prompt_text.value = params.get('init_prompt', '')
+            self.negprompt_text.value = params.get('negprompt', '')
+            self.width_slider.value = params.get('width', 512)
+            self.height_slider.value = params.get('height', 512)
+            self.scale_slider.value = params.get('scale', 9.0)
+            self.steps_slider.value = params.get('steps', 40)
+            self.strength_slider.value = params.get('strength', 0.5)
+            self.scheduler_dropdown.value = params.get('scheduler', 'EulerDiscreteScheduler')
+            self.batchsize_slider.value = params.get('batch', 10)
+        except Exception as e:
+            print(e)
+            print("Error loading params")
+            pass
         self.updateWidgets()
 
 
@@ -221,12 +266,14 @@ class BatchNotebookInterface:
         else:
             self.pipelines.useLORAs([])
 
-        if(self.type_dropdown.value == "Text to image"):
-            batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)    
-        elif(self.type_dropdown.value == "Image to image"):
+        if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
             batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
-        elif(self.type_dropdown.value == "Control Net"):
-            batch = BatchRunner(self.pipelines.controlNet, params, params['batch'], self.output_dir)
+        elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+            batch = BatchRunner(self.pipelines.imageToImageControlNet, params, params['batch'], self.output_dir)
+        elif(self.initimages_num.value == 0):
+            batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)
+        else:
+            batch = BatchRunner(self.pipelines.textToImageControlNet, params, params['batch'], self.output_dir)
         batch.run()
 
 
