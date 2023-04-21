@@ -4,7 +4,7 @@ import urllib.request
 import json
 from krita import *
 from PyQt5.Qt import QByteArray
-from PyQt5.QtGui  import QImage, QPixmap
+from PyQt5.QtGui  import QPixmap
 import array
 from copy import copy
 from pathlib import Path
@@ -788,24 +788,8 @@ def TxtToImage():
         runSD(p)
 
 
-def base64EncodeImage(image):
-    data = QByteArray()
-    buf = QBuffer(data)
-    image.save(buf, 'PNG')
-    ba=data.toBase64()
-    image64=str(ba,"ascii")
-    return image64
-
-
 def ImageToImage():
-    s=getSelection()
-    if (s==None):   
-        return    
-    n = getLayer()
-    if (n==None):   
-        return  
-    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
-    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    image = getLayerSelection()
     image64 = base64EncodeImage(image)
     
     dlg = SDDialog("img2img",image)
@@ -831,14 +815,7 @@ def ImageToImage():
 
 
 def ControlNet():
-    s=getSelection()
-    if (s==None):   
-        return    
-    n = getLayer()
-    if (n==None):   
-        return  
-    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
-    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    image = getLayerSelection()
     image64 = base64EncodeImage(image)
     
     dlg = SDDialog("controlnet",image)
@@ -864,7 +841,7 @@ def ControlNet():
 
 
 def TiledImageToImage():
-    image = getSelectionOrLayer();
+    image = getLayerSelection();
     image64 = base64EncodeImage(image)
     
     dlg = SDDialog("img2imgTiled",image)
@@ -896,7 +873,7 @@ def TiledImageToImage():
 
 
 def Upscale(): 
-    image = getSelectionOrLayer();
+    image = getLayerSelection();
     image64 = base64EncodeImage(image)
     dlg = SDDialog("upscale", image)
     dlg.resize(900,200)
@@ -921,7 +898,7 @@ def Upscale():
 
 
 def Preprocess():
-    image = getSelectionOrLayer();
+    image = getLayerSelection();
     image64 = base64EncodeImage(image)
     dlg = SDDialog("preprocess",image)
     dlg.resize(900,200)
@@ -937,14 +914,7 @@ def Preprocess():
 
 
 def InstructPixToPix():
-    s=getSelection()
-    if (s==None):   
-        return    
-    n = getLayer()
-    if (n==None):   
-        return  
-    data=n.pixelData(s.x(),s.y(),s.width(),s.height())
-    image=QImage(data.data(),s.width(),s.height(),QImage.Format_RGBA8888).rgbSwapped()
+    image=getLayerSelection()
     image64 = base64EncodeImage(image)
     
     dlg = SDDialog("instructpix2pix",image)
@@ -975,46 +945,9 @@ def getParametersForAction(action, data):
     return p
 
 
-def FaceEnhance(): 
-    doc = getDocument()
-    layer = getLayer()
-    if (layer==None):   
-        return  
-    selection = doc.selection()
-    if(selection is None):
-        data = layer.pixelData(0, 0, doc.width(), doc.height())
-        image = QImage(data.data(),doc.width(),doc.height(),QImage.Format_RGBA8888).rgbSwapped()
-    else:
-        data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
-        image = QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
-    image64 = base64EncodeImage(image)
-    
-    params = SDParameters()
-    params.action = "face_enhance"
-    params.image64 = image64
-    params.num = 1
-    params.scale = None
-    params.prompt = "Face Enhance"
-    runSD(params)
-
-
 def Inpaint():    
-    layer = getLayer()
-    if (layer==None):   
-        return  
-    selection = getSelection()
-    if (selection==None):   
-        return
-    data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
-    image=QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
-
-    print(image.width(),image.height())        
-    data = QByteArray()
-    buf = QBuffer(data)
-    image.save(buf, 'PNG')
-    ba=data.toBase64()
-    DataAsString=str(ba,"ascii")
-    image64 = DataAsString
+    image = getLayerSelection()
+    image64 = base64EncodeImage(image)
 
     foundTrans=False
     foundPixel=False

@@ -1,4 +1,5 @@
 from krita import *
+from PyQt5.Qt import QByteArray, QBuffer, QImage
 
 def errorMessage(text,detailed):
     msgBox= QMessageBox()
@@ -22,10 +23,13 @@ def getLayer():
     if (d==None):  
         return
     n = d.activeNode()
-    if(n.type()!="paintlayer"):
-        errorMessage("Select a paint layer",  "Selected layer must be a paint layer.")
-        return
-    return n
+    print(n.type())
+    if(n.type() == "paintlayer"):
+        return [n]
+    elif(n.type() == "grouplayer"):
+        return n.childNodes()
+    errorMessage("Select a paint layer or group layer",  "Selected layer must be a paint layer or group layer.")
+    return
 
 
 def getSelection():
@@ -38,11 +42,12 @@ def getSelection():
     return s   
 
 
-def getSelectionOrLayer():
+def getLayerSelection():
     doc = getDocument()
-    layer = getLayer()
-    if (layer==None):   
+    layers = getLayer()
+    if (layers==None or len(layers)==0):
         return  
+    layer = layers[0]
     selection = doc.selection()
     if(selection is None):
         data = layer.pixelData(0, 0, doc.width(), doc.height())
@@ -51,3 +56,12 @@ def getSelectionOrLayer():
         data=layer.pixelData(selection.x(), selection.y(), selection.width(), selection.height())
         image = QImage(data.data(), selection.width(), selection.height(), QImage.Format_RGBA8888).rgbSwapped()
     return image
+
+
+def base64EncodeImage(image):
+    data = QByteArray()
+    buf = QBuffer(data)
+    image.save(buf, 'PNG')
+    ba=data.toBase64()
+    image64=str(ba,"ascii")
+    return image64
