@@ -218,7 +218,7 @@ class DiffusersView(FlaskView):
             print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
             print(f'Method: {method}, Tile width: {tilewidth}, Tile height: {tileheight}, Tile Overlap: {tileoverlap}')
 
-            controlimages = base64DecodeImage(controlimages)
+            controlimages = base64DecodeImages(controlimages)
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
