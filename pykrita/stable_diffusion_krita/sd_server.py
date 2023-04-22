@@ -44,7 +44,7 @@ class SDParameters:
 INIT_IMAGE_MODEL = "Init Image"
 
 
-def createRequest(params):
+def createRequest(action, params):
     if (not params.seed): 
         seed=None
     else: 
@@ -61,6 +61,8 @@ def createRequest(params):
         controlmodels = params.controlmodels.copy()
         if(controlmodels.count(INIT_IMAGE_MODEL) > 1):
             raise Exception("Multiple init images found in image list")
+        if(action == "inpaint" and INIT_IMAGE_MODEL not in controlmodels):
+            raise Exception("init image not found in image list")
         try:
             initIndex = controlmodels.index(INIT_IMAGE_MODEL)
             params.images64.insert(0, params.images64.pop(initIndex))
@@ -103,7 +105,7 @@ def getServerDataAsync(action, params):
     if(action == "img2img" and INIT_IMAGE_MODEL not in params.controlmodels):
         action = "txt2img"
 
-    data = createRequest(params)
+    data = createRequest(action, params)
     reqData = json.dumps(data).encode("utf-8")
     endpoint=SDConfig.url
     endpoint=endpoint.strip("/")

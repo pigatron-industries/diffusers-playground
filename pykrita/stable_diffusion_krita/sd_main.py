@@ -921,6 +921,7 @@ def Inpaint():
         p.scale=data["scale"]
         p.strength=data["strength"]
         p.scheduler=data["scheduler"]
+        p.controlmodels = data["controlmodels"]
         p.images64=images64
         runSD(p)
 
