@@ -66,6 +66,7 @@ class InitImageWidgets:
                 pipeline.addTask(preprocessor())
             if(pipeline.requireInputImage()):
                 pipeline.setInputImage(RandomImage.fromDirectory(self.input_dropdown.value))
+            pipeline.addTask(ResizeProcessor(type="stretch", size=(self.width_slider.value, self.height_slider.value)))
             return pipeline
 
 
