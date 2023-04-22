@@ -301,7 +301,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(self.upscale_method)
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
-            self.upscale_amount=self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
+            self.upscale_amount, _ = self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
 
         if('tile_method' in actionfields):
             tilemethod_label = QLabel("Tile method")
@@ -336,19 +336,20 @@ class SDDialog(QDialog):
             formLayout.addWidget(self.tile_alignmenty)
 
         if('strength' in actionfields):
-            formLayout.addWidget(QLabel("Strength"))
-            self.strength=self.addSlider(formLayout,data["strength"]*100,0,100,1,100)
+            self.strength_label = QLabel("Strength")
+            formLayout.addWidget(self.strength_label)
+            self.strength, self.strength_value = self.addSlider(formLayout,data["strength"]*100,0,100,1,100)
 
         if('steps' in actionfields):
-            steps_label=QLabel("Steps")
-            formLayout.addWidget(steps_label)        
-            self.steps=self.addSlider(formLayout,data["steps"],1,250,5,1)
+            self.steps_label=QLabel("Steps")
+            formLayout.addWidget(self.steps_label)        
+            self.steps, self.steps_value = self.addSlider(formLayout,data["steps"],1,250,5,1)
 
         if('scale' in actionfields):
             scale_label=QLabel("Guidance Scale")
             scale_label.setToolTip("how strongly the image should follow the prompt")
             formLayout.addWidget(scale_label)        
-            self.scale=self.addSlider(formLayout,data.get("scale", 9)*10,10,300,5,10)
+            self.scale, _ = self.addSlider(formLayout,data.get("scale", 9)*10,10,300,5,10)
      
         if('seed' in actionfields):
             seed_label=QLabel("Seed (empty=random)")
@@ -360,7 +361,7 @@ class SDDialog(QDialog):
 
         if('num' in actionfields):
             formLayout.addWidget(QLabel("Number images"))        
-            self.num=self.addSlider(formLayout,data["num"],1,4,1,1)
+            self.num, _ = self.addSlider(formLayout,data["num"],1,4,1,1)
    
         if('scheduler' in actionfields):
             scheduler_label=QLabel("Scheduler")
@@ -409,6 +410,7 @@ class SDDialog(QDialog):
             for i, image in enumerate(images):
                 self.addImageTab(tabs, image, i, data)
             self.layout.addWidget(tabs)
+            self.controlModelChanged(0)
 
         self.setLayout(self.layout)
 
@@ -424,7 +426,7 @@ class SDDialog(QDialog):
             control_model_dropdown.setCurrentText(savedvalue[i])
         self.control_model_dropdowns.append(control_model_dropdown)
         imgLabel = QLabel()
-        imgLabel.setPixmap(self.maxSizePixmap(image, (1024, 1024)))
+        imgLabel.setPixmap(self.maxSizePixmap(image, (896, 896)))
         tabLayout.addWidget(control_model_dropdown)
         tabLayout.addWidget(imgLabel)
         tabWidget.setLayout(tabLayout)
@@ -434,13 +436,17 @@ class SDDialog(QDialog):
     def controlModelChanged(self, index):
         action = "txt2img"
         for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
-            if (control_model_dropdown.getCurrentText() == INIT_IMAGE_MODEL):
+            if (control_model_dropdown.currentText() == INIT_IMAGE_MODEL):
                 action = "img2img"
                 break
         print("controlModelChanged", action)
-
-        
-                
+        if (hasattr(self, 'strength') and hasattr(self, 'steps')):
+            self.steps.setVisible(action == "txt2img")
+            self.steps_label.setVisible(action == "txt2img")
+            self.steps_value.setVisible(action == "txt2img")
+            self.strength.setVisible(action == "img2img")
+            self.strength_label.setVisible(action == "img2img")
+            self.strength_value.setVisible(action == "img2img")
 
 
     def maxSizePixmap(self, image, max_size):
@@ -467,7 +473,7 @@ class SDDialog(QDialog):
             slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or label.setText( str(slider.value())))
         slider.setValue(int(value))
         layout.addLayout(h_layout)
-        return slider
+        return slider, label
         
     # put data from dialog in configuration and save it        
     def setDlgData(self):
@@ -595,11 +601,11 @@ class showImages(QDialog):
         #TODO add scale control here
         
         top_layout.addWidget(QLabel("Update one image with new Steps value"))
-        self.steps_update=SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("steps_update",50),1,250,5,1)
+        self.steps_update, _ = SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("steps_update",50),1,250,5,1)
         
         if (params.action in ("img2img", "inpaint", "img2imgTiled")):
             top_layout.addWidget(QLabel("Update with new Strengths value"))
-            self.strength_update=SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("strength",0.5)*100,0,100,1,100)
+            self.strength_update, _ = SDDialog.addSlider(self,top_layout,SDConfig.dlgData.get("strength",0.5)*100,0,100,1,100)
 
         self.setLayout(top_layout)
 
