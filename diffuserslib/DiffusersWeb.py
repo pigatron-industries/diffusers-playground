@@ -260,6 +260,9 @@ class DiffusersView(FlaskView):
             if(len(controlmodels) > 0):
                 controlimage = controlimages[1]
                 controlmodel = controlmodels[0]
+            else:
+                controlimage = None
+                controlmodel = None
 
             outputimages = []
             for i in range(0, batch):

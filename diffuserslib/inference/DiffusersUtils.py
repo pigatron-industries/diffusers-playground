@@ -60,7 +60,7 @@ def tiledImageToImageCentred(pipelines:DiffusersPipelines, initimg, prompt, negp
 
 def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None, controlmodel=None, controlimage=None):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
-    if(len(controlmodels) == 0):
+    if(controlmodel is None):
         outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model)
     else:
         outimage, usedseed = pipelines.inpaintControlNet(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model, 
