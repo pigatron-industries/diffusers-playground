@@ -378,7 +378,7 @@ class DiffusersPipelines:
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
-        return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, steps=steps, guidance_scale=scale, 
+        return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
