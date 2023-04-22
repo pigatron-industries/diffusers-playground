@@ -320,7 +320,6 @@ class DiffusersPipelines:
         pipeline.pipeline.vae.enable_tiling(tiling)
         if(pipeline.preset.autocast): # TODO figure out why autocast is needed for 1.5 models in cuda but not mac
             with torch.autocast(self.inferencedevice):
-                print(kwargs)
                 image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
         else:
             image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
@@ -368,6 +367,18 @@ class DiffusersPipelines:
         else:
             controlimage = controlimage.convert("RGB")
         return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
+                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+    
+
+    def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
+        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_inpaint")
+        initimage = initimage.convert("RGB")
+        maskimage = maskimage.convert("RGB")
+        if(isinstance(controlimage, list)):
+            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
+        else:
+            controlimage = controlimage.convert("RGB")
+        return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 

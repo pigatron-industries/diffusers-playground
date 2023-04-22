@@ -244,23 +244,26 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, batch=1, **kwargs):
+    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, batch=1, **kwargs):
         try:
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-            controlimage = base64DecodeImages(controlimages)[0]
+            initimage = base64DecodeImages(controlimages)[0]
             if maskimage is None:
-                maskimage = alphaToMask(controlimage)
+                maskimage = alphaToMask(initimage)
             else:
                 maskimage = base64DecodeImage(maskimage)
+            if(len(controlmodels) > 0):
+                initimage = controlimages[0]
+                controlimages.pop(0)
 
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = compositedInpaint(self.pipelines, initimage=controlimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
