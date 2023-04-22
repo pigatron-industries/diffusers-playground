@@ -22,6 +22,8 @@ def evaluateArguments(args, **kwargs):
         argvalue = args[argkey]
         if(callable(argvalue)):
             outargs[argkey] = argvalue(**kwargs)
+        elif(isinstance(argvalue, list) and all(callable(item) for item in argvalue)):
+            outargs[argkey] = [item(**kwargs) for item in argvalue]
         else:
             outargs[argkey] = argvalue
     return outargs
@@ -108,3 +110,6 @@ class BatchRunner:
                     file.write(f"{arg}: {value}\n")
                 elif (isinstance(value, Image.Image) and hasattr(value, 'filename')):
                     file.write(f"{arg}: {value.filename}\n")
+                elif (isinstance(value, list)):
+                    if (all(isinstance(item, str) for item in value) or all(isinstance(item, int) for item in value) or all(isinstance(item, float) for item in value)):
+                        file.write(f"{arg}: {value}\n")
