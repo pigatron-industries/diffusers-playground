@@ -251,20 +251,21 @@ class DiffusersView(FlaskView):
             print(f'Negative: {negprompt}')
             print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
 
-            initimage = base64DecodeImages(controlimages)[0]
+            controlimages = base64DecodeImages(controlimages)
+            initimage = controlimages[0]
             if maskimage is None:
                 maskimage = alphaToMask(initimage)
             else:
                 maskimage = base64DecodeImage(maskimage)
             if(len(controlmodels) > 0):
-                initimage = controlimages[0]
-                controlimages.pop(0)
+                controlimage = controlimages[1]
+                controlmodel = controlmodels[0]
 
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, 
-                                                       model=model, controlimages=controlimages, controlmodels=controlmodels)
+                                                       model=model, controlimage=controlimage, controlmodel=controlmodel)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
