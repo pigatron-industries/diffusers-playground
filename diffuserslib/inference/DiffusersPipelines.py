@@ -18,7 +18,7 @@ from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
 from .LORA import LORA
-from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
+from .DiffusersPipelineWrapper import *
 from ..DiffusersModelPresets import DiffusersModelList
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
@@ -269,14 +269,8 @@ class DiffusersPipelines:
         gc.collect()
         torch.cuda.empty_cache()
         preset = self.getModel(model, presets)
-        args = self.createArgs(preset)
-        args = mergeDicts(args, kwargs)
 
-        pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
-        # pipeline.enable_model_cpu_offload()
-        pipeline.enable_attention_slicing()
-        # pipeline.enable_xformers_memory_efficient_attention()
-        self.pipelines[cls.__name__] = DiffusersPipelineWrapper(preset, pipeline)
+        self.pipelines[cls.__name__] = StableDiffusionPipelineWrapper(preset, cls, self.device, self.safety_checker, **kwargs)
         self._addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
         self._addLORAsToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
