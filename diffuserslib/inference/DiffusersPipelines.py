@@ -17,8 +17,9 @@ from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, Stabl
 from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
-from .LORA import LORA, LORAUse
-from ..DiffusersModelPresets import DiffusersModelList, DiffusersModel
+from .LORA import LORA
+from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
+from ..DiffusersModelPresets import DiffusersModelList
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
 from ..StringUtils import mergeDicts
@@ -42,13 +43,6 @@ def dummy(images, **kwargs):
 
 def str_to_class(str):
     return getattr(sys.modules[__name__], str)
-
-
-class DiffusersPipeline:
-    def __init__(self, preset:DiffusersModel, pipeline:DiffusionPipeline, controlmodel:str = None):
-        self.preset = preset
-        self.pipeline = pipeline
-        self.controlmodel = controlmodel
 
 
 class BaseModelData:
@@ -77,7 +71,7 @@ class DiffusersPipelines:
         self.cache_dir = cache_dir
         self.lora_use = []
 
-        self.pipelines: Dict[str,DiffusersPipeline] = {}
+        self.pipelines: Dict[str,DiffusersPipelineWrapper] = {}
 
         self.vae = None
         self.baseModelData: Dict[str, BaseModelData] = {}
@@ -155,12 +149,12 @@ class DiffusersPipelines:
         base.textembeddings.load_file(path, token)
 
 
-    def _addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipeline):
+    def _addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipelineWrapper):
         if (pipeline.preset.base in self.baseModelData):
             self.baseModelData[pipeline.preset.base].textembeddings.add_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer)
 
 
-    def processPrompt(self, prompt: str, pipeline: DiffusersPipeline):
+    def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
         if (pipeline.preset.base in self.baseModelData):
             prompt = self.baseModelData[pipeline.preset.base].textembeddings.process_prompt(prompt)
@@ -196,12 +190,12 @@ class DiffusersPipelines:
         return list(self.getBaseModelData(base).loras.keys())
 
 
-    def _addLORAsToPipeline(self, pipeline: DiffusersPipeline):
+    def _addLORAsToPipeline(self, pipeline: DiffusersPipelineWrapper):
         for lora_use in self.lora_use:
             self._addLORAToPipeline(pipeline, lora_use.name, lora_use.weight)
 
 
-    def _addLORAToPipeline(self, pipeline: DiffusersPipeline, lora_name, weight=1):
+    def _addLORAToPipeline(self, pipeline: DiffusersPipelineWrapper, lora_name, weight=1):
         if (pipeline.preset.base in self.baseModelData and lora_name in self.baseModelData[pipeline.preset.base].loras):
             print(f"Loading LORA {lora_name}")
             self.baseModelData[pipeline.preset.base].loras[lora_name].add_to_model(pipeline.pipeline, weight=weight, device=self.device)
@@ -220,7 +214,7 @@ class DiffusersPipelines:
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
 
 
-    def loadScheduler(self, schedulerClass, pipeline: DiffusersPipeline):
+    def loadScheduler(self, schedulerClass, pipeline: DiffusersPipelineWrapper):
         if (isinstance(schedulerClass, str)):
             schedulerClass = str_to_class(schedulerClass)
         pipeline.pipeline.scheduler = schedulerClass.from_config(pipeline.pipeline.scheduler.config)
@@ -282,7 +276,7 @@ class DiffusersPipelines:
         # pipeline.enable_model_cpu_offload()
         pipeline.enable_attention_slicing()
         # pipeline.enable_xformers_memory_efficient_attention()
-        self.pipelines[cls.__name__] = DiffusersPipeline(preset, pipeline)
+        self.pipelines[cls.__name__] = DiffusersPipelineWrapper(preset, pipeline)
         self._addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
         self._addLORAsToPipeline(self.pipelines[cls.__name__])
         return self.pipelines[cls.__name__]
@@ -312,7 +306,7 @@ class DiffusersPipelines:
 
     #=============== INFERENCE ==============
 
-    def inference(self, pipeline:DiffusersPipeline, prompt, seed, scheduler=None, tiling=False, **kwargs):
+    def inference(self, pipeline:DiffusersPipelineWrapper, prompt, seed, scheduler=None, tiling=False, **kwargs):
         prompt = self.processPrompt(prompt, pipeline)
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
