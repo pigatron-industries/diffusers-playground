@@ -88,27 +88,27 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
         super().__init__(StableDiffusionPipeline, preset, device, custom_pipeline = 'lpw_stable_diffusion', **kwargs)
 
-    def inference(self, prompt, seed, **kwargs):
-        return super().inference(prompt=prompt, seed=seed, **kwargs)
+    def inference(self, prompt, seed, scale, steps, **kwargs):
+        return super().inference(prompt=prompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, **kwargs)
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
         super().__init__(StableDiffusionImg2ImgPipeline, preset, device, **kwargs)
 
-    def inference(self, prompt, seed, initimage, **kwargs):
+    def inference(self, prompt, seed, initimage, scale, **kwargs):
         initimage = initimage.convert("RGB")
-        return super().inference(prompt=prompt, seed=seed, initimage=initimage, **kwargs)
+        return super().inference(prompt=prompt, seed=seed, image=initimage, guidance_scale=scale, **kwargs)
     
 
 class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
         super().__init__(StableDiffusionImg2ImgPipeline, preset, device, **kwargs)
 
-    def inference(self, prompt, seed, initimage, maskimage, **kwargs):
+    def inference(self, prompt, seed, initimage, maskimage, scale, steps, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
-        return super().inference(prompt=prompt, seed=seed, initimage=initimage, maskimage=maskimage, **kwargs)
+        return super().inference(prompt=prompt, seed=seed, image=initimage, maskimage=maskimage, guidance_scale=scale, num_inference_steps=steps, **kwargs)
     
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
@@ -134,32 +134,32 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
     def __init__(self, preset:DiffusersModel, device, controlmodel, **kwargs):
         super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, **kwargs)
 
-    def inference(self, prompt, seed, **kwargs):
-        return super().inference(prompt=prompt, seed=seed, **kwargs)
+    def inference(self, prompt, seed, scale, steps, **kwargs):
+        return super().inference(prompt=prompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, **kwargs)
     
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, **kwargs):
         super().__init__(custom_pipeline="stable_diffusion_controlnet_img2img", preset=preset, device=device, controlmodel=controlmodel, **kwargs)
 
-    def inference(self, prompt, seed, initimage, controlimage, **kwargs):
+    def inference(self, prompt, seed, initimage, controlimage, scale, **kwargs):
         initimage = initimage.convert("RGB")
         if(isinstance(controlimage, list)):
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
-        return super().inference(prompt=prompt, seed=seed, initimage=initimage, controlnet_conditioning_image=controlimage, **kwargs)
+        return super().inference(prompt=prompt, seed=seed, image=initimage, controlnet_conditioning_image=controlimage, guidance_scale=scale, **kwargs)
     
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, **kwargs):
         super().__init__(custom_pipeline="stable_diffusion_controlnet_inpaint", preset=preset, device=device, controlmodel=controlmodel, **kwargs)
 
-    def inference(self, prompt, seed, initimage, maskimage, controlimage, **kwargs):
+    def inference(self, prompt, seed, initimage, maskimage, controlimage, scale, steps, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         if(isinstance(controlimage, list)):
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
-        return super().inference(prompt=prompt, seed=seed, initimage=initimage, maskimage=maskimage, controlnet_conditioning_image=controlimage, **kwargs)
+        return super().inference(prompt=prompt, seed=seed, image=initimage, maskimage=maskimage, controlnet_conditioning_image=controlimage, guidance_scale=scale, num_inference_steps=steps, **kwargs)
