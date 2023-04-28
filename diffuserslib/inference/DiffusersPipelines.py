@@ -7,15 +7,9 @@ from typing import Dict
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
                         StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
-                        ControlNetModel, StableDiffusionControlNetPipeline,
-                        # Schedulers
-                        DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
-                        KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
-                        KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
-                        ScoreSdeVeScheduler, IPNDMScheduler, 
-                        UNet2DConditionModel, UniPCMultistepScheduler)
+                        ControlNetModel, StableDiffusionControlNetPipeline)
 from diffusers.models import AutoencoderKL
-from transformers import CLIPTokenizer, CLIPTextModel, CLIPFeatureExtractor, CLIPModel
+from transformers import CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
 from .LORA import LORA
 from .DiffusersPipelineWrapper import *
@@ -214,12 +208,6 @@ class DiffusersPipelines:
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
 
 
-    def loadScheduler(self, schedulerClass, pipeline: DiffusersPipelineWrapper):
-        if (isinstance(schedulerClass, str)):
-            schedulerClass = str_to_class(schedulerClass)
-        pipeline.pipeline.scheduler = schedulerClass.from_config(pipeline.pipeline.scheduler.config)
-
-
     def getModel(self, modelid, modelList:DiffusersModelList):
         preset = modelList.getModel(modelid)
         if(preset.location == 'url' and preset.modelpath.startswith('http')):
@@ -270,9 +258,10 @@ class DiffusersPipelines:
         torch.cuda.empty_cache()
         preset = self.getModel(model, presets)
 
-        self.pipelines[cls.__name__] = StableDiffusionPipelineWrapper(preset, cls, self.device, self.safety_checker, **kwargs)
-        self._addTextEmbeddingsToPipeline(self.pipelines[cls.__name__])
-        self._addLORAsToPipeline(self.pipelines[cls.__name__])
+        pipelineWrapper = StableDiffusionPipelineWrapper(preset, cls, self.device, self.safety_checker, **kwargs)
+        self._addTextEmbeddingsToPipeline(pipelineWrapper)
+        self._addLORAsToPipeline(pipelineWrapper)
+        self.pipelines[cls.__name__] = pipelineWrapper
         return self.pipelines[cls.__name__]
     
     
@@ -300,18 +289,9 @@ class DiffusersPipelines:
 
     #=============== INFERENCE ==============
 
-    def inference(self, pipeline:DiffusersPipelineWrapper, prompt, seed, scheduler=None, tiling=False, **kwargs):
+    def inference(self, pipeline:DiffusersPipelineWrapper, prompt, seed, **kwargs):
         prompt = self.processPrompt(prompt, pipeline)
-        generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler, pipeline)
-        pipeline.pipeline.vae.enable_tiling(tiling)
-        if(pipeline.preset.autocast): # TODO figure out why autocast is needed for 1.5 models in cuda but not mac
-            with torch.autocast(self.inferencedevice):
-                image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
-        else:
-            image = pipeline.pipeline(prompt, generator=generator, **kwargs).images[0]
-        return image, seed
+        return pipeline.inference(prompt=prompt, seed=seed, **kwargs)
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
