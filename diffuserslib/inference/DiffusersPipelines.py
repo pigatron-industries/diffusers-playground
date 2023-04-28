@@ -235,7 +235,7 @@ class DiffusersPipelines:
         torch.cuda.empty_cache()
         preset = self.getModel(model, presets)
 
-        pipelineWrapper = cls(preset, self.device, safety_chceker=self.safety_checker, **kwargs)
+        pipelineWrapper = cls(preset, self.device, safety_checker=self.safety_checker, **kwargs)
         self._addTextEmbeddingsToPipeline(pipelineWrapper)
         self._addLORAsToPipeline(pipelineWrapper)
         self.pipelines[cls.__name__] = pipelineWrapper
