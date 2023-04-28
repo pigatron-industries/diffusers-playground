@@ -105,7 +105,7 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
         super().__init__(StableDiffusionImg2ImgPipeline, preset, device, **kwargs)
 
-    def inference(self, prompt, seed, initimage, **kwargs):
+    def inference(self, prompt, seed, initimage, maskimage, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         return super().inference(prompt=prompt, seed=seed, initimage=initimage, maskimage=maskimage, **kwargs)
@@ -148,7 +148,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
-        return super().inference(prompt=prompt, seed=seed, initimage=initimage, controlimage=controlimage, **kwargs)
+        return super().inference(prompt=prompt, seed=seed, initimage=initimage, controlnet_conditioning_image=controlimage, **kwargs)
     
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
@@ -162,4 +162,4 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
-        return super().inference(prompt=prompt, seed=seed, initimage=initimage, maskimage=maskimage, controlimage=controlimage, **kwargs)
+        return super().inference(prompt=prompt, seed=seed, initimage=initimage, maskimage=maskimage, controlnet_conditioning_image=controlimage, **kwargs)
