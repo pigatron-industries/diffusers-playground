@@ -112,8 +112,8 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, contromodel, cls=DiffusionPipeline, **kwargs):
-        controlnet = self.createControlNets(contromodel)
+    def __init__(self, preset:DiffusersModel, device, controlmodel, cls=DiffusionPipeline, **kwargs):
+        controlnet = self.createControlNets(controlmodel)
         super().__init__(StableDiffusionControlNetPipeline, preset=preset, device=device, cls=cls, controlnet=controlnet, **kwargs)
 
     def createControlNets(self, controlmodel):
