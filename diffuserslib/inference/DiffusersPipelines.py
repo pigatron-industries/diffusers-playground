@@ -1,5 +1,4 @@
 import torch
-import random
 import os
 import sys
 import gc
@@ -16,7 +15,6 @@ from .DiffusersPipelineWrapper import *
 from ..DiffusersModelPresets import DiffusersModelList
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
-from ..StringUtils import mergeDicts
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -202,12 +200,6 @@ class DiffusersPipelines:
         self.clip_model = CLIPModel.from_pretrained(model, torch_dtype=torch.float16)
 
 
-    def createGenerator(self, seed=None):
-        if(seed is None):
-            seed = random.randint(0, MAX_SEED)
-        return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
-
-
     def getModel(self, modelid, modelList:DiffusersModelList):
         preset = modelList.getModel(modelid)
         if(preset.location == 'url' and preset.modelpath.startswith('http')):
@@ -229,21 +221,6 @@ class DiffusersPipelines:
 
     #=============== LOAD PIPELINES ==============
 
-    def createArgs(self, preset):
-        args = {}
-        if (not self.safety_checker):
-            args['safety_checker'] = None
-        if(preset.revision is not None):
-            args['revision'] = preset.revision
-            if(preset.revision == 'fp16'):
-                args['torch_dtype'] = torch.float16
-        if(preset.vae is not None):
-            args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        if(self.cache_dir is not None):
-            args['cache_dir'] = self.cache_dir
-        return args
-    
-
     def createPipeline(self, cls, model, presets, default, **kwargs):
         if(cls.__name__ not in self.pipelines and (model is None or model == "")):
             model = default
@@ -258,7 +235,7 @@ class DiffusersPipelines:
         torch.cuda.empty_cache()
         preset = self.getModel(model, presets)
 
-        pipelineWrapper = StableDiffusionPipelineWrapper(preset, cls, self.device, self.safety_checker, **kwargs)
+        pipelineWrapper = cls(preset, self.device, safety_chceker=self.safety_checker, **kwargs)
         self._addTextEmbeddingsToPipeline(pipelineWrapper)
         self._addLORAsToPipeline(pipelineWrapper)
         self.pipelines[cls.__name__] = pipelineWrapper
@@ -295,57 +272,38 @@ class DiffusersPipelines:
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, custom_pipeline=self.custom_pipeline)
+        pipeline = self.createPipeline(StableDiffusionTextToImagePipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
         return self.inference(prompt=prompt, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):        
-        pipeline = self.createPipeline(StableDiffusionImg2ImgPipeline, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
-        initimage = initimage.convert("RGB")
+        pipeline = self.createPipeline(StableDiffusionImageToImagePipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
         return self.inference(prompt=prompt, image=initimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionInpaintPipeline, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL)
-        initimage = initimage.convert("RGB")
-        maskimage = maskimage.convert("RGB")
+        pipeline = self.createPipeline(StableDiffusionInpaintPipelineWrapper, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL)
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, width=initimage.width, height=initimage.height,
                               negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, pipeline=pipeline, seed=seed, 
                               scheduler=scheduler, tiling=tiling)
     
 
     def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel)
-        # if controlimage is a list
-        if(isinstance(controlimage, list)):
-            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
-        else:
-            controlimage = controlimage.convert("RGB")
+        pipeline = self.createPipeline(StableDiffusionTextToImageControlNetPipelineWrapper, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL, controlmodel=controlmodel)
         return self.inference(prompt=prompt, image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
-        initimage = initimage.convert("RGB")
-        if(isinstance(controlimage, list)):
-            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
-        else:
-            controlimage = controlimage.convert("RGB")
+        pipeline = self.createPipeline(StableDiffusionImageToImageControlNetPipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
         return self.inference(prompt=prompt, image=initimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, strength=strength, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createControlNetPipeline(model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_inpaint")
-        initimage = initimage.convert("RGB")
-        maskimage = maskimage.convert("RGB")
-        if(isinstance(controlimage, list)):
-            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
-        else:
-            controlimage = controlimage.convert("RGB")
+        pipeline = self.createPipeline(StableDiffusionInpaintControlNetPipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_inpaint")
         return self.inference(prompt=prompt, image=initimage, mask_image=maskimage, controlnet_conditioning_image=controlimage, negative_prompt=negprompt, num_inference_steps=steps, guidance_scale=scale, 
                               pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
 
