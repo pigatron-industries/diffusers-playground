@@ -287,6 +287,8 @@ class DiffusersView(FlaskView):
             print(f'Method: {method}')
             if(model is None):
                 model = "stabilityai/stable-diffusion-x4-upscaler"
+            if(steps is None):
+                steps = 75
 
             controlimages = base64DecodeImages(controlimages)
             outputimages = []
