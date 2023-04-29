@@ -46,7 +46,7 @@ class DiffusersView(FlaskView):
                 presets = self.pipelines.presets.getModelsByType("controlnet")
             else:
                 presets = self.pipelines.presets.getModelsByType("txt2img")
-        models = [model.toDict() for model in presets.models.values()]
+        models = [model.toDict() for model in presets.values()]
         return jsonify(models)
 
 
