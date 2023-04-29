@@ -34,14 +34,14 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
         # if(scheduler is not None):
         #     self.loadScheduler(scheduler)
         prompt_embeds, negprompt_embeds = self.pipeline.encode_prompt(prompt=prompt, negative_prompt=negprompt)
-        image = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, generator=generator, output_type="pt", **kwargs).images[0]
-        pilimage = pt_to_pil(image)[0]
-        return pilimage, seed
+        image = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, generator=generator, output_type="pil", **kwargs).images[0]
+        # pilimage = pt_to_pil(image)[0]
+        return image, seed
 
 
 class DeepFloydTextToImagePipelineWrapper(DeepFloydPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
         super().__init__(IFPipeline, preset, device, **kwargs)
 
-    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, width, height, **kwargs):
+        return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, width=width, height=height)
