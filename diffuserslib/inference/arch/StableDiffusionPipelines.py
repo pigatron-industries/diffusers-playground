@@ -31,6 +31,9 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
+        if (isinstance(cls, str)):
+            args['custom_pipeline'] = cls
+            cls = DiffusionPipeline
         self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
         self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
@@ -128,7 +131,7 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
-        super().__init__(custom_pipeline="stable_diffusion_controlnet_img2img", preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+        super().__init__(cls="stable_diffusion_controlnet_img2img", preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, initimage, controlimage, scale, strength, scheduler, **kwargs):
         initimage = initimage.convert("RGB")
@@ -142,7 +145,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
-        super().__init__(custom_pipeline="stable_diffusion_controlnet_inpaint", preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+        super().__init__(cls="stable_diffusion_controlnet_inpaint", preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, scheduler, **kwargs):
         initimage = initimage.convert("RGB")
