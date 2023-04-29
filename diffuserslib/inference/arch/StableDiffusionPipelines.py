@@ -21,6 +21,10 @@ import sys
 MAX_SEED = 4294967295
 
 
+def str_to_class(str):
+    return getattr(sys.modules[__name__], str)
+
+
 class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, controlmodel=None, **kwargs):
         self.safety_checker = safety_checker
