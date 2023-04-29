@@ -285,6 +285,8 @@ class DiffusersView(FlaskView):
         try:
             print('=== upscale ===')
             print(f'Method: {method}')
+            if(model is None):
+                model = "stabilityai/stable-diffusion-x4-upscaler"
 
             controlimages = base64DecodeImages(controlimages)
             outputimages = []

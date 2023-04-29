@@ -50,9 +50,9 @@ class DiffusersModelList:
         self.models = {}
         self.basemodels = {}
 
-    def load_from_file(self, filepath, key):
+    def load_from_file(self, filepath: str):
         filedata = yaml.safe_load(open(filepath, "r"))
-        if(key in filedata):
+        for key in filedata:
             modeldata = filedata[key]
             for basedata in modeldata:
                 self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'])
