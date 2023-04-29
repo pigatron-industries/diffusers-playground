@@ -16,7 +16,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
-        self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+        self.pipeline = cls.from_pretrained(preset.modelpath, **args)
         self.pipeline2 = IFSuperResolutionPipeline.from_pretrained(preset.data['id2'], text_encoder=None, **args)
 
     def createPipelineArgs(self, preset, **kwargs):
