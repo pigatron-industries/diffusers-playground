@@ -238,4 +238,4 @@ class DiffusersPipelines:
 
 
     def upscale(self, initimage, prompt, negprompt, scale, steps, scheduler=None, model=None):
-        return self.run(pipelinetype="upscale", model=model, image=initimage, prompt=prompt, negative_prompt=negprompt, steps=steps, scale=scale, scheduler=scheduler)
+        return self.run(pipelinetype="upscale", model=model, initimage=initimage, prompt=prompt, negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
