@@ -23,7 +23,8 @@ class DiffusersPipelineType:
  
 
 class DiffusersModel:
-    def __init__(self, modelid: str, base: str, pipelinetypes: Dict[str, str], revision: str = None, stylephrase: str = None, vae = None, autocast: bool = True, location: str = 'hf', modelpath: str = None):
+    def __init__(self, modelid: str, base: str, pipelinetypes: Dict[str, str], revision: str = None, stylephrase: str = None, vae = None, 
+                 autocast: bool = True, location: str = 'hf', modelpath: str = None, data = None):
         self.modelid = modelid
         self.base = base
         self.pipelinetypes = pipelinetypes
@@ -32,6 +33,7 @@ class DiffusersModel:
         self.vae = vae
         self.autocast = autocast
         self.location = location
+        self.data = data
         if(modelpath is None):
             self.modelpath = modelid
         else:
@@ -63,15 +65,15 @@ class DiffusersModelList:
                     else:
                         autocast = False
                     self.addModel(modelid=modeldata['id'], base=basedata['base'], revision=modeldata.get('revision'), 
-                                    stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast)
+                                    stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast, data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
             self.basemodels[base] = {}
         self.basemodels[base]['pipelines'] = pipelinetypes
 
-    def addModel(self, modelid: str, base: str, revision: str=None, stylephrase:str=None, vae=None, autocast=True, location='hf', modelpath=None):
-        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=self.basemodels[base]['pipelines'], revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+    def addModel(self, modelid: str, base: str, revision: str=None, stylephrase:str=None, vae=None, autocast=True, location='hf', modelpath=None, data=None):
+        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=self.basemodels[base]['pipelines'], revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, data=data)
 
     def addModels(self, models):
         self.models.update(models.models)
