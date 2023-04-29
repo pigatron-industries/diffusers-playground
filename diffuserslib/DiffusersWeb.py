@@ -281,7 +281,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def upscaleRun(self, controlimages, method="esrgan/remacri", amount=4, prompt="", negprompt="", steps=30, scale=7.0, scheduler="EulerDiscreteScheduler", batch=1, model=None, **kwargs):
+    def upscaleRun(self, controlimages, method="esrgan/remacri", amount=4, prompt="", negprompt="", steps=30, scale=7.0, scheduler="EulerDiscreteScheduler", batch=1, model="stabilityai/stable-diffusion-x4-upscaler", **kwargs):
         try:
             print('=== upscale ===')
             print(f'Method: {method}')
