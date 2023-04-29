@@ -31,7 +31,7 @@ class InitImageWidgets:
     def __init__(self, interface, includeInitImage = False):
         self.interface = interface
         if (includeInitImage):
-            model_options = [INIT_IMAGE]+list(interface.pipelines.presetsControl.models.keys())
+            model_options = [INIT_IMAGE]+list(interface.pipelines.presets.getModelsByType("controlnet").keys())
         else:
             model_options = list(interface.pipelines.presetsControl.models.keys())
         self.model_dropdown = interface.dropdown(label="Control Model:", options=model_options, value=INIT_IMAGE if includeInitImage else None)
@@ -94,7 +94,7 @@ class BatchNotebookInterface:
         self.initimage_widgets.append(InitImageWidgets(self))
 
         #  Config
-        self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presetsImage.models.keys()), value=None)
+        self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
         self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
         self.loraweight_text = self.floatText(label="LORA weight:", value=1)
         self.prompt_text = self.textarea(label="Prompt:", value="")

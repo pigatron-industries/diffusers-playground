@@ -80,3 +80,10 @@ class DiffusersModelList:
             return self.models[modelid]
         else:
             return DiffusersModel(modelid, None, None, None, None)
+        
+    def getModelsByType(self, pipelinetype):
+        matchingmodels = {}
+        for modelid, model in self.models:
+            if pipelinetype in model.pipelinetypes:
+                matchingmodels[modelid] = model
+        return matchingmodels
