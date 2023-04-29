@@ -144,7 +144,7 @@ class DiffusersPipelines:
 
 
     def getLORAList(self, model):
-        base = self.presetsImage.models[model].base
+        base = self.getModel(model).base
         return list(self.getBaseModelData(base).loras.keys())
 
 
