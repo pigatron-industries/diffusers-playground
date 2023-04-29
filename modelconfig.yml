@@ -1,15 +1,10 @@
 
 image:
-  - base: sd_2_1_768
+  - base: sd_2_1
     models:
       - id: stabilityai/stable-diffusion-2-1  # official
-        autocast: false
-      - id: stablediffusionapi/illuminati-diffusion
-        autocast: false
-  - base: sd_2_1_512
-    models:
       - id: stabilityai/stable-diffusion-2-1-base  # official
-        autocast: false
+      - id: stablediffusionapi/illuminati-diffusion
   - base: sd_1_5
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
