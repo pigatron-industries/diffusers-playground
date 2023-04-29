@@ -30,11 +30,12 @@ INIT_IMAGE = "Init Image"
 class InitImageWidgets:
     def __init__(self, interface, includeInitImage = False):
         self.interface = interface
+        controlnet_models = list(interface.pipelines.presets.getModelsByType("controlnet").keys())
         if (includeInitImage):
-            model_options = [INIT_IMAGE]+list(interface.pipelines.presets.getModelsByType("controlnet").keys())
+            controlmodel_options = [INIT_IMAGE]+controlnet_models
         else:
-            model_options = list(interface.pipelines.presetsControl.models.keys())
-        self.model_dropdown = interface.dropdown(label="Control Model:", options=model_options, value=INIT_IMAGE if includeInitImage else None)
+            controlmodel_options = controlnet_models
+        self.model_dropdown = interface.dropdown(label="Control Model:", options=controlmodel_options, value=INIT_IMAGE if includeInitImage else None)
         self.generation_dropdown = interface.dropdown(label="Generation:", options=list(interface.generation_pipelines.keys()), value=None)
         self.input_dropdown = interface.dropdown(label="Input:", options=interface.input_dirs, value=None)
         self.preprocessor_dropdown = interface.dropdown(label="Preprocessor:", options=[None]+list(interface.preprocessing_pipelines.keys()), value=None)
