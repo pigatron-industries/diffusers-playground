@@ -231,14 +231,14 @@ class DiffusersPipelines:
     
 
     def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        return self.inference(pipelinetype="img2img_controlnet", model=model, prompt=prompt, initimage=initimage, controlimage=controlimage, negative_prompt=negprompt, 
+        return self.run(pipelinetype="img2img_controlnet", model=model, prompt=prompt, initimage=initimage, controlimage=controlimage, negative_prompt=negprompt, 
                               strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        return self.inference(pipelinetype="inpaint_controlet", model=model, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
+        return self.run(pipelinetype="inpaint_controlet", model=model, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
                               negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def upscale(self, initimage, prompt, scheduler=None, model=None):
-        return self.inference(pipelinetype="upscale", model=model, image=initimage, prompt=prompt, scheduler=scheduler)
+        return self.run(pipelinetype="upscale", model=model, image=initimage, prompt=prompt, scheduler=scheduler)
