@@ -202,7 +202,7 @@ class DiffusersPipelines:
     
 
     def run(self, pipelinetype, model, prompt, **kwargs):
-        pipelineWrapper = self.createPipeline(pipelinetype, model)
+        pipelineWrapper = self.createPipeline(pipelinetype, model, **kwargs)
         prompt = self.processPrompt(prompt, pipelineWrapper)
         return pipelineWrapper.inference(prompt=prompt, **kwargs)
 
