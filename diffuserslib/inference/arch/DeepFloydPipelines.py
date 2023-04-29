@@ -7,12 +7,12 @@ import torch
 
 
 class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, controlmodel=None, **kwargs):
+    def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         self.safety_checker = safety_checker
         self.device = device
         self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset, controlmodel)
+        super().__init__(preset)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
