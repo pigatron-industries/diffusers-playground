@@ -70,7 +70,10 @@ class DiffusersModelList:
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
             self.basemodels[base] = {}
-        self.basemodels[base]['pipelines'] = pipelinetypes
+        if 'pipelines' not in self.basemodels[base]:
+            self.basemodels[base]['pipelines'] = {}
+        for pipelinetype in pipelinetypes:
+            self.basemodels[base]['pipelines'][pipelinetype] = pipelinetypes[pipelinetype]
 
     def addModel(self, modelid: str, base: str, revision: str=None, stylephrase:str=None, vae=None, autocast=True, location='hf', modelpath=None, data=None):
         self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=self.basemodels[base]['pipelines'], revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, data=data)
