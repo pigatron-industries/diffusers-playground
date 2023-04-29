@@ -31,11 +31,10 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
-        pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
-        pipeline.enable_attention_slicing()
+        self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+        self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
         # pipeline.enable_xformers_memory_efficient_attention()
-        self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
 
     def createPipelineArgs(self, preset, **kwargs):
         args = {}
