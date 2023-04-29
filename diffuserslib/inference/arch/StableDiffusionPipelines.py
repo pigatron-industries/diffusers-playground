@@ -117,9 +117,6 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
         else:
             controlnet = ControlNetModel.from_pretrained(controlmodel)
         return controlnet
-
-    def inference(self, prompt, negprompt, seed, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, **kwargs)
     
 
 class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
