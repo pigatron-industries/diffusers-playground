@@ -47,23 +47,30 @@ class DiffusersModel:
 class DiffusersModelList:
     def __init__(self):
         self.models = {}
+        self.basemodels = {}
 
     def load_from_file(self, filepath, key):
         filedata = yaml.safe_load(open(filepath, "r"))
         if(key in filedata):
             modeldata = filedata[key]
             for basedata in modeldata:
+                self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'])
                 for modeldata in basedata['models']:
                     # print(model)
                     if (modeldata.get('autocast') != 'false'):
                         autocast = True
                     else:
                         autocast = False
-                    self.addModel(modelid=modeldata['id'], base=basedata['base'], pipelinetypes=basedata['pipelines'], revision=modeldata.get('revision'), 
+                    self.addModel(modelid=modeldata['id'], base=basedata['base'], revision=modeldata.get('revision'), 
                                     stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast)
 
-    def addModel(self, modelid, base, pipelinetypes, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
-        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=pipelinetypes, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+    def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
+        if base not in self.basemodels:
+            self.basemodels[base] = {}
+        self.basemodels[base]['pipelines'] = pipelinetypes
+
+    def addModel(self, modelid: str, base: str, revision: str=None, stylephrase:str=None, vae=None, autocast=True, location='hf', modelpath=None):
+        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=self.basemodels[base]['pipelines'], revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
     def addModels(self, models):
         self.models.update(models.models)
