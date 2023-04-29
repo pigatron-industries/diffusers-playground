@@ -44,4 +44,4 @@ class DeepFloydTextToImagePipelineWrapper(DeepFloydPipelineWrapper):
         super().__init__(IFPipeline, preset, device, **kwargs)
 
     def inference(self, prompt, negprompt, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, **kwargs)
+        return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
