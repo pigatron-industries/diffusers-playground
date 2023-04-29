@@ -208,32 +208,32 @@ class DiffusersPipelines:
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        return self.run(pipelinetype="txt2img", model=model, prompt=prompt, negative_prompt=negprompt, steps=steps, scale=scale, 
+        return self.run(pipelinetype="txt2img", model=model, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, 
                  width=width, height=height, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        return self.run(pipelinetype="img2img", model=model, prompt=prompt, initimage=initimage, negative_prompt=negprompt, strength=strength, scale=scale, 
+        return self.run(pipelinetype="img2img", model=model, prompt=prompt, initimage=initimage, negprompt=negprompt, strength=strength, scale=scale, 
                         seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
         return self.run(pipelinetype="inpaint", model=model, prompt=prompt, initimage=initimage, maskimage=maskimage, width=initimage.width, height=initimage.height,
-                        negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
+                        negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        return self.run(pipelinetype="txt2img_controlnet", model=model, prompt=prompt, controlimage=controlimage, negative_prompt=negprompt, steps=steps, scale=scale, 
+        return self.run(pipelinetype="txt2img_controlnet", model=model, controlmodel=controlmodel, prompt=prompt, controlimage=controlimage, negprompt=negprompt, steps=steps, scale=scale, 
                         seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        return self.run(pipelinetype="img2img_controlnet", model=model, prompt=prompt, initimage=initimage, controlimage=controlimage, negative_prompt=negprompt, 
+        return self.run(pipelinetype="img2img_controlnet", model=model, controlmodel=controlmodel, prompt=prompt, initimage=initimage, controlimage=controlimage, negprompt=negprompt, 
                               strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        return self.run(pipelinetype="inpaint_controlet", model=model, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
+        return self.run(pipelinetype="inpaint_controlet", model=model, controlmodel=controlmodel, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
                               negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
