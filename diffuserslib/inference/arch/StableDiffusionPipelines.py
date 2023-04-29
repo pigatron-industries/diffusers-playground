@@ -123,8 +123,8 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
     def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
         super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
-    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+    def inference(self, prompt, negprompt, seed, controlimage, scale, steps, scheduler, **kwargs):
+        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
     
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
