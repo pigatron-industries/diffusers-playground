@@ -71,8 +71,8 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
         super().__init__(StableDiffusionPipeline, preset, device) #custom_pipeline = 'lpw_stable_diffusion',
 
-    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+    def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
+        return super().inference(prompt=prompt, negative_prompt=negprompt, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
