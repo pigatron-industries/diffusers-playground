@@ -94,6 +94,13 @@ inpaint:
       - id: saik0s/realistic_vision_inpainting
         vae: stabilityai/sd-vae-ft-mse
 
+upscale:
+  - base: sd_2_0
+    pipelines:
+      upscale: StableDiffusionUpscalePipeline
+    models:
+      - id: stabilityai/stable-diffusion-x4-upscaler # official
+
 controlnet:
   - base: sd_1_5
     pipelines:
@@ -121,9 +128,3 @@ controlnet:
       - id: thibaud/controlnet-sd21-hed-diffusers
       - id: thibaud/controlnet-sd21-openpose-diffusers
       - id: thibaud/controlnet-sd21-scribble-diffusers
-
-misc:
-  - base: sd_1_5
-    pipelines:
-    models:
-      - id: timbrooks/instruct-pix2pix

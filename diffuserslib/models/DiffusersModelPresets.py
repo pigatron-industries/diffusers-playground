@@ -15,6 +15,7 @@ class DiffusersPipelineType:
     text2img = 'text2img'
     img2img = 'img2img'
     inpaint = 'inpaint'
+    upscale = 'upscale'
     controlnet = 'controlnet'
     text2img_controlnet = 'text2img_controlnet'
     img2img_controlnet = 'img2img_controlnet'

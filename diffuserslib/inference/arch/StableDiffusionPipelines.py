@@ -105,6 +105,15 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
         return super().inference(prompt=prompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, **kwargs)
     
 
+class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
+    def __init__(self, preset:DiffusersModel, device, **kwargs):
+        super().__init__(DiffusionPipeline, preset, device, **kwargs)
+
+    def inference(self, prompt, seed, initimage, scale, steps, **kwargs):
+        initimage = initimage.convert("RGB")
+        return super().inference(prompt=prompt, seed=seed, image=initimage, guidance_scale=scale, num_inference_steps=steps, **kwargs)
+
+
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, cls=DiffusionPipeline, **kwargs):
         controlnet = self.createControlNets(controlmodel)

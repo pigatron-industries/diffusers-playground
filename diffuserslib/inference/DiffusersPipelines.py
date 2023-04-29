@@ -240,9 +240,5 @@ class DiffusersPipelines:
                               negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        return self.inference(pipelinetype="instructpix2pix", model=model, prompt=prompt, image=initimage.convert("RGB"), num_inference_steps=steps, scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
-
-
-    def upscale(self, inimage, prompt, scheduler=None, model=None):
-        return self.inference(pipelinetype="upscale", model=model, image=inimage, prompt=prompt, pipeline=pipeline, scheduler=scheduler)
+    def upscale(self, initimage, prompt, scheduler=None, model=None):
+        return self.inference(pipelinetype="upscale", model=model, image=initimage, prompt=prompt, scheduler=scheduler)
