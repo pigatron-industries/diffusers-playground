@@ -83,7 +83,7 @@ class DiffusersModelList:
         
     def getModelsByType(self, pipelinetype):
         matchingmodels = {}
-        for modelid, model in self.models:
+        for modelid, model in self.models.items():
             if pipelinetype in model.pipelinetypes:
                 matchingmodels[modelid] = model
         return matchingmodels
