@@ -34,7 +34,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
         # if(scheduler is not None):
         #     self.loadScheduler(scheduler)
         prompt_embeds, negprompt_embeds = self.pipeline.encode_prompt(prompt=prompt, negative_prompt=negprompt)
-        ptimage = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, width=int(width/4), height=(int(height/4)), generator=generator, output_type="pt", **kwargs).images[0]
+        ptimage = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, width=int(width/4), height=(int(height/4)), generator=generator, output_type="pt", **kwargs).images
         image = self.pipeline2(image=ptimage, prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, generator=generator, output_type="pil", **kwargs).images[0]
         return image, seed
 
