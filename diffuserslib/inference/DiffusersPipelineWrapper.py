@@ -1,4 +1,4 @@
-from ..DiffusersModelPresets import DiffusersModel
+from ..models.DiffusersModelPresets import DiffusersModel
 from ..StringUtils import mergeDicts
 from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
@@ -86,7 +86,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
-        super().__init__(StableDiffusionPipeline, preset, device, custom_pipeline = 'lpw_stable_diffusion', **kwargs)
+        super().__init__(StableDiffusionPipeline, preset, device,  **kwargs) #custom_pipeline = 'lpw_stable_diffusion',
 
     def inference(self, prompt, seed, scale, steps, **kwargs):
         return super().inference(prompt=prompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, **kwargs)

@@ -12,7 +12,8 @@ from transformers import CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
 from .LORA import LORA
 from .DiffusersPipelineWrapper import *
-from ..DiffusersModelPresets import DiffusersModelList
+from .BaseModelData import BaseModelData
+from ..models.DiffusersModelPresets import DiffusersModelList
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
 
@@ -37,17 +38,6 @@ def str_to_class(str):
     return getattr(sys.modules[__name__], str)
 
 
-class BaseModelData:
-    def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None):  #: Dict[str, list[str]]
-        self.base : str = base
-        self.textembeddings : TextEmbeddings = textembeddings
-        self.loras = {}
-        if (modifierdict is None):
-            self.modifierdict = {}
-        else:
-            self.modifierdict = modifierdict
-
-
 class DiffusersPipelines:
     def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None, custom_pipeline = None, cache_dir = None):
         self.localmodelpath: str = localmodelpath
@@ -67,48 +57,24 @@ class DiffusersPipelines:
 
         self.vae = None
         self.baseModelData: Dict[str, BaseModelData] = {}
-
-        self.presetsImage: DiffusersModelList = DiffusersModelList()
-        self.presetsInpaint: DiffusersModelList = DiffusersModelList()
-        self.presetsControl: DiffusersModelList = DiffusersModelList()
-        self.presetsMisc: DiffusersModelList = DiffusersModelList()
+        self.presets = DiffusersModelList()
 
 
     def loadPresetFile(self, filepath):
-        self.presetsImage = DiffusersModelList.from_file(filepath, 'image')
-        self.presetsInpaint = DiffusersModelList.from_file(filepath, 'inpaint')
-        self.presetsControl = DiffusersModelList.from_file(filepath, 'controlnet')
-        self.presetsMisc = DiffusersModelList.from_file(filepath, 'misc')
+        self.presets.load_from_file(filepath, 'image')
+        self.presets.load_from_file(filepath, 'inpaint')
+        self.presets.load_from_file(filepath, 'controlnet')
+        self.presets.load_from_file(filepath, 'misc')
 
 
-    def addPresetsImage(self, presets):
-        self.presetsImage.addModels(presets)
+    def addPresets(self, presets):
+        self.presets.addModels(presets)
 
 
-    def addPresetsInpaint(self, presets):
-        self.presetsInpaint.addModels(presets)
-
-
-    def addPresetsControl(self, presets):
-        self.presetsControl.addModels(presets)
-
-
-    def addPresetImage(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+    def addPreset(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
-        self.presetsImage.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
-
-
-    def addPresetInpaint(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
-        if(modelpath == None and location == 'local'):
-            modelpath = self.localmodelpath + '/' + modelid
-        self.presetsInpaint.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
-
-
-    def addPresetControl(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
-        if(modelpath == None and location == 'local'):
-            modelpath = self.localmodelpath + '/' + modelid
-        self.presetsControl.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+        self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
 
 
     def getModifierDict(self, base):
@@ -200,15 +166,8 @@ class DiffusersPipelines:
         self.clip_model = CLIPModel.from_pretrained(model, torch_dtype=torch.float16)
 
 
-    def getModel(self, modelid, modelList:DiffusersModelList):
-        preset = modelList.getModel(modelid)
-        if(preset.location == 'url' and preset.modelpath.startswith('http')):
-            localmodelpath = self.localmodelcache + '/' + modelid
-            if (not os.path.isdir(localmodelpath)):
-                downloadModel(preset.modelpath, modelid)
-                convertToDiffusers(modelid)
-            preset.modelpath = localmodelpath
-        return preset
+    def getModel(self, modelid):
+        return self.presets.getModel(modelid)
 
 
     def latentsToImage(self, pipeline, latents):
@@ -221,47 +180,21 @@ class DiffusersPipelines:
 
     #=============== LOAD PIPELINES ==============
 
-    def createPipeline(self, cls, model, presets, default, **kwargs):
-        if(cls.__name__ not in self.pipelines and (model is None or model == "")):
-            model = default
-        if(model is None or model == ""):
-            return self.pipelines[cls.__name__]
-        if (cls.__name__ in self.pipelines and self.pipelines[cls.__name__].preset.modelid == model):
-            return self.pipelines[cls.__name__]
-        print(f"Creating {cls.__name__} pipeline from model {model}")
-        if (cls.__name__ in self.pipelines):
-            del self.pipelines[cls.__name__]
+    def createPipeline(self, pipelinetype, model, **kwargs):
+        if (pipelinetype in self.pipelines and self.pipelines[pipelinetype].preset.modelid == model):
+            return self.pipelines[pipelinetype]
+        print(f"Creating {pipelinetype} pipeline from model {model}")
+        if (pipelinetype in self.pipelines):
+            del self.pipelines[pipelinetype]
         gc.collect()
         torch.cuda.empty_cache()
-        preset = self.getModel(model, presets)
-
-        pipelineWrapper = cls(preset, self.device, safety_checker=self.safety_checker, **kwargs)
+        preset = self.getModel(model)
+        pipelineWrapperClass = str_to_class(preset.pipelinetypes[pipelinetype]+"Wrapper")
+        pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
         self._addTextEmbeddingsToPipeline(pipelineWrapper)
         self._addLORAsToPipeline(pipelineWrapper)
-        self.pipelines[cls.__name__] = pipelineWrapper
-        return self.pipelines[cls.__name__]
-    
-    
-    def createControlNetPipeline(self, model, presets, default, controlmodel, cls=StableDiffusionControlNetPipeline, **kwargs):
-        if("StableDiffusionControlNetPipeline" not in self.pipelines and (model is None or model == "")):
-            model = default
-        if(model is None or model == ""):
-            return self.pipelines["StableDiffusionControlNetPipeline"]
-        if("StableDiffusionControlNetPipeline" in self.pipelines and 
-           self.pipelines["StableDiffusionControlNetPipeline"].preset.modelid == model and 
-           self.pipelines["StableDiffusionControlNetPipeline"].controlmodel == controlmodel):
-            return self.pipelines["StableDiffusionControlNetPipeline"]
-        if("StableDiffusionControlNetPipeline" in self.pipelines):
-            del self.pipelines["StableDiffusionControlNetPipeline"]
-        if(isinstance(controlmodel, list)):
-            controlnet = []
-            for cmodel in controlmodel:
-                controlnet.append(ControlNetModel.from_pretrained(cmodel))
-        else:
-            controlnet = ControlNetModel.from_pretrained(controlmodel)
-        pipeline = self.createPipeline(cls, model, presets, default, controlnet=controlnet, **kwargs)
-        pipeline.controlmodel = controlmodel
-        return pipeline
+        self.pipelines[pipelinetype] = pipelineWrapper
+        return self.pipelines[pipelinetype]
 
 
     #=============== INFERENCE ==============
@@ -269,63 +202,47 @@ class DiffusersPipelines:
     def inference(self, pipeline:DiffusersPipelineWrapper, prompt, seed, **kwargs):
         prompt = self.processPrompt(prompt, pipeline)
         return pipeline.inference(prompt=prompt, seed=seed, **kwargs)
+    
+
+    def run(self, pipelinetype, model, prompt, **kwargs):
+        pipelineWrapper = self.createPipeline(pipelinetype, model)
+        prompt = self.processPrompt(prompt, pipelineWrapper)
+        return pipelineWrapper.inference(**kwargs)
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionTextToImagePipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
-        return self.inference(prompt=prompt, negative_prompt=negprompt, steps=steps, scale=scale, 
-                              width=width, height=height, pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+        return self.run(pipelinetype="txt2img", model=model, prompt=prompt, negative_prompt=negprompt, steps=steps, scale=scale, 
+                 width=width, height=height, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):        
-        pipeline = self.createPipeline(StableDiffusionImageToImagePipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL)
-        return self.inference(prompt=prompt, initimage=initimage, negative_prompt=negprompt, strength=strength, scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+    def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
+        return self.run(pipelinetype="img2img", model=model, prompt=prompt, initimage=initimage, negative_prompt=negprompt, strength=strength, scale=scale, 
+                        seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionInpaintPipelineWrapper, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL)
-        return self.inference(prompt=prompt, initimage=initimage, maskimage=maskimage, width=initimage.width, height=initimage.height,
-                              negative_prompt=negprompt, steps=steps, scale=scale, pipeline=pipeline, seed=seed, 
-                              scheduler=scheduler, tiling=tiling)
+        return self.run(pipelinetype="inpaint", model=model, prompt=prompt, initimage=initimage, maskimage=maskimage, width=initimage.width, height=initimage.height,
+                        negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionTextToImageControlNetPipelineWrapper, model, self.presetsInpaint, DEFAULT_INPAINT_MODEL, controlmodel=controlmodel)
-        return self.inference(prompt=prompt, controlimage=controlimage, negative_prompt=negprompt, steps=steps, scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+        return self.run(pipelinetype="txt2img_controlnet", model=model, prompt=prompt, controlimage=controlimage, negative_prompt=negprompt, steps=steps, scale=scale, 
+                        seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionImageToImageControlNetPipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_img2img")
-        return self.inference(prompt=prompt, initimage=initimage, controlimage=controlimage, negative_prompt=negprompt, strength=strength, scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
+        return self.inference(pipelinetype="img2img_controlnet", model=model, prompt=prompt, initimage=initimage, controlimage=controlimage, negative_prompt=negprompt, 
+                              strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, controlmodel=None, tiling=False, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionInpaintControlNetPipelineWrapper, model, self.presetsImage, DEFAULT_TEXTTOIMAGE_MODEL, controlmodel=controlmodel, cls=DiffusionPipeline, custom_pipeline="stable_diffusion_controlnet_inpaint")
-        return self.inference(prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, negative_prompt=negprompt, steps=steps, scale=scale, 
-                              pipeline=pipeline, seed=seed, scheduler=scheduler, tiling=tiling)
-
-
-    def depthToImage(self, inimage, prompt, negprompt, strength, scale, steps=50, seed=None, scheduler=None, model=None, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionDepth2ImgPipeline, model, self.presetsImage, DEFAULT_DEPTHTOIMAGE_MODEL)
-        inimage = inimage.convert("RGB")
-        return self.inference(prompt=prompt, image=inimage, negative_prompt=negprompt, strength=strength, scale=scale, 
-                              steps=steps, pipeline=pipeline, seed=seed, scheduler=scheduler)
-
-
-    def imageVariation(self, initimage, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionImageVariationPipeline, model, self.presetsImage, DEFAULT_IMAGEVARIATION_MODEL)
-        return self.inference(image=initimage.convert("RGB"), width=initimage.width, height=initimage.height, steps=steps, 
-                              scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
+        return self.inference(pipelinetype="inpaint_controlet", model=model, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
+                              negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def instructPixToPix(self, initimage, prompt, steps, scale, seed=None, scheduler=None, model=None, **kwargs):
-        pipeline = self.createPipeline(StableDiffusionInstructPix2PixPipeline, model, self.presetsImage, DEFAULT_INSTRUCTPIXTOPIX_MODEL)
-        return self.inference(prompt, image=initimage.convert("RGB"), num_inference_steps=steps, scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
+        return self.inference(pipelinetype="instructpix2pix", model=model, prompt=prompt, image=initimage.convert("RGB"), num_inference_steps=steps, scale=scale, pipeline=pipeline, seed=seed, scheduler=scheduler)
 
 
     def upscale(self, inimage, prompt, scheduler=None, model=None):
-        pipeline = self.createPipeline(StableDiffusionUpscalePipeline, model, self.presetsImage, DEFAULT_UPSCALE_MODEL)
-        return self.inference(image=inimage, prompt=prompt, pipeline=pipeline, scheduler=scheduler)
+        return self.inference(pipelinetype="upscale", model=model, image=inimage, prompt=prompt, pipeline=pipeline, scheduler=scheduler)

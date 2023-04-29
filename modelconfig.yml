@@ -1,11 +1,21 @@
 
 image:
   - base: sd_2_1
+    pipelines:
+      txt2img: StableDiffusionTextToImagePipeline
+      img2img: StableDiffusionImageToImagePipeline
+      txt2img_controlnet: StableDiffusionTextToImageControlNetPipeline
+      img2img_controlnet: StableDiffusionImageToImageControlNetPipeline
     models:
       - id: stabilityai/stable-diffusion-2-1  # official
       - id: stabilityai/stable-diffusion-2-1-base  # official
       - id: stablediffusionapi/illuminati-diffusion
   - base: sd_1_5
+    pipelines:
+      txt2img: StableDiffusionTextToImagePipeline
+      img2img: StableDiffusionImageToImagePipeline
+      txt2img_controlnet: StableDiffusionTextToImageControlNetPipeline
+      img2img_controlnet: StableDiffusionImageToImageControlNetPipeline
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
         vae: stabilityai/sd-vae-ft-mse
@@ -66,10 +76,14 @@ image:
         vae: stabilityai/sd-vae-ft-mse
 
 inpaint:
-  - base: sd_2_0_512
+  - base: sd_2_0
+    pipelines:
+      inpaint: StableDiffusionInpaintPipeline
     models:
       - id: stabilityai/stable-diffusion-2-inpainting # official
   - base: sd_1_5
+    pipelines:
+      inpaint: StableDiffusionInpaintPipeline
     models:
       - id: runwayml/stable-diffusion-inpainting # official
         vae: stabilityai/sd-vae-ft-mse
@@ -82,6 +96,8 @@ inpaint:
 
 controlnet:
   - base: sd_1_5
+    pipelines:
+      controlnet: StableDiffusionControlNetPipeline
     models:
       - id: lllyasviel/control_v11p_sd15_canny
       - id: lllyasviel/control_v11f1p_sd15_depth
@@ -96,7 +112,9 @@ controlnet:
       - id: lllyasviel/control_v11e_sd15_shuffle
       - id: lllyasviel/control_v11u_sd15_tile
      
-  - base: sd_2_1_512
+  - base: sd_2_1
+    pipelines:
+      controlnet: StableDiffusionControlNetPipeline
     models:
       - id: thibaud/controlnet-sd21-canny-diffusers
       - id: thibaud/controlnet-sd21-depth-diffusers
@@ -106,9 +124,6 @@ controlnet:
 
 misc:
   - base: sd_1_5
+    pipelines:
     models:
       - id: timbrooks/instruct-pix2pix
-  - base: sd_1_4
-    models:
-      - id: lambdalabs/sd-image-variations-diffusers
-        revision: v2.0

@@ -1,4 +1,3 @@
-from .DiffusersModelPresets import *
 from .DiffusersWeb import *
 from .TrainTextEmbedding import *
 from .imagetools.ImageTools import *
@@ -6,6 +5,8 @@ from .ImageUtils import *
 from .ModelUtils import *
 from .FileUtils import *
 from .Web import *
+
+from .models.DiffusersModelPresets import *
 
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import *
