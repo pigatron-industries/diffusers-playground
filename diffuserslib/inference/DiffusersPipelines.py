@@ -207,7 +207,7 @@ class DiffusersPipelines:
     def run(self, pipelinetype, model, prompt, **kwargs):
         pipelineWrapper = self.createPipeline(pipelinetype, model)
         prompt = self.processPrompt(prompt, pipelineWrapper)
-        return pipelineWrapper.inference(**kwargs)
+        return pipelineWrapper.inference(prompt=prompt, **kwargs)
 
 
     def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, tiling=False, **kwargs):
