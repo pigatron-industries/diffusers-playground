@@ -16,7 +16,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
-        self.pipeline = IFPipeline.from_pretrained(preset.modelpath, **args)
+        self.pipeline = cls.from_pretrained(preset.modelpath, **args)
         self.pipeline2 = IFSuperResolutionPipeline.from_pretrained(preset.data['id2'], text_encoder=None, **args)
 
     def createPipelineArgs(self, preset, **kwargs):
@@ -40,8 +40,8 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
 
 
 class DeepFloydTextToImagePipelineWrapper(DeepFloydPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, **kwargs):
-        super().__init__(IFPipeline, preset, device)
+    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
+        super().__init__(IFPipeline, preset, device, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, scale, steps, scheduler, width, height, **kwargs):
         return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, width=width, height=height)
