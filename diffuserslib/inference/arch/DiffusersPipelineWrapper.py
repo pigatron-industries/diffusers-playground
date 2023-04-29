@@ -9,9 +9,8 @@ MAX_SEED = 4294967295
 
 
 class DiffusersPipelineWrapper:
-    def __init__(self, preset:DiffusersModel, controlmodel:str = None):
+    def __init__(self, preset:DiffusersModel):
         self.preset = preset
-        self.controlmodel = controlmodel
 
     def inference(self, **kwargs):
         pass

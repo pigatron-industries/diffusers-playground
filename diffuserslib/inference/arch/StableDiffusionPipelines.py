@@ -22,12 +22,12 @@ def str_to_class(str):
 
 
 class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, controlmodel=None, **kwargs):
+    def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         self.safety_checker = safety_checker
         self.device = device
         self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset, controlmodel)
+        super().__init__(preset)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
@@ -47,8 +47,6 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
                 args['torch_dtype'] = torch.float16
         if(preset.vae is not None):
             args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        # if(self.cache_dir is not None):
-        #     args['cache_dir'] = self.cache_dir
         return mergeDicts(args, kwargs)
     
     def loadScheduler(self, schedulerClass):
@@ -71,7 +69,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
-        super().__init__(StableDiffusionPipeline, preset, device,  **kwargs) #custom_pipeline = 'lpw_stable_diffusion',
+        super().__init__(StableDiffusionPipeline, preset, device) #custom_pipeline = 'lpw_stable_diffusion',
 
     def inference(self, prompt, negprompt, seed, scale, steps, **kwargs):
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, **kwargs)
@@ -79,7 +77,7 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
-        super().__init__(StableDiffusionImg2ImgPipeline, preset, device, **kwargs)
+        super().__init__(StableDiffusionImg2ImgPipeline, preset, device)
 
     def inference(self, prompt, negprompt, seed, initimage, scale, **kwargs):
         initimage = initimage.convert("RGB")
@@ -88,7 +86,7 @@ class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper)
 
 class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
-        super().__init__(StableDiffusionInpaintPipeline, preset, device, **kwargs)
+        super().__init__(StableDiffusionInpaintPipeline, preset, device)
 
     def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, **kwargs):
         initimage = initimage.convert("RGB")
@@ -98,7 +96,7 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, **kwargs):
-        super().__init__(DiffusionPipeline, preset, device, **kwargs)
+        super().__init__(DiffusionPipeline, preset, device)
 
     def inference(self, prompt, seed, initimage, scale, steps, **kwargs):
         initimage = initimage.convert("RGB")
@@ -108,7 +106,7 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, cls=DiffusionPipeline, **kwargs):
         controlnet = self.createControlNets(controlmodel)
-        super().__init__(preset=preset, device=device, cls=cls, controlnet=controlnet, **kwargs)
+        super().__init__(preset=preset, device=device, cls=cls, controlnet=controlnet)
 
     def createControlNets(self, controlmodel):
         self.controlmodel = controlmodel
@@ -126,7 +124,7 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, **kwargs):
-        super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, **kwargs)
+        super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel)
 
     def inference(self, prompt, negprompt, seed, scale, steps, **kwargs):
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, **kwargs)
@@ -134,7 +132,7 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, **kwargs):
-        super().__init__(custom_pipeline="stable_diffusion_controlnet_img2img", preset=preset, device=device, controlmodel=controlmodel, **kwargs)
+        super().__init__(custom_pipeline="stable_diffusion_controlnet_img2img", preset=preset, device=device, controlmodel=controlmodel)
 
     def inference(self, prompt, negprompt, seed, initimage, controlimage, scale, **kwargs):
         initimage = initimage.convert("RGB")
@@ -147,7 +145,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, **kwargs):
-        super().__init__(custom_pipeline="stable_diffusion_controlnet_inpaint", preset=preset, device=device, controlmodel=controlmodel, **kwargs)
+        super().__init__(custom_pipeline="stable_diffusion_controlnet_inpaint", preset=preset, device=device, controlmodel=controlmodel)
 
     def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, **kwargs):
         initimage = initimage.convert("RGB")
