@@ -11,7 +11,7 @@ from diffusers.models import AutoencoderKL
 from transformers import CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
 from .LORA import LORA
-from .DiffusersPipelineWrapper import *
+from .arch import *
 from .BaseModelData import BaseModelData
 from ..models.DiffusersModelPresets import DiffusersModelList
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
