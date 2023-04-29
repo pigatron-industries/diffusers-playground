@@ -14,11 +14,7 @@ from diffusers import ( # Pipelines
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler)
 import torch
-import random
 import sys
-
-
-MAX_SEED = 4294967295
 
 
 def str_to_class(str):
@@ -54,11 +50,6 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         # if(self.cache_dir is not None):
         #     args['cache_dir'] = self.cache_dir
         return mergeDicts(args, kwargs)
-    
-    def createGenerator(self, seed=None):
-        if(seed is None):
-            seed = random.randint(0, MAX_SEED)
-        return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
     
     def loadScheduler(self, schedulerClass):
         if (isinstance(schedulerClass, str)):

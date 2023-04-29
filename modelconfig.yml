@@ -1,5 +1,12 @@
 
 image:
+  - base: df_1_0
+    pipelines:
+      txt2img: DeepFloydTextToImagePipeline
+    models:
+      - id: DeepFloyd/IF-I-M-v1.0
+      - id: DeepFloyd/IF-I-L-v1.0
+      - id: DeepFloyd/IF-I-XL-v1.0
   - base: sd_2_1
     pipelines:
       txt2img: StableDiffusionTextToImagePipeline
