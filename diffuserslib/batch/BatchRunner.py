@@ -71,12 +71,26 @@ class BatchRunner:
     def run(self):
         for i, args in enumerate(self.argsbatch):
             print(f"Generating {i}/{len(self.argsbatch)}")
-            print(f"Arguments: {args}")
+            self.logArgs(args)
+
             image, seed = self.pipeline(**args)
             self.argsbatch[i]["image"] = image
             self.argsbatch[i]["seed"] = seed
             self.argsbatch[i]["timestamp"] = int(time.time())
             self._output(image, seed, i)
+
+
+    def logArgs(self, args):
+        print(f"Arguments: {args}")
+        for arg in args.keys():
+            value = args[arg]
+            if (isinstance(value, Image)):
+                print(f"{arg}:")
+                display(value)
+            elif (isinstance(value, list) and all(isinstance(item, Image) for item in value)):
+                print(f"{arg}:")
+                for item in value:
+                    display(item)
 
 
     def _output(self, image, seed, index):
