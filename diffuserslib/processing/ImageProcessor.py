@@ -1,5 +1,5 @@
 from PIL import Image
-from ..batch import evaluateArguments
+from ..batch import evaluateArguments, PlaceholderArgument
 
 
 class ImageProcessor():
@@ -39,11 +39,26 @@ class ImageProcessorPipeline():
         self.oversize = oversize
         self.tasks = []
 
-    def requireInputImage(self):
-        return self.initargs["size"] is None
-    
-    def setInputImage(self, image):
-        self.tasks[0].setImage(image)
+    def hasPlaceholder(self, name):
+        # check if placeholder argument exists in initargs or tasks
+        for key, arg in self.initargs.items():
+            if isinstance(arg, PlaceholderArgument) and arg.name == name:
+                return True
+        for task in self.tasks:
+            for key, arg in task.args.items():
+                if isinstance(arg, PlaceholderArgument) and arg.name == name:
+                    return True
+        return False
+
+    def setPlaceholder(self, name, value):
+        # find placeholder argument in initargs and tasks and set value
+        for key, arg in self.initargs.items():
+            if (isinstance(arg, PlaceholderArgument) and arg.name == name):
+                self.initargs[key] = value
+        for task in self.tasks:
+            for key, arg in task.args.items():
+                if (isinstance(arg, PlaceholderArgument) and arg.name == name):
+                    task.args[key] = value
 
     def addTask(self, task):
         self.tasks.append(task)
@@ -102,11 +117,18 @@ class ResizeProcessor(ImageProcessor):
     def __call__(self, context):
         args = evaluateArguments(self.args, context=context)
         image = context.getViewportImage()
+        width = args["size"][0]
+        height = args["size"][1]
 
         if(args["type"] == "stretch"):
             newimage = image.resize(args["size"], resample=Image.Resampling.LANCZOS)
-        else:
-            newimage = Image.new("RGBA", size=(args["size"][0], args["size"][1]), color=args["fill"])
+
+        if(args["type"] == "fit"):
+            ratio = min(args["size"][0]/image.width, args["size"][1]/image.height)
+            image = image.resize((int(image.width*ratio), int(image.height*ratio)), resample=Image.Resampling.LANCZOS)
+
+        if(args["type"] in ("extend", "fit")):
+            newimage = Image.new("RGBA", size=(width, height), color=args["fill"])
             if (args["halign"] == "left"):
                 x = 0
             elif (args["halign"] == "right"):

@@ -82,4 +82,5 @@ class RandomImageSelection(Argument):
         file = random.choice(self.filelist)
         image = Image.open(file)
         image.filename = file
+        # TODO get random selection from image
         return image

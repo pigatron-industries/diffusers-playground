@@ -65,9 +65,10 @@ class InitImageWidgets:
             if(self.preprocessor_dropdown.value is not None):
                 preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
                 pipeline.addTask(preprocessor())
-            if(pipeline.requireInputImage()):
-                pipeline.setInputImage(RandomImage.fromDirectory(self.input_dropdown.value))
-            pipeline.addTask(ResizeProcessor(type="stretch", size=(self.interface.width_slider.value, self.interface.height_slider.value)))
+            if(pipeline.hasPlaceholder("image")):
+                pipeline.setPlaceholder("image", RandomImage.fromDirectory(self.input_dropdown.value))
+            if(pipeline.hasPlaceholder("size")):
+                pipeline.setPlaceholder("size", (self.interface.width_slider.value, self.interface.height_slider.value))
             return pipeline
 
 
