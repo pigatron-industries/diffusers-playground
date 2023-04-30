@@ -86,10 +86,14 @@ class BatchRunner:
             value = args[arg]
             if (isinstance(value, Image.Image)):
                 print(f"{arg}:")
+                if(hasattr(value, "filename")):
+                    print(value.filename)
                 display(value)
             elif (isinstance(value, list) and all(isinstance(item, Image.Image) for item in value)):
                 print(f"{arg}:")
                 for item in value:
+                    if(hasattr(item, "filename")):
+                        print(item.filename)
                     display(item)
 
 
