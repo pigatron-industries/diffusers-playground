@@ -93,7 +93,8 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, 
+                                 scheduler=scheduler, width=initimage.width, height=initimage.height)
     
 
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
@@ -155,4 +156,5 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
         else:
             controlimage = controlimage.convert("RGB")
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, 
-                                 controlnet_conditioning_image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+                                 controlnet_conditioning_image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, 
+                                 width=initimage.width, height=initimage.height)
