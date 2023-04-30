@@ -84,10 +84,10 @@ class BatchRunner:
         print(f"Arguments: {args}")
         for arg in args.keys():
             value = args[arg]
-            if (isinstance(value, Image)):
+            if (isinstance(value, Image.Image)):
                 print(f"{arg}:")
                 display(value)
-            elif (isinstance(value, list) and all(isinstance(item, Image) for item in value)):
+            elif (isinstance(value, list) and all(isinstance(item, Image.Image) for item in value)):
                 print(f"{arg}:")
                 for item in value:
                     display(item)
