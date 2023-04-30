@@ -45,9 +45,10 @@ class ImageProcessorPipeline():
             if isinstance(arg, PlaceholderArgument) and arg.name == name:
                 return True
         for task in self.tasks:
-            for key, arg in task.args.items():
-                if isinstance(arg, PlaceholderArgument) and arg.name == name:
-                    return True
+            if hasattr(task, "args"):
+                for key, arg in task.args.items():
+                    if isinstance(arg, PlaceholderArgument) and arg.name == name:
+                        return True
         return False
 
     def setPlaceholder(self, name, value):
