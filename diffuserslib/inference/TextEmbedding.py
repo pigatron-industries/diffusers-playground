@@ -106,4 +106,6 @@ class TextEmbeddings:
                     for option in options:
                         expandedtoken = expandedtoken + ' ' + embedding.token + option
                 prompt = prompt.replace(prompttoken, expandedtoken)
+            else:
+                print(f"WARNING: embedding token {tokenname} not found")
         return prompt
