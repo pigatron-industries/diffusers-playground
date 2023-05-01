@@ -16,4 +16,7 @@ class PlaceholderArgument(Argument):
     def __call__(self, **kwargs):
         if(self.value is None):
             raise Exception(f'Placeholder {self.name} not set')
-        return self.value
+        if(callable(self.value)):
+            return self.value()
+        else:
+            return self.value

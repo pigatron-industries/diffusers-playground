@@ -55,11 +55,11 @@ class ImageProcessorPipeline():
         # find placeholder argument in initargs and tasks and set value
         for key, arg in self.initargs.items():
             if (isinstance(arg, PlaceholderArgument) and arg.name == name):
-                self.initargs[key] = value
+                self.initargs[key].setValue(value)
         for task in self.tasks:
             for key, arg in task.args.items():
                 if (isinstance(arg, PlaceholderArgument) and arg.name == name):
-                    task.args[key] = value
+                    task.args[key].setValue(value)
 
     def addTask(self, task):
         self.tasks.append(task)
