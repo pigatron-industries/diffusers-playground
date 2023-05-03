@@ -71,10 +71,16 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(StableDiffusionPipeline, preset, device, safety_checker=safety_checker) #custom_pipeline = 'lpw_stable_diffusion',
+        super().__init__("composable_stable_diffusion", preset, device, safety_checker=safety_checker) #custom_pipeline = 'lpw_stable_diffusion',
 
     def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+        prompts = prompt.split("|")
+        negprompts = [negprompt] * len(prompts)
+        weights = []
+        for prompt in prompts:
+            weights.append("1")
+        weights = " | ".join(weights)
+        return super().inference(prompt=prompt, negative_prompt=negprompts, weights=weights, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
