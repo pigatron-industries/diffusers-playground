@@ -77,8 +77,8 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
         prompts = prompt.split("|")
         negprompts = [negprompt] * len(prompts)
         weights = []
-        for prompt in prompts:
-            weight = prompt.split(" ")[-1]
+        for promptpart in prompts:
+            weight = promptpart.split(" ")[-1]
             if (weight.isnumeric()):
                 weights.append(weight)
             else:
