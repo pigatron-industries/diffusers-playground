@@ -78,7 +78,11 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
         negprompts = [negprompt] * len(prompts)
         weights = []
         for prompt in prompts:
-            weights.append("1")
+            weight = prompt.split(" ")[-1]
+            if (weight.isnumeric()):
+                weights.append(weight)
+            else:
+                weights.append("1")
         weights = " | ".join(weights)
         return super().inference(prompt=prompt, negative_prompt=negprompts, weights=weights, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
 
