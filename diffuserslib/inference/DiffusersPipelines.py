@@ -53,7 +53,7 @@ class DiffusersPipelines:
         self.cache_dir = cache_dir
         self.lora_use = []
 
-        self.pipelines: Dict[str,DiffusersPipelineWrapper] = {}
+        self.pipeline: DiffusersPipelineWrapper = None
 
         self.vae = None
         self.baseModelData: Dict[str, BaseModelData] = {}
@@ -137,7 +137,7 @@ class DiffusersPipelines:
     def useLORAs(self, lora_use = []):
         if (set(lora_use) != set(self.lora_use)):
             self.lora_use = lora_use
-            self.pipelines.clear()
+            self.pipeline = None
 
 
     def getLORAList(self, model):
@@ -178,20 +178,20 @@ class DiffusersPipelines:
     #=============== LOAD PIPELINES ==============
 
     def createPipeline(self, pipelinetype, model, **kwargs):
-        if (pipelinetype in self.pipelines and self.pipelines[pipelinetype].preset.modelid == model):
-            return self.pipelines[pipelinetype]
+        # TODO check if current pipeline is the same as requested
+        if(self.pipeline is not None and self.pipeline.preset.modelid == model):
+            return self.pipeline
         print(f"Creating {pipelinetype} pipeline from model {model}")
-        if (pipelinetype in self.pipelines):
-            del self.pipelines[pipelinetype]
+        if (self.pipeline is not None):
+            del self.pipeline
         gc.collect()
         torch.cuda.empty_cache()
         preset = self.getModel(model)
         pipelineWrapperClass = str_to_class(preset.pipelinetypes[pipelinetype]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
-        # self._addTextEmbeddingsToPipeline(pipelineWrapper)
         self._addLORAsToPipeline(pipelineWrapper)
-        self.pipelines[pipelinetype] = pipelineWrapper
-        return self.pipelines[pipelinetype]
+        self.pipeline = pipelineWrapper
+        return self.pipeline
 
 
     #=============== INFERENCE ==============
