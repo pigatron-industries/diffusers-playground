@@ -247,6 +247,7 @@ class BatchNotebookInterface:
                 self.mergemodel_dropdown.value = model[1]
             else:
                 self.model_dropdown.value = model
+            self.mergeweight_slider.value = params.get('model_weight', 1)
             self.lora_dropdown.value = params.get('lora', None)
             self.loraweight_text.value = params.get('lora_weight', 1)
             self.prompt_text.value = params.get('init_prompt', '')
