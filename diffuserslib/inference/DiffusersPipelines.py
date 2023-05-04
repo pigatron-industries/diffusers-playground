@@ -155,6 +155,26 @@ class DiffusersPipelines:
             print(f"Loading LORA {lora_name}")
             self.baseModelData[pipeline.preset.base].loras[lora_name].add_to_model(pipeline.pipeline, weight=weight, device=self.device)
 
+    #=============== MODEL MERGING ==============
+
+    def mergeModel(self, modelid, weight=0.5):
+        preset = self.getModel(modelid)
+        mergePipeline = self.pipeline.__class__(preset=preset, device=self.device, safety_checker=self.safety_checker)
+        for moduleName in self.pipeline.pipeline.config.keys():
+            module1 = getattr(self.pipeline.pipeline, moduleName)
+            module2 = getattr(mergePipeline.pipeline, moduleName)
+            if hasattr(module1, "state_dict") and hasattr(module2, "state_dict"):
+                print(f"Merging state_dict of {moduleName}")
+                updateStateDictFunc = getattr(module1, "load_state_dict")
+                theta_0 = getattr(module1, "state_dict")()
+                theta_1 = getattr(module2, "state_dict")()
+                for key in theta_0.keys():
+                    if key in theta_1:
+                        theta_0[key] = (1 - weight) * theta_0[key] + weight * theta_1[key]
+                for key in theta_1.keys():
+                    if key not in theta_0:
+                        theta_0[key] = theta_1[key]
+                updateStateDictFunc(theta_0)
 
     #===============  ==============
 
