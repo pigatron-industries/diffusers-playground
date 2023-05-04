@@ -96,18 +96,22 @@ class TextEmbeddings:
             try:
                 embedding.add_to_model(text_encoder, tokenizer)
             except ValueError:
-                print(f"Token {token} already exists in tokenizer, skipping")
+                pass
 
 
     def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
-        prompt = self.process_prompt(prompt)
         tokens = self.get_tokens_from_prompt(prompt)
         self.add_tokens_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer, tokens)
+        prompt = self.process_prompt(prompt)
         return prompt
 
 
     def get_tokens_from_prompt(self, prompt: str):
-        return re.findall(r'<.*?>', prompt)
+        prompttokens = re.findall(r'<.*?>', prompt)
+        for prompttoken in prompttokens:
+            tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken)  # remove everything between square brackets
+            prompttokens.append(tokenname)
+        return prompttokens
     
 
     def process_prompt(self, prompt: str):
