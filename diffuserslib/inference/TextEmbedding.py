@@ -108,10 +108,11 @@ class TextEmbeddings:
 
     def get_tokens_from_prompt(self, prompt: str):
         prompttokens = re.findall(r'<.*?>', prompt)
+        tokennames = []
         for prompttoken in prompttokens:
             tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken)  # remove everything between square brackets
-            prompttokens.append(tokenname)
-        return prompttokens
+            tokennames.append(tokenname)
+        return tokennames
     
 
     def process_prompt(self, prompt: str):
