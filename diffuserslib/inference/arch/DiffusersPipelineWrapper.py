@@ -19,3 +19,6 @@ class DiffusersPipelineWrapper:
         if(seed is None):
             seed = random.randint(0, MAX_SEED)
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
+    
+    def isEqual(self, cls, modelid, **kwargs):
+        return cls == self.__class__ and self.preset.modelid == modelid
