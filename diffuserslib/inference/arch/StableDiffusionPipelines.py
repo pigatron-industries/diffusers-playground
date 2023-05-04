@@ -75,16 +75,18 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
 
     def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
         prompts = prompt.split("|")
-        negprompts = [negprompt] * len(prompts)
-        weights = []
-        for promptpart in prompts:
-            weight = promptpart.split(" ")[-1]
-            if (weight.isnumeric()):
-                weights.append(weight)
-            else:
-                weights.append("1")
-        weights = " | ".join(weights)
-        return super().inference(prompt=prompt, negative_prompt=negprompts, weights=weights, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+        weights = None
+        if (len(prompts) == 1):
+            negprompt = [negprompt] * len(prompts)
+            weights = []
+            for promptpart in prompts:
+                weight = promptpart.split(" ")[-1]
+                if (weight.isnumeric()):
+                    weights.append(weight)
+                else:
+                    weights.append("1")
+            weights = " | ".join(weights)
+        return super().inference(prompt=prompt, negative_prompt=negprompt, weights=weights, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
