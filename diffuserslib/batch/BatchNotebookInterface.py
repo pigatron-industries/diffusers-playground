@@ -97,6 +97,8 @@ class BatchNotebookInterface:
 
         #  Config
         self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.mergemodel_dropdown = self.dropdown(label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.mergeweight_slider = self.floatSlider(label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
         self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
         self.loraweight_text = self.floatText(label="LORA weight:", value=1)
         self.prompt_text = self.textarea(label="Prompt:", value="")
@@ -123,6 +125,8 @@ class BatchNotebookInterface:
         for initimage_w in self.initimage_widgets:
             initimage_w.display()
         display(self.model_dropdown, 
+                self.mergemodel_dropdown,
+                self.mergeweight_slider,
                 self.lora_dropdown,
                 self.loraweight_text,
                 widgets.HTML("<span>&nbsp;</span>"),
@@ -151,6 +155,11 @@ class BatchNotebookInterface:
         if(self.model_dropdown.value is not None):
             self.lora_dropdown.options = [None] + self.pipelines.getLORAList(self.model_dropdown.value)
 
+        if(self.mergemodel_dropdown.value is not None):
+            self.mergeweight_slider.layout.display = 'flex'
+        else:
+            self.mergeweight_slider.layout.display = 'none'
+
         if(self.lora_dropdown.value is not None):
             self.loraweight_text.layout.display = 'flex'
         else:
@@ -171,7 +180,11 @@ class BatchNotebookInterface:
 
     def getParams(self):
         params = {}
-        params['model'] = self.model_dropdown.value
+        if(self.mergemodel_dropdown.value is None):
+            params['model'] = self.model_dropdown.value
+        else:
+            params['model'] = [self.model_dropdown.value, self.mergemodel_dropdown.value]
+        params['model_weight'] = self.mergeweight_slider.value
         params['init_prompt'] = self.prompt_text.value
         params['shuffle'] = self.shuffle_checkbox.value
         params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
@@ -228,7 +241,12 @@ class BatchNotebookInterface:
                 initimage_w.input_dropdown.value = params.get(f'initimage{i}_input', None)
                 initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
 
-            self.model_dropdown.value = params.get('model', None)
+            model = params.get('model', None)
+            if(isinstance(model, list)):
+                self.model_dropdown.value = model[0]
+                self.mergemodel_dropdown.value = model[1]
+            else:
+                self.model_dropdown.value = model
             self.lora_dropdown.value = params.get('lora', None)
             self.loraweight_text.value = params.get('lora_weight', 1)
             self.prompt_text.value = params.get('init_prompt', '')

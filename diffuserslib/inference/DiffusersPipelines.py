@@ -197,8 +197,11 @@ class DiffusersPipelines:
 
     #=============== LOAD PIPELINES ==============
 
-    def createPipeline(self, pipelinetype, model, **kwargs):
-        preset = self.getModel(model)
+    def createPipeline(self, pipelinetype, model, model_weight=None, **kwargs):
+        if(isinstance(model, list)):
+            preset = self.getModel(model[0])
+        else:
+            preset = self.getModel(model)
         pipelineWrapperClass = str_to_class(preset.pipelinetypes[pipelinetype]+"Wrapper")
         if(self.pipeline is not None and self.pipeline.isEqual(pipelineWrapperClass, model, **kwargs)):
             return self.pipeline
@@ -209,6 +212,10 @@ class DiffusersPipelines:
         gc.collect()
         torch.cuda.empty_cache()
         pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
+        
+        if(isinstance(model, list)):
+            for modelid in model[1:]:
+                self.mergeModel(modelid, model_weight)
         self._addLORAsToPipeline(pipelineWrapper)
         self.pipeline = pipelineWrapper
         return self.pipeline
