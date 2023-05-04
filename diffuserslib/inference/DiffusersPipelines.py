@@ -212,12 +212,12 @@ class DiffusersPipelines:
         gc.collect()
         torch.cuda.empty_cache()
         pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
+        self.pipeline = pipelineWrapper
         
         if(isinstance(model, list)):
             for modelid in model[1:]:
                 self.mergeModel(modelid, model_weight)
         self._addLORAsToPipeline(pipelineWrapper)
-        self.pipeline = pipelineWrapper
         return self.pipeline
 
 
