@@ -93,7 +93,10 @@ class TextEmbeddings:
     def add_tokens_to_model(self, text_encoder, tokenizer, tokens: List[str]):
         for token in tokens:
             embedding = self.embeddings[token]
-            embedding.add_to_model(text_encoder, tokenizer)
+            try:
+                embedding.add_to_model(text_encoder, tokenizer)
+            except ValueError:
+                print(f"Token {token} already exists in tokenizer, skipping")
 
 
     def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
