@@ -1,7 +1,8 @@
 import torch
 import re
 import os
-from typing import Dict
+from typing import Dict, List
+from .arch.StableDiffusionPipelines import DiffusersPipelineWrapper
 from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
@@ -66,11 +67,13 @@ class TextEmbeddings:
         self.embeddings: Dict[str, TextEmbedding] = {} # Map of token to embedding
         self.modifiers: Dict[str, list[str]] = {} # dictionary of prompt modifiers
 
+
     def load_directory(self, path: str, base: str):
         print(f'Loading text embeddings for base {base} from path {path}')
         for embedding_path, embedding_file in getPathsFiles(f"{path}/*"):
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
                 self.load_file(embedding_path)
+
 
     def load_file(self, path: str, token: str = None):
         embedding = TextEmbedding.from_file(path, token)
@@ -81,16 +84,35 @@ class TextEmbeddings:
         print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embedding_vectors)} vectors")
         return embedding
 
-    def add_to_model(self, text_encoder, tokenizer):
+
+    def add_all_to_model(self, text_encoder, tokenizer):
         for embedding in self.embeddings.values():
             embedding.add_to_model(text_encoder, tokenizer)
+
+
+    def add_tokens_to_model(self, text_encoder, tokenizer, tokens: List[str]):
+        for token in tokens:
+            embedding = self.embeddings[token]
+            embedding.add_to_model(text_encoder, tokenizer)
+
+
+    def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
+        prompt = self.process_prompt(prompt)
+        tokens = self.get_tokens_from_prompt(prompt)
+        self.add_tokens_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer, tokens)
+        return prompt
+
+
+    def get_tokens_from_prompt(self, prompt: str):
+        return re.findall(r'<.*?>', prompt)
+    
 
     def process_prompt(self, prompt: str):
         """ Expand token between angle brackets in prompt to a token for each vector in the embedding
             Use all vectors: <token>
             Use specific vectors: <token[0][4]>
         """
-        prompttokens = re.findall(r'<.*?>', prompt)
+        prompttokens = self.get_tokens_from_prompt(prompt)
         for prompttoken in prompttokens:
             tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken) # remove everything between square brackets
             options = re.findall(r'\[(.*?)\]', prompttoken) # get everything between square brackets

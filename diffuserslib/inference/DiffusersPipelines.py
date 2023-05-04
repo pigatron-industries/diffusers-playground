@@ -112,7 +112,7 @@ class DiffusersPipelines:
     def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
         if (pipeline.preset.base in self.baseModelData):
-            prompt = self.baseModelData[pipeline.preset.base].textembeddings.process_prompt(prompt)
+            prompt = self.baseModelData[pipeline.preset.base].textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
         return prompt
 
 
@@ -188,7 +188,7 @@ class DiffusersPipelines:
         preset = self.getModel(model)
         pipelineWrapperClass = str_to_class(preset.pipelinetypes[pipelinetype]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
-        self._addTextEmbeddingsToPipeline(pipelineWrapper)
+        # self._addTextEmbeddingsToPipeline(pipelineWrapper)
         self._addLORAsToPipeline(pipelineWrapper)
         self.pipelines[pipelinetype] = pipelineWrapper
         return self.pipelines[pipelinetype]
