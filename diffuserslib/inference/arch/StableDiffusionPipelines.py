@@ -76,7 +76,7 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
         prompts = prompt.split("|")
         weights = None
-        if (len(prompts) == 1):
+        if (len(prompts) > 1):
             negprompt = [negprompt] * len(prompts)
             weights = []
             for promptpart in prompts:
