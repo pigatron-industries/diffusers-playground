@@ -123,15 +123,14 @@ class DiffusersView(FlaskView):
             print(f'Control Images: {len(controlimages)}')
 
             controlimages = base64DecodeImages(controlimages)
-            if(len(controlmodels) > 0):
-                initimage = controlimages[0]
-                controlimages.pop(0)
+            initimage = controlimages[0]
+            controlimages.pop(0)
 
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if(len(controlmodels) == 0):
-                    outimage, usedseed = self.pipelines.imageToImage(initimage=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
+                    outimage, usedseed = self.pipelines.imageToImage(initimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 else:
                     outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
@@ -209,7 +208,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, 
+    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None,
                         method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
@@ -220,21 +219,24 @@ class DiffusersView(FlaskView):
             print(f'Method: {method}, Tile width: {tilewidth}, Tile height: {tileheight}, Tile Overlap: {tileoverlap}')
 
             controlimages = base64DecodeImages(controlimages)
+            initimage = controlimages[0]
+            controlimages.pop(0)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if (method=="singlepass"):
-                    outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimg=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageCentred(self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                  alignmentx=tilealignmentx, alignmenty=tilealignmenty, model=model, callback=self.updateProgress)
+                                                                  alignmentx=tilealignmentx, alignmenty=tilealignmenty, model=model, controlmodels=controlmodels, callback=self.updateProgress)
                 elif (method=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimg=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                    passes=2, strengthMult=0.5, model=model, callback=self.updateProgress)
+                                                                    passes=2, strengthMult=0.5, model=model, controlmodels=controlmodels, callback=self.updateProgress)
                 elif (method=="inpaint_seams"):
-                    outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimg=controlimages[0], prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageInpaintSeams(self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                        scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, 
-                                                                       model=model, overlap=tileoverlap)
+                                                                       model=model, controlmodels=controlmodels, overlap=tileoverlap)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"img2imgTiled", "images": outputimages }

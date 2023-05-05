@@ -121,9 +121,9 @@ def cv2ToPil(cv2_image):
     return Image.fromarray(cv2_image, "RGBA")
 
 
-def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overlap=128, reduceEdges = False, scale=1, callback=None):
-    xslices = math.ceil((initimg.width-overlap) / (tilewidth-overlap))
-    yslices = math.ceil((initimg.height-overlap) / (tileheight-overlap))
+def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640, tileheight=640, overlap=128, reduceEdges = False, scale=1, callback=None):
+    xslices = math.ceil((initimage.width-overlap) / (tilewidth-overlap))
+    yslices = math.ceil((initimage.height-overlap) / (tileheight-overlap))
     totalslices = xslices * yslices
     slicesdone = 0
     print(f'Processing {xslices} x {yslices} slices')
@@ -131,11 +131,11 @@ def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overl
         callback("Running", totalslices, slicesdone)
 
     if(overlap >= 0):
-        merged_image = initimg.convert("RGBA")
-        merged_image = merged_image.resize((initimg.width*scale, initimg.height*scale), resample=Image.BICUBIC)
+        merged_image = initimage.convert("RGBA")
+        merged_image = merged_image.resize((initimage.width*scale, initimage.height*scale), resample=Image.BICUBIC)
     else:
         # if overlap is negative create new transparent image to leave gaps between tiles
-        merged_image = Image.new("RGBA", size=(initimg.width*scale, initimg.height*scale), color=(255, 255, 255, 0))
+        merged_image = Image.new("RGBA", size=(initimage.width*scale, initimage.height*scale), color=(255, 255, 255, 0))
 
     # split into slices
     for yslice in range(yslices):
@@ -150,19 +150,27 @@ def tiledImageProcessor(processor, initimg, tilewidth=640, tileheight=640, overl
             ybottom = ytop + tileheight
             if(reduceEdges):
                 if(bottom):
-                    ybottom = initimg.height
+                    ybottom = initimage.height
                 if(right):
-                    xright = initimg.width
+                    xright = initimage.width
 
             if(overlap >= 0 and scale == 1): 
                 # if possible take slice from merged image to include overlapped portions
                 image_slice = merged_image.crop((xleft, ytop, xright, ybottom))
             else:
-                image_slice = initimg.crop((xleft, ytop, xright, ybottom))
+                image_slice = initimage.crop((xleft, ytop, xright, ybottom))
+            
+            # slice controlimages if provided
+            controlimage_slices = None
+            if(controlimages is not None):
+                controlimage_slices = []
+                for controlimage in controlimages:
+                    controlimage_slice = controlimage.crop((xleft, ytop, xright, ybottom))
+                    controlimage_slices.append(controlimage_slice)
 
             # process image tile
             image_slice = image_slice.convert("RGB")
-            imageout_slice = processor(image_slice)
+            imageout_slice = processor(image_slice, controlimage_slices)
             display(imageout_slice)
             # imageout_slice = applyColourCorrection(image_slice, imageout_slice)
             
