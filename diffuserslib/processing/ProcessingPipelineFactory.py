@@ -1,8 +1,8 @@
 from .ProcessingPipeline import ImageProcessorPipeline
-from .ImageProcessor import InitImageProcessor, FillBackgroundProcessor, ResizeProcessor
+from .ImageProcessor import InitImageProcessor, FillBackgroundProcessor, ResizeProcessor, CropProcessor
 from .TransformProcessors import SimpleTransformProcessor, SymmetrizeProcessor, SpiralizeProcessor
 from .GeometryProcessors import DrawRegularShapeProcessor, DrawCheckerboardProcessor, DrawGeometricSpiralProcessor
-from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument
+from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument, RandomNumberTuple
 
 import math
 
@@ -50,6 +50,11 @@ class ProcessingPipelineBuilder(ImageProcessorPipeline):
     def resize(self, resizetype=RandomChoiceArgument(["stretch", "extend"]), size=RandomChoiceArgument([(512, 768), (768, 512)]),
                         halign=RandomChoiceArgument(["left", "right", "centre"]), valign=RandomChoiceArgument(["top", "bottom", "centre"]), fill="black"):
         self.addTask(ResizeProcessor(type=resizetype, size=size, fill=fill, halign=halign, valign=valign))
+        return self
+
+    
+    def crop(self, size = RandomChoiceArgument([(512, 768), (768, 512)]), position = RandomNumberTuple(2, 0, 1)):
+        self.addTask(CropProcessor(size = size, position = position))
         return self
 
 

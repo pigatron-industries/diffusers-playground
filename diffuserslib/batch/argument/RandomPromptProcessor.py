@@ -17,7 +17,7 @@ class RandomPromptProcessor(Argument):
                 _colour[2-3,]_  =  "red, green, blue"
                 _colour[2-3 and]_  =  "red and green and blue"
     """
-    def __init__(self, modifier_dict, prompt="", shuffle=False):
+    def __init__(self, modifier_dict, prompt:str="", shuffle:bool=False):
         self.modifier_dict = modifier_dict
         self.prompt = prompt
         self.shuffle = shuffle

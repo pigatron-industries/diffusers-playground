@@ -5,9 +5,9 @@ from ..processing import *
 import ipywidgets as widgets
 import pickle 
 import os
-from typing import List, Dict
+from typing import List, Dict, Optional
 from functools import partial
-from IPython.display import HTML, display, clear_output
+from IPython.display import display, clear_output
 
 INTERFACE_WIDTH = '900px'
 
@@ -63,22 +63,21 @@ class InitImageWidgets:
         self.input_dropdown.layout.display = 'block'
         self.preprocessor_dropdown.layout.display = 'block'
 
-    def createGenerationPipeline(self, prevPipeline):
-        if(self.generation_dropdown.value is not None):
-            pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
-            if(self.preprocessor_dropdown.value is not None):
-                preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
-                pipeline.addTask(preprocessor())
-            if(pipeline.hasPlaceholder("image")):
-                if(self.input_dropdown.value != PREV_IMAGE):
-                    pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_dropdown.value))
-                else:
-                    # TODO need to create some kind of pipeline dependency where the output of previous pipeline is used as input
-                    # curently this will rerun the pipeline and create a new random image
-                    pipeline.setPlaceholder("image", prevPipeline)
-            if(pipeline.hasPlaceholder("size")):
-                pipeline.setPlaceholder("size", (self.interface.width_slider.value, self.interface.height_slider.value))
-            return pipeline
+    def createGenerationPipeline(self, prevPipeline:Optional[ImageProcessorPipeline] = None) -> ImageProcessorPipeline:
+        pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
+        if(self.preprocessor_dropdown.value is not None):
+            preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
+            pipeline.addTask(preprocessor())
+        if(pipeline.hasPlaceholder("image")):
+            if(self.input_dropdown.value != PREV_IMAGE):
+                pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_dropdown.value))
+            else:
+                # TODO need to create some kind of pipeline dependency where the output of previous pipeline is used as input
+                # curently this will rerun the pipeline and create a new random image
+                pipeline.setPlaceholder("image", prevPipeline)
+        if(pipeline.hasPlaceholder("size")):
+            pipeline.setPlaceholder("size", (self.interface.width_slider.value, self.interface.height_slider.value))
+        return pipeline
 
 
 class BatchNotebookInterface:
@@ -124,7 +123,7 @@ class BatchNotebookInterface:
         self.seed_text = self.intText(label='Seed:', value=None)
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
-        html = HTML('''<style>
+        html = widgets.HTML('''<style>
                         .widget-label { min-width: 20ex !important; }
                     </style>''')
 
@@ -196,7 +195,7 @@ class BatchNotebookInterface:
         params['model_weight'] = self.mergeweight_slider.value
         params['init_prompt'] = self.prompt_text.value
         params['shuffle'] = self.shuffle_checkbox.value
-        params['prompt'] = RandomPromptProcessor(self.modifier_dict, self.prompt_text.value, shuffle=self.shuffle_checkbox.value)
+        params['prompt'] = RandomPromptProcessor(self.modifier_dict, str(self.prompt_text.value), shuffle=bool(self.shuffle_checkbox.value))
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
         params['height'] = self.height_slider.value
@@ -314,7 +313,7 @@ class BatchNotebookInterface:
 
     # ============== widget helpers =============
 
-    def text(self, label, value):
+    def text(self, label, value) -> widgets.Text:
         text = widgets.Text(
             value=value,
             description=label,
@@ -324,7 +323,7 @@ class BatchNotebookInterface:
         text.observe(self.onChange)
         return text
 
-    def intText(self, label, value):
+    def intText(self, label, value) -> widgets.IntText:
         inttext = widgets.IntText(
             value=value,
             description=label,
@@ -333,7 +332,7 @@ class BatchNotebookInterface:
         inttext.observe(self.onChange)
         return inttext
     
-    def floatText(self, label, value):
+    def floatText(self, label, value) -> widgets.FloatText:
         floattext = widgets.FloatText(
             value=value,
             description=label,
@@ -342,7 +341,7 @@ class BatchNotebookInterface:
         floattext.observe(self.onChange)
         return floattext
 
-    def intSlider(self, label, value, min, max, step):
+    def intSlider(self, label, value, min, max, step) -> widgets.IntSlider:
         slider = widgets.IntSlider(
             value=value,
             min=min,
@@ -357,7 +356,7 @@ class BatchNotebookInterface:
         slider.observe(self.onChange)
         return slider
 
-    def floatSlider(self, label, value, min, max, step):
+    def floatSlider(self, label, value, min, max, step) -> widgets.FloatSlider:
         slider = widgets.FloatSlider(
             value=value,
             min=min,
@@ -372,7 +371,7 @@ class BatchNotebookInterface:
         slider.observe(self.onChange)
         return slider
 
-    def dropdown(self, label, options, value):
+    def dropdown(self, label, options, value) -> widgets.Dropdown:
         dropdown = widgets.Dropdown(
             options=options,
             description=label,
@@ -382,7 +381,7 @@ class BatchNotebookInterface:
         dropdown.observe(self.onChange)
         return dropdown
     
-    def textarea(self, label, value):
+    def textarea(self, label, value) -> widgets.Textarea:
         textarea = widgets.Textarea(
             value=value,
             description=label,
@@ -391,7 +390,7 @@ class BatchNotebookInterface:
         textarea.observe(self.onChange)
         return textarea
     
-    def checkbox(self, label, value):
+    def checkbox(self, label, value) -> widgets.Checkbox:
         checkbox = widgets.Checkbox(
             value=value,
             description=label,

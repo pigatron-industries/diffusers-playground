@@ -1,6 +1,7 @@
 from PIL import Image
 from .ProcessingPipeline import ImageProcessor
 from ..batch import evaluateArguments
+from typing import Union, Callable
 
 
 class InitImageProcessor(ImageProcessor):
@@ -36,7 +37,12 @@ class FillBackgroundProcessor(ImageProcessor):
     
 
 class ResizeProcessor(ImageProcessor):
-    def __init__(self, type="stretch", size = (512, 768), halign="centre", valign="centre", fill="black"):
+    def __init__(self, 
+                 type:Union[str,Callable] = "stretch", 
+                 size:Union[tuple[int, int],Callable] = (512, 768), 
+                 halign:Union[str,Callable] = "centre", 
+                 valign:Union[str,Callable] = "centre", 
+                 fill:Union[str,Callable] = "black"):
         self.args = {
             "type": type,
             "size": size,
@@ -50,6 +56,7 @@ class ResizeProcessor(ImageProcessor):
         image = context.getViewportImage()
         width = args["size"][0]
         height = args["size"][1]
+        newimage = image
 
         if(args["type"] == "stretch"):
             newimage = image.resize(args["size"], resample=Image.Resampling.LANCZOS)
@@ -79,6 +86,19 @@ class ResizeProcessor(ImageProcessor):
     
 
 class CropProcessor(ImageProcessor):
-    def __init__(self):
-        # TODO
-        pass        
+    def __init__(self, size = (512, 768), position = (0.5, 0.5)):
+        self.args = {
+            "size": size,
+            "position": position
+        }
+
+    def __call__(self, context):
+        args = evaluateArguments(self.args, context=context)
+        image = context.getViewportImage()
+        width = args["size"][0]
+        height = args["size"][1]
+        left = (image.width - width) * args["position"][0]
+        top = (image.height - height) * args["position"][1]
+        newimage = image.crop((left, top, left+width, top+height))
+        context.setViewportImage(newimage)
+        return context

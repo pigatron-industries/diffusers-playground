@@ -26,6 +26,17 @@ class SequentialNumberArgument(Argument):
         return num
 
 
+class RandomNumberTuple(Argument):
+    """  """
+    def __init__(self, num, min, max):
+        self.num = num
+        self.min = min
+        self.max = max
+        
+    def __call__(self, **kwargs):
+        return tuple([random.randint(self.min, self.max) for i in range(self.num)])
+
+
 class RandomChoiceArgument(Argument):
     def __init__(self, list):
         self.list = list
@@ -64,5 +75,5 @@ class RandomImageArgument(Argument):
     def __call__(self, **kwargs):
         file = random.choice(self.filelist)
         image = Image.open(file)
-        image.filename = file
+        setattr(image, "filename", file)
         return image
