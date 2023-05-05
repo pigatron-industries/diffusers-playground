@@ -5,6 +5,7 @@ from ..processing import *
 import ipywidgets as widgets
 import pickle 
 import os
+from collections import OrderedDict
 from typing import List, Dict, Optional
 from functools import partial
 from IPython.display import display, clear_output
@@ -72,9 +73,8 @@ class InitImageWidgets:
             if(self.input_dropdown.value != PREV_IMAGE):
                 pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_dropdown.value))
             else:
-                # TODO need to create some kind of pipeline dependency where the output of previous pipeline is used as input
-                # curently this will rerun the pipeline and create a new random image
-                pipeline.setPlaceholder("image", prevPipeline)
+                if (prevPipeline is not None):
+                    pipeline.setPlaceholder("image", prevPipeline.getLastOutput)
         if(pipeline.hasPlaceholder("size")):
             pipeline.setPlaceholder("size", (self.interface.width_slider.value, self.interface.height_slider.value))
         return pipeline
@@ -187,7 +187,7 @@ class BatchNotebookInterface:
 
 
     def getParams(self):
-        params = {}
+        params = OrderedDict()
         if(self.mergemodel_dropdown.value is None):
             params['model'] = self.model_dropdown.value
         else:

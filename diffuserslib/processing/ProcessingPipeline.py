@@ -38,6 +38,7 @@ class ImageProcessorPipeline():
         }
         self.oversize = oversize
         self.tasks = []
+        self.context = None
 
     def hasPlaceholder(self, name):
         # check if placeholder argument exists in initargs or tasks
@@ -78,8 +79,11 @@ class ImageProcessorPipeline():
 
     def __call__(self):
         initargs = evaluateArguments(self.initargs)
-        context = ImageContext(size=initargs["size"], oversize=self.oversize)
+        self.context = ImageContext(size=initargs["size"], oversize=self.oversize)
         for task in self.tasks:
-            task(context)
-        return context.getViewportImage()
+            task(self.context)
+        return self.context.getViewportImage()
+    
+    def getLastOutput(self):
+        return self.context.getViewportImage()
 
