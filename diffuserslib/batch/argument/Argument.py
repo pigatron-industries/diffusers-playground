@@ -1,9 +1,11 @@
 
 class Argument:
-    pass  
+        pass
+
 
 class BatchArgument:
     pass
+
 
 class PlaceholderArgument(Argument):
     def __init__(self, name):
@@ -12,6 +14,9 @@ class PlaceholderArgument(Argument):
 
     def setValue(self, value):
         self.value = value
+
+    def getValue(self):
+        return self.value
 
     def __call__(self, **kwargs):
         if(self.value is None):

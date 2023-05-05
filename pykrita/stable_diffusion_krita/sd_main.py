@@ -237,7 +237,7 @@ fields = {
     'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
     'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
-    'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler'],
+    'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image'],
     'imagevariation':  ['steps', 'seed', 'scale', 'num', 'image', 'scheduler'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
     'preprocess':      ['process', 'image']
@@ -795,6 +795,7 @@ def TiledImageToImage():
         data=SDConfig.dlgData
         p.action="img2imgTiled"
         p.model = data["model"]
+        p.controlmodels = data["controlmodels"]
         p.negprompt = data["negprompt"]
         p.steps=data["steps"]
         p.seed=data["seed"]

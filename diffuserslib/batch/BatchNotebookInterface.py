@@ -1,4 +1,4 @@
-from . import BatchRunner, RandomNumberArgument, RandomPromptProcessor, RandomImage
+from . import BatchRunner, RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
 from ..inference import DiffusersPipelines, LORAUse
 from ..FileUtils import getLeafFolders
 from ..processing import *
@@ -25,6 +25,7 @@ DEFAULT_PREPROCESSORS = {
 }
 
 INIT_IMAGE = "Init Image"
+PREV_IMAGE = "Previous Image"
 
 
 class InitImageWidgets:
@@ -32,12 +33,15 @@ class InitImageWidgets:
         self.interface = interface
         controlnet_models = list(interface.pipelines.presets.getModelsByType("controlnet").keys())
         if (includeInitImage):
-            controlmodel_options = [INIT_IMAGE]+controlnet_models
-        else:
-            controlmodel_options = controlnet_models
-        self.model_dropdown = interface.dropdown(label="Control Model:", options=controlmodel_options, value=INIT_IMAGE if includeInitImage else None)
-        self.generation_dropdown = interface.dropdown(label="Generation:", options=list(interface.generation_pipelines.keys()), value=None)
-        self.input_dropdown = interface.dropdown(label="Input:", options=interface.input_dirs, value=None)
+            controlnet_models = [INIT_IMAGE] + controlnet_models
+        generation_pipeline_options = list(interface.generation_pipelines.keys())
+        inputdirs_options = interface.input_dirs
+        if (not includeInitImage):
+            inputdirs_options = [PREV_IMAGE] + inputdirs_options
+        
+        self.model_dropdown = interface.dropdown(label="Control Model:", options=controlnet_models, value=INIT_IMAGE if includeInitImage else None)
+        self.generation_dropdown = interface.dropdown(label="Generation:", options=generation_pipeline_options, value=None)
+        self.input_dropdown = interface.dropdown(label="Input:", options=inputdirs_options, value=None)
         self.preprocessor_dropdown = interface.dropdown(label="Preprocessor:", options=[None]+list(interface.preprocessing_pipelines.keys()), value=None)
 
     def display(self):
@@ -59,14 +63,19 @@ class InitImageWidgets:
         self.input_dropdown.layout.display = 'block'
         self.preprocessor_dropdown.layout.display = 'block'
 
-    def createGenerationPipeline(self):
+    def createGenerationPipeline(self, prevPipeline):
         if(self.generation_dropdown.value is not None):
             pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
             if(self.preprocessor_dropdown.value is not None):
                 preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
                 pipeline.addTask(preprocessor())
             if(pipeline.hasPlaceholder("image")):
-                pipeline.setPlaceholder("image", RandomImage.fromDirectory(self.input_dropdown.value))
+                if(self.input_dropdown.value != PREV_IMAGE):
+                    pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_dropdown.value))
+                else:
+                    # TODO need to create some kind of pipeline dependency where the output of previous pipeline is used as input
+                    # curently this will rerun the pipeline and create a new random image
+                    pipeline.setPlaceholder("image", prevPipeline)
             if(pipeline.hasPlaceholder("size")):
                 pipeline.setPlaceholder("size", (self.interface.width_slider.value, self.interface.height_slider.value))
             return pipeline
@@ -201,6 +210,7 @@ class BatchNotebookInterface:
 
         params['initimages_num'] = self.initimages_num.value
 
+        prevPipeline = None
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i >= self.initimages_num.value):
                 break
@@ -208,7 +218,9 @@ class BatchNotebookInterface:
             params[f'initimage{i}_generation'] = initimage_w.generation_dropdown.value
             params[f'initimage{i}_input'] = initimage_w.input_dropdown.value
             params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
-            pipeline = initimage_w.createGenerationPipeline()
+            pipeline = initimage_w.createGenerationPipeline(prevPipeline)
+            prevPipeline = pipeline
+
             if(initimage_w.model_dropdown.value == INIT_IMAGE):
                 params['initimage'] = pipeline
             else:

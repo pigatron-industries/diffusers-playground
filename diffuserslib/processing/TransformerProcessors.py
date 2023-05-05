@@ -1,4 +1,4 @@
-from .ImageProcessor import ImageProcessor
+from .ProcessingPipeline import ImageProcessor
 from ..batch import evaluateArguments
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image

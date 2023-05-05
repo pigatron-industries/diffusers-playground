@@ -47,7 +47,7 @@ class RandomPositionArgument(Argument):
         return (random.randint(left, right), random.randint(top, bottom))
 
 
-class RandomImage(Argument):
+class RandomImageArgument(Argument):
 
     @classmethod
     def fromDirectory(cls, directory):
@@ -65,22 +65,4 @@ class RandomImage(Argument):
         file = random.choice(self.filelist)
         image = Image.open(file)
         image.filename = file
-        return image
-
-
-class RandomImageSelection(Argument):
-
-    @classmethod
-    def fromDirectory(cls, directory):
-        filelist = glob.glob(f'{directory}/*.png') + glob.glob(f'{directory}/*.jpg') + glob.glob(f'{directory}/*.jpeg')
-        return cls(filelist)
-
-    def __init__(self, filelist, width, height, rotate, crop, **kwargs):
-        self.filelist = filelist
-
-    def __call__(self):
-        file = random.choice(self.filelist)
-        image = Image.open(file)
-        image.filename = file
-        # TODO get random selection from image
         return image

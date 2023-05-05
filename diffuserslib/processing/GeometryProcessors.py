@@ -1,4 +1,4 @@
-from .ImageProcessor import ImageProcessor, ImageContext
+from .ProcessingPipeline import ImageProcessor, ImageContext
 from ..batch import RandomPositionArgument, evaluateArguments
 
 from PIL import ImageDraw
