@@ -97,8 +97,8 @@ class CropProcessor(ImageProcessor):
         image = context.getViewportImage()
         width = args["size"][0]
         height = args["size"][1]
-        left = (image.width - width) * args["position"][0]
-        top = (image.height - height) * args["position"][1]
+        left = int((image.width - width) * args["position"][0])
+        top = int((image.height - height) * args["position"][1])
         newimage = image.crop((left, top, left+width, top+height))
         context.setViewportImage(newimage)
         return context

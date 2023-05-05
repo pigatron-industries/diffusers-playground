@@ -34,7 +34,7 @@ class RandomNumberTuple(Argument):
         self.max = max
         
     def __call__(self, **kwargs):
-        return tuple([random.randint(self.min, self.max) for i in range(self.num)])
+        return tuple([random.uniform(self.min, self.max) for i in range(self.num)])
 
 
 class RandomChoiceArgument(Argument):

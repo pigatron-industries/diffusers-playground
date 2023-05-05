@@ -52,8 +52,8 @@ class ProcessingPipelineBuilder(ImageProcessorPipeline):
         self.addTask(ResizeProcessor(type=resizetype, size=size, fill=fill, halign=halign, valign=valign))
         return self
 
-    
-    def crop(self, size = RandomChoiceArgument([(512, 768), (768, 512)]), position = RandomNumberTuple(2, 0, 1)):
+
+    def crop(self, size = RandomChoiceArgument([(512, 768), (768, 512)]), position = RandomNumberTuple(2, 0.0, 1.0)):
         self.addTask(CropProcessor(size = size, position = position))
         return self
 
