@@ -33,7 +33,7 @@ class ESRGANUpscaler():
     
     def upscaleTiled(self, img, scale=4, tilewidth=768, tileheight=768, overlap=64):
         # return img
-        return tiledImageProcessor(partial(self.upscale), img, scale=scale,  tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, reduceEdges=True)
+        return tiledImageProcessor(partial(self.upscale, scale=scale), img, scale=scale,  tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, reduceEdges=True)
 
 
     def __call__(self, img):

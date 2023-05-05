@@ -170,7 +170,10 @@ def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640,
 
             # process image tile
             image_slice = image_slice.convert("RGB")
-            imageout_slice = processor(image_slice, controlimage_slices)
+            if(controlimages is not None):
+                imageout_slice = processor(image_slice, controlimage_slices)
+            else:
+                imageout_slice = processor(image_slice)
             display(imageout_slice)
             # imageout_slice = applyColourCorrection(image_slice, imageout_slice)
             
