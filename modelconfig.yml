@@ -127,7 +127,7 @@ controlnet:
       - id: lllyasviel/control_v11p_sd15_seg
       - id: lllyasviel/control_v11p_sd15_softedge
       - id: lllyasviel/control_v11e_sd15_shuffle
-      - id: lllyasviel/control_v11u_sd15_tile
+      - id: lllyasviel/control_v11f1e_sd15_tile
      
   - base: sd_2_1
     pipelines:
