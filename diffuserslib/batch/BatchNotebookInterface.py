@@ -5,6 +5,7 @@ from ..processing import *
 import ipywidgets as widgets
 import pickle 
 import os
+import copy
 from collections import OrderedDict
 from typing import List, Dict, Optional
 from functools import partial
@@ -66,6 +67,7 @@ class InitImageWidgets:
 
     def createGenerationPipeline(self, prevPipeline:Optional[ImageProcessorPipeline] = None) -> ImageProcessorPipeline:
         pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
+        pipeline = copy.deepcopy(pipeline)
         if(self.preprocessor_dropdown.value is not None):
             preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
             pipeline.addTask(preprocessor())
