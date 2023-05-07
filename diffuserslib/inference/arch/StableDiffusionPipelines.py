@@ -71,22 +71,29 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__("composable_stable_diffusion", preset, device, safety_checker=safety_checker) #custom_pipeline = 'lpw_stable_diffusion',
+        self.custom_pipeline = 'composable_stable_diffusion'
+        # self.custom_pipeline = 'lpw_stable_diffusion'
+        # self.custom_pipeline = StableDiffusionPipeline
+        super().__init__(self.custom_pipeline, preset, device, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
-        prompts = prompt.split("|")
-        weights = None
-        if (len(prompts) > 1):
-            negprompt = [negprompt] * len(prompts)
-            weights = []
-            for promptpart in prompts:
-                weight = promptpart.split(" ")[-1]
-                if (weight.isnumeric()):
-                    weights.append(weight)
-                else:
-                    weights.append("1")
-            weights = " | ".join(weights)
-        return super().inference(prompt=prompt, negative_prompt=negprompt, weights=weights, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+        args = {}
+        if (self.custom_pipeline == 'composable_stable_diffusion'):
+            prompts = prompt.split("|")
+            weights = None
+            if (len(prompts) > 1):
+                negprompt = [negprompt] * len(prompts)
+                weights = []
+                for promptpart in prompts:
+                    weight = promptpart.split(" ")[-1]
+                    if (weight.isnumeric()):
+                        weights.append(weight)
+                    else:
+                        weights.append("1")
+                weights = " | ".join(weights)
+            args['weights'] = weights
+
+        return super().inference(prompt=prompt, negative_prompt=negprompt, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, **args)
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):

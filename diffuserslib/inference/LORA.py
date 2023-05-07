@@ -38,8 +38,9 @@ class DiffusersLORA(LORA):
         super().__init__(name, path)
     
     def add_to_model(self, pipeline, weight = 1, device="cuda"):
-        state_dict = torch.load(self.path)
-        pipeline.unet.load_attn_procs(state_dict)
+        # TODO write custom lora loading function to take weight into account
+        lora = torch.load(self.path)
+        pipeline.load_lora_weights(lora)
 
 
 class StableDiffusionLORA(LORA):
