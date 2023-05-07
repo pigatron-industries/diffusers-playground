@@ -24,7 +24,7 @@ class LORA:
 
     @classmethod
     def from_file(cls, name, path):
-        if(os.path.isdir(path)):
+        if (path.endswith('.bin')):
             return DiffusersLORA(name, path)
         else:
             return StableDiffusionLORA(name, path)
