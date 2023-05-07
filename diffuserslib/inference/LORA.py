@@ -38,7 +38,7 @@ class DiffusersLORA(LORA):
         super().__init__(name, path)
     
     def add_to_model(self, pipeline, weight = 1, device="cuda"):
-        pipeline.unet.load_attn_procs(self.lora_path)
+        pipeline.unet.load_attn_procs(self.path)
 
 
 class StableDiffusionLORA(LORA):
