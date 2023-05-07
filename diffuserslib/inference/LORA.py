@@ -38,7 +38,8 @@ class DiffusersLORA(LORA):
         super().__init__(name, path)
     
     def add_to_model(self, pipeline, weight = 1, device="cuda"):
-        pipeline.unet.load_attn_procs(self.path)
+        state_dict = torch.load(self.path)
+        pipeline.unet.load_attn_procs(state_dict)
 
 
 class StableDiffusionLORA(LORA):
