@@ -1,4 +1,5 @@
 from safetensors.torch import load_file
+from collections import defaultdict
 import torch
 import os
 
@@ -50,18 +51,20 @@ class StableDiffusionLORA(LORA):
 
     def add_to_model(self, pipeline, weight = 1, device="cuda"):
         state_dict = load_file(self.path, device=device)
-        visited = []
-        for key in state_dict:
 
-            # as we have set the alpha beforehand, so just skip
-            if '.alpha' in key or key in visited:
-                continue
+        updates = defaultdict(dict)
+        for key, value in state_dict.items():
+            layer, elem = key.split('.', 1)
+            updates[layer][elem] = value
 
-            if 'text' in key:
-                layer_infos = key.split('.')[0].split(LORA_PREFIX_TEXT_ENCODER+'_')[-1].split('_')
+        # directly update weight in diffusers model
+        for layer, elems in updates.items():
+
+            if "text" in layer:
+                layer_infos = layer.split(LORA_PREFIX_TEXT_ENCODER + "_")[-1].split("_")
                 curr_layer = pipeline.text_encoder
             else:
-                layer_infos = key.split('.')[0].split(LORA_PREFIX_UNET+'_')[-1].split('_')
+                layer_infos = layer.split(LORA_PREFIX_UNET + "_")[-1].split("_")
                 curr_layer = pipeline.unet
 
             # find the target layer
@@ -75,29 +78,21 @@ class StableDiffusionLORA(LORA):
                         break
                 except Exception:
                     if len(temp_name) > 0:
-                        temp_name += '_'+layer_infos.pop(0)
+                        temp_name += "_" + layer_infos.pop(0)
                     else:
                         temp_name = layer_infos.pop(0)
 
-            # org_forward(x) + lora_up(lora_down(x)) * multiplier
-            pair_keys = []
-            if 'lora_down' in key:
-                pair_keys.append(key.replace('lora_down', 'lora_up'))
-                pair_keys.append(key)
+            # get elements for this layer
+            weight_up = elems['lora_up.weight'].to(torch.float16)
+            weight_down = elems['lora_down.weight'].to(torch.float16)
+            alpha = elems['alpha']
+            if alpha:
+                alpha = alpha.item() / weight_up.shape[1]
             else:
-                pair_keys.append(key)
-                pair_keys.append(key.replace('lora_up', 'lora_down'))
+                alpha = 1.0
 
             # update weight
-            if len(state_dict[pair_keys[0]].shape) == 4:
-                weight_up = state_dict[pair_keys[0]].squeeze(3).squeeze(2).to(torch.float32)
-                weight_down = state_dict[pair_keys[1]].squeeze(3).squeeze(2).to(torch.float32)
-                curr_layer.weight.data += weight * torch.mm(weight_up, weight_down).unsqueeze(2).unsqueeze(3)
+            if len(weight_up.shape) == 4:
+                curr_layer.weight.data += weight * alpha * torch.mm(weight_up.squeeze(3).squeeze(2), weight_down.squeeze(3).squeeze(2)).unsqueeze(2).unsqueeze(3)
             else:
-                weight_up = state_dict[pair_keys[0]].to(torch.float32)
-                weight_down = state_dict[pair_keys[1]].to(torch.float32)
-                curr_layer.weight.data += weight * torch.mm(weight_up, weight_down)
-
-            # update visited list
-            for item in pair_keys:
-                visited.append(item)
+                curr_layer.weight.data += weight * alpha * torch.mm(weight_up, weight_down)
