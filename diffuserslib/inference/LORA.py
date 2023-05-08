@@ -38,8 +38,9 @@ class DiffusersLORA(LORA):
         super().__init__(name, path)
     
     def add_to_model(self, pipeline, weight = 1, device="cuda"):
-        # TODO write custom lora loading function to take weight into account
         lora = torch.load(self.path)
+        for key in lora.keys():
+            lora[key] = lora[key] * weight
         pipeline.load_lora_weights(lora)
 
 
