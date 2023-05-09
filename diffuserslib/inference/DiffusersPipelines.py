@@ -261,8 +261,8 @@ class DiffusersPipelines:
 
     def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, controlmodel=None, tiling=False, **kwargs):
         return self.run(pipelinetype="inpaint_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
-                              negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
+                              negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
     def upscale(self, initimage, prompt, negprompt, scale, steps=40, seed=None, scheduler=None, model=None):
-        return self.run(pipelinetype="upscale", model=model, initimage=initimage, prompt=prompt, negative_prompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
+        return self.run(pipelinetype="upscale", model=model, initimage=initimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler)
