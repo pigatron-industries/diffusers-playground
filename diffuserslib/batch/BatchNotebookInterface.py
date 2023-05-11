@@ -15,8 +15,9 @@ INTERFACE_WIDTH = '900px'
 
 DEFAULT_PREPROCESSORS = {
     'canny edge detection': CannyEdgeProcessor,
-    'holistically nested edge detection': EdgeDetectionProcessor,
-    'straight line detection': StraightLineDetectionProcessor,
+    'HED edge detection': HEDEdgeDetectionProcessor,
+    'PIDI edge detection': PIDIEdgeDetectionProcessor,
+    'MLSD straight line detection': MLSDStraightLineDetectionProcessor,
     'pose detection': PoseDetectionProcessor,
     'depth estimation': DepthEstimationProcessor,
     'normal estimation': NormalEstimationProcessor,

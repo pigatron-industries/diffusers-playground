@@ -388,9 +388,10 @@ class SDDialog(QDialog):
             self.process.addItems([
                 'DepthEstimation',
                 'NormalEstimation',
-                'EdgeDetection',
                 'CannyEdge',
-                'StraightLineDetection',
+                'HEDEdgeDetection',
+                'PIDIEdgeDetection',
+                'MLSDStraightLineDetection',
                 'PoseDetection',
                 'Segmentation',
                 'ContentShuffle'

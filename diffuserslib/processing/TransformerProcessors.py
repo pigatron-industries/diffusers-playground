@@ -2,7 +2,7 @@ from .ProcessingPipeline import ImageProcessor
 from ..batch import evaluateArguments
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image
-from controlnet_aux import HEDdetector, MLSDdetector, OpenposeDetector, ContentShuffleDetector
+from controlnet_aux import HEDdetector, MLSDdetector, PidiNetDetector, OpenposeDetector, ContentShuffleDetector
 import numpy as np
 import cv2
 import torch
@@ -44,7 +44,7 @@ class NormalEstimationProcessor(ImageProcessor):
         return context
 
 
-class EdgeDetectionProcessor(ImageProcessor):
+class HEDEdgeDetectionProcessor(ImageProcessor):
     def __init__(self):
         self.hed = HEDdetector.from_pretrained('lllyasviel/ControlNet')
 
@@ -54,7 +54,17 @@ class EdgeDetectionProcessor(ImageProcessor):
         return context
 
 
-class StraightLineDetectionProcessor(ImageProcessor):
+class PIDIEdgeDetectionProcessor(ImageProcessor):
+    def __init__(self):
+        self.pidi = PidiNetDetector.from_pretrained("lllyasviel/Annotators")
+
+    def __call__(self, context):
+        image = self.pidi(context.getViewportImage())
+        context.setViewportImage(image)
+        return context
+
+
+class MLSDStraightLineDetectionProcessor(ImageProcessor):
     def __init__(self):
         self.mlsd = MLSDdetector.from_pretrained('lllyasviel/ControlNet')
 
