@@ -21,6 +21,7 @@ DEFAULT_PREPROCESSORS = {
     'depth estimation': DepthEstimationProcessor,
     'normal estimation': NormalEstimationProcessor,
     'segmentation': SegmentationProcessor,
+    'content shuffle': ContentShuffleProcessor,
     'monochrome': partial(SaturationProcessor, saturation=0),
     'blur': partial(GaussianBlurProcessor, radius=2),
     'noise': partial(GaussianNoiseProcessor, sigma=10),

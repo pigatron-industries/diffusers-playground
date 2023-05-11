@@ -392,7 +392,8 @@ class SDDialog(QDialog):
                 'CannyEdge',
                 'StraightLineDetection',
                 'PoseDetection',
-                'Segmentation'
+                'Segmentation',
+                'ContentShuffle'
             ])
             self.process.setCurrentText(data.get("process","DepthEstimation"))
             formLayout.addWidget(self.process)

@@ -2,7 +2,7 @@ from .ProcessingPipeline import ImageProcessor
 from ..batch import evaluateArguments
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image
-from controlnet_aux import HEDdetector, MLSDdetector, OpenposeDetector
+from controlnet_aux import HEDdetector, MLSDdetector, OpenposeDetector, ContentShuffleDetector
 import numpy as np
 import cv2
 import torch
@@ -70,6 +70,16 @@ class PoseDetectionProcessor(ImageProcessor):
 
     def __call__(self, context):
         image = self.pose(context.getViewportImage())
+        context.setViewportImage(image)
+        return context
+    
+
+class ContentShuffleProcessor(ImageProcessor):
+    def __init__(self):
+        self.content_shuffle = ContentShuffleDetector()
+
+    def __call__(self, context):
+        image = self.content_shuffle(context.getViewportImage())
         context.setViewportImage(image)
         return context
 
