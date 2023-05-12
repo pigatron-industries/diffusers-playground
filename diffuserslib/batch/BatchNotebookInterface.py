@@ -237,7 +237,8 @@ class BatchNotebookInterface:
                 break
             params[f'initimage{i}_model'] = initimage_w.model_dropdown.value
             params[f'initimage{i}_generation'] = initimage_w.generation_dropdown.value
-            params[f'initimage{i}_input'] = initimage_w.input_dropdown.value
+            params[f'initimage{i}_input_source'] = initimage_w.input_source_dropdown.value
+            params[f'initimage{i}_input_select'] = initimage_w.input_select_dropdown.value
             params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
             pipeline = initimage_w.createGenerationPipeline(prevPipeline)
             prevPipeline = pipeline
@@ -271,7 +272,8 @@ class BatchNotebookInterface:
             for i, initimage_w in enumerate(self.initimage_widgets):
                 initimage_w.model_dropdown.value = params.get(f'initimage{i}_model', None)
                 initimage_w.generation_dropdown.value = params.get(f'initimage{i}_generation', None)
-                initimage_w.input_dropdown.value = params.get(f'initimage{i}_input', None)
+                initimage_w.input_source_dropdown.value = params.get(f'initimage{i}_input_source', None)
+                initimage_w.input_select_dropdown.value = params.get(f'initimage{i}_input_select', None)
                 initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
 
             model = params.get('model', None)
