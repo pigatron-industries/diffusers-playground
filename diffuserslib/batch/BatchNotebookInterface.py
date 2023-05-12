@@ -61,8 +61,7 @@ class InitImageWidgets:
     def updateWidgets(self):
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
             filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
-            self.input_select_dropdown.options = [os.path.basename(x) for x in filepaths]
-            self.input_select_dropdown.options.insert(0, "Random")
+            self.input_select_dropdown.options = ["Random"] + [os.path.basename(x) for x in filepaths]
         else:
             self.input_select_dropdown.options = []
         
