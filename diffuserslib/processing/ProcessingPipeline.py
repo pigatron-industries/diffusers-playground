@@ -3,7 +3,11 @@ from ..batch import evaluateArguments, PlaceholderArgument
 
 
 class ImageProcessor():
-    pass
+    def __init__(self):
+        self.args = {}
+
+    def __call__(self, context):
+        raise NotImplementedError
 
 
 class ImageContext():

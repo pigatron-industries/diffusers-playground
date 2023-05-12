@@ -10,6 +10,7 @@ import torch
 
 class DepthEstimationProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.depth_estimator = pipeline('depth-estimation', model='Intel/dpt-large')
 
     def __call__(self, context):
@@ -23,6 +24,7 @@ class DepthEstimationProcessor(ImageProcessor):
 
 class NormalEstimationProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.depth_estimator = pipeline('depth-estimation', model='Intel/dpt-hybrid-midas')
 
     def __call__(self, context):
@@ -46,6 +48,7 @@ class NormalEstimationProcessor(ImageProcessor):
 
 class HEDEdgeDetectionProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.hed = HEDdetector.from_pretrained('lllyasviel/ControlNet')
 
     def __call__(self, context):
@@ -56,6 +59,7 @@ class HEDEdgeDetectionProcessor(ImageProcessor):
 
 class PIDIEdgeDetectionProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.pidi = PidiNetDetector.from_pretrained("lllyasviel/Annotators")
 
     def __call__(self, context):
@@ -66,6 +70,7 @@ class PIDIEdgeDetectionProcessor(ImageProcessor):
 
 class MLSDStraightLineDetectionProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.mlsd = MLSDdetector.from_pretrained('lllyasviel/ControlNet')
 
     def __call__(self, context):
@@ -76,6 +81,7 @@ class MLSDStraightLineDetectionProcessor(ImageProcessor):
 
 class PoseDetectionProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.pose = OpenposeDetector.from_pretrained('lllyasviel/ControlNet')
 
     def __call__(self, context):
@@ -86,6 +92,7 @@ class PoseDetectionProcessor(ImageProcessor):
 
 class ContentShuffleProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.content_shuffle = ContentShuffleDetector()
 
     def __call__(self, context):
@@ -96,6 +103,7 @@ class ContentShuffleProcessor(ImageProcessor):
 
 class SegmentationProcessor(ImageProcessor):
     def __init__(self):
+        self.args = {}
         self.image_processor = AutoImageProcessor.from_pretrained("openmmlab/upernet-convnext-small")
         self.image_segmentor = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-convnext-small")
 
