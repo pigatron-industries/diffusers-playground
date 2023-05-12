@@ -1,15 +1,16 @@
 from . import BatchRunner, RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
 from ..inference import DiffusersPipelines, LORAUse
-from ..FileUtils import getLeafFolders
 from ..processing import *
 import ipywidgets as widgets
 import pickle 
 import os
 import copy
+import glob
 from collections import OrderedDict
 from typing import List, Dict, Optional
 from functools import partial
 from IPython.display import display, clear_output
+from PIL import Image
 
 INTERFACE_WIDTH = '900px'
 
@@ -45,26 +46,38 @@ class InitImageWidgets:
         
         self.model_dropdown = interface.dropdown(label="Control Model:", options=controlnet_models, value=INIT_IMAGE if includeInitImage else None)
         self.generation_dropdown = interface.dropdown(label="Generation:", options=generation_pipeline_options, value=None)
-        self.input_dropdown = interface.dropdown(label="Input:", options=inputdirs_options, value=None)
+        self.input_source_dropdown = interface.dropdown(label="Input Source:", options=inputdirs_options, value=None)
+        self.input_select_dropdown = interface.dropdown(label="Input Select:", options=[], value=None)
         self.preprocessor_dropdown = interface.dropdown(label="Preprocessor:", options=[None]+list(interface.preprocessing_pipelines.keys()), value=None)
 
     def display(self):
         display(self.model_dropdown,
                 self.generation_dropdown,
-                self.input_dropdown,
+                self.input_source_dropdown,
+                self.input_select_dropdown,
                 self.preprocessor_dropdown,
                 widgets.HTML("<span>&nbsp;</span>"))
+        
+    def updateWidgets(self):
+        if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
+            filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
+            self.input_select_dropdown.options = [os.path.basename(x) for x in filepaths]
+            self.input_select_dropdown.options.insert(0, "Random")
+        else:
+            self.input_select_dropdown.options = []
         
     def hide(self):
         self.model_dropdown.layout.display = 'none'
         self.generation_dropdown.layout.display = 'none'
-        self.input_dropdown.layout.display = 'none'
+        self.input_source_dropdown.layout.display = 'none'
+        self.input_select_dropdown.layout.display = 'none'
         self.preprocessor_dropdown.layout.display = 'none'
 
     def show(self):
         self.model_dropdown.layout.display = 'block'
         self.generation_dropdown.layout.display = 'block'
-        self.input_dropdown.layout.display = 'block'
+        self.input_source_dropdown.layout.display = 'block'
+        self.input_select_dropdown.layout.display = 'block'
         self.preprocessor_dropdown.layout.display = 'block'
 
     def createGenerationPipeline(self, prevPipeline:Optional[ImageProcessorPipeline] = None) -> ImageProcessorPipeline:
@@ -74,8 +87,11 @@ class InitImageWidgets:
             preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
             pipeline.addTask(preprocessor())
         if(pipeline.hasPlaceholder("image")):
-            if(self.input_dropdown.value != PREV_IMAGE):
-                pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_dropdown.value))
+            if(self.input_source_dropdown.value != PREV_IMAGE):
+                if(self.input_select_dropdown.value == "Random"):
+                    pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_source_dropdown.value))
+                else:
+                    pipeline.setPlaceholder("image", Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value))
             else:
                 if (prevPipeline is not None):
                     pipeline.setPlaceholder("image", prevPipeline.getLastOutput)
@@ -183,6 +199,9 @@ class BatchNotebookInterface:
         else:
             self.strength_slider.layout.display = 'none'
             self.steps_slider.layout.display = 'flex'
+
+        for initimage_w in self.initimage_widgets:
+            initimage_w.updateWidgets()
 
     
     def onChange(self, change):
