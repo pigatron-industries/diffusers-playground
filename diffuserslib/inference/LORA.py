@@ -51,6 +51,9 @@ class StableDiffusionLORA(LORA):
 
     def add_to_model(self, pipeline, weight = 1, device="cuda"):
         state_dict = load_file(self.path, device=device)
+        state_dict = load_file(self.path, device="cpu")
+        for key, value in state_dict.items():
+            state_dict[key] = value.to(torch.float16).to(device)
 
         updates = defaultdict(dict)
         for key, value in state_dict.items():
@@ -83,8 +86,8 @@ class StableDiffusionLORA(LORA):
                         temp_name = layer_infos.pop(0)
 
             # get elements for this layer
-            weight_up = elems['lora_up.weight'].to(torch.float16)
-            weight_down = elems['lora_down.weight'].to(torch.float16)
+            weight_up = elems['lora_up.weight']
+            weight_down = elems['lora_down.weight']
             alpha = elems['alpha']
             if alpha:
                 alpha = alpha.item() / weight_up.shape[1]
