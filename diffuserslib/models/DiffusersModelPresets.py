@@ -1,5 +1,5 @@
 import yaml
-from typing import Dict
+from typing import Dict, List, Union
 
 
 AUTOENCODER_MODEL_1_5 = 'stabilityai/sd-vae-ft-mse'
@@ -25,7 +25,7 @@ class DiffusersPipelineType:
 class DiffusersModel:
     def __init__(self, modelid: str, base: str, pipelinetypes: Dict[str, str], revision: str = None, stylephrase: str = None, vae = None, 
                  autocast: bool = True, location: str = 'hf', modelpath: str = None, data = None):
-        self.modelid = modelid
+        self.modelid: Union[str, List[str]] = modelid
         self.base = base
         self.pipelinetypes = pipelinetypes
         self.revision = revision

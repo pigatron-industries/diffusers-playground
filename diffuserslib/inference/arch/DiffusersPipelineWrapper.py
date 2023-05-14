@@ -21,4 +21,5 @@ class DiffusersPipelineWrapper:
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
     
     def isEqual(self, cls, modelid, **kwargs):
+        print("isEqual", cls, modelid, self.preset.modelid)
         return cls == self.__class__ and self.preset.modelid == modelid
