@@ -315,8 +315,6 @@ class BatchNotebookInterface:
                 lora_w.lora_dropdown.value = params.get(f'lora{i}_lora', None)
                 lora_w.loraweight_text.value = params.get(f'lora{i}_loraweight', 1)
 
-            self.lora_dropdown.value = params.get('lora', None)
-            self.loraweight_text.value = params.get('lora_weight', 1)
             self.prompt_text.value = params.get('init_prompt', '')
             self.negprompt_text.value = params.get('negprompt', '')
             self.width_slider.value = params.get('width', 512)
@@ -352,7 +350,9 @@ class BatchNotebookInterface:
         params = self.saveParams()
 
         loras = []
-        if(self.lora_num.value > 0):
+        for i, lora_w in enumerate(self.lora_widgets):
+            if(i >= self.lora_num.value):
+                break
             loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
         self.pipelines.useLORAs(loras)
 
