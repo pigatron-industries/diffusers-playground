@@ -249,12 +249,7 @@ class BatchNotebookInterface:
         params['scheduler'] = self.scheduler_dropdown.value
         params['batch'] = self.batchsize_slider.value
 
-        if(self.lora_dropdown.value is not None):
-            params['lora'] = self.lora_dropdown.value
-            params['lora_weight'] = self.loraweight_text.value
-
         params['initimages_num'] = self.initimages_num.value
-
         prevPipeline = None
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i >= self.initimages_num.value):
@@ -277,6 +272,7 @@ class BatchNotebookInterface:
                 params['controlimage'].append(pipeline)
                 params['controlmodel'].append(initimage_w.model_dropdown.value)
 
+        params['lora_num'] = self.lora_num.value
         for i, lora_w in enumerate(self.lora_widgets):
             if(i >= self.lora_num.value):
                 break
