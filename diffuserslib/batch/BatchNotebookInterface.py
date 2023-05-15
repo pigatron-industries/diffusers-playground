@@ -99,6 +99,25 @@ class InitImageWidgets:
         return pipeline
 
 
+class LoraWidgets:
+    def __init__(self, interface):
+        self.interface = interface
+        self.lora_dropdown = interface.dropdown(label="LORA:", options=[""], value=None)
+        self.loraweight_text = interface.floatText(label="LORA weight:", value=1)
+
+    def display(self):
+        display(self.lora_dropdown,
+                self.loraweight_text)
+        
+    def hide(self):
+        self.lora_dropdown.layout.display = 'none'
+        self.loraweight_text.layout.display = 'none'
+
+    def show(self):
+        self.lora_dropdown.layout.display = 'flex'
+        self.loraweight_text.layout.display = 'flex'
+
+
 class BatchNotebookInterface:
     def __init__(self, pipelines:DiffusersPipelines, output_dir:str, modifier_dict=None, save_file:str='batch_params.pkl', 
                  generation_pipelines:Dict[str, ImageProcessorPipeline]={}, 
@@ -114,20 +133,24 @@ class BatchNotebookInterface:
 
         #  Init images
         self.initimages_num = self.intSlider(label='Input Images:', value=0, min=0, max=4, step=1)
-
-        # use an array of widgets instead
         self.initimage_widgets = []
         self.initimage_widgets.append(InitImageWidgets(self, includeInitImage=True))
         self.initimage_widgets.append(InitImageWidgets(self))
         self.initimage_widgets.append(InitImageWidgets(self))
         self.initimage_widgets.append(InitImageWidgets(self))
 
-        #  Config
+        # Model options
         self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
         self.mergemodel_dropdown = self.dropdown(label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
         self.mergeweight_slider = self.floatSlider(label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
-        self.lora_dropdown = self.dropdown(label="LORA:", options=[""], value=None)
-        self.loraweight_text = self.floatText(label="LORA weight:", value=1)
+        self.lora_num = self.intSlider(label='LORAs:', value=0, min=0, max=4, step=1)
+        self.lora_widgets = []
+        self.lora_widgets.append(LoraWidgets(self))
+        self.lora_widgets.append(LoraWidgets(self))
+        self.lora_widgets.append(LoraWidgets(self))
+        self.lora_widgets.append(LoraWidgets(self))
+
+        # Generation options
         self.prompt_text = self.textarea(label="Prompt:", value="")
         self.shuffle_checkbox = self.checkbox(label="Shuffle", value=False)
         self.negprompt_text = self.textarea(label="Neg Prompt:", value="")
@@ -147,16 +170,17 @@ class BatchNotebookInterface:
                     </style>''')
 
         display(html,
-                self.initimages_num,
-                widgets.HTML("<span>&nbsp;</span>"))
+                self.initimages_num)
         for initimage_w in self.initimage_widgets:
             initimage_w.display()
-        display(self.model_dropdown, 
+        display(widgets.HTML("<span>&nbsp;</span>"),
+                self.model_dropdown, 
                 self.mergemodel_dropdown,
                 self.mergeweight_slider,
-                self.lora_dropdown,
-                self.loraweight_text,
-                widgets.HTML("<span>&nbsp;</span>"),
+                self.lora_num)
+        for lora_w in self.lora_widgets:
+            lora_w.display()
+        display(widgets.HTML("<span>&nbsp;</span>"),
                 self.prompt_text, 
                 self.shuffle_checkbox,
                 self.negprompt_text, 
@@ -179,18 +203,18 @@ class BatchNotebookInterface:
             else:
                 initimage_w.hide()
 
-        if(self.model_dropdown.value is not None):
-            self.lora_dropdown.options = [None] + self.pipelines.getLORAList(self.model_dropdown.value)
-
         if(self.mergemodel_dropdown.value is not None):
             self.mergeweight_slider.layout.display = 'flex'
         else:
             self.mergeweight_slider.layout.display = 'none'
 
-        if(self.lora_dropdown.value is not None):
-            self.loraweight_text.layout.display = 'flex'
-        else:
-            self.loraweight_text.layout.display = 'none'
+        for i, lora_w in enumerate(self.lora_widgets):
+            if(i < self.lora_num.value):
+                lora_w.show()
+                if(self.model_dropdown.value is not None):
+                    lora_w.lora_dropdown.options = [None] + self.pipelines.getLORAList(self.model_dropdown.value)
+            else:
+                lora_w.hide()
 
         if(self.initimages_num.value > 0 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
             self.strength_slider.layout.display = 'flex'
@@ -253,6 +277,12 @@ class BatchNotebookInterface:
                 params['controlimage'].append(pipeline)
                 params['controlmodel'].append(initimage_w.model_dropdown.value)
 
+        for i, lora_w in enumerate(self.lora_widgets):
+            if(i >= self.lora_num.value):
+                break
+            params[f'lora{i}_lora'] = lora_w.lora_dropdown.value
+            params[f'lora{i}_loraweight'] = lora_w.loraweight_text.value
+
         if(self.initimages_num.value > 0 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
             params['strength'] = self.strength_slider.value
         else:
@@ -283,6 +313,12 @@ class BatchNotebookInterface:
             else:
                 self.model_dropdown.value = model
             self.mergeweight_slider.value = params.get('model_weight', 1)
+
+            self.lora_num.value = params.get('lora_num', 0)
+            for i, lora_w in enumerate(self.lora_widgets):
+                lora_w.lora_dropdown.value = params.get(f'lora{i}_lora', None)
+                lora_w.loraweight_text.value = params.get(f'lora{i}_loraweight', 1)
+
             self.lora_dropdown.value = params.get('lora', None)
             self.loraweight_text.value = params.get('lora_weight', 1)
             self.prompt_text.value = params.get('init_prompt', '')
@@ -318,10 +354,11 @@ class BatchNotebookInterface:
 
     def run(self):
         params = self.saveParams()
-        if(self.lora_dropdown.value is not None):
-            self.pipelines.useLORAs([LORAUse(params['lora'], params['lora_weight'])])
-        else:
-            self.pipelines.useLORAs([])
+
+        loras = []
+        if(self.lora_num.value > 0):
+            loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
+        self.pipelines.useLORAs(loras)
 
         if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
             batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
