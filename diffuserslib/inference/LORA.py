@@ -63,12 +63,14 @@ class StableDiffusionLORA(LORA):
         # directly update weight in diffusers model
         for layer, elems in updates.items():
 
-            if "text" in layer:
+            if LORA_PREFIX_TEXT_ENCODER in layer:
                 layer_infos = layer.split(LORA_PREFIX_TEXT_ENCODER + "_")[-1].split("_")
                 curr_layer = pipeline.text_encoder
-            else:
+            elif LORA_PREFIX_UNET in layer:
                 layer_infos = layer.split(LORA_PREFIX_UNET + "_")[-1].split("_")
                 curr_layer = pipeline.unet
+            else:
+                continue
 
             # find the target layer
             temp_name = layer_infos.pop(0)
