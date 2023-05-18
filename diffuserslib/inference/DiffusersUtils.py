@@ -120,7 +120,7 @@ def tiledImageToImageInpaintSeams(pipelines, initimage, prompt, negprompt, stren
     pass
 
 
-def tiledImageToImageMultipass(pipelines, initimage, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
+def tiledImageToImageMultipass(pipelines, initimage, prompt, negprompt, strength, scale, scheduler=None, seed=None, controlimages=None, controlmodels=None,
                                tilewidth=640, tileheight=640, overlap=128, passes=2, strengthMult=0.5, model=None, callback=None):
     offsetEven = (0, 0)
     offsetOdd = (-int((tilewidth - overlap)/2), -int((tileheight - overlap)/2))
