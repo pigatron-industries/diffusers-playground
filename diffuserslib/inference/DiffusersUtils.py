@@ -64,10 +64,10 @@ def tiledImageToImageCentred(pipelines:DiffusersPipelines, initimage, prompt, ne
                                    seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, model=model, controlmodels=controlmodels, callback=callback)
 
 
-def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None, controlmodel=None, controlimage=None):
+def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, strength=1.0, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None, controlmodel=None, controlimage=None):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
     if(controlmodel is None):
-        outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model)
+        outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, scheduler=scheduler, seed=seed, model=model)
     else:
         outimage, usedseed = pipelines.inpaintControlNet(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model, 
                                                          controlmodel=controlmodel, controlimage=controlimage)

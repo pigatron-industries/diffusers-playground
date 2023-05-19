@@ -247,7 +247,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, batch=1, **kwargs):
+    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, strength=1.0, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, batch=1, **kwargs):
         try:
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
@@ -270,7 +270,7 @@ class DiffusersView(FlaskView):
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, 
+                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, 
                                                        model=model, controlimage=controlimage, controlmodel=controlmodel)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })

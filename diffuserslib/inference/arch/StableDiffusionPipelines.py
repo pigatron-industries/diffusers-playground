@@ -109,11 +109,11 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         super().__init__(StableDiffusionInpaintPipeline, preset, device, safety_checker=safety_checker)
 
-    def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, **kwargs):
+    def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, strength=1.0, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, 
-                                 scheduler=scheduler, width=initimage.width, height=initimage.height)
+                                 strength=strength, scheduler=scheduler, width=initimage.width, height=initimage.height)
     
 
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):

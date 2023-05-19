@@ -248,9 +248,9 @@ class DiffusersPipelines:
                         seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs):
+    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, strength=1.0, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs):
         return self.run(pipelinetype="inpaint", model=model, model_weight=model_weight, prompt=prompt, initimage=initimage, maskimage=maskimage, width=initimage.width, height=initimage.height,
-                        negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
+                        negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
     def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, controlmodel=None, tiling=False, **kwargs):

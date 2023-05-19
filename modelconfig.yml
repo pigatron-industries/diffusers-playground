@@ -6,10 +6,13 @@ image:
     models:
       - id: DeepFloyd/IF-I-M-v1.0
         id2: DeepFloyd/IF-II-M-v1.0
+        id3: stabilityai/stable-diffusion-x4-upscaler
       - id: DeepFloyd/IF-I-L-v1.0
         id2: DeepFloyd/IF-II-L-v1.0
+        id3: stabilityai/stable-diffusion-x4-upscaler
       - id: DeepFloyd/IF-I-XL-v1.0
         id2: DeepFloyd/IF-II-L-v1.0
+        id3: stabilityai/stable-diffusion-x4-upscaler
   - base: sd_2_1
     pipelines:
       txt2img: StableDiffusionTextToImagePipeline

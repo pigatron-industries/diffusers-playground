@@ -18,6 +18,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
         args = self.createPipelineArgs(preset, **kwargs)
         self.pipeline = cls.from_pretrained(preset.modelpath, **args)
         self.pipeline2 = IFSuperResolutionPipeline.from_pretrained(preset.data['id2'], text_encoder=None, **args)
+        self.pipeline3 = DiffusionPipeline.from_pretrained(preset.data['id3'], **args)
 
     def createPipelineArgs(self, preset, **kwargs):
         args = {}
@@ -34,8 +35,9 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
         # if(scheduler is not None):
         #     self.loadScheduler(scheduler)
         prompt_embeds, negprompt_embeds = self.pipeline.encode_prompt(prompt=prompt, negative_prompt=negprompt)
-        ptimage = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, width=int(width/4), height=(int(height/4)), generator=generator, output_type="pt", **kwargs).images
+        ptimage = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, width=int(width/16), height=(int(height/16)), generator=generator, output_type="pt", **kwargs).images
         image = self.pipeline2(image=ptimage, prompt_embeds=prompt_embeds, negative_prompt_embeds=negprompt_embeds, generator=generator, output_type="pil", **kwargs).images[0]
+        image = self.pipeline3(image=image, prompt=prompt, negative_prompt=negprompt, generator=generator, output_type="pil", **kwargs).images[0]
         return image, seed
 
 
