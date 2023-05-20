@@ -5,8 +5,8 @@ from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
 from .imagetools.ImageTools import ImageTools
-from .processing.TransformerProcessors import *
-from .processing.FilterProcessors import *
+from .processing.processors.TransformerProcessors import *
+from .processing.processors.FilterProcessors import *
 from .processing.ProcessingPipelineFactory import ProcessingPipelineBuilder
 import json
 

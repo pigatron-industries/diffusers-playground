@@ -1,6 +1,7 @@
 import itertools
 import time
 from PIL import Image
+# import pyexiv2
 
 from IPython.display import display
 import ipywidgets as widgets
@@ -117,17 +118,27 @@ class BatchRunner:
         image_filename = f"{self.outputdir}/txt2img_{timestamp}.png"
         info_filename = f"{self.outputdir}/txt2img_{timestamp}.txt"
         image.save(image_filename)
-        self._saveArgs(args, info_filename)
+
+        description = self._saveArgs(args, info_filename)
+        # xmp_metadata = pyexiv2.XmpMetadata()
+        # xmp_metadata["Xmp.dc.description"] = description
+        # xmp_metadata.write(image_filename)
+        
         output.append_stdout("Saved to: " + image_filename)
 
     def _saveArgs(self, args, file):
         with open(file, 'w') as file:
+            description = ""
             for arg in args.keys():
                 value = args[arg]
                 if (isinstance(value, str) or isinstance(value, int) or isinstance(value, float)):
+                    description += f"{arg}: {value}\n"
                     file.write(f"{arg}: {value}\n")
                 elif (isinstance(value, Image.Image) and hasattr(value, 'filename')):
+                    description += f"{arg}: {value.filename}\n"
                     file.write(f"{arg}: {value.filename}\n")
                 elif (isinstance(value, list)):
                     if (all(isinstance(item, str) for item in value) or all(isinstance(item, int) for item in value) or all(isinstance(item, float) for item in value)):
+                        description += f"{arg}: {value}\n"
                         file.write(f"{arg}: {value}\n")
+        return description

@@ -23,11 +23,11 @@ from .batch.argument.RandomPromptProcessor import *
 from .animation.SceneDef import *
 from .animation.SceneRenderer import *
 
-from .processing.ImageProcessor import *
-from .processing.TransformProcessors import *
-from .processing.TransformerProcessors import *
-from .processing.FilterProcessors import *
-from .processing.GeometryProcessors import *
+from .processing.processors.ImageProcessor import *
+from .processing.processors.TransformProcessors import *
+from .processing.processors.TransformerProcessors import *
+from .processing.processors.FilterProcessors import *
+from .processing.processors.GeometryProcessors import *
 from .processing.ProcessingPipelineFactory import *
 
 from .imagetools.ImageTools import *

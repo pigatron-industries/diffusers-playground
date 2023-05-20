@@ -1,6 +1,6 @@
-from .ProcessingPipeline import ImageProcessor
-from ..batch import evaluateArguments
-from ..ImageUtils import cv2ToPil, pilToCv2
+from ..ProcessingPipeline import ImageProcessor
+from ...batch import evaluateArguments
+from ...ImageUtils import cv2ToPil, pilToCv2
 
 from PIL import ImageEnhance, ImageFilter
 import numpy as np

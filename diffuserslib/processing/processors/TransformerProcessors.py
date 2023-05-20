@@ -1,5 +1,5 @@
-from .ProcessingPipeline import ImageProcessor
-from ..batch import evaluateArguments
+from ..ProcessingPipeline import ImageProcessor
+from ...batch import evaluateArguments
 from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image
 from controlnet_aux import HEDdetector, MLSDdetector, PidiNetDetector, OpenposeDetector, ContentShuffleDetector

@@ -1,6 +1,6 @@
 from PIL import Image
-from .ProcessingPipeline import ImageProcessor
-from ..batch import evaluateArguments
+from ..ProcessingPipeline import ImageProcessor
+from ...batch import evaluateArguments
 from typing import Union, Callable
 
 
