@@ -1,6 +1,7 @@
 import itertools
 import time
 from PIL import Image
+import inspect
 # import pyexiv2
 
 from IPython.display import display
