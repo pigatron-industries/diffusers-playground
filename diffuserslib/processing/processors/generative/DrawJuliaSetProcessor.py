@@ -1,4 +1,4 @@
-from ...ProcessingPipeline import ImageProcessor, ImageContext
+from ..ImageProcessor import ImageProcessor, ImageContext
 from ....batch import evaluateArguments
 
 

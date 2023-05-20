@@ -1,6 +1,10 @@
-from . import BatchRunner, RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
+from ..batch import BatchRunner
+from ..batch.argument import RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
 from ..inference import DiffusersPipelines, LORAUse
 from ..processing import *
+from ..processing.ProcessingPipeline import ImageProcessorPipeline
+from ..processing.processors.FilterProcessors import *
+from ..processing.processors.TransformerProcessors import *
 import ipywidgets as widgets
 import pickle 
 import os

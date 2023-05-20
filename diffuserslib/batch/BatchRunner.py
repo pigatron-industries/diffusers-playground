@@ -6,7 +6,6 @@ from PIL import Image
 from IPython.display import display
 import ipywidgets as widgets
 import functools
-import inspect
 
 from .argument.Argument import BatchArgument
 

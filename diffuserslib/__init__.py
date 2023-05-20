@@ -12,3 +12,4 @@ from .batch import *
 from .animation import *
 from .processing import *
 from .imagetools import *
+from .interface import *

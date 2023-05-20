@@ -1,4 +1,4 @@
-from ..ProcessingPipeline import ImageProcessor
+from .ImageProcessor import ImageProcessor
 from ...batch import evaluateArguments
 from ...ImageUtils import cv2ToPil, pilToCv2
 
