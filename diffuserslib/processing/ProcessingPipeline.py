@@ -1,6 +1,7 @@
 from PIL import Image
 from ..batch import evaluateArguments, PlaceholderArgument
 from typing import Optional, Tuple, Callable, Self
+from .processors.ImageProcessor import ImageContext
 
 
 class ImageProcessorPipeline():
