@@ -6,6 +6,7 @@ from PIL import Image
 from IPython.display import display
 import ipywidgets as widgets
 import functools
+import inspect
 
 from .argument.Argument import BatchArgument
 
@@ -17,14 +18,26 @@ def mergeDict(d1, d2):
     return dict
 
 
+def callFunc(func, **kwargs):
+    args = {}
+    try:
+        funcargs = inspect.signature(func).parameters
+        for arg in funcargs.keys():
+            if arg in kwargs.keys():
+                args[arg] = kwargs[arg]
+    except ValueError:
+        pass
+    return func(**args)
+
+
 def evaluateArguments(args, **kwargs):
     outargs = {}
     for argkey in args.keys():
         argvalue = args[argkey]
         if(callable(argvalue)):
-            outargs[argkey] = argvalue(**kwargs)
+            outargs[argkey] = callFunc(argvalue, **kwargs)
         elif(isinstance(argvalue, list) and all(callable(item) for item in argvalue)):
-            outargs[argkey] = [item(**kwargs) for item in argvalue]
+            outargs[argkey] = [callFunc(item, **kwargs) for item in argvalue]
         else:
             outargs[argkey] = argvalue
     return outargs

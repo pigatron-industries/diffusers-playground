@@ -1,26 +1,31 @@
 from .ProcessingPipeline import ImageProcessorPipeline
 from .processors.ImageProcessor import InitImageProcessor, FillBackgroundProcessor, ResizeProcessor, CropProcessor
 from .processors.TransformProcessors import SimpleTransformProcessor, SymmetrizeProcessor, SpiralizeProcessor
-from .processors.generative.GeometryProcessors import DrawRegularShapeProcessor, DrawCheckerboardProcessor, DrawGeometricSpiralProcessor
+from .processors.generative.GeometryProcessors import DrawRegularShapeProcessor, DrawCheckerboardProcessor
+from .processors.generative.DrawGeometricSpiralProcessor import DrawGeometricSpiralProcessor
 from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument, RandomNumberTuple
 
 import math
+from PIL import Image
+from typing import Tuple, Callable
 
 
 class ProcessingPipelineBuilder(ImageProcessorPipeline):
-    def __init__(self, size=None, oversize=0):
+    def __init__(self, 
+                 size : Tuple[int, int] | Callable[[], Tuple[int, int]] | None = None, 
+                 oversize=0):
         super().__init__(size, oversize)
 
 
     @classmethod
-    def fromImage(cls, image):
+    def fromImage(cls, image: Image.Image):
         pipeline = cls(oversize=0)
         pipeline.addTask(InitImageProcessor(image=image))
         return pipeline
     
 
     @classmethod
-    def fromBlank(cls, size=RandomChoiceArgument([(512, 768), (768, 512), (512, 512)])):
+    def fromBlank(cls, size: Tuple[int, int] | Callable[[], Tuple[int, int]] = RandomChoiceArgument([(512, 768), (768, 512), (512, 512)])):
         pipeline = cls(size=size)
         return pipeline
         

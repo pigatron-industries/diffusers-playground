@@ -1,6 +1,6 @@
 from PIL import Image
 from ..batch import evaluateArguments, PlaceholderArgument
-from typing import Optional, Tuple, Callable
+from typing import Optional, Tuple, Callable, Self
 
 
 class ImageContext():
@@ -36,6 +36,9 @@ class ImageProcessor():
 
     def __call__(self, context:ImageContext):
         raise NotImplementedError
+    
+    def evaluateArguments(self, context:ImageContext):
+        return evaluateArguments(self.args, context=context)
 
 
 class ImageProcessorPipeline():
@@ -81,7 +84,7 @@ class ImageProcessorPipeline():
                 if (isinstance(arg, PlaceholderArgument) and arg.name == name):
                     arg.setValue(value)
 
-    def addTask(self, task) -> "ImageProcessorPipeline":
+    def addTask(self, task) -> Self:
         self.tasks.append(task)
         return self
 
