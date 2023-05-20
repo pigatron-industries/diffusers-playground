@@ -81,8 +81,9 @@ class ImageProcessorPipeline():
                 if (isinstance(arg, PlaceholderArgument) and arg.name == name):
                     arg.setValue(value)
 
-    def addTask(self, task):
+    def addTask(self, task) -> "ImageProcessorPipeline":
         self.tasks.append(task)
+        return self
 
     def __call__(self):
         initargs = evaluateArguments(self.initargs)

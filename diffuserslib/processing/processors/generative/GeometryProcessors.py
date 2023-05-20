@@ -1,5 +1,5 @@
-from ..ProcessingPipeline import ImageProcessor, ImageContext
-from ...batch import RandomPositionArgument, evaluateArguments
+from ...ProcessingPipeline import ImageProcessor, ImageContext
+from ....batch import RandomPositionArgument, evaluateArguments
 
 from PIL import ImageDraw
 import math
