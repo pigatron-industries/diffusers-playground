@@ -87,6 +87,7 @@ def createRequest(action, params):
         'seed':seed,
         'height':SDConfig.height,
         'width':SDConfig.width,
+        'prescale': params.prescale,
         'method': method,
         'amount': params.upscale_amount,
         'upscale_overlap':64,
