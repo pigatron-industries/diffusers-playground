@@ -234,9 +234,9 @@ class ModifierDialog(QDialog):
 
 fields = {
     'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'num', 'scheduler'],
-    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
+    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler', 'prescale'],
     'upscale':         ['prompt', 'upscale_method', 'upscale_amount', 'scale', 'scheduler'],
-    'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'strength', 'seed', 'num', 'image', 'scheduler'],
+    'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'strength', 'seed', 'num', 'image', 'scheduler', 'prescale'],
     'img2imgTiled':    ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image'],
     'imagevariation':  ['steps', 'seed', 'scale', 'num', 'image', 'scheduler'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'num', 'image', 'scheduler'],
@@ -399,6 +399,14 @@ class SDDialog(QDialog):
             self.process.setCurrentText(data.get("process","DepthEstimation"))
             formLayout.addWidget(self.process)
 
+        if('prescale' in actionfields):
+            prescale_label = QLabel("Prescale")
+            formLayout.addWidget(prescale_label)  
+            self.prescale = QComboBox()
+            self.prescale.addItems(['0.5', '1', '2'])
+            self.prescale.setCurrentText(data.get("prescale","1"))
+            formLayout.addWidget(self.prescale)
+
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
 
@@ -515,6 +523,8 @@ class SDDialog(QDialog):
             SDConfig.dlgData["upscale_method"]=self.upscale_method.currentText()
         if('process' in actionfields):
             SDConfig.dlgData["process"]=self.process.currentText()
+        if('prescale' in actionfields):
+            SDConfig.dlgData["prescale"]=self.prescale.currentText()
         if('image' in actionfields):
             SDConfig.dlgData["controlmodels"] = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
@@ -779,6 +789,7 @@ def ImageToImage():
         p.images64=images64
         p.controlmodels = data["controlmodels"]
         p.strength=data["strength"]
+        p.prescale = int(data["prescale"])
         runSD(p)
 
 
@@ -923,6 +934,7 @@ def Inpaint():
         p.num=data["num"]
         p.scale=data["scale"]
         p.strength=data["strength"]
+        p.prescale = int(data["prescale"])
         p.scheduler=data["scheduler"]
         p.controlmodels = data["controlmodels"]
         p.images64=images64

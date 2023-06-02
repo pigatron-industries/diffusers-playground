@@ -30,6 +30,7 @@ class SDParameters:
     inpaint_mask_content="latent noise" 
     action="txt2img"
     strength = 1 
+    prescale = 1
     upscale_amount = 1
     upscale_method = None
     tile_method = None
