@@ -127,7 +127,7 @@ class DiffusersView(FlaskView):
 
             controlimages = base64DecodeImages(controlimages)
             if (prescale != 1):
-                controlimages = [ image.resize((int(image.width * prescale), int(image.height * prescale))) for image in controlimages]
+                controlimages = [ image.resize((int(image.width * prescale), int(image.height * prescale)), Image.LANCZOS) for image in controlimages]
             initimage = controlimages[0]
             controlimages.pop(0)
 
@@ -140,7 +140,7 @@ class DiffusersView(FlaskView):
                     outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
                 if(prescale != 1):
-                    outimage = outimage.resize(int(outimage.width / prescale), int(outimage.height / prescale), Image.LANCZOS)
+                    outimage = outimage.resize((int(outimage.width / prescale), int(outimage.height / prescale)), Image.LANCZOS)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }
