@@ -1,6 +1,7 @@
 from flask import request, jsonify
 from flask_classful import FlaskView, route
 from threading import Thread
+from typing import List
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledImageToImageCentred, tiledImageToImageMultipass, tiledImageToImageInpaintSeams, compositedInpaint
 from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
@@ -113,7 +114,9 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def img2imgRun(self, seed=None, prompt="", negprompt="", strength=0.5, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlimages=None, controlmodels=None, batch=1, **kwargs):
+    def img2imgRun(self, seed:int|None=None, prompt:str="", negprompt:str="", strength:float=0.5, scale:float=9, 
+                   prescale:float=1, scheduler:str="EulerDiscreteScheduler", model:str|None=None, 
+                   controlimages:List[Image.Image]=[], controlmodels:List[str]=[], batch:int=1, **kwargs):
         try:
             print('=== img2img ===')
             print(f'Prompt: {prompt}')
@@ -123,6 +126,8 @@ class DiffusersView(FlaskView):
             print(f'Control Images: {len(controlimages)}')
 
             controlimages = base64DecodeImages(controlimages)
+            if (prescale != 1):
+                controlimages = [ image.resize((int(image.width * prescale), int(image.height * prescale))) for image in controlimages]
             initimage = controlimages[0]
             controlimages.pop(0)
 
@@ -134,6 +139,8 @@ class DiffusersView(FlaskView):
                 else:
                     outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
+                if(prescale != 1):
+                    outimage = outimage.resize(int(outimage.width / prescale), int(outimage.height / prescale))
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }

@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from io import BytesIO
+from typing import List
 from skimage import exposure
 from blendmodes.blend import blendLayers, BlendType
 import numpy as np
@@ -21,9 +22,9 @@ def base64DecodeImage(b64image):
     image = Image.open(buffer)
     return image
 
-def base64DecodeImages(b64images):
+def base64DecodeImages(b64images:List[Image.Image]) -> List[Image.Image]:
     if (b64images is None):
-        return
+        return []
     images = []
     for b64image in b64images:
         images.append(base64DecodeImage(b64image))
