@@ -1,5 +1,13 @@
 
 image:
+  - base: kandinsky_2_1
+    pipelines:
+      txt2img: KandinskyTextToImagePipeline
+      img2img: KandinskyImageToImagePipeline
+      interpolate: KandinskyInterpolatePipeline
+    models:
+      - id: kandinsky-community/kandinsky-2-1
+        id2: kandinsky-community/kandinsky-2-1-prior
   - base: df_1_0
     pipelines:
       txt2img: DeepFloydTextToImagePipeline
@@ -89,6 +97,12 @@ image:
         vae: stabilityai/sd-vae-ft-mse
 
 inpaint:
+  - base: kandinsky_2_1
+    pipelines:
+      txt2img: KandinskyInpaintPipeline
+    models:
+      - id: kandinsky-community/kandinsky-2-1-inpaint
+        id2: kandinsky-community/kandinsky-2-1-prior
   - base: sd_2_0
     pipelines:
       inpaint: StableDiffusionInpaintPipeline

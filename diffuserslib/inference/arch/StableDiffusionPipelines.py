@@ -161,7 +161,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, controlnet_conditioning_image=controlimage, 
+        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, control_image=controlimage, 
                                  guidance_scale=scale, strength=strength, scheduler=scheduler)
     
 
