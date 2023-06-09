@@ -4,10 +4,9 @@ from ...StringUtils import mergeDicts
 from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
 from diffusers import ( # Pipelines
-                        DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
-                        StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
-                        StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
-                        ControlNetModel, StableDiffusionControlNetPipeline,
+                        DiffusionPipeline, StableDiffusionImg2ImgPipeline, 
+                        StableDiffusionInpaintPipeline, ControlNetModel, StableDiffusionControlNetPipeline,
+                        StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -154,7 +153,7 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
-        super().__init__(cls="stable_diffusion_controlnet_img2img", preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+        super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, initimage, controlimage, scale, strength, scheduler, **kwargs):
         initimage = initimage.convert("RGB")
@@ -168,7 +167,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
-        super().__init__(cls="stable_diffusion_controlnet_inpaint", preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, scheduler, **kwargs):
         initimage = initimage.convert("RGB")
