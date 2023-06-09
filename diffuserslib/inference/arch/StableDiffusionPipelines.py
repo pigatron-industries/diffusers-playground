@@ -1,8 +1,10 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
+from PIL import Image
 from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
+from diffusers import pil_to_numpy, numpy_to_pt
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionImg2ImgPipeline, 
                         StableDiffusionInpaintPipeline, ControlNetModel, StableDiffusionControlNetPipeline,
@@ -14,6 +16,10 @@ from diffusers import ( # Pipelines
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler)
 import torch
 import sys
+import numpy as np
+
+
+INPAINT_CONTROL_MODEL = "lllyasviel/control_v11p_sd15_inpaint"
 
 
 def str_to_class(str):
@@ -104,17 +110,6 @@ class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper)
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, guidance_scale=scale, strength=strength, scheduler=scheduler)
     
 
-class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(StableDiffusionInpaintPipeline, preset, device, safety_checker=safety_checker)
-
-    def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, strength=1.0, **kwargs):
-        initimage = initimage.convert("RGB")
-        maskimage = maskimage.convert("RGB")
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, 
-                                 strength=strength, scheduler=scheduler, width=initimage.width, height=initimage.height)
-    
-
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         super().__init__(DiffusionPipeline, preset, device, safety_checker=safety_checker)
@@ -165,17 +160,49 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
                                  guidance_scale=scale, strength=strength, scheduler=scheduler)
     
 
+class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
+    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, device=device, controlmodel=INPAINT_CONTROL_MODEL, safety_checker=safety_checker)
+
+    def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, strength=1.0, **kwargs):
+        initimage = initimage.convert("RGB")
+        maskimage = maskimage.convert("RGB")
+        inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
+        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, control_image=inpaint_pt, 
+                                 guidance_scale=scale, num_inference_steps=steps, strength=strength, scheduler=scheduler, width=initimage.width, height=initimage.height)
+    
+
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
+        if(not isinstance(controlmodel, list)):
+            controlmodel = [controlmodel]
+        controlmodel.append(INPAINT_CONTROL_MODEL)
         super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+
 
     def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, scheduler, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
-        if(isinstance(controlimage, list)):
-            controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
-        else:
-            controlimage = controlimage.convert("RGB")
+        inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
+        if(not isinstance(controlimage, list)):
+            controlimage = [controlimage]
+        controlimage = list(map(lambda x: pil_to_pt(x), controlimage))
+        controlimage.append(inpaint_pt)
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, 
-                                 controlnet_conditioning_image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, 
+                                 control_image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, 
                                  width=initimage.width, height=initimage.height)
+    
+
+def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:
+    npinitimage = np.array(initimage.convert("RGB")).astype(np.float32) / 255.0
+    npmaskimage = np.array(maskimage.convert("L")).astype(np.float32) / 255.0
+    npinitimage[npmaskimage > 0.5] = -1.0  # set as masked pixel
+    npinitimage = np.expand_dims(npinitimage, 0).transpose(0, 3, 1, 2)
+    npinitimage = torch.from_numpy(npinitimage)
+    return npinitimage
+
+
+def pil_to_pt(image:Image.Image) -> torch.Tensor:
+    npimage = np.array(image.convert("RGB")).astype(np.float32) / 255.0
+    npimage = np.expand_dims(npimage, 0).transpose(0, 3, 1, 2)
+    return torch.from_numpy(npimage)

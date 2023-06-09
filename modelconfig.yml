@@ -35,8 +35,10 @@ image:
     pipelines:
       txt2img: StableDiffusionTextToImagePipeline
       img2img: StableDiffusionImageToImagePipeline
+      inpaint: StableDiffusionInpaintPipeline
       txt2img_controlnet: StableDiffusionTextToImageControlNetPipeline
       img2img_controlnet: StableDiffusionImageToImageControlNetPipeline
+      inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
         vae: stabilityai/sd-vae-ft-mse
@@ -99,7 +101,7 @@ image:
 inpaint:
   - base: kandinsky_2_1
     pipelines:
-      txt2img: KandinskyInpaintPipeline
+      inpaint: KandinskyInpaintPipeline
     models:
       - id: kandinsky-community/kandinsky-2-1-inpaint
         id2: kandinsky-community/kandinsky-2-1-prior
@@ -109,19 +111,6 @@ inpaint:
       inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
     models:
       - id: stabilityai/stable-diffusion-2-inpainting # official
-  - base: sd_1_5
-    pipelines:
-      inpaint: StableDiffusionInpaintPipeline
-      inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
-    models:
-      - id: runwayml/stable-diffusion-inpainting # official
-        vae: stabilityai/sd-vae-ft-mse
-      - id: ghunkins/stable-diffusion-liberty-inpainting
-        vae: stabilityai/sd-vae-ft-mse
-      - id: parlance/dreamlike-diffusion-1.0-inpainting
-        vae: stabilityai/sd-vae-ft-mse
-      - id: saik0s/realistic_vision_inpainting
-        vae: stabilityai/sd-vae-ft-mse
 
 upscale:
   - base: sd_2_0
