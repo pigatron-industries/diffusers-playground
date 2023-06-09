@@ -4,7 +4,6 @@ from ...StringUtils import mergeDicts
 from PIL import Image
 from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
-from diffusers import pil_to_numpy, numpy_to_pt
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionImg2ImgPipeline, 
                         StableDiffusionInpaintPipeline, ControlNetModel, StableDiffusionControlNetPipeline,
