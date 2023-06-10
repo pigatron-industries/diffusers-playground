@@ -30,7 +30,7 @@ class KandinskyPipelineWrapper(DiffusersPipelineWrapper):
     
     def inference(self, prompt, negprompt, seed, guidance_scale=4.0, **kwargs):
         generator, seed = self.createGenerator(seed)
-        image_embeds, negimage_embeds = self.pipeline_prior(prompt=prompt, negative_prompt=negprompt, generator=generator, guidance_scale=guidance_scale)
+        image_embeds, negimage_embeds = self.pipeline_prior(prompt=prompt, negative_prompt=negprompt, generator=generator, guidance_scale=guidance_scale, return_dict=False)
         image = self.pipeline(prompt=prompt, image_embeds=image_embeds, negative_image_embeds=negimage_embeds, guidance_scale=guidance_scale, **kwargs).images[0]
         return image, seed
 
