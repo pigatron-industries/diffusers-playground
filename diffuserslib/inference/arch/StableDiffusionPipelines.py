@@ -70,8 +70,8 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        self.custom_pipeline = 'composable_stable_diffusion'
-        # self.custom_pipeline = 'lpw_stable_diffusion'
+        # self.custom_pipeline = 'composable_stable_diffusion'
+        self.custom_pipeline = 'lpw_stable_diffusion'
         # self.custom_pipeline = StableDiffusionPipeline
         super().__init__(self.custom_pipeline, preset, device, safety_checker=safety_checker)
 
