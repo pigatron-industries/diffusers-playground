@@ -262,6 +262,7 @@ class SDDialog(QDialog):
         self.layout.addLayout(formLayout)
 
         actionfields = fields[action]
+        modeltype = action
 
         if('prompt' in actionfields):
             formLayout.addWidget(QLabel("Prompt"))
@@ -276,10 +277,24 @@ class SDDialog(QDialog):
             self.instruct.setText(data.get("instruct", ""))
             formLayout.addWidget(self.instruct)
 
+        if('tile_method' in actionfields):
+            tilemethod_label = QLabel("Tile method")
+            formLayout.addWidget(tilemethod_label)
+            self.tile_method = QComboBox()
+            self.tile_method.addItems(['singlepass', 'multipass', 'inpaint'])
+            tilemethod = data.get("tile_method", "singlepass")
+            self.tile_method.setCurrentText(tilemethod)
+            if(tilemethod in ('singlepass', 'multipass')):
+                modeltype = 'img2img'
+            else:
+                modeltype = 'inpaint'
+            self.tile_method.currentIndexChanged.connect(self.tileMethodChanged)
+            formLayout.addWidget(self.tile_method)
+
         if('model' in actionfields):
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
-            models = getModels(action)
+            models = getModels(modeltype)
             modelids = [model["modelid"] for model in models]
             modelids.sort()
             self.model.addItems([""] + modelids)
@@ -303,14 +318,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(upscale_label)
             self.upscale_amount, _ = self.addSlider(formLayout, data.get("upscale_amount", 2), 2,4,1,1)
 
-        if('tile_method' in actionfields):
-            tilemethod_label = QLabel("Tile method")
-            formLayout.addWidget(tilemethod_label)
-            self.tile_method = QComboBox()
-            self.tile_method.addItems(['singlepass', 'multipass', 'inpaint_seams'])
-            self.tile_method.setCurrentText(data.get("tile_method", "singlepass"))
-            formLayout.addWidget(self.tile_method)
-            
+        if('tile_method' in actionfields):           
             tilewidth_label = QLabel("Tile width")
             formLayout.addWidget(tilewidth_label)
             self.tile_width=createSlider(self, formLayout, data.get("tile_width", 640), 256, 1024, 64, 1)
@@ -423,6 +431,19 @@ class SDDialog(QDialog):
             self.controlModelChanged(0)
 
         self.setLayout(self.layout)
+
+
+    def tileMethodChanged(self, index):
+        if(self.tile_method.currentText() in ('singlepass', 'multipass')):
+            modeltype = 'img2img'
+        else:
+            modeltype = 'inpaint'
+        models = getModels(modeltype)
+        modelids = [model["modelid"] for model in models]
+        modelids.sort()
+        # update itesm in model dropdown
+        self.model.clear()
+        self.model.addItems([""] + modelids)
 
 
     def addImageTab(self, tabs, image, i, data):
