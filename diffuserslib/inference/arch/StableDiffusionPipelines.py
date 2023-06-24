@@ -139,7 +139,7 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
             controlnet = ControlNetModel.from_pretrained(controlmodel)
         return controlnet
     
-    def isEqual(self, cls, modelid, controlmodel, **kwargs):
+    def isEqual(self, cls, modelid, controlmodel=None, **kwargs):
         return super().isEqual(cls, modelid) and self.controlmodel == controlmodel
     
 
