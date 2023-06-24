@@ -1,5 +1,7 @@
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
+from typing import Tuple
+from PIL import Image
 import sys
 import random
 import torch
@@ -12,7 +14,7 @@ class DiffusersPipelineWrapper:
     def __init__(self, preset:DiffusersModel):
         self.preset = preset
 
-    def inference(self, **kwargs):
+    def inference(self, **kwargs) -> Tuple[Image.Image, int]: # type: ignore
         pass
 
     def createGenerator(self, seed=None):
