@@ -144,7 +144,7 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
     
 
 class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
         super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, controlimage, scale, steps, scheduler, **kwargs):
@@ -152,7 +152,7 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
     
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
         super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, initimage, controlimage, scale, strength, scheduler, **kwargs):
@@ -166,7 +166,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
     
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, controlmodel, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
         super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, scheduler, **kwargs):
