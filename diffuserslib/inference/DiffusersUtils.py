@@ -38,12 +38,8 @@ def tiledInpaint(pipelines:DiffusersPipelines, initimage, prompt, negprompt, str
     mask.paste((255, 255, 255), (int((inpaintwidth/2)-(tilewidth/2)), int((inpaintheight/2)-(tileheight/2)), int((inpaintwidth/2)+(tilewidth/2)), int((inpaintheight/2)+(tileheight/2))))
     
     def inpaintFunc(initimagetile, controlimagetiles=None):
-        if(controlimagetiles is None or len(controlimagetiles) == 0):
-            image, _ = pipelines.inpaint(initimage=initimagetile, maskimage=mask, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, steps=50,
-                                              scheduler=scheduler, seed=seed, model=model)
-        else:
-            image, _ = pipelines.inpaintControlNet(initimage=initimagetile, maskimage=mask, controlimage=controlimagetiles, prompt=prompt, negprompt=negprompt, 
-                                                   strength=strength, scale=scale, steps=50, scheduler=scheduler, seed=seed, model=model, controlmodel=controlmodels)
+        image, _ = compositedInpaint(pipelines=pipelines, initimage=initimagetile, maskimage=mask, controlimage=controlimagetiles, prompt=prompt, negprompt=negprompt, 
+                                     strength=strength, scale=scale, steps=40, scheduler=scheduler, seed=seed, model=model, controlmodel=controlmodels)
         return image
     
     return tiledImageProcessor(processor=inpaintFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), seed
