@@ -35,7 +35,7 @@ def tiledInpaint(pipelines:DiffusersPipelines, initimage, prompt, negprompt, str
 
     # create mask image
     mask = Image.new("RGB", size=(tilewidth, tileheight), color=(0, 0, 0))
-    mask.paste((255, 255, 255), (int((inpaintwidth/2)-(tilewidth/2)), int((inpaintheight/2)-(tileheight/2)), int((inpaintwidth/2)+(tilewidth/2)), int((inpaintheight/2)+(tileheight/2))))
+    mask.paste((255, 255, 255), (int((tilewidth/2)-(inpaintwidth/2)), int((tileheight/2)-(inpaintheight/2)), int((tilewidth/2)+(inpaintwidth/2)), int((tileheight/2)+(inpaintheight/2))))
     
     def inpaintFunc(initimagetile, controlimagetiles=None):
         image, _ = compositedInpaint(pipelines=pipelines, initimage=initimagetile, maskimage=mask, controlimage=controlimagetiles, prompt=prompt, negprompt=negprompt, 
