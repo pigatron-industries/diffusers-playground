@@ -12,7 +12,7 @@ def loginHuggingFace(token):
 
 
 def tiledImageToImage(pipelines:DiffusersPipelines, initimage, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                      controlimages=None, controlmodels=None, model=None, tilewidth=640, tileheight=640, overlap=128, callback=None):
+                      controlimages=None, controlmodels=None, model=None, tilewidth=768, tileheight=768, overlap=128, callback=None):
     if(seed is None):
         seed = random.randint(0, MAX_SEED)
     
@@ -29,7 +29,7 @@ def tiledImageToImage(pipelines:DiffusersPipelines, initimage, prompt, negprompt
 
 
 def tiledInpaint(pipelines:DiffusersPipelines, initimage, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                      controlimages=None, controlmodels=None, model=None, tilewidth=640, tileheight=640, overlap=128, inpaintwidth=512, inpaintheight=512, callback=None):
+                      controlimages=None, controlmodels=None, model=None, tilewidth=768, tileheight=768, overlap=256, inpaintwidth=512, inpaintheight=512, callback=None):
     if(seed is None):
         seed = random.randint(0, MAX_SEED)
 
@@ -39,7 +39,7 @@ def tiledInpaint(pipelines:DiffusersPipelines, initimage, prompt, negprompt, str
     
     def inpaintFunc(initimagetile, controlimagetiles=None):
         image, _ = compositedInpaint(pipelines=pipelines, initimage=initimagetile, maskimage=mask, controlimage=controlimagetiles, prompt=prompt, negprompt=negprompt, 
-                                     strength=strength, scale=scale, steps=40, scheduler=scheduler, seed=seed, model=model, controlmodel=controlmodels)
+                                     strength=strength, scale=scale, steps=50, scheduler=scheduler, seed=seed, model=model, controlmodel=controlmodels)
         return image
     
     return tiledImageProcessor(processor=inpaintFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), seed

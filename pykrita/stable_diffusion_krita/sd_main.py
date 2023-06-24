@@ -327,7 +327,7 @@ class SDDialog(QDialog):
             self.tile_height=createSlider(self, formLayout, data.get("tile_height", 640), 256, 1024, 64, 1)
             tileoverlap_label = QLabel("Tile overlap")
             formLayout.addWidget(tileoverlap_label)
-            self.tile_overlap = createSlider(self, formLayout, data.get("tile_overlap", 128), -128, 128, 2, 1)
+            self.tile_overlap = createSlider(self, formLayout, data.get("tile_overlap", 128), 0, 384, 2, 1)
 
             tilealignmentx_label = QLabel("Tile alignment x")
             formLayout.addWidget(tilealignmentx_label)
