@@ -60,7 +60,7 @@ def tiledProcessorOffset(tileprocessor, initimage, tilewidth=640, tileheight=640
 
 
 def tiledProcessorCentred(tileprocessor, initimage, tilewidth=640, tileheight=640, overlap=128, 
-                             alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, model=None, **kwargs):
+                             alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, **kwargs):
     # find top left of initial centre tile 
     offsetx = offsetx + int(initimage.width/2)
     offsety = offsety + int(initimage.height/2)
