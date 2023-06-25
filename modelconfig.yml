@@ -120,7 +120,7 @@ inpaint:
         vae: stabilityai/sd-vae-ft-mse
       - id: parlance/dreamlike-diffusion-1.0-inpainting
         vae: stabilityai/sd-vae-ft-mse
-      - id: saik0s/realistic_vision_inpainting
+      - id: lioo/Realistic_Vision_V2.0-inpainting
         vae: stabilityai/sd-vae-ft-mse
 
 upscale:
