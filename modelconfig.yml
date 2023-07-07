@@ -111,6 +111,19 @@ inpaint:
       inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
     models:
       - id: stabilityai/stable-diffusion-2-inpainting # official
+  - base: sd_1_5
+    pipelines:
+      inpaint: StableDiffusionInpaintPipeline
+      inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
+    models:
+      - id: runwayml/stable-diffusion-inpainting # official
+        vae: stabilityai/sd-vae-ft-mse
+      - id: ghunkins/stable-diffusion-liberty-inpainting
+        vae: stabilityai/sd-vae-ft-mse
+      - id: parlance/dreamlike-diffusion-1.0-inpainting
+        vae: stabilityai/sd-vae-ft-mse
+      - id: lioo/Realistic_Vision_V2.0-inpainting
+        vae: stabilityai/sd-vae-ft-mse
 
 upscale:
   - base: sd_2_0
