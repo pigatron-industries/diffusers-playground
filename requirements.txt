@@ -8,6 +8,7 @@ ftfy
 torchvision
 controlnet-aux
 ipywidgets
+invisible-watermark>=2.0
 
 # diffusers conversion script
 OmegaConf

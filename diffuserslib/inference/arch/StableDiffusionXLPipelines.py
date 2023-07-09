@@ -17,7 +17,7 @@ class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionPipelineWrapper
         super().__init__(StableDiffusionXLPipeline, preset, device, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, **args)
+        return super().inference(prompt=prompt, negative_prompt=negprompt, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
 
 
 class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
