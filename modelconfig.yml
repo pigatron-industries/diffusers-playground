@@ -1,5 +1,12 @@
 
 image:
+  - base: sdxl
+    pipelines:
+      txt2img: StableDiffusionXLTextToImagePipeline
+      img2img: StableDiffusionXLImageToImagePipeline
+    models:
+      - id: stabilityai/stable-diffusion-xl-base-0.9
+      - id: stabilityai/stable-diffusion-xl-refiner-0.9
   - base: kandinsky_2_1
     pipelines:
       txt2img: KandinskyTextToImagePipeline
@@ -96,6 +103,8 @@ image:
       - id: windwhinny/chilloutmix
         vae: stabilityai/sd-vae-ft-mse
       - id: XpucT/Deliberate
+        vae: stabilityai/sd-vae-ft-mse
+      - id: philz1337/reliberate
         vae: stabilityai/sd-vae-ft-mse
 
 inpaint:
