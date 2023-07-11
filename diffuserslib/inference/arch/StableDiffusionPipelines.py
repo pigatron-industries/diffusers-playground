@@ -129,6 +129,8 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
             controlnet = []
             for cmodel in controlmodel:
                 controlnet.append(ControlNetModel.from_pretrained(cmodel))
+            if(len(controlnet) == 1):
+                controlnet = controlnet[0]
         else:
             controlnet = ControlNetModel.from_pretrained(controlmodel)
         return controlnet
