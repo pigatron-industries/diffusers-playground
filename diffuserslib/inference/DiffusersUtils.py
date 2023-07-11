@@ -3,6 +3,7 @@ import math, random
 from ..ImageUtils import compositeImages, tiledImageProcessor
 from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
 from huggingface_hub import login
+from typing import List, Optional
 
 from IPython.display import display
 
@@ -46,16 +47,24 @@ def tiledInpaint(pipelines:DiffusersPipelines, initimage, prompt, negprompt, str
 
 
 
-def tiledProcessorOffset(tileprocessor, initimage, tilewidth=640, tileheight=640, overlap=128, offsetx=0, offsety=0, **kwargs):
+def tiledProcessorOffset(tileprocessor, initimage:Image.Image, controlimages:List[Image.Image]|None=None, 
+                         tilewidth:int=640, tileheight:int=640, overlap:int=128, offsetx:int=0, offsety:int=0, **kwargs):
     # creates a new image slightly bigger than original image to allow tiling to start at negative offset
     offsetimage = Image.new(initimage.mode, (initimage.width-offsetx, initimage.height-offsety))
     offsetimage.paste(initimage, (-offsetx, -offsety, -offsetx+initimage.width, -offsety+initimage.height))
-    outimage, seed = tileprocessor(initimage=offsetimage, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, **kwargs)
+    offsetcontrolimages = None
+    if controlimages is not None:
+        offsetcontrolimages = []
+        for controlimage in controlimages:
+            offsetcontrolimage = Image.new(controlimage.mode, (controlimage.width-offsetx, controlimage.height-offsety))
+            offsetcontrolimage.paste(controlimage, (-offsetx, -offsety, -offsetx+controlimage.width, -offsety+controlimage.height))
+            offsetcontrolimages.append(offsetcontrolimage)
+    outimage, seed = tileprocessor(initimage=offsetimage, controlimages=offsetcontrolimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, **kwargs)
     image = outimage.crop((-offsetx, -offsety, outimage.width, outimage.height))
     return image, seed
 
 
-def tiledProcessorCentred(tileprocessor, initimage, tilewidth=640, tileheight=640, overlap=128, 
+def tiledProcessorCentred(tileprocessor, initimage, controlimages=None, tilewidth=640, tileheight=640, overlap=128, 
                              alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, **kwargs):
     # find top left of initial centre tile 
     offsetx = offsetx + int(initimage.width/2)
@@ -75,7 +84,7 @@ def tiledProcessorCentred(tileprocessor, initimage, tilewidth=640, tileheight=64
     while offsety > 0:
         offsety = offsety - (tileheight-overlap)
 
-    return tiledProcessorOffset(tileprocessor, initimage=initimage, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, **kwargs)
+    return tiledProcessorOffset(tileprocessor, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, **kwargs)
 
 
 def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, strength=1.0, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None, controlmodel=None, controlimage=None):
