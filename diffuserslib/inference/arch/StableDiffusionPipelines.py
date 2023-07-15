@@ -5,7 +5,7 @@ from PIL import Image
 from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
 from diffusers import ( # Pipelines
-                        DiffusionPipeline, StableDiffusionImg2ImgPipeline, 
+                        DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
                         StableDiffusionInpaintPipeline, ControlNetModel, StableDiffusionControlNetPipeline,
                         StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
                         # Schedulers
@@ -38,7 +38,10 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         if (isinstance(cls, str)):
             args['custom_pipeline'] = cls
             cls = DiffusionPipeline
-        self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+        if (preset.modelpath.endswith('.safetensors') or preset.modelpath.endswith('.ckpt')):
+            self.pipeline = cls.from_single_file(preset.modelpath, load_safety_checker=self.safety_checker, **args).to(self.device)
+        else:
+            self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
         self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
         # pipeline.enable_xformers_memory_efficient_attention()
@@ -76,8 +79,8 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         # self.custom_pipeline = 'composable_stable_diffusion'
-        self.custom_pipeline = 'lpw_stable_diffusion'
-        # self.custom_pipeline = StableDiffusionPipeline
+        # self.custom_pipeline = 'lpw_stable_diffusion'
+        self.custom_pipeline = StableDiffusionPipeline
         super().__init__(self.custom_pipeline, preset, device, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
