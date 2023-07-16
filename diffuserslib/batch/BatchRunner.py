@@ -45,28 +45,26 @@ def evaluateArguments(args, **kwargs):
 
 class BatchRunner:
 
-    def __init__(self, pipeline, argdict, count=1, outputdir="."):
+    #  TODO make pipeline part of the argdict
+    def __init__(self, pipeline, outputdir="."):
         self.pipeline = pipeline
-        self.argdict = argdict
-        self.count = count
         self.outputdir = outputdir
-        self._createBatchArguments()
+        self.argsbatch = []
         print(f"Created batch of size {len(self.argsbatch)}")
 
 
-    def _createBatchArguments(self):
+    def appendBatchArguments(self, argdict, count=1):
         batchargs = {}
         flatargs = {}
-        self.argsbatch = []
 
         # Expand instances of BatchArgument into lists of items
-        for arg in self.argdict.keys():
-            if(isinstance(self.argdict[arg], BatchArgument)):
-                batchargs[arg] = self.argdict[arg]()
+        for arg in argdict.keys():
+            if(isinstance(argdict[arg], BatchArgument)):
+                batchargs[arg] = argdict[arg]()
             else:
-                flatargs[arg] = self.argdict[arg]
+                flatargs[arg] = argdict[arg]
 
-        for batch in range(0, self.count):
+        for batch in range(0, count):
             # Evaluate instances of Argument
             args = evaluateArguments(flatargs)
 
@@ -78,8 +76,6 @@ class BatchRunner:
                     self.argsbatch.append(mergeDict(iterargs, args))
             else:
                 self.argsbatch.append(args)
-
-        return batch
 
 
     def run(self):
@@ -101,13 +97,13 @@ class BatchRunner:
             if (isinstance(value, Image.Image)):
                 print(f"{arg}:")
                 if(hasattr(value, "filename")):
-                    print(value.filename)
+                    print(getattr(value, "filename"))
                 display(value)
             elif (isinstance(value, list) and all(isinstance(item, Image.Image) for item in value)):
                 print(f"{arg}:")
                 for item in value:
                     if(hasattr(item, "filename")):
-                        print(item.filename)
+                        print(getattr(item, "filename"))
                     display(item)
 
 
@@ -148,8 +144,8 @@ class BatchRunner:
                     description += f"{arg}: {value}\n"
                     file.write(f"{arg}: {value}\n")
                 elif (isinstance(value, Image.Image) and hasattr(value, 'filename')):
-                    description += f"{arg}: {value.filename}\n"
-                    file.write(f"{arg}: {value.filename}\n")
+                    description += f"{arg}: {getattr(value, 'filename')}\n"
+                    file.write(f"{arg}: {getattr(value, 'filename')}\n")
                 elif (isinstance(value, list)):
                     if (all(isinstance(item, str) for item in value) or all(isinstance(item, int) for item in value) or all(isinstance(item, float) for item in value)):
                         description += f"{arg}: {value}\n"

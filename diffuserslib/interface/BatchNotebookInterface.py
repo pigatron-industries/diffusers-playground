@@ -361,13 +361,14 @@ class BatchNotebookInterface:
         self.pipelines.useLORAs(loras)
 
         if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            batch = BatchRunner(self.pipelines.imageToImage, params, params['batch'], self.output_dir)
+            batch = BatchRunner(self.pipelines.imageToImage, self.output_dir)
         elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            batch = BatchRunner(self.pipelines.imageToImageControlNet, params, params['batch'], self.output_dir)
+            batch = BatchRunner(self.pipelines.imageToImageControlNet, self.output_dir)
         elif(self.initimages_num.value == 0):
-            batch = BatchRunner(self.pipelines.textToImage, params, params['batch'], self.output_dir)
+            batch = BatchRunner(self.pipelines.textToImage, self.output_dir)
         else:
-            batch = BatchRunner(self.pipelines.textToImageControlNet, params, params['batch'], self.output_dir)
+            batch = BatchRunner(self.pipelines.textToImageControlNet, self.output_dir)
+        batch.appendBatchArguments(params, params['batch'])
         batch.run()
 
 
