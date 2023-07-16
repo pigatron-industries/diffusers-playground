@@ -18,11 +18,16 @@ class ImageContext():
     def setViewportImage(self, image:Image.Image):
         self.image = Image.new("RGBA", size=(image.width+self.oversize*2, image.height+self.oversize*2))
         self.image.paste(image, self.offset)
+        if(hasattr(image, "filename")):
+            self.filename = getattr(image, "filename")
         self.calcSize()
 
     def getViewportImage(self) -> Optional[Image.Image]:
         if(self.image is not None):
-            return self.image.crop(self.viewport)
+            image = self.image.crop(self.viewport)
+            if(self.filename is not None):
+                setattr(image, "filename", self.filename)
+            return image
 
     def calcSize(self):
         if(self.image is not None):
