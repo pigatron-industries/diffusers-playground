@@ -50,7 +50,6 @@ class BatchRunner:
         self.pipeline = pipeline
         self.outputdir = outputdir
         self.argsbatch = []
-        print(f"Created batch of size {len(self.argsbatch)}")
 
 
     def appendBatchArguments(self, argdict, count=1):
@@ -76,6 +75,8 @@ class BatchRunner:
                     self.argsbatch.append(mergeDict(iterargs, args))
             else:
                 self.argsbatch.append(args)
+
+        print(f"Created batch of size {len(self.argsbatch)}")
 
 
     def run(self):

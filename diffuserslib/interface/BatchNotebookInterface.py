@@ -169,6 +169,13 @@ class BatchNotebookInterface:
         self.seed_text = self.intText(label='Seed:', value=None)
         self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
 
+        self.run_button = widgets.Button(description="Run")
+        self.clear_button = widgets.Button(description="Clear")
+        self.output = widgets.Output()
+
+        self.run_button.on_click(self.runClick)
+        self.clear_button.on_click(self.clearClick)
+
         html = widgets.HTML('''<style>
                         .widget-label { min-width: 20ex !important; }
                     </style>''')
@@ -195,7 +202,11 @@ class BatchNotebookInterface:
                 self.strength_slider,
                 self.scheduler_dropdown,
                 self.seed_text,
-                self.batchsize_slider
+                self.batchsize_slider,
+                widgets.HTML("<span>&nbsp;</span>"),
+                self.run_button,
+                self.clear_button,
+                self.output
         )
         self.loadParams()
 
@@ -349,6 +360,15 @@ class BatchNotebookInterface:
                 self.setParams(params)
         self.updateWidgets()
     
+
+    def runClick(self, b):
+        with self.output:
+            self.run()
+
+
+    def clearClick(self, b):
+        self.output.clear_output()
+
 
     def run(self):
         params = self.saveParams()
