@@ -248,6 +248,17 @@ class BatchNotebookInterface:
 
     def getParams(self):
         params = OrderedDict()
+
+        if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+            pipelineFunc = self.pipelines.imageToImage
+        elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+            pipelineFunc = self.pipelines.imageToImageControlNet
+        elif(self.initimages_num.value == 0):
+            pipelineFunc = self.pipelines.textToImage
+        else:
+            pipelineFunc = self.pipelines.textToImageControlNet
+        self.batch = BatchRunner(pipelineFunc, self.output_dir)
+
         if(self.mergemodel_dropdown.value is None):
             params['model'] = self.model_dropdown.value
         else:
@@ -379,16 +390,8 @@ class BatchNotebookInterface:
             loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
         self.pipelines.useLORAs(loras)
 
-        if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            batch = BatchRunner(self.pipelines.imageToImage, self.output_dir)
-        elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            batch = BatchRunner(self.pipelines.imageToImageControlNet, self.output_dir)
-        elif(self.initimages_num.value == 0):
-            batch = BatchRunner(self.pipelines.textToImage, self.output_dir)
-        else:
-            batch = BatchRunner(self.pipelines.textToImageControlNet, self.output_dir)
-        batch.appendBatchArguments(params, params['batch'])
-        batch.run()
+        self.batch.appendBatchArguments(params, params['batch'])
+        self.batch.run()
 
 
 
