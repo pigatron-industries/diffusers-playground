@@ -11,7 +11,7 @@ import os
 import copy
 import glob
 from collections import OrderedDict
-from typing import List, Dict, Optional
+from typing import List, Dict, Callable
 from functools import partial
 from IPython.display import display, clear_output
 from PIL import Image
@@ -83,7 +83,7 @@ class InitImageWidgets:
         self.input_select_dropdown.layout.display = 'block'
         self.preprocessor_dropdown.layout.display = 'block'
 
-    def createGenerationPipeline(self, prevPipeline:Optional[ImageProcessorPipeline] = None) -> ImageProcessorPipeline:
+    def createGenerationPipeline(self, prevImageFunc:Callable[[Image.Image], None]|None = None) -> ImageProcessorPipeline:
         pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
         pipeline = copy.deepcopy(pipeline)
         if(self.preprocessor_dropdown.value is not None):
@@ -95,9 +95,8 @@ class InitImageWidgets:
                     pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_source_dropdown.value))
                 else:
                     pipeline.setPlaceholder("image", Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value))
-            else:
-                if (prevPipeline is not None):
-                    pipeline.setPlaceholder("image", prevPipeline.getLastOutput)
+            elif (prevImageFunc is not None):
+                pipeline.setPlaceholder("image", prevImageFunc)
         if(pipeline.hasPlaceholder("size")):
             pipeline.setPlaceholder("size", (self.interface.width_slider.value, self.interface.height_slider.value))
         return pipeline
@@ -265,7 +264,7 @@ class BatchNotebookInterface:
         params['batch'] = self.batchsize_slider.value
 
         params['initimages_num'] = self.initimages_num.value
-        prevPipeline = None
+        prevImageFunc = None #TODO initalise with function to get prev image
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i >= self.initimages_num.value):
                 break
@@ -274,8 +273,8 @@ class BatchNotebookInterface:
             params[f'initimage{i}_input_source'] = initimage_w.input_source_dropdown.value
             params[f'initimage{i}_input_select'] = initimage_w.input_select_dropdown.value
             params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
-            pipeline = initimage_w.createGenerationPipeline(prevPipeline)
-            prevPipeline = pipeline
+            pipeline = initimage_w.createGenerationPipeline(prevImageFunc)
+            prevImageFunc = pipeline.getLastOutput
 
             if(initimage_w.model_dropdown.value == INIT_IMAGE):
                 params['initimage'] = pipeline
