@@ -8,6 +8,7 @@ class ImageContext():
         self.oversize = oversize
         self.size = size
         self.offset = (oversize, oversize)
+        self.filename = None
         if(size is not None):
             self.viewport = (oversize, oversize, oversize+size[0], oversize+size[1])
             self.image = Image.new("RGBA", size=(size[0]+oversize*2, size[1]+oversize*2))

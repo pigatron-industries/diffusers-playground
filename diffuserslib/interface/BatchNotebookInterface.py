@@ -10,6 +10,7 @@ import pickle
 import os
 import copy
 import glob
+import functools
 from collections import OrderedDict
 from typing import List, Dict, Callable
 from functools import partial
@@ -93,14 +94,14 @@ class InitImageWidgets:
             return Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value)
         
 
-    def createGenerationPipeline(self, prevImageFunc:Callable[[Image.Image], None]|None = None) -> ImageProcessorPipeline:
+    def createGenerationPipeline(self, prevImageFunc:Callable[[], (Image.Image|None)]|Image.Image|None = None, feedbackImage = False) -> ImageProcessorPipeline:
         pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
         pipeline = copy.deepcopy(pipeline)
         if(self.preprocessor_dropdown.value is not None):
             preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
             pipeline.addTask(preprocessor())
         if(pipeline.hasPlaceholder("image")):
-            if(self.input_source_dropdown.value != PREV_IMAGE):
+            if(self.input_source_dropdown.value != PREV_IMAGE and not feedbackImage):
                 pipeline.setPlaceholder("image", self.getInitImage())
             elif (prevImageFunc is not None):
                 pipeline.setPlaceholder("image", prevImageFunc)
@@ -133,6 +134,7 @@ class BatchNotebookInterface:
                  generation_pipelines:Dict[str, ImageProcessorPipeline]={}, 
                  preprocessing_pipelines:Dict[str, ImageProcessor]=DEFAULT_PREPROCESSORS, 
                  input_dirs:List[str]=[]):
+        self.images = []
         self.pipelines = pipelines
         self.output_dir = output_dir
         self.input_dirs = input_dirs
@@ -143,7 +145,7 @@ class BatchNotebookInterface:
 
         #  Init images
         self.initimages_num = self.intSlider(label='Input Images:', value=0, min=0, max=4, step=1)
-        self.initimage_widgets = []
+        self.initimage_widgets:List[InitImageWidgets] = []
         self.initimage_widgets.append(InitImageWidgets(self, firstImage=True))
         self.initimage_widgets.append(InitImageWidgets(self))
         self.initimage_widgets.append(InitImageWidgets(self))
@@ -179,8 +181,8 @@ class BatchNotebookInterface:
         self.clear_button = widgets.Button(description="Clear")
         self.output = widgets.Output()
 
-        self.run_button.on_click(self.runClick)
-        self.clear_button.on_click(self.clearClick)
+        self.run_button.on_click(self._runClick)
+        self.clear_button.on_click(self._clearClick)
 
         html = widgets.HTML('''<style>
                         .widget-label { min-width: 20ex !important; }
@@ -253,18 +255,8 @@ class BatchNotebookInterface:
             self.updateWidgets()
 
 
-    def getParams(self):
+    def getParams(self, initimage:Image.Image|None = None):
         params = OrderedDict()
-
-        if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            pipelineFunc = self.pipelines.imageToImage
-        elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            pipelineFunc = self.pipelines.imageToImageControlNet
-        elif(self.initimages_num.value == 0):
-            pipelineFunc = self.pipelines.textToImage
-        else:
-            pipelineFunc = self.pipelines.textToImageControlNet
-        self.batch = BatchRunner(pipelineFunc, self.output_dir)
 
         if(self.mergemodel_dropdown.value is None):
             params['model'] = self.model_dropdown.value
@@ -280,18 +272,26 @@ class BatchNotebookInterface:
         params['scale'] = self.scale_slider.value
         params['scheduler'] = self.scheduler_dropdown.value
         params['batch'] = self.batchsize_slider.value
-
         params['initimages_num'] = self.initimages_num.value
+
+        # image feedback handling
         prevImageFunc = None
+        feebdackImage = False
+        if(initimage is not None and params['initimages_num'] > 0):
+            prevImageFunc = initimage
+            feebdackImage = True
+        else:
+            pass #TODO add init image params
+
         for i, initimage_w in enumerate(self.initimage_widgets):
-            if(i >= self.initimages_num.value):
+            if(i >= params['initimages_num']):
                 break
             params[f'initimage{i}_model'] = initimage_w.model_dropdown.value
             params[f'initimage{i}_generation'] = initimage_w.generation_dropdown.value
             params[f'initimage{i}_input_source'] = initimage_w.input_source_dropdown.value
             params[f'initimage{i}_input_select'] = initimage_w.input_select_dropdown.value
             params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
-            pipeline = initimage_w.createGenerationPipeline(prevImageFunc)
+            pipeline = initimage_w.createGenerationPipeline(prevImageFunc, feebdackImage)
             prevImageFunc = pipeline.getLastOutput
 
             if(initimage_w.model_dropdown.value == INIT_IMAGE):
@@ -377,19 +377,42 @@ class BatchNotebookInterface:
                 params = pickle.load(f)
                 self.setParams(params)
         self.updateWidgets()
-    
 
-    def runClick(self, b):
+
+    def _callback(self, image, output):
+        with output:
+            self.images.append(image)
+            index = len(self.images)-1
+            refineBtn = widgets.Button(description="Refine")
+            refineBtn.on_click(functools.partial(self._refineClick, index))
+            display(refineBtn)
+
+
+    def _runClick(self, b):
         with self.output:
             self.run()
 
 
-    def clearClick(self, b):
+    def _clearClick(self, b):
         self.output.clear_output()
+        self.images = []
 
 
-    def run(self):
-        params = self.saveParams()
+    def _refineClick(self, index, b):
+        with self.output:
+            self.refine(self.images[index])
+
+
+    def initPipeline(self, params):
+        if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+            pipelineFunc = self.pipelines.imageToImage
+        elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+            pipelineFunc = self.pipelines.imageToImageControlNet
+        elif(self.initimages_num.value == 0):
+            pipelineFunc = self.pipelines.textToImage
+        else:
+            pipelineFunc = self.pipelines.textToImageControlNet
+        self.batch = BatchRunner(pipelineFunc, self.output_dir, self._callback)
 
         loras = []
         for i, lora_w in enumerate(self.lora_widgets):
@@ -398,6 +421,17 @@ class BatchNotebookInterface:
             loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
         self.pipelines.useLORAs(loras)
 
+
+    def run(self):
+        params = self.saveParams()
+        self.initPipeline(params)
+        self.batch.appendBatchArguments(params, params['batch'])
+        self.batch.run()
+
+
+    def refine(self, image):
+        params = self.getParams(image)
+        self.initPipeline(params)
         self.batch.appendBatchArguments(params, params['batch'])
         self.batch.run()
 

@@ -89,8 +89,6 @@ class BatchRunner:
             self.argsbatch[i]["seed"] = seed
             self.argsbatch[i]["timestamp"] = int(time.time())
             self._output(image, seed, i)
-            if(self.callback is not None):
-                self.callback(args, image)
 
 
     def logArgs(self, args):
@@ -120,6 +118,9 @@ class BatchRunner:
         saveBtn = widgets.Button(description="Save")
         saveBtn.on_click(functools.partial(self._saveOutput, index))
         display(saveBtn, output)
+
+        if(self.callback is not None):
+            self.callback(image, output)
 
 
     def _saveOutput(self, index, btn):
