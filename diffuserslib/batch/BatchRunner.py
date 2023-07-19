@@ -45,11 +45,11 @@ def evaluateArguments(args, **kwargs):
 
 class BatchRunner:
 
-    #  TODO make pipeline part of the argdict
-    def __init__(self, pipeline, outputdir="."):
+    def __init__(self, pipeline, outputdir=".", callback=None):
         self.pipeline = pipeline
         self.outputdir = outputdir
         self.argsbatch = []
+        self.callback = callback
 
 
     def appendBatchArguments(self, argdict, count=1):
@@ -89,6 +89,8 @@ class BatchRunner:
             self.argsbatch[i]["seed"] = seed
             self.argsbatch[i]["timestamp"] = int(time.time())
             self._output(image, seed, i)
+            if(self.callback is not None):
+                self.callback(args, image)
 
 
     def logArgs(self, args):

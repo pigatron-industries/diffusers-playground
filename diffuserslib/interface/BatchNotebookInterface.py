@@ -35,20 +35,22 @@ DEFAULT_PREPROCESSORS = {
 
 INIT_IMAGE = "Init Image"
 PREV_IMAGE = "Previous Image"
+RANDOM_IMAGE = "Random"
 
 
 class InitImageWidgets:
-    def __init__(self, interface, includeInitImage = False):
+    def __init__(self, interface, firstImage = False):
         self.interface = interface
+        self.firstImage = firstImage
         controlnet_models = list(interface.pipelines.presets.getModelsByType("controlnet").keys())
-        if (includeInitImage):
+        if (firstImage):
             controlnet_models = [INIT_IMAGE] + controlnet_models
         generation_pipeline_options = list(interface.generation_pipelines.keys())
         inputdirs_options = interface.input_dirs
-        if (not includeInitImage):
+        if (not firstImage):
             inputdirs_options = [PREV_IMAGE] + inputdirs_options
         
-        self.model_dropdown = interface.dropdown(label="Control Model:", options=controlnet_models, value=INIT_IMAGE if includeInitImage else None)
+        self.model_dropdown = interface.dropdown(label="Control Model:", options=controlnet_models, value=INIT_IMAGE if firstImage else None)
         self.generation_dropdown = interface.dropdown(label="Generation:", options=generation_pipeline_options, value=None)
         self.input_source_dropdown = interface.dropdown(label="Input Source:", options=inputdirs_options, value=None)
         self.input_select_dropdown = interface.dropdown(label="Input Select:", options=[], value=None)
@@ -65,7 +67,7 @@ class InitImageWidgets:
     def updateWidgets(self):
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
             filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
-            self.input_select_dropdown.options = ["Random"] + [os.path.basename(x) for x in filepaths]
+            self.input_select_dropdown.options = [RANDOM_IMAGE] + [os.path.basename(x) for x in filepaths]
         else:
             self.input_select_dropdown.options = []
         
@@ -83,6 +85,14 @@ class InitImageWidgets:
         self.input_select_dropdown.layout.display = 'block'
         self.preprocessor_dropdown.layout.display = 'block'
 
+
+    def getInitImage(self):
+        if(self.input_select_dropdown.value == RANDOM_IMAGE):
+            return RandomImageArgument.fromDirectory(self.input_source_dropdown.value)
+        else:
+            return Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value)
+        
+
     def createGenerationPipeline(self, prevImageFunc:Callable[[Image.Image], None]|None = None) -> ImageProcessorPipeline:
         pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
         pipeline = copy.deepcopy(pipeline)
@@ -91,10 +101,7 @@ class InitImageWidgets:
             pipeline.addTask(preprocessor())
         if(pipeline.hasPlaceholder("image")):
             if(self.input_source_dropdown.value != PREV_IMAGE):
-                if(self.input_select_dropdown.value == "Random"):
-                    pipeline.setPlaceholder("image", RandomImageArgument.fromDirectory(self.input_source_dropdown.value))
-                else:
-                    pipeline.setPlaceholder("image", Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value))
+                pipeline.setPlaceholder("image", self.getInitImage())
             elif (prevImageFunc is not None):
                 pipeline.setPlaceholder("image", prevImageFunc)
         if(pipeline.hasPlaceholder("size")):
@@ -137,7 +144,7 @@ class BatchNotebookInterface:
         #  Init images
         self.initimages_num = self.intSlider(label='Input Images:', value=0, min=0, max=4, step=1)
         self.initimage_widgets = []
-        self.initimage_widgets.append(InitImageWidgets(self, includeInitImage=True))
+        self.initimage_widgets.append(InitImageWidgets(self, firstImage=True))
         self.initimage_widgets.append(InitImageWidgets(self))
         self.initimage_widgets.append(InitImageWidgets(self))
         self.initimage_widgets.append(InitImageWidgets(self))
@@ -275,7 +282,7 @@ class BatchNotebookInterface:
         params['batch'] = self.batchsize_slider.value
 
         params['initimages_num'] = self.initimages_num.value
-        prevImageFunc = None #TODO initalise with function to get prev image
+        prevImageFunc = None
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i >= self.initimages_num.value):
                 break
@@ -358,8 +365,9 @@ class BatchNotebookInterface:
 
     def saveParams(self):
         params = self.getParams()
+        filtered_params = { key: value for key, value in params.items() if key not in ['initimage', 'controlimage'] }
         with open(self.save_file, 'wb') as f:
-            pickle.dump(params, f)
+            pickle.dump(filtered_params, f)
         return params
 
 
