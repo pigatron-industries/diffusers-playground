@@ -83,16 +83,20 @@ class BatchRunner:
         for i, args in enumerate(self.argsbatch):
             output_index, output = self.startOutput(args)
             with output:
-                print(f"Generating {i}/{len(self.argsbatch)}")
-                self.logArgs(args)
+                try:
+                    print(f"Generating {i}/{len(self.argsbatch)}")
+                    self.logArgs(args)
 
-                image, seed = self.pipeline(**args)
-                self.argsbatch[i]["image"] = image
-                self.argsbatch[i]["seed"] = seed
-                self.argsbatch[i]["timestamp"] = int(time.time())
+                    image, seed = self.pipeline(**args)
+                    self.argsbatch[i]["image"] = image
+                    self.argsbatch[i]["seed"] = seed
+                    self.argsbatch[i]["timestamp"] = int(time.time())
 
-                if(self.endCallback is not None):
-                    self.endCallback(output_index, args, image)
+                    if(self.endCallback is not None):
+                        self.endCallback(output_index, args, image)
+                except KeyboardInterrupt:
+                    break
+
 
 
     def startOutput(self, args) -> Tuple[int, widgets.Output]:
