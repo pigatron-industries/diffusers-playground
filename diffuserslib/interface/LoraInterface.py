@@ -1,11 +1,12 @@
 from IPython.display import display
+from .WidgetHelpers import *
 
 
 class LoraInterface:
     def __init__(self, interface):
         self.interface = interface
-        self.lora_dropdown = interface.dropdown(label="LORA:", options=[""], value=None)
-        self.loraweight_text = interface.floatText(label="LORA weight:", value=1)
+        self.lora_dropdown = dropdown(interface, label="LORA:", options=[""], value=None)
+        self.loraweight_text = floatText(interface, label="LORA weight:", value=1)
 
     def display(self):
         display(self.lora_dropdown,

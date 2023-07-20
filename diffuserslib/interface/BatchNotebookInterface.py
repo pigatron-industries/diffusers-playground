@@ -7,7 +7,7 @@ from ..processing.processors.FilterProcessors import *
 from ..processing.processors.TransformerProcessors import *
 from .InitImageInterface import *
 from .LoraInterface import *
-import WidgetHelpers as w
+from .WidgetHelpers import *
 import ipywidgets as widgets
 import pickle 
 import os
@@ -58,7 +58,7 @@ class BatchNotebookInterface:
         self.outputs:List[OutputInterface] = []
 
         #  Init images
-        self.initimages_num = w.intSlider(self, label='Input Images:', value=0, min=0, max=4, step=1)
+        self.initimages_num = intSlider(self, label='Input Images:', value=0, min=0, max=4, step=1)
         self.initimage_widgets:List[InitImageInterface] = []
         self.initimage_widgets.append(InitImageInterface(self, firstImage=True))
         self.initimage_widgets.append(InitImageInterface(self))
@@ -66,10 +66,10 @@ class BatchNotebookInterface:
         self.initimage_widgets.append(InitImageInterface(self))
 
         # Model options
-        self.model_dropdown = w.dropdown(self, label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
-        self.mergemodel_dropdown = w.dropdown(self, label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
-        self.mergeweight_slider = w.floatSlider(self, label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
-        self.lora_num = w.intSlider(self, label='LORAs:', value=0, min=0, max=4, step=1)
+        self.model_dropdown = dropdown(self, label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.mergemodel_dropdown = dropdown(self, label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.mergeweight_slider = floatSlider(self, label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
+        self.lora_num = intSlider(self, label='LORAs:', value=0, min=0, max=4, step=1)
         self.lora_widgets = []
         self.lora_widgets.append(LoraInterface(self))
         self.lora_widgets.append(LoraInterface(self))
@@ -77,19 +77,19 @@ class BatchNotebookInterface:
         self.lora_widgets.append(LoraInterface(self))
 
         # Generation options
-        self.prompt_text = w.textarea(self, label="Prompt:", value="")
-        self.shuffle_checkbox = w.checkbox(self, label="Shuffle", value=False)
-        self.negprompt_text = w.textarea(self, label="Neg Prompt:", value="")
-        self.width_slider = w.intSlider(self, label='Width:', value=512, min=256, max=1024, step=64)
-        self.height_slider = w.intSlider(self, label='Height:', value=768, min=256, max=1024, step=64)
-        self.scale_slider = w.floatSlider(self, label='Guidance:', value=9, min=1, max=20, step=0.1)
-        self.steps_slider = w.intSlider(self, label='Steps:', value=40, min=5, max=100, step=5)
-        self.strength_slider = w.floatSlider(self, label='Strength:', value=0.5, min=0, max=1, step=0.01)
-        self.scheduler_dropdown = w.dropdown(self, label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
+        self.prompt_text = textarea(self, label="Prompt:", value="")
+        self.shuffle_checkbox = checkbox(self, label="Shuffle", value=False)
+        self.negprompt_text = textarea(self, label="Neg Prompt:", value="")
+        self.width_slider = intSlider(self, label='Width:', value=512, min=256, max=1024, step=64)
+        self.height_slider = intSlider(self, label='Height:', value=768, min=256, max=1024, step=64)
+        self.scale_slider = floatSlider(self, label='Guidance:', value=9, min=1, max=20, step=0.1)
+        self.steps_slider = intSlider(self, label='Steps:', value=40, min=5, max=100, step=5)
+        self.strength_slider = floatSlider(self, label='Strength:', value=0.5, min=0, max=1, step=0.01)
+        self.scheduler_dropdown = dropdown(self, label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
                                                                            'EulerAncestralDiscreteScheduler', 'EulerDiscreteScheduler',
                                                                            'LMSDiscreteScheduler', 'UniPCMultistepScheduler'], value="EulerDiscreteScheduler")
-        self.seed_text = w.intText(self, label='Seed:', value=None)
-        self.batchsize_slider = w.intSlider(self, label='Batch:', value=10, min=1, max=100, step=1)
+        self.seed_text = intText(self, label='Seed:', value=None)
+        self.batchsize_slider = intSlider(self, label='Batch:', value=10, min=1, max=100, step=1)
 
         self.run_button = widgets.Button(description="Run")
         self.clear_button = widgets.Button(description="Clear")

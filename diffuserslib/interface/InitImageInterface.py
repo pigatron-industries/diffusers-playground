@@ -5,7 +5,7 @@ from PIL import Image
 import copy
 import glob
 import os
-import WidgetHelpers as w
+from .WidgetHelpers import *
 from ..batch.argument import RandomImageArgument
 from ..processing.ProcessingPipeline import ImageProcessorPipeline
 
@@ -27,11 +27,11 @@ class InitImageInterface:
         if (not firstImage):
             inputdirs_options = [PREV_IMAGE] + inputdirs_options
         
-        self.model_dropdown = w.dropdown(interface, label="Control Model:", options=controlnet_models, value=INIT_IMAGE if firstImage else None)
-        self.generation_dropdown = w.dropdown(interface, label="Generation:", options=generation_pipeline_options, value=None)
-        self.input_source_dropdown = w.dropdown(interface, label="Input Source:", options=inputdirs_options, value=None)
-        self.input_select_dropdown = w.dropdown(interface, label="Input Select:", options=[], value=None)
-        self.preprocessor_dropdown = w.dropdown(interface, label="Preprocessor:", options=[None]+list(interface.preprocessing_pipelines.keys()), value=None)
+        self.model_dropdown = dropdown(interface, label="Control Model:", options=controlnet_models, value=INIT_IMAGE if firstImage else None)
+        self.generation_dropdown = dropdown(interface, label="Generation:", options=generation_pipeline_options, value=None)
+        self.input_source_dropdown = dropdown(interface, label="Input Source:", options=inputdirs_options, value=None)
+        self.input_select_dropdown = dropdown(interface, label="Input Select:", options=[], value=None)
+        self.preprocessor_dropdown = dropdown(interface, label="Preprocessor:", options=[None]+list(interface.preprocessing_pipelines.keys()), value=None)
 
     def display(self):
         display(self.model_dropdown,
