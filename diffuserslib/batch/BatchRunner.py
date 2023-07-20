@@ -88,7 +88,7 @@ class BatchRunner:
             self.argsbatch[i]["image"] = image
             self.argsbatch[i]["seed"] = seed
             self.argsbatch[i]["timestamp"] = int(time.time())
-            self._output(image, seed, i)
+            self._output(image, seed, args, i)
 
 
     def logArgs(self, args):
@@ -99,28 +99,32 @@ class BatchRunner:
                 print(f"{arg}:")
                 if(hasattr(value, "filename")):
                     print(getattr(value, "filename"))
-                display(value)
+                thumb = value.copy()
+                thumb.thumbnail((256,256), Image.ANTIALIAS)
+                display(thumb)
             elif (isinstance(value, list) and all(isinstance(item, Image.Image) for item in value)):
                 print(f"{arg}:")
                 for item in value:
                     if(hasattr(item, "filename")):
                         print(getattr(item, "filename"))
-                    display(item)
+                    thumb = item.copy()
+                    thumb.thumbnail((256,256), Image.ANTIALIAS)
+                    display(thumb)
 
 
-    def _output(self, image, seed, index):
-        self.argsbatch[index]["image"] = image
-        self.argsbatch[index]["seed"] = seed
+    def _output(self, image, seed, args, index):
+        args["image"] = image
+        args["seed"] = seed
         display(image)
 
         output = widgets.Output()
-        self.argsbatch[index]["output"] = output
+        args["output"] = output
         saveBtn = widgets.Button(description="Save")
         saveBtn.on_click(functools.partial(self._saveOutput, index))
         display(saveBtn, output)
 
         if(self.callback is not None):
-            self.callback(image, output)
+            self.callback(args, image, output)
 
 
     def _saveOutput(self, index, btn):
