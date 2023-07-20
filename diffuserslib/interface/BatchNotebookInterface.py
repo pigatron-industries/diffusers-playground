@@ -182,10 +182,8 @@ class BatchNotebookInterface:
                 lora_w.hide()
 
         if(self.initimages_num.value > 0 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
-            self.strength_slider.layout.display = 'flex'
             self.steps_slider.layout.display = 'none'
         else:
-            self.strength_slider.layout.display = 'none'
             self.steps_slider.layout.display = 'flex'
 
         for initimage_w in self.initimage_widgets:
@@ -218,12 +216,11 @@ class BatchNotebookInterface:
 
         # image feedback handling
         prevImageFunc = None
-        feebdackImage = False
-        if(initimage is not None and params['initimages_num'] > 0):
+        if(initimage is not None):
             prevImageFunc = initimage
-            feebdackImage = True
-        else:
-            pass #TODO add init image params
+            if(params['initimages_num'] == 0):
+                params['initimages_num'] = 1
+                params['initimage0_model'] = INIT_IMAGE
 
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i >= params['initimages_num']):
@@ -233,7 +230,7 @@ class BatchNotebookInterface:
             params[f'initimage{i}_input_source'] = initimage_w.input_source_dropdown.value
             params[f'initimage{i}_input_select'] = initimage_w.input_select_dropdown.value
             params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
-            pipeline = initimage_w.createGenerationPipeline(prevImageFunc, feebdackImage)
+            pipeline = initimage_w.createGenerationPipeline(prevImageFunc, initimage is not None)
             prevImageFunc = pipeline.getLastOutput
 
             if(initimage_w.model_dropdown.value == INIT_IMAGE):
@@ -253,7 +250,7 @@ class BatchNotebookInterface:
             params[f'lora{i}_lora'] = lora_w.lora_dropdown.value
             params[f'lora{i}_loraweight'] = lora_w.loraweight_text.value
 
-        if(self.initimages_num.value > 0 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+        if(params['initimages_num'] > 0 and params['initimage0_model'] == INIT_IMAGE):
             params['strength'] = self.strength_slider.value
         else:
             params['steps'] = self.steps_slider.value
@@ -401,11 +398,11 @@ class BatchNotebookInterface:
 
 
     def creatBatch(self, params):
-        if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+        if(params['initimages_num'] == 1 and params['initimage0_model'] == INIT_IMAGE):
             pipelineFunc = self.pipelines.imageToImage
-        elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
+        elif(params['initimages_num'] > 1 and params['initimage0_model'] == INIT_IMAGE):
             pipelineFunc = self.pipelines.imageToImageControlNet
-        elif(self.initimages_num.value == 0):
+        elif(params['initimages_num'] == 0):
             pipelineFunc = self.pipelines.textToImage
         else:
             pipelineFunc = self.pipelines.textToImageControlNet
