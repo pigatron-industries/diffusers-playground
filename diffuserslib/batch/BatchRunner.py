@@ -90,7 +90,6 @@ class BatchRunner:
                 self.argsbatch[i]["image"] = image
                 self.argsbatch[i]["seed"] = seed
                 self.argsbatch[i]["timestamp"] = int(time.time())
-                self._output(image, seed, args, i)
 
                 if(self.endCallback is not None):
                     self.endCallback(output_index, args, image)
@@ -123,49 +122,3 @@ class BatchRunner:
                     thumb = item.copy()
                     thumb.thumbnail((256,256), Image.ANTIALIAS)
                     display(thumb)
-
-
-    def _output(self, image, seed, args, index):
-        args["image"] = image
-        args["seed"] = seed
-        display(image)
-
-        output = widgets.Output()
-        args["output"] = output
-        saveBtn = widgets.Button(description="Save")
-        saveBtn.on_click(functools.partial(self._saveOutput, index))
-        display(saveBtn, output)
-
-
-    def _saveOutput(self, index, btn):
-        args = self.argsbatch[index]
-        timestamp = args['timestamp']
-        output = args['output']
-        image = args['image']
-        image_filename = f"{self.outputdir}/txt2img_{timestamp}.png"
-        info_filename = f"{self.outputdir}/txt2img_{timestamp}.txt"
-        image.save(image_filename)
-
-        description = self._saveArgs(args, info_filename)
-        # xmp_metadata = pyexiv2.XmpMetadata()
-        # xmp_metadata["Xmp.dc.description"] = description
-        # xmp_metadata.write(image_filename)
-        
-        output.append_stdout("Saved to: " + image_filename)
-
-    def _saveArgs(self, args, file):
-        with open(file, 'w') as file:
-            description = ""
-            for arg in args.keys():
-                value = args[arg]
-                if (isinstance(value, str) or isinstance(value, int) or isinstance(value, float)):
-                    description += f"{arg}: {value}\n"
-                    file.write(f"{arg}: {value}\n")
-                elif (isinstance(value, Image.Image) and hasattr(value, 'filename')):
-                    description += f"{arg}: {getattr(value, 'filename')}\n"
-                    file.write(f"{arg}: {getattr(value, 'filename')}\n")
-                elif (isinstance(value, list)):
-                    if (all(isinstance(item, str) for item in value) or all(isinstance(item, int) for item in value) or all(isinstance(item, float) for item in value)):
-                        description += f"{arg}: {value}\n"
-                        file.write(f"{arg}: {value}\n")
-        return description

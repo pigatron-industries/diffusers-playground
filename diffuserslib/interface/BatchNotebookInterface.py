@@ -332,12 +332,13 @@ class BatchNotebookInterface:
         with outputItem.output:
             outputItem.image = image
             outputItem.args = args
-            # TODO add save button here instead of BtachRunner
+            saveBtn = widgets.Button(description="Save")
+            saveBtn.on_click(functools.partial(self._saveClick, output_index))
             refineBtn = widgets.Button(description="Refine")
             refineBtn.on_click(functools.partial(self._refineClick, output_index))
             removeBtn = widgets.Button(description="Remove")
             removeBtn.on_click(functools.partial(self._removeClick, output_index))
-            display(refineBtn, removeBtn)
+            display(image, saveBtn, refineBtn, removeBtn)
 
 
     def _runClick(self, b):
@@ -350,9 +351,39 @@ class BatchNotebookInterface:
         self.args = []
 
 
+    def _saveClick(self, index, b):
+        outputItem = self.output.getOutput(index)
+        with outputItem.output:
+            args = outputItem.args
+            image = outputItem.image
+            if(image is not None):
+                timestamp = args['timestamp']
+                image_filename = f"{self.output_dir}/txt2img_{timestamp}.png"
+                info_filename = f"{self.output_dir}/txt2img_{timestamp}.txt"
+                image.save(image_filename)
+                self._saveArgs(args, info_filename)
+                print("Saved to: " + image_filename)
+
+
+    def _saveArgs(self, args, file):
+        with open(file, 'w') as file:
+            description = ""
+            for arg in args.keys():
+                value = args[arg]
+                if (isinstance(value, str) or isinstance(value, int) or isinstance(value, float)):
+                    description += f"{arg}: {value}\n"
+                    file.write(f"{arg}: {value}\n")
+                elif (isinstance(value, Image.Image) and hasattr(value, 'filename')):
+                    description += f"{arg}: {getattr(value, 'filename')}\n"
+                    file.write(f"{arg}: {getattr(value, 'filename')}\n")
+                elif (isinstance(value, list)):
+                    if (all(isinstance(item, str) for item in value) or all(isinstance(item, int) for item in value) or all(isinstance(item, float) for item in value)):
+                        description += f"{arg}: {value}\n"
+                        file.write(f"{arg}: {value}\n")
+
+
     def _removeClick(self, index, b):
         with self.output.output:
-            print(f"Removing output {index}")
             self.output.removeOutput(index)
 
 
