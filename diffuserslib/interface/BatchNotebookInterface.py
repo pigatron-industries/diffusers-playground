@@ -6,6 +6,7 @@ from ..processing.ProcessingPipeline import ImageProcessorPipeline
 from ..processing.processors.FilterProcessors import *
 from ..processing.processors.TransformerProcessors import *
 from .InitImageInterface import *
+from .LoraInterface import *
 import ipywidgets as widgets
 import pickle 
 import os
@@ -34,25 +35,6 @@ DEFAULT_PREPROCESSORS = {
     'noise': partial(GaussianNoiseProcessor, sigma=10),
 }
 
-
-
-class LoraWidgets:
-    def __init__(self, interface):
-        self.interface = interface
-        self.lora_dropdown = interface.dropdown(label="LORA:", options=[""], value=None)
-        self.loraweight_text = interface.floatText(label="LORA weight:", value=1)
-
-    def display(self):
-        display(self.lora_dropdown,
-                self.loraweight_text)
-        
-    def hide(self):
-        self.lora_dropdown.layout.display = 'none'
-        self.loraweight_text.layout.display = 'none'
-
-    def show(self):
-        self.lora_dropdown.layout.display = 'flex'
-        self.loraweight_text.layout.display = 'flex'
 
 
 class BatchNotebookInterface:
@@ -84,10 +66,10 @@ class BatchNotebookInterface:
         self.mergeweight_slider = self.floatSlider(label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
         self.lora_num = self.intSlider(label='LORAs:', value=0, min=0, max=4, step=1)
         self.lora_widgets = []
-        self.lora_widgets.append(LoraWidgets(self))
-        self.lora_widgets.append(LoraWidgets(self))
-        self.lora_widgets.append(LoraWidgets(self))
-        self.lora_widgets.append(LoraWidgets(self))
+        self.lora_widgets.append(LoraInterface(self))
+        self.lora_widgets.append(LoraInterface(self))
+        self.lora_widgets.append(LoraInterface(self))
+        self.lora_widgets.append(LoraInterface(self))
 
         # Generation options
         self.prompt_text = self.textarea(label="Prompt:", value="")
