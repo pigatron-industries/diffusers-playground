@@ -12,6 +12,8 @@ import ipywidgets as widgets
 import pickle 
 import os
 import functools
+import multiprocessing
+import time
 from threading import Thread
 from collections import OrderedDict
 from typing import List, Dict, Callable
@@ -154,7 +156,9 @@ class BatchNotebookInterface:
                 self.output.output
         )
         self.loadParams()
-        # TODO self.genThread = Thread(target=self.genThreadLoop)
+        self.batchQueue:List[BatchRunner] = []
+        # self.batchThread = multiprocessing.Process(target=self.batchThreadLoop)
+        # self.batchThread.start()
 
 
     def updateWidgets(self):
@@ -297,7 +301,6 @@ class BatchNotebookInterface:
         except Exception as e:
             print(e)
             print("Error loading params")
-            pass
         self.updateWidgets()
 
 
@@ -317,9 +320,12 @@ class BatchNotebookInterface:
         self.updateWidgets()
 
 
-    def genThreadLoop(self):
-        # TODO check generation queue and start gens
-        pass
+    def batchThreadLoop(self):
+        while(True):
+            if(len(self.batchQueue) > 0):
+                batch = self.batchQueue.pop(0)
+                batch.run()
+            time.sleep(0.1)
 
 
     def startGenerationCallback(self, args:Dict) -> Tuple[int, widgets.Output]:
@@ -342,7 +348,8 @@ class BatchNotebookInterface:
 
 
     def _runClick(self, b):
-        self.run()
+        with self.output.output:
+            self.run()
 
 
     def _clearClick(self, b):
@@ -393,7 +400,7 @@ class BatchNotebookInterface:
             self.refine(outputItem.image, outputItem.args)
 
 
-    def initPipeline(self, params):
+    def creatBatch(self, params):
         if(self.initimages_num.value == 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
             pipelineFunc = self.pipelines.imageToImage
         elif(self.initimages_num.value > 1 and self.initimage_widgets[0].model_dropdown.value == INIT_IMAGE):
@@ -402,7 +409,6 @@ class BatchNotebookInterface:
             pipelineFunc = self.pipelines.textToImage
         else:
             pipelineFunc = self.pipelines.textToImageControlNet
-        self.batch = BatchRunner(pipelineFunc, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
 
         loras = []
         for i, lora_w in enumerate(self.lora_widgets):
@@ -411,17 +417,22 @@ class BatchNotebookInterface:
             loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
         self.pipelines.useLORAs(loras)
 
+        batch = BatchRunner(pipelineFunc, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
+        return batch
+
 
     def run(self):
         params = self.saveParams()
-        self.initPipeline(params)
-        self.batch.appendBatchArguments(params, params['batch'])
-        self.batch.run()
+        batch = self.creatBatch(params)
+        batch.appendBatchArguments(params, params['batch'])
+        # self.batchQueue.append(batch)
+        batch.run()
 
 
     def refine(self, image, args):
         # TODO preserve prompt from args
         params = self.getParams(image)
-        self.initPipeline(params)
-        self.batch.appendBatchArguments(params, params['batch'])
-        self.batch.run()
+        batch = self.creatBatch(params)
+        batch.appendBatchArguments(params, params['batch'])
+        # self.batchQueue.append(batch)
+        batch.run()
