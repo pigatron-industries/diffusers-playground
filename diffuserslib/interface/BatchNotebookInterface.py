@@ -7,6 +7,7 @@ from ..processing.processors.FilterProcessors import *
 from ..processing.processors.TransformerProcessors import *
 from .InitImageInterface import *
 from .LoraInterface import *
+import WidgetHelpers as w
 import ipywidgets as widgets
 import pickle 
 import os
@@ -18,7 +19,6 @@ from functools import partial
 from IPython.display import display, clear_output
 from PIL import Image
 
-INTERFACE_WIDTH = '900px'
 
 DEFAULT_PREPROCESSORS = {
     'canny edge detection': CannyEdgeProcessor,
@@ -36,14 +36,18 @@ DEFAULT_PREPROCESSORS = {
 }
 
 
+class OutputInterface:
+    def __init__(self, output, args, image):
+        self.output = output
+        self.args = args
+        self.image = image
+
 
 class BatchNotebookInterface:
     def __init__(self, pipelines:DiffusersPipelines, output_dir:str, modifier_dict=None, save_file:str='batch_params.pkl', 
                  generation_pipelines:Dict[str, ImageProcessorPipeline]={}, 
                  preprocessing_pipelines:Dict[str, ImageProcessor]=DEFAULT_PREPROCESSORS, 
                  input_dirs:List[str]=[]):
-        self.images = []
-        self.args = []
         self.pipelines = pipelines
         self.output_dir = output_dir
         self.input_dirs = input_dirs
@@ -51,9 +55,10 @@ class BatchNotebookInterface:
         self.save_file = save_file
         self.generation_pipelines = generation_pipelines
         self.preprocessing_pipelines = preprocessing_pipelines
+        self.outputs:List[OutputInterface] = []
 
         #  Init images
-        self.initimages_num = self.intSlider(label='Input Images:', value=0, min=0, max=4, step=1)
+        self.initimages_num = w.intSlider(self, label='Input Images:', value=0, min=0, max=4, step=1)
         self.initimage_widgets:List[InitImageInterface] = []
         self.initimage_widgets.append(InitImageInterface(self, firstImage=True))
         self.initimage_widgets.append(InitImageInterface(self))
@@ -61,10 +66,10 @@ class BatchNotebookInterface:
         self.initimage_widgets.append(InitImageInterface(self))
 
         # Model options
-        self.model_dropdown = self.dropdown(label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
-        self.mergemodel_dropdown = self.dropdown(label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
-        self.mergeweight_slider = self.floatSlider(label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
-        self.lora_num = self.intSlider(label='LORAs:', value=0, min=0, max=4, step=1)
+        self.model_dropdown = w.dropdown(self, label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.mergemodel_dropdown = w.dropdown(self, label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.mergeweight_slider = w.floatSlider(self, label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
+        self.lora_num = w.intSlider(self, label='LORAs:', value=0, min=0, max=4, step=1)
         self.lora_widgets = []
         self.lora_widgets.append(LoraInterface(self))
         self.lora_widgets.append(LoraInterface(self))
@@ -72,19 +77,19 @@ class BatchNotebookInterface:
         self.lora_widgets.append(LoraInterface(self))
 
         # Generation options
-        self.prompt_text = self.textarea(label="Prompt:", value="")
-        self.shuffle_checkbox = self.checkbox(label="Shuffle", value=False)
-        self.negprompt_text = self.textarea(label="Neg Prompt:", value="")
-        self.width_slider = self.intSlider(label='Width:', value=512, min=256, max=1024, step=64)
-        self.height_slider = self.intSlider(label='Height:', value=768, min=256, max=1024, step=64)
-        self.scale_slider = self.floatSlider(label='Guidance:', value=9, min=1, max=20, step=0.1)
-        self.steps_slider = self.intSlider(label='Steps:', value=40, min=5, max=100, step=5)
-        self.strength_slider = self.floatSlider(label='Strength:', value=0.5, min=0, max=1, step=0.01)
-        self.scheduler_dropdown = self.dropdown(label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
+        self.prompt_text = w.textarea(self, label="Prompt:", value="")
+        self.shuffle_checkbox = w.checkbox(self, label="Shuffle", value=False)
+        self.negprompt_text = w.textarea(self, label="Neg Prompt:", value="")
+        self.width_slider = w.intSlider(self, label='Width:', value=512, min=256, max=1024, step=64)
+        self.height_slider = w.intSlider(self, label='Height:', value=768, min=256, max=1024, step=64)
+        self.scale_slider = w.floatSlider(self, label='Guidance:', value=9, min=1, max=20, step=0.1)
+        self.steps_slider = w.intSlider(self, label='Steps:', value=40, min=5, max=100, step=5)
+        self.strength_slider = w.floatSlider(self, label='Strength:', value=0.5, min=0, max=1, step=0.01)
+        self.scheduler_dropdown = w.dropdown(self, label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
                                                                            'EulerAncestralDiscreteScheduler', 'EulerDiscreteScheduler',
                                                                            'LMSDiscreteScheduler', 'UniPCMultistepScheduler'], value="EulerDiscreteScheduler")
-        self.seed_text = self.intText(label='Seed:', value=None)
-        self.batchsize_slider = self.intSlider(label='Batch:', value=10, min=1, max=100, step=1)
+        self.seed_text = w.intText(self, label='Seed:', value=None)
+        self.batchsize_slider = w.intSlider(self, label='Batch:', value=10, min=1, max=100, step=1)
 
         self.run_button = widgets.Button(description="Run")
         self.clear_button = widgets.Button(description="Clear")
@@ -352,94 +357,3 @@ class BatchNotebookInterface:
         self.initPipeline(params)
         self.batch.appendBatchArguments(params, params['batch'])
         self.batch.run()
-
-
-
-    # ============== widget helpers =============
-
-    def text(self, label, value) -> widgets.Text:
-        text = widgets.Text(
-            value=value,
-            description=label,
-            disabled=False,
-            layout={'width': INTERFACE_WIDTH}
-        )
-        text.observe(self.onChange)
-        return text
-
-    def intText(self, label, value) -> widgets.IntText:
-        inttext = widgets.IntText(
-            value=value,
-            description=label,
-            disabled=False
-        )
-        inttext.observe(self.onChange)
-        return inttext
-    
-    def floatText(self, label, value) -> widgets.FloatText:
-        floattext = widgets.FloatText(
-            value=value,
-            description=label,
-            disabled=False
-        )
-        floattext.observe(self.onChange)
-        return floattext
-
-    def intSlider(self, label, value, min, max, step) -> widgets.IntSlider:
-        slider = widgets.IntSlider(
-            value=value,
-            min=min,
-            max=max,
-            step=step,
-            description=label,
-            orientation='horizontal',
-            readout=True,
-            readout_format='d',
-            layout={'width': INTERFACE_WIDTH}
-        )
-        slider.observe(self.onChange)
-        return slider
-
-    def floatSlider(self, label, value, min, max, step) -> widgets.FloatSlider:
-        slider = widgets.FloatSlider(
-            value=value,
-            min=min,
-            max=max,
-            step=step,
-            description=label,
-            orientation='horizontal',
-            readout=True,
-            readout_format='.2f',
-            layout={'width': INTERFACE_WIDTH}
-        )
-        slider.observe(self.onChange)
-        return slider
-
-    def dropdown(self, label, options, value) -> widgets.Dropdown:
-        dropdown = widgets.Dropdown(
-            options=options,
-            description=label,
-            value=value,
-            layout={'width': INTERFACE_WIDTH}
-        )
-        dropdown.observe(self.onChange)
-        return dropdown
-    
-    def textarea(self, label, value) -> widgets.Textarea:
-        textarea = widgets.Textarea(
-            value=value,
-            description=label,
-            layout={'width': INTERFACE_WIDTH, 'height': '100px'}
-        )
-        textarea.observe(self.onChange)
-        return textarea
-    
-    def checkbox(self, label, value) -> widgets.Checkbox:
-        checkbox = widgets.Checkbox(
-            value=value,
-            description=label,
-            disabled=False,
-            indent=True
-        )
-        checkbox.observe(self.onChange)
-        return checkbox
