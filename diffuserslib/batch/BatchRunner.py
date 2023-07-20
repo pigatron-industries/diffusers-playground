@@ -1,6 +1,7 @@
 import itertools
 import time
 from PIL import Image
+from typing import List, Dict, Callable, Tuple
 import inspect
 # import pyexiv2
 
@@ -45,11 +46,12 @@ def evaluateArguments(args, **kwargs):
 
 class BatchRunner:
 
-    def __init__(self, pipeline, outputdir=".", callback=None):
+    def __init__(self, pipeline, outputdir=".", startCallback:Callable[[Dict], Tuple[int, widgets.Output]]|None=None, endCallback:Callable[[int, Dict, Image.Image], None]|None=None):
         self.pipeline = pipeline
         self.outputdir = outputdir
         self.argsbatch = []
-        self.callback = callback
+        self.startCallback = startCallback
+        self.endCallback = endCallback
 
 
     def appendBatchArguments(self, argdict, count=1):
@@ -76,19 +78,30 @@ class BatchRunner:
             else:
                 self.argsbatch.append(args)
 
-        print(f"Created batch of size {len(self.argsbatch)}")
-
 
     def run(self):
         for i, args in enumerate(self.argsbatch):
-            print(f"Generating {i}/{len(self.argsbatch)}")
-            self.logArgs(args)
+            output_index, output = self.startOutput(args)
+            with output:
+                print(f"Generating {i}/{len(self.argsbatch)}")
+                self.logArgs(args)
 
-            image, seed = self.pipeline(**args)
-            self.argsbatch[i]["image"] = image
-            self.argsbatch[i]["seed"] = seed
-            self.argsbatch[i]["timestamp"] = int(time.time())
-            self._output(image, seed, args, i)
+                image, seed = self.pipeline(**args)
+                self.argsbatch[i]["image"] = image
+                self.argsbatch[i]["seed"] = seed
+                self.argsbatch[i]["timestamp"] = int(time.time())
+                self._output(image, seed, args, i)
+
+                if(self.endCallback is not None):
+                    self.endCallback(output_index, args, image)
+
+
+    def startOutput(self, args) -> Tuple[int, widgets.Output]:
+        if (self.startCallback):
+            return self.startCallback(args)
+        else:
+            return widgets.Output()
+
 
 
     def logArgs(self, args):
@@ -122,9 +135,6 @@ class BatchRunner:
         saveBtn = widgets.Button(description="Save")
         saveBtn.on_click(functools.partial(self._saveOutput, index))
         display(saveBtn, output)
-
-        if(self.callback is not None):
-            self.callback(args, image, output)
 
 
     def _saveOutput(self, index, btn):

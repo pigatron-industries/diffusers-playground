@@ -36,11 +36,35 @@ DEFAULT_PREPROCESSORS = {
 }
 
 
-class OutputInterface:
-    def __init__(self, output, args, image):
-        self.output = output
+class OutputItem:
+    def __init__(self, args:Dict, image:Image.Image|None = None):
+        self.output:widgets.Output = widgets.Output()
         self.args = args
         self.image = image
+
+
+class OutputList:
+    def __init__(self):
+        self.output:widgets.Output = widgets.Output()
+        self.outputs:List[OutputItem] = []
+
+    def addOutput(self, args) -> Tuple[int, OutputItem]:
+        item = OutputItem(args)
+        self.outputs.append(item)
+        with self.output:
+            display(item.output)
+        return (len(self.outputs) - 1, item)
+    
+    def getOutput(self, index) -> OutputItem:
+        return self.outputs[index]
+    
+    def removeOutput(self, index):
+        self.outputs[index].output.clear_output()
+    
+    def clear(self):
+        self.outputs = []
+        self.output.clear_output()
+
 
 
 class BatchNotebookInterface:
@@ -55,7 +79,6 @@ class BatchNotebookInterface:
         self.save_file = save_file
         self.generation_pipelines = generation_pipelines
         self.preprocessing_pipelines = preprocessing_pipelines
-        self.outputs:List[OutputInterface] = []
 
         #  Init images
         self.initimages_num = intSlider(self, label='Input Images:', value=0, min=0, max=4, step=1)
@@ -93,7 +116,7 @@ class BatchNotebookInterface:
 
         self.run_button = widgets.Button(description="Run")
         self.clear_button = widgets.Button(description="Clear")
-        self.output = widgets.Output()
+        self.output:OutputList = OutputList()
 
         self.run_button.on_click(self._runClick)
         self.clear_button.on_click(self._clearClick)
@@ -128,7 +151,7 @@ class BatchNotebookInterface:
                 widgets.HTML("<span>&nbsp;</span>"),
                 self.run_button,
                 self.clear_button,
-                self.output
+                self.output.output
         )
         self.loadParams()
         # TODO self.genThread = Thread(target=self.genThreadLoop)
@@ -299,30 +322,44 @@ class BatchNotebookInterface:
         pass
 
 
-    def _callback(self, args, image, output):
-        with output:
-            self.images.append(image)
-            self.args.append(args)
-            index = len(self.images)-1
+    def startGenerationCallback(self, args:Dict) -> Tuple[int, widgets.Output]:
+        index, outputItem = self.output.addOutput(args)
+        return index, outputItem.output
+
+
+    def endGenerationCallback(self, output_index:int, args:Dict, image:Image.Image):
+        outputItem = self.output.getOutput(output_index)
+        with outputItem.output:
+            outputItem.image = image
+            outputItem.args = args
+            # TODO add save button here instead of BtachRunner
             refineBtn = widgets.Button(description="Refine")
-            refineBtn.on_click(functools.partial(self._refineClick, index))
-            display(refineBtn)
+            refineBtn.on_click(functools.partial(self._refineClick, output_index))
+            removeBtn = widgets.Button(description="Remove")
+            removeBtn.on_click(functools.partial(self._removeClick, output_index))
+            display(refineBtn, removeBtn)
 
 
     def _runClick(self, b):
-        with self.output:
-            self.run()
+        self.run()
 
 
     def _clearClick(self, b):
-        self.output.clear_output()
+        self.output.clear()
         self.images = []
         self.args = []
 
 
+    def _removeClick(self, index, b):
+        with self.output.output:
+            print(f"Removing output {index}")
+            self.output.removeOutput(index)
+
+
     def _refineClick(self, index, b):
-        with self.output:
-            self.refine(self.images[index], self.args[index])
+        with self.output.output:
+            outputItem = self.output.getOutput(index)
+            self.refine(outputItem.image, outputItem.args)
 
 
     def initPipeline(self, params):
@@ -334,7 +371,7 @@ class BatchNotebookInterface:
             pipelineFunc = self.pipelines.textToImage
         else:
             pipelineFunc = self.pipelines.textToImageControlNet
-        self.batch = BatchRunner(pipelineFunc, self.output_dir, self._callback)
+        self.batch = BatchRunner(pipelineFunc, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
 
         loras = []
         for i, lora_w in enumerate(self.lora_widgets):
