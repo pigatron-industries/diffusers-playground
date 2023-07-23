@@ -3,6 +3,7 @@ import time
 from PIL import Image
 from typing import List, Dict, Callable, Tuple
 import inspect
+import traceback
 # import pyexiv2
 
 from IPython.display import display
@@ -94,7 +95,8 @@ class BatchRunner:
 
                     if(self.endCallback is not None):
                         self.endCallback(output_index, args, image)
-                except KeyboardInterrupt:
+                except Exception as e:
+                    print(traceback.format_exc())
                     break
 
 

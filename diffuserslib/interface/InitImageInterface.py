@@ -70,14 +70,14 @@ class InitImageInterface:
             return Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value)
         
 
-    def createGenerationPipeline(self, prevImageFunc:Callable[[], (Image.Image|None)]|Image.Image|None = None, feedbackImage = False) -> ImageProcessorPipeline:
+    def createGenerationPipeline(self, prevImageFunc:Callable[[], (Image.Image|None)]|Image.Image|None = None) -> ImageProcessorPipeline:
         pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
         pipeline = copy.deepcopy(pipeline)
         if(self.preprocessor_dropdown.value is not None):
             preprocessor = self.interface.preprocessing_pipelines[self.preprocessor_dropdown.value]
             pipeline.addTask(preprocessor())
         if(pipeline.hasPlaceholder("image")):
-            if(self.input_source_dropdown.value != PREV_IMAGE and not feedbackImage):
+            if(self.input_source_dropdown.value != PREV_IMAGE):
                 pipeline.setPlaceholder("image", self.getInitImage())
             elif (prevImageFunc is not None):
                 pipeline.setPlaceholder("image", prevImageFunc)

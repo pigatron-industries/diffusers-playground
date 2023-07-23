@@ -43,6 +43,23 @@ class OutputItem:
         self.output:widgets.Output = widgets.Output()
         self.args = args
         self.image = image
+        self.preserveprompt_checkbox = widgets.Checkbox(description="Preserve previous prompt", value=True)
+        self.preservecontrol_checkbox = widgets.Checkbox(description="Preserve control images", value=False)
+        self.preserveprompt_checkbox.layout.width = "300px"
+        self.preservecontrol_checkbox.layout.width = "300px"
+
+    def display(self, args:Dict, image:Image.Image, saveClick, refineClick, removeClick):
+        with self.output:
+            self.image = image
+            self.args = args
+            saveBtn = widgets.Button(description="Save")
+            saveBtn.on_click(saveClick)
+            refineBtn = widgets.Button(description="Refine")
+            refineBtn.on_click(refineClick)
+            refine_box = widgets.HBox([refineBtn, self.preserveprompt_checkbox, self.preservecontrol_checkbox])
+            removeBtn = widgets.Button(description="Remove")
+            removeBtn.on_click(removeClick)
+            display(image, saveBtn, refine_box, removeBtn)
 
 
 class OutputList:
@@ -59,6 +76,9 @@ class OutputList:
     
     def getOutput(self, index) -> OutputItem:
         return self.outputs[index]
+    
+    def display(self, index, args, image, saveClick, refineClick, removeClick):
+        self.outputs[index].display(args, image, functools.partial(saveClick, index), functools.partial(refineClick, index), functools.partial(removeClick, index))
     
     def removeOutput(self, index):
         self.outputs[index].output.clear_output()
@@ -195,7 +215,7 @@ class BatchNotebookInterface:
             self.updateWidgets()
 
 
-    def getParams(self, initimage:Image.Image|None = None):
+    def getParams(self):
         params = OrderedDict()
 
         if(self.mergemodel_dropdown.value is None):
@@ -214,14 +234,7 @@ class BatchNotebookInterface:
         params['batch'] = self.batchsize_slider.value
         params['initimages_num'] = self.initimages_num.value
 
-        # image feedback handling
         prevImageFunc = None
-        if(initimage is not None):
-            prevImageFunc = initimage
-            if(params['initimages_num'] == 0):
-                params['initimages_num'] = 1
-                params['initimage0_model'] = INIT_IMAGE
-
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i >= params['initimages_num']):
                 break
@@ -230,7 +243,7 @@ class BatchNotebookInterface:
             params[f'initimage{i}_input_source'] = initimage_w.input_source_dropdown.value
             params[f'initimage{i}_input_select'] = initimage_w.input_select_dropdown.value
             params[f'initimage{i}_preprocessor'] = initimage_w.preprocessor_dropdown.value
-            pipeline = initimage_w.createGenerationPipeline(prevImageFunc, initimage is not None)
+            pipeline = initimage_w.createGenerationPipeline(prevImageFunc)
             prevImageFunc = pipeline.getLastOutput
 
             if(initimage_w.model_dropdown.value == INIT_IMAGE):
@@ -250,10 +263,8 @@ class BatchNotebookInterface:
             params[f'lora{i}_lora'] = lora_w.lora_dropdown.value
             params[f'lora{i}_loraweight'] = lora_w.loraweight_text.value
 
-        if(params['initimages_num'] > 0 and params['initimage0_model'] == INIT_IMAGE):
-            params['strength'] = self.strength_slider.value
-        else:
-            params['steps'] = self.steps_slider.value
+        params['strength'] = self.strength_slider.value
+        params['steps'] = self.steps_slider.value
 
         if(self.seed_text.value > 0):
             params['seed'] = self.seed_text.value
@@ -331,17 +342,7 @@ class BatchNotebookInterface:
 
 
     def endGenerationCallback(self, output_index:int, args:Dict, image:Image.Image):
-        outputItem = self.output.getOutput(output_index)
-        with outputItem.output:
-            outputItem.image = image
-            outputItem.args = args
-            saveBtn = widgets.Button(description="Save")
-            saveBtn.on_click(functools.partial(self._saveClick, output_index))
-            refineBtn = widgets.Button(description="Refine")
-            refineBtn.on_click(functools.partial(self._refineClick, output_index))
-            removeBtn = widgets.Button(description="Remove")
-            removeBtn.on_click(functools.partial(self._removeClick, output_index))
-            display(image, saveBtn, refineBtn, removeBtn)
+        self.output.display(output_index, args, image, self._saveClick, self._refineClick, self._removeClick)
 
 
     def _runClick(self, b):
@@ -394,18 +395,18 @@ class BatchNotebookInterface:
     def _refineClick(self, index, b):
         with self.output.output:
             outputItem = self.output.getOutput(index)
-            self.refine(outputItem.image, outputItem.args)
+            self.refine(outputItem.image, outputItem.args, outputItem.preserveprompt_checkbox.value, outputItem.preservecontrol_checkbox.value)
 
 
     def creatBatch(self, params):
-        if(params['initimages_num'] == 1 and params['initimage0_model'] == INIT_IMAGE):
-            pipelineFunc = self.pipelines.imageToImage
-        elif(params['initimages_num'] > 1 and params['initimage0_model'] == INIT_IMAGE):
-            pipelineFunc = self.pipelines.imageToImageControlNet
-        elif(params['initimages_num'] == 0):
+        if(not 'initimage' in params and not 'controlimage' in params):
             pipelineFunc = self.pipelines.textToImage
-        else:
+        elif('initimage' in params and not 'controlimage' in params):
+            pipelineFunc = self.pipelines.imageToImage
+        elif(not 'initimage' in params and 'controlimage' in params):
             pipelineFunc = self.pipelines.textToImageControlNet
+        else:
+            pipelineFunc = self.pipelines.imageToImageControlNet
 
         loras = []
         for i, lora_w in enumerate(self.lora_widgets):
@@ -426,9 +427,19 @@ class BatchNotebookInterface:
         batch.run()
 
 
-    def refine(self, image, args):
-        # TODO preserve prompt from args
-        params = self.getParams(image)
+    def refine(self, image, args, preserveprompt:bool=False, preservecontrol:bool=False):
+        params = self.getParams()
+
+        # modify params for refinement
+        params['initimage'] = image
+        if(preserveprompt):
+            params['prompt'] = args['prompt']
+        if(preservecontrol and 'controlimage' in args):
+            params['controlimage'] = args['controlimage']
+        elif('controlimage' in args):
+            del params['controlimage']
+            del params['controlmodel']
+
         batch = self.creatBatch(params)
         batch.appendBatchArguments(params, params['batch'])
         # self.batchQueue.append(batch)
