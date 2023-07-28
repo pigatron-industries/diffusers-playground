@@ -5,8 +5,8 @@ image:
       txt2img: StableDiffusionXLTextToImagePipeline
       img2img: StableDiffusionXLImageToImagePipeline
     models:
-      - id: stabilityai/stable-diffusion-xl-base-0.9
-      - id: stabilityai/stable-diffusion-xl-refiner-0.9
+      - id: stabilityai/stable-diffusion-xl-base-1.0
+      - id: stabilityai/stable-diffusion-xl-refiner-1.0
   - base: kandinsky_2_1
     pipelines:
       txt2img: KandinskyTextToImagePipeline
