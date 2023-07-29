@@ -81,6 +81,7 @@ class BatchRunner:
 
 
     def run(self):
+        stop = False
         for i, args in enumerate(self.argsbatch):
             output_index, output = self.startOutput(args)
             with output:
@@ -95,9 +96,15 @@ class BatchRunner:
 
                     if(self.endCallback is not None):
                         self.endCallback(output_index, args, image)
+                except KeyboardInterrupt:
+                    stop = True
+                    break
                 except Exception as e:
                     print(traceback.format_exc())
+                    stop = True
                     break
+            if(stop):
+                break
 
 
 
