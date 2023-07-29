@@ -4,6 +4,7 @@ image:
     pipelines:
       txt2img: StableDiffusionXLTextToImagePipeline
       img2img: StableDiffusionXLImageToImagePipeline
+      inpaint: StableDiffusionXLInpaintPipeline
     models:
       - id: stabilityai/stable-diffusion-xl-base-1.0
       - id: stabilityai/stable-diffusion-xl-refiner-1.0
