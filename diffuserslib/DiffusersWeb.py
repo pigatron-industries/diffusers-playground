@@ -126,13 +126,7 @@ class DiffusersView(FlaskView):
             print(f'Control Images: {len(controlimages)}')
 
             controlimages = base64DecodeImages(controlimages)
-
-            if (prescale > 1):
-                prescaledimages = []
-                for image in controlimages:
-                    image = self.tools.upscaleEsrgan(image, int(prescale), "remacri") #TODO allow prescale algorithm selection
-                    prescaledimages.append(image)
-                controlimages = prescaledimages
+            controlimages = self.prescaleBefore(controlimages, prescale)
 
             initimage = controlimages[0]
             controlimages.pop(0)
@@ -145,8 +139,7 @@ class DiffusersView(FlaskView):
                 else:
                     outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
                 display(outimage)
-                if(prescale != 1):
-                    outimage = outimage.resize((int(outimage.width / prescale), int(outimage.height / prescale)), Image.LANCZOS) #TODO allow prescale algorithm selection
+                outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }
@@ -198,7 +191,7 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, strength=1.0, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, batch=1, **kwargs):
+    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, prescale:float=1, strength=1.0, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, batch=1, **kwargs):
         try:
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
@@ -218,12 +211,15 @@ class DiffusersView(FlaskView):
                 controlimage = None
                 controlmodel = None
 
+            controlimages = self.prescaleBefore(controlimages, prescale)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, 
                                                        model=model, controlimage=controlimage, controlmodel=controlmodel)
                 # outimage = applyColourCorrection(initimage, outimage)
+                outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
@@ -281,3 +277,37 @@ class DiffusersView(FlaskView):
         except Exception as e:
             self.job.status = { "status":"error", "action":"upscale", "error":str(e) }
             raise e
+
+
+    def prescaleBefore(self, images:List[Image.Image], prescale:float) -> List[Image.Image]:
+        if (prescale > 1):
+            prescaledimages = []
+            for image in images:
+                image = self.tools.upscaleEsrgan(image, int(prescale), "remacri")
+                prescaledimages.append(image)
+            return prescaledimages
+        elif (prescale < 1):
+            prescaledimages = []
+            for image in images:
+                image = image.resize((int(image.width * prescale), int(image.height * prescale)), Image.LANCZOS)
+                prescaledimages.append(image)
+            return prescaledimages
+        else:
+            return images
+        
+
+    def prescaleAfter(self, images:List[Image.Image], prescale:float) -> List[Image.Image]:
+        if (prescale > 1):
+            prescaledimages = []
+            for image in images:
+                image = image.resize((int(image.width / prescale), int(image.height / prescale)), Image.LANCZOS)
+                prescaledimages.append(image)
+            return prescaledimages
+        elif (prescale < 1):
+            prescaledimages = []
+            for image in images:
+                image = self.tools.upscaleEsrgan(image, int(1 / prescale), "remacri")
+                prescaledimages.append(image)
+            return prescaledimages
+        else:
+            return images

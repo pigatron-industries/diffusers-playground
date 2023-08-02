@@ -955,7 +955,7 @@ def Inpaint():
         p.num=data["num"]
         p.scale=data["scale"]
         p.strength=data["strength"]
-        p.prescale = int(data["prescale"])
+        p.prescale = data["prescale"]
         p.scheduler=data["scheduler"]
         p.controlmodels = data["controlmodels"]
         p.images64=images64
