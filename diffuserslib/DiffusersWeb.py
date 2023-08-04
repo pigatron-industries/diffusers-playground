@@ -205,19 +205,20 @@ class DiffusersView(FlaskView):
             else:
                 maskimage = base64DecodeImage(maskimage)
             if(controlmodels is not None and len(controlmodels) > 0):
-                controlimage = controlimages[1]
-                controlmodel = controlmodels[0]
+                controlimages.pop(0)
             else:
-                controlimage = None
-                controlmodel = None
+                controlimages = []
+                controlmodels = []
 
+            maskimage = self.prescaleBefore([maskimage], prescale)[0]
+            initimage = self.prescaleBefore([initimage], prescale)[0]
             controlimages = self.prescaleBefore(controlimages, prescale)
 
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, 
-                                                       model=model, controlimage=controlimage, controlmodel=controlmodel)
+                                                       model=model, controlimage=controlimages, controlmodel=controlmodels)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -280,16 +281,16 @@ class DiffusersView(FlaskView):
 
 
     def prescaleBefore(self, images:List[Image.Image], prescale:float) -> List[Image.Image]:
-        if (prescale > 1):
+        if (float(prescale) > 1):
             prescaledimages = []
             for image in images:
                 image = self.tools.upscaleEsrgan(image, int(prescale), "remacri")
                 prescaledimages.append(image)
             return prescaledimages
-        elif (prescale < 1):
+        elif (float(prescale) < 1):
             prescaledimages = []
             for image in images:
-                image = image.resize((int(image.width * prescale), int(image.height * prescale)), Image.LANCZOS)
+                image = image.resize((int(image.width * float(prescale)), int(image.height * float(prescale))), Image.LANCZOS)
                 prescaledimages.append(image)
             return prescaledimages
         else:
@@ -297,16 +298,16 @@ class DiffusersView(FlaskView):
         
 
     def prescaleAfter(self, images:List[Image.Image], prescale:float) -> List[Image.Image]:
-        if (prescale > 1):
+        if (float(prescale) > 1):
             prescaledimages = []
             for image in images:
-                image = image.resize((int(image.width / prescale), int(image.height / prescale)), Image.LANCZOS)
+                image = image.resize((int(image.width / float(prescale)), int(image.height / float(prescale))), Image.LANCZOS)
                 prescaledimages.append(image)
             return prescaledimages
-        elif (prescale < 1):
+        elif (float(prescale) < 1):
             prescaledimages = []
             for image in images:
-                image = self.tools.upscaleEsrgan(image, int(1 / prescale), "remacri")
+                image = self.tools.upscaleEsrgan(image, int(1 / float(prescale)), "remacri")
                 prescaledimages.append(image)
             return prescaledimages
         else:

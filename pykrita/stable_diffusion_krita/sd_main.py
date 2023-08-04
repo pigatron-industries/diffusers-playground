@@ -810,7 +810,7 @@ def ImageToImage():
         p.images64=images64
         p.controlmodels = data["controlmodels"]
         p.strength=data["strength"]
-        p.prescale = int(data["prescale"])
+        p.prescale = data["prescale"]
         runSD(p)
 
 
