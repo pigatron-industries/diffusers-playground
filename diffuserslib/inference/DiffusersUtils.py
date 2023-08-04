@@ -108,7 +108,7 @@ def tiledImageToImageMultipass(tileprocessor, initimage, tilewidth=640, tileheig
             offset = offsetEven
         else:
             offset = offsetOdd
-        image, usedseed = tiledProcessorOffset(tileprocessor=tileprocessor, initimage=image, stregnth=strength, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, 
+        image, usedseed = tiledProcessorOffset(tileprocessor=tileprocessor, initimage=image, strength=strength, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, 
                                                offsetx=offset[0], offsety=offset[1], **kwargs)
         strength = strength * strengthMult
 

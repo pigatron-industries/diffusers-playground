@@ -172,7 +172,7 @@ class DiffusersView(FlaskView):
                                                                   scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
                                                                   alignmentx=tilealignmentx, alignmenty=tilealignmenty, model=model, controlmodels=controlmodels, callback=self.updateProgress)
                 elif (method=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
+                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
                                                                     scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
                                                                     passes=2, strengthMult=0.5, model=model, controlmodels=controlmodels, callback=self.updateProgress)
                 elif (method=="inpaint"):
