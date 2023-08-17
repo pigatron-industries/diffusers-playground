@@ -9,6 +9,7 @@ torchvision
 controlnet-aux
 ipywidgets
 invisible-watermark>=2.0
+compel
 
 # diffusers conversion script
 OmegaConf

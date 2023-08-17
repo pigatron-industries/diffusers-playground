@@ -16,6 +16,7 @@ from diffusers import ( # Pipelines
 import torch
 import sys
 import numpy as np
+from compel import Compel
 
 
 INPAINT_CONTROL_MODEL = "lllyasviel/control_v11p_sd15_inpaint"
@@ -68,11 +69,15 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         if(scheduler is not None):
             self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
+
+        compel = Compel(tokenizer=self.pipeline.tokenizer, text_encoder=self.pipeline.text_encoder)
+        conditioning = compel.build_conditioning_tensor(prompt)
+
         if(self.preset.autocast):
             with torch.autocast(self.inferencedevice):
-                image = self.pipeline(prompt, generator=generator, **kwargs).images[0]
+                image = self.pipeline(prompt_embeds=conditioning, generator=generator, **kwargs).images[0]
         else:
-            image = self.pipeline(prompt, generator=generator, **kwargs).images[0]
+            image = self.pipeline(prompt_embeds=conditioning, generator=generator, **kwargs).images[0]
         return image, seed
     
 
