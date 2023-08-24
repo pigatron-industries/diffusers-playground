@@ -157,6 +157,8 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
         super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
     def inference(self, prompt, negprompt, seed, controlimage, scale, steps, scheduler, controlnet_conditioning_scale, **kwargs):
+        if(len(controlnet_conditioning_scale) == 1):
+            controlnet_conditioning_scale = controlnet_conditioning_scale[0]
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=controlimage, guidance_scale=scale, 
                                  num_inference_steps=steps, scheduler=scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
@@ -171,6 +173,8 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
+        if(len(controlnet_conditioning_scale) == 1):
+            controlnet_conditioning_scale = controlnet_conditioning_scale[0]
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, control_image=controlimage, 
                                  guidance_scale=scale, strength=strength, scheduler=scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
@@ -215,6 +219,8 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
             controlimage = [controlimage]
         controlimage = list(map(lambda x: pil_to_pt(x), controlimage))
         controlimage.append(inpaint_pt)
+        if(len(controlnet_conditioning_scale) == 1):
+            controlnet_conditioning_scale = controlnet_conditioning_scale[0]
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, 
                                  control_image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, 
                                  width=initimage.width, height=initimage.height, controlnet_conditioning_scale=controlnet_conditioning_scale)
