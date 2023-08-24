@@ -4,6 +4,7 @@ from ...StringUtils import mergeDicts
 from PIL import Image
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
+                        StableDiffusionXLControlNetPipeline,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -26,11 +27,7 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
                         returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED, requires_pooled=[False, True])
         conditioning, pooled = compel(prompt)
 
-        if(self.preset.autocast):
-            with torch.autocast(self.inferencedevice):
-                image = self.pipeline(prompt_embeds=conditioning, pooled_prompt_embeds=pooled, generator=generator, **kwargs).images[0]
-        else:
-            image = self.pipeline(prompt_embeds=conditioning, pooled_prompt_embeds=pooled, generator=generator, **kwargs).images[0]
+        image = self.pipeline(prompt_embeds=conditioning, pooled_prompt_embeds=pooled, generator=generator, **kwargs).images[0]
         return image, seed
 
 
@@ -50,6 +47,7 @@ class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionPipelineWrappe
         initimage = initimage.convert("RGB")
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, guidance_scale=scale, strength=strength, scheduler=scheduler)
 
+
 class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         super().__init__(StableDiffusionXLInpaintPipeline, preset, device, safety_checker=safety_checker)
@@ -59,3 +57,36 @@ class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
         maskimage = maskimage.convert("RGB")
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, 
                                  strength=strength, scheduler=scheduler, width=initimage.width, height=initimage.height)
+
+
+class StableDiffusionXLControlNetPipelineWrapper(StableDiffusionXLPipelineWrapper):
+    def __init__(self, preset:DiffusersModel, device, controlmodel, cls=DiffusionPipeline, safety_checker=True, **kwargs):
+        controlnet = self.createControlNets(controlmodel)
+        super().__init__(preset=preset, device=device, cls=cls, controlnet=controlnet, safety_checker=safety_checker)
+
+    def createControlNets(self, controlmodel):
+        self.controlmodel = controlmodel
+        if(isinstance(controlmodel, list)):
+            controlnet = []
+            for cmodel in controlmodel:
+                controlnet.append(ControlNetModel.from_pretrained(cmodel))
+            if(len(controlnet) == 1):
+                controlnet = controlnet[0]
+        else:
+            controlnet = ControlNetModel.from_pretrained(controlmodel)
+        return controlnet
+    
+    def isEqual(self, cls, modelid, controlmodel=None, **kwargs):
+        if(controlmodel is None):
+            return super().isEqual(cls, modelid)
+        else:
+            return super().isEqual(cls, modelid) and self.controlmodel == controlmodel
+        
+
+class StableDiffusionXLTextToImageControlNetPipelineWrapper(StableDiffusionXLControlNetPipelineWrapper):
+    def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
+        super().__init__(cls=StableDiffusionXLControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+
+    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, controlimage, controlnet_conditioning_scale, **kwargs):
+        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=controlimage, guidance_scale=scale, 
+                                 num_inference_steps=steps, scheduler=scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)

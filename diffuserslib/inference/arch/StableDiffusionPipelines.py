@@ -64,20 +64,22 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             schedulerClass = str_to_class(schedulerClass)
         self.pipeline.scheduler = schedulerClass.from_config(self.pipeline.scheduler.config)
     
-    def inference(self, prompt, seed, scheduler=None, tiling=False, **kwargs):
+    def inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
 
         compel = Compel(tokenizer=self.pipeline.tokenizer, text_encoder=self.pipeline.text_encoder)
-        conditioning = compel.build_conditioning_tensor(prompt)
+        conditioning = compel(prompt)
+        negative_conditioning = compel(negative_prompt)
+        # [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
 
         if(self.preset.autocast):
             with torch.autocast(self.inferencedevice):
-                image = self.pipeline(prompt_embeds=conditioning, generator=generator, **kwargs).images[0]
+                image = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs).images[0]
         else:
-            image = self.pipeline(prompt_embeds=conditioning, generator=generator, **kwargs).images[0]
+            image = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs).images[0]
         return image, seed
     
 
@@ -154,22 +156,23 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
     def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
         super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
-    def inference(self, prompt, negprompt, seed, controlimage, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+    def inference(self, prompt, negprompt, seed, controlimage, scale, steps, scheduler, controlnet_conditioning_scale, **kwargs):
+        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=controlimage, guidance_scale=scale, 
+                                 num_inference_steps=steps, scheduler=scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
         super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
-    def inference(self, prompt, negprompt, seed, initimage, controlimage, scale, strength, scheduler, **kwargs):
+    def inference(self, prompt, negprompt, seed, initimage, controlimage, scale, strength, scheduler, controlnet_conditioning_scale, **kwargs):
         initimage = initimage.convert("RGB")
         if(isinstance(controlimage, list)):
             controlimage = list(map(lambda x: x.convert("RGB"), controlimage))
         else:
             controlimage = controlimage.convert("RGB")
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, control_image=controlimage, 
-                                 guidance_scale=scale, strength=strength, scheduler=scheduler)
+                                 guidance_scale=scale, strength=strength, scheduler=scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
 # Standard stable diffusion inpaint pipeline
@@ -204,7 +207,7 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
         super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
 
 
-    def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, scheduler, **kwargs):
+    def inference(self, prompt, negprompt, seed, initimage, maskimage, controlimage, scale, steps, scheduler, controlnet_conditioning_scale, **kwargs):
         initimage = initimage.convert("RGB")
         maskimage = maskimage.convert("RGB")
         inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
@@ -214,7 +217,7 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
         controlimage.append(inpaint_pt)
         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, 
                                  control_image=controlimage, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, 
-                                 width=initimage.width, height=initimage.height)
+                                 width=initimage.width, height=initimage.height, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
 def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:

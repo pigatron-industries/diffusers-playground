@@ -2,7 +2,7 @@ import torch
 import os
 import sys
 import gc
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from PIL import Image
 from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
@@ -254,19 +254,22 @@ class DiffusersPipelines:
                         negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
-    def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, controlmodel=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
+    def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, 
+                              controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
         return self.run(pipelinetype="txt2img_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, controlimage=controlimage, negprompt=negprompt, steps=steps, scale=scale, 
-                        seed=seed, scheduler=scheduler, tiling=tiling)
+                        seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
-    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, model_weight=None, controlmodel=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
+    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, model_weight=None, 
+                               controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
         return self.run(pipelinetype="img2img_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, controlimage=controlimage, negprompt=negprompt, 
-                              strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
+                              strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
-    def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, controlmodel=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
+    def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, 
+                          controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
         return self.run(pipelinetype="inpaint_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
-                              negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling)
+                              negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
 
 
     def upscale(self, initimage, prompt, negprompt, scale, steps=40, seed=None, scheduler=None, model=None) -> Tuple[Image.Image, int]:

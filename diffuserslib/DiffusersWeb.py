@@ -87,7 +87,8 @@ class DiffusersView(FlaskView):
         self.job.status['done'] = done
 
     
-    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, controlimages=[], controlmodels=None, batch=1, **kwargs):
+    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, 
+                   controlimages=[], controlmodels=None, controlscales:List[float]=[1.0], batch=1, **kwargs):
         try:
             print('=== txt2img ===')
             print(f'Prompt: {prompt}')
@@ -102,7 +103,9 @@ class DiffusersView(FlaskView):
                 if(controlimages is None or len(controlimages) == 0):
                     outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed, model=model)
                 else:
-                    outimage, usedseed = self.pipelines.textToImageControlNet(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed, model=model, controlimage=controlimages, controlmodel=controlmodels)
+                    outimage, usedseed = self.pipelines.textToImageControlNet(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, 
+                                                                              scheduler=scheduler, seed=seed, model=model, 
+                                                                              controlimage=controlimages, controlmodel=controlmodels, controlnet_conditioning_scale=controlscales)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -116,7 +119,7 @@ class DiffusersView(FlaskView):
 
     def img2imgRun(self, seed:int|None=None, prompt:str="", negprompt:str="", strength:float=0.5, scale:float=9, 
                    prescale:float=1, scheduler:str="EulerDiscreteScheduler", model:str|None=None, 
-                   controlimages:List[Image.Image]=[], controlmodels:List[str]=[], batch:int=1, **kwargs):
+                   controlimages:List[Image.Image]=[], controlmodels:List[str]=[], controlscales:List[float]=[1.0], batch:int=1, **kwargs):
         try:
             print('=== img2img ===')
             print(f'Prompt: {prompt}')
@@ -137,7 +140,7 @@ class DiffusersView(FlaskView):
                 if(len(controlmodels) == 0):
                     outimage, usedseed = self.pipelines.imageToImage(initimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
                 else:
-                    outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels)
+                    outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels, controlnet_conditioning_scale=controlscales)
                 display(outimage)
                 outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -191,7 +194,8 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, prescale:float=1, strength=1.0, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, batch=1, **kwargs):
+    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, prescale:float=1, strength=1.0, 
+                   scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, controlscales:List[float]=[1.0], batch=1, **kwargs):
         try:
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
@@ -218,7 +222,7 @@ class DiffusersView(FlaskView):
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, 
-                                                       model=model, controlimage=controlimages, controlmodel=controlmodels)
+                                                       model=model, controlimage=controlimages, controlmodel=controlmodels,  controlnet_conditioning_scale=controlscales)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
