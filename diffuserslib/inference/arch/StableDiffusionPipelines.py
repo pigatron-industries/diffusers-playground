@@ -87,11 +87,11 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         # self.custom_pipeline = 'composable_stable_diffusion'
         # self.custom_pipeline = 'lpw_stable_diffusion'
         self.custom_pipeline = StableDiffusionPipeline
-        super().__init__(self.custom_pipeline, preset, params, device, safety_checker=safety_checker)
+        super().__init__(self.custom_pipeline, preset, params, device)
 
     def inference(self, params:GenerationParameters):
         # args = {}
@@ -115,7 +115,7 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         super().__init__(StableDiffusionImg2ImgPipeline, preset, params, device)
 
     def inference(self, params:GenerationParameters):
@@ -125,7 +125,7 @@ class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper)
 
 
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         super().__init__(DiffusionPipeline, preset, params, device)
 
     def inference(self, params:GenerationParameters):
@@ -135,7 +135,7 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline):
         controlmodel = []
         for controlimageparams in params.getControlImages():
             controlmodel.append(controlimageparams.model)
@@ -162,8 +162,8 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
     
 
 class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, controlmodel=[], safety_checker=True, **kwargs):
-        super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, params=params, device=device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         if(len(params.controlimages) == 1):
@@ -180,7 +180,7 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
     
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, params:GenerationParameters, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, device, params:GenerationParameters):
         super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, preset=preset, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
@@ -201,8 +201,8 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 # Standard stable diffusion inpaint pipeline
 # class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
-#     def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-#         super().__init__(StableDiffusionInpaintPipeline, preset, device, safety_checker=safety_checker)
+#     def __init__(self, preset:DiffusersModel, device):
+#         super().__init__(StableDiffusionInpaintPipeline, preset, device)
 
 #     def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, strength=1.0, **kwargs):
 #         initimage = initimage.convert("RGB")
@@ -212,7 +212,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 
 class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         params.controlimages.append(ControlImageParameters(image=None, type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
         super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
 
@@ -232,7 +232,7 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWra
     
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         params.controlimages.append(ControlImageParameters(image=None, type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
         super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
 
