@@ -214,7 +214,7 @@ class DiffusersPipelines:
         gc.collect()
         torch.cuda.empty_cache()
 
-        pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker)
+        pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, params=params)
         self.pipeline = pipelineWrapper
         
         if(len(params.models) > 1):
