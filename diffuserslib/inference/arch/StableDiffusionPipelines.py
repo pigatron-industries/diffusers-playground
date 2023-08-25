@@ -217,15 +217,12 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWra
         super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
-        initimage = None
-        maskimage = None
-        for controlimageparams in params.controlimages:
-            if(controlimageparams.model is None or controlimageparams.type == IMAGETYPE_INITIMAGE):
-                initimage = controlimageparams.image.convert("RGB")
-            elif(controlimageparams.model == "maskimage"):
-                maskimage = controlimageparams.image.convert("RGB")
-        if(initimage is None or maskimage is None):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getMaskImage()
+        if(initimageparams is None or maskimageparams is None):
             raise ValueError("Must provide both initimage and maskimage")
+        initimage = initimageparams.image.convert("RGB")
+        maskimage = maskimageparams.image.convert("RGB")
         inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
         return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, control_image=inpaint_pt, 
                                  guidance_scale=params.cfgscale, num_inference_steps=params.steps, strength=params.strength, scheduler=params.scheduler, width=initimage.width, height=initimage.height)
@@ -238,21 +235,19 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
 
 
     def inference(self, params:GenerationParameters):
-        initimage = None
-        maskimage = None
-        controlnet_conditioning_scale = []
-        controlimages = []
-        for controlimageparams in params.controlimages:
-            if(controlimageparams.model is None or controlimageparams.type == IMAGETYPE_INITIMAGE):
-                initimage = controlimageparams.image.convert("RGB")
-            elif(controlimageparams.type == IMAGETYPE_MASKIMAGE):
-                maskimage = controlimageparams.image.convert("RGB")
-            else:
-                controlimages.append(pil_to_pt(controlimageparams.image.convert("RGB")))
-                controlnet_conditioning_scale.append(controlimageparams.condscale)
-        if(initimage is None or maskimage is None):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getMaskImage()
+        if(initimageparams is None or maskimageparams is None):
             raise ValueError("Must provide both initimage and maskimage")
-        inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
+        initimage = initimageparams.image.convert("RGB")
+        maskimage = maskimageparams.image.convert("RGB")
+
+        controlnet_conditioning_scale = [1.0]
+        controlimages = [make_inpaint_condition(initimage=initimage, maskimage=maskimage)]
+        for controlimageparams in params.controlimages:
+            controlimages.append(pil_to_pt(controlimageparams.image))
+            controlnet_conditioning_scale.append(controlimageparams.condscale)
+
         return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
                                  control_image=controlimages, guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler, 
                                  width=initimage.width, height=initimage.height, controlnet_conditioning_scale=controlnet_conditioning_scale)
