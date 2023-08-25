@@ -44,6 +44,7 @@ class GenerationParameters:
         self.generationtype = generationtype
         self.safetychecker = safetychecker
         self.prompt = prompt
+        self.expanded_prompt = prompt
         self.negprompt = negprompt
         self.steps = steps
         self.cfgscale = cfgscale

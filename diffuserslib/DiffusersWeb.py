@@ -142,7 +142,7 @@ class DiffusersView(FlaskView):
             controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
             for i in range(0, len(controlimages)):
                 controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
-            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
+            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
                                           models=[ModelParameters(name=model)], controlimages=controlimageparams)
 
             outputimages = []
