@@ -253,15 +253,15 @@ class DiffusersPipelines:
     def generate(self, params:GenerationParameters) -> Tuple[Image.Image, int]:
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
-        params.expanded_prompt = self.processPrompt(params.prompt, pipelineWrapper)
+        params.prompt = self.processPrompt(params.original_prompt, pipelineWrapper)
         return pipelineWrapper.inference(params)
 
     
 
-    def run(self, pipelinetype, model, prompt, **kwargs) -> Tuple[Image.Image, int]:
-        pipelineWrapper = self.createPipeline(pipelinetype, model, **kwargs)
-        prompt = self.processPrompt(prompt, pipelineWrapper)
-        return pipelineWrapper.inference(prompt=prompt, **kwargs)
+    # def run(self, pipelinetype, model, prompt, **kwargs) -> Tuple[Image.Image, int]:
+    #     pipelineWrapper = self.createPipeline(pipelinetype, model, **kwargs)
+    #     prompt = self.processPrompt(prompt, pipelineWrapper)
+    #     return pipelineWrapper.inference(prompt=prompt, **kwargs)
 
 
     # def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:

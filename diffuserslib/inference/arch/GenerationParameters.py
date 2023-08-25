@@ -43,8 +43,8 @@ class GenerationParameters:
                  controlimages:List[ControlImageParameters] = []):
         self.generationtype = generationtype
         self.safetychecker = safetychecker
+        self.original_prompt = prompt
         self.prompt = prompt
-        self.expanded_prompt = prompt
         self.negprompt = negprompt
         self.steps = steps
         self.cfgscale = cfgscale

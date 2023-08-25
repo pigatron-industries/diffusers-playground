@@ -110,7 +110,7 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
         #         weights = " | ".join(weights)
         #     args['weights'] = weights
 
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
                                  guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler)
 
 
@@ -120,7 +120,7 @@ class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper)
 
     def inference(self, params:GenerationParameters):
         initimage = params.controlimages[0].image.convert("RGB")
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
                                  strength=params.strength, scheduler=params.scheduler)
 
 
@@ -130,7 +130,7 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
     def inference(self, params:GenerationParameters):
         initimage = params.controlimages[0].image.convert("RGB")
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
                                  num_inference_steps=params.steps, scheduler=params.scheduler)
 
 
@@ -175,7 +175,7 @@ class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControl
         controlimages = []
         for controlimage in params.controlimages:
             controlimages.append(controlimage.image.convert("RGB"))
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, seed=params.seed, image=controlimages, guidance_scale=params.cfgscale, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=controlimages, guidance_scale=params.cfgscale, 
                                  num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
@@ -195,7 +195,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
                 controlnet_conditioning_scale.append(controlimageparams.condscale)
         if(len(controlnet_conditioning_scale) == 1):
             controlnet_conditioning_scale = controlnet_conditioning_scale[0]
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, control_image=controlimages, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, control_image=controlimages, 
                                  guidance_scale=params.cfgscale, strength=params.strength, scheduler=params.scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
@@ -227,7 +227,7 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWra
         if(initimage is None or maskimage is None):
             raise ValueError("Must provide both initimage and maskimage")
         inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, control_image=inpaint_pt, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, control_image=inpaint_pt, 
                                  guidance_scale=params.cfgscale, num_inference_steps=params.steps, strength=params.strength, scheduler=params.scheduler, width=initimage.width, height=initimage.height)
     
 
@@ -253,7 +253,7 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
         if(initimage is None or maskimage is None):
             raise ValueError("Must provide both initimage and maskimage")
         inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
-        return super().diffusers_inference(prompt=params.expanded_prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
                                  control_image=controlimages, guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler, 
                                  width=initimage.width, height=initimage.height, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
