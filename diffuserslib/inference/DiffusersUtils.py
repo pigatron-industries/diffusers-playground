@@ -91,7 +91,11 @@ def tiledProcessorCentred(tileprocessor, initimage, controlimages=None, tilewidt
 def compositedInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, maskDilation=21, maskFeather=3):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
     outimage, usedseed = pipelines.generate(params)
-    outimage = compositeImages(outimage, params.getInitImage(), params.getMaskImage(), maskDilation=maskDilation, maskFeather=maskFeather)
+    initimageparams = params.getInitImage()
+    maskimageparams = params.getMaskImage()
+    if initimageparams is None or maskimageparams is None:
+        raise Exception("compositedInpaint requires initimage and maskimage to be set in params")
+    outimage = compositeImages(outimage, initimageparams.image, maskimageparams.image, maskDilation=maskDilation, maskFeather=maskFeather)
     return outimage, usedseed
 
 
