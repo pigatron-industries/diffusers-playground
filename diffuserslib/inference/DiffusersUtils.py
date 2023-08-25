@@ -2,6 +2,7 @@ from PIL import Image
 import math, random
 from ..ImageUtils import compositeImages, tiledImageProcessor
 from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
+from .arch.GenerationParameters import GenerationParameters
 from huggingface_hub import login
 from typing import List, Optional
 
@@ -87,14 +88,10 @@ def tiledProcessorCentred(tileprocessor, initimage, controlimages=None, tilewidt
     return tiledProcessorOffset(tileprocessor, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, **kwargs)
 
 
-def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, strength=1.0, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None, controlmodel=None, controlimage=None):
+def compositedInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, maskDilation=21, maskFeather=3):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
-    if(controlmodel is None or len(controlmodel) == 0):
-        outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, scheduler=scheduler, seed=seed, model=model)
-    else:
-        outimage, usedseed = pipelines.inpaintControlNet(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model, 
-                                                         controlmodel=controlmodel, controlimage=controlimage)
-    outimage = compositeImages(outimage, initimage, maskimage, maskDilation=maskDilation, maskFeather=maskFeather)
+    outimage, usedseed = pipelines.generate(params)
+    outimage = compositeImages(outimage, params.getInitImage(), params.getMaskImage(), maskDilation=maskDilation, maskFeather=maskFeather)
     return outimage, usedseed
 
 

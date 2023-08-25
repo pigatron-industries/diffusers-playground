@@ -1,6 +1,7 @@
 from ..batch import BatchRunner
 from ..batch.argument import RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
 from ..inference import DiffusersPipelines, LORAUse
+from ..inference.arch.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ..processing import *
 from ..processing.ProcessingPipeline import ImageProcessorPipeline
 from ..processing.processors.FilterProcessors import *
@@ -399,15 +400,7 @@ class BatchNotebookInterface:
 
 
     def creatBatch(self, params):
-        if(not 'initimage' in params and not 'controlimage' in params):
-            pipelineFunc = self.pipelines.textToImage
-        elif('initimage' in params and not 'controlimage' in params):
-            pipelineFunc = self.pipelines.imageToImage
-        elif(not 'initimage' in params and 'controlimage' in params):
-            pipelineFunc = self.pipelines.textToImageControlNet
-        else:
-            pipelineFunc = self.pipelines.imageToImageControlNet
-
+         # TOOD add lora to params object
         loras = []
         for i, lora_w in enumerate(self.lora_widgets):
             if(i >= self.lora_num.value):
@@ -415,15 +408,23 @@ class BatchNotebookInterface:
             loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
         self.pipelines.useLORAs(loras)
 
-        batch = BatchRunner(pipelineFunc, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
+        batch = BatchRunner(self.generate, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
         return batch
+    
+
+    def generate(self, initimage, controlimage, controlmodel, prompt, negprompt, scale, scheduler, seed, model, strength, **kwargs):
+        controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
+        for i in range(0, len(controlimage)):
+            controlimageparams.append(ControlImageParameters(image=controlimage[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodel[i]))
+        params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, scheduler=scheduler, seed=seed, 
+                                      models=[ModelParameters(name=model)], controlimages=controlimageparams)
+        return self.pipelines.generate(params)
 
 
     def run(self):
         params = self.saveParams()
         batch = self.creatBatch(params)
         batch.appendBatchArguments(params, params['batch'])
-        # self.batchQueue.append(batch)
         batch.run()
 
 
