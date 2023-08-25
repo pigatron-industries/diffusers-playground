@@ -2,7 +2,7 @@ from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from .GenerationParameters import GenerationParameters, ControlImageParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
-from typing import Callable
+from typing import Callable, List
 from PIL import Image
 from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
@@ -135,8 +135,10 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline, extracontrolmodels:List[str]=[]):
         controlmodel = []
+        for extracontrolmodel in extracontrolmodels:
+            controlmodel.append(extracontrolmodel)
         for controlimageparams in params.getControlImages():
             controlmodel.append(controlimageparams.model)
         controlnet = self.createControlNets(controlmodel)
@@ -213,8 +215,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        params.controlimages.append(ControlImageParameters(image=None, type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device, extracontrolmodels = [INPAINT_CONTROL_MODEL])
 
     def inference(self, params:GenerationParameters):
         initimageparams = params.getInitImage()
@@ -230,8 +231,7 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWra
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        params.controlimages.append(ControlImageParameters(image=None, type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device, extracontrolmodels = [INPAINT_CONTROL_MODEL])
 
 
     def inference(self, params:GenerationParameters):
