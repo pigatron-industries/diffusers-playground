@@ -161,8 +161,9 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None,
-                        method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
+    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model:str="", controlmodels=[],
+                        method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, 
+                        controlscales:List[float]=[1.0], batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
             print(f'Method: {method}')
@@ -175,21 +176,25 @@ class DiffusersView(FlaskView):
             initimage = controlimages[0]
             controlimages.pop(0)
 
+            # create params TODO pass in object as is to api
+            controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
+            for i in range(0, len(controlimages)):
+                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
+            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, 
+                                          seed=seed, models=[ModelParameters(name=model)], controlimages=controlimageparams)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if (method=="singlepass"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                  scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                  alignmentx=tilealignmentx, alignmenty=tilealignmenty, model=model, controlmodels=controlmodels, callback=self.updateProgress)
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
+                                                               overlap=tileoverlap, alignmentx=tilealignmentx, alignmenty=tilealignmenty)
                 elif (method=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                    passes=2, strengthMult=0.5, model=model, controlmodels=controlmodels, callback=self.updateProgress)
+                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
+                                                                    overlap=tileoverlap, passes=2, strengthMult=0.5)
                 elif (method=="inpaint"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                       scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, 
-                                                                       model=model, controlmodels=controlmodels, overlap=tileoverlap)
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
+                                                               overlap=tileoverlap)
                 else:
                     raise Exception(f"Unknown method: {method}")
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })

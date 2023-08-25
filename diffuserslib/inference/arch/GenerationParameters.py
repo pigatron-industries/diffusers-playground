@@ -1,5 +1,5 @@
 from typing import List
-import PIL.Image
+from PIL import Image
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
@@ -15,7 +15,7 @@ class ModelParameters:
 
 class ControlImageParameters:
     def __init__(self, 
-                 image:PIL.Image.Image, 
+                 image:Image.Image, 
                  type:str = IMAGETYPE_INITIMAGE,
                  model:str|None = None, 
                  condscale:float = 1.0):
@@ -57,25 +57,27 @@ class GenerationParameters:
         self.tiling = tiling
         self.controlimages = controlimages
 
-
-    def getMaskImage(self) -> ControlImageParameters|None:
+    def getImage(self, type:str) -> ControlImageParameters|None:
         for controlimage in self.controlimages:
-            if(controlimage.type == IMAGETYPE_MASKIMAGE):
+            if(controlimage.type == type):
                 return controlimage
         return None
     
-    def getInitImage(self) -> ControlImageParameters|None:
-        for controlimage in self.controlimages:
-            if(controlimage.type == IMAGETYPE_INITIMAGE):
-                return controlimage
-        return None
-    
-    def getControlImages(self) -> List[ControlImageParameters]:
+    def getImages(self, type:str) -> List[ControlImageParameters]:
         controlimages = []
         for controlimage in self.controlimages:
-            if(controlimage.type == IMAGETYPE_CONTROLIMAGE):
+            if(controlimage.type == type):
                 controlimages.append(controlimage)
         return controlimages
+
+    def getMaskImage(self) -> ControlImageParameters|None:
+        return self.getImage(IMAGETYPE_MASKIMAGE)
+    
+    def getInitImage(self) -> ControlImageParameters|None:
+        return self.getImage(IMAGETYPE_INITIMAGE)
+    
+    def getControlImages(self) -> List[ControlImageParameters]:
+        return self.getImages(IMAGETYPE_CONTROLIMAGE)
 
     def getGenerationType(self) -> str:
         if(self.generationtype is not None):
@@ -92,6 +94,28 @@ class GenerationParameters:
                 generationtype += "_controlnet"
             return generationtype
         
+    def setImage(self, image:Image.Image, type:str):
+        for controlimage in self.controlimages:
+            if(controlimage.type == type):
+                controlimage.image = image
+                return
+        self.controlimages.append(ControlImageParameters(image, type))
+
+    def setInitImage(self, image:Image.Image):
+        self.setImage(image, IMAGETYPE_INITIMAGE)
+
+    def setMaskImage(self, image:Image.Image):
+        self.setImage(image, IMAGETYPE_MASKIMAGE)
+                
+    def setControlImage(self, index:int, image:Image.Image):
+        for controlimage in self.controlimages:
+            if(controlimage.type == IMAGETYPE_CONTROLIMAGE):
+                if(index == 0):
+                    controlimage.image = image
+                    return
+                index -= 1
+        raise Exception("Control image index out of range")
+
 
 
 class TileGenerationParameters(GenerationParameters):
