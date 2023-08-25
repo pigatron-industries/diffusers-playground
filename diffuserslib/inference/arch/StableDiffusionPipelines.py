@@ -1,5 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from .GenerationParameters import GenerationParameters, InpainGenerationParameters, TileGenerationParameters
+from .GenerationParameters import GenerationParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
 from typing import Callable
@@ -185,7 +185,7 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
         controlnet_conditioning_scale = []
         initimage = None
         for controlimageparams in params.controlimages:
-            if(controlimageparams.model is None or controlimageparams.model == "initimage"):
+            if(controlimageparams.model is None or controlimageparams.type == IMAGETYPE_INITIMAGE):
                 initimage = controlimageparams.image.convert("RGB")
             else:
                 controlimages.append(controlimageparams.image.convert("RGB"))
@@ -216,7 +216,7 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWra
         initimage = None
         maskimage = None
         for controlimageparams in params.controlimages:
-            if(controlimageparams.model is None or controlimageparams.model == "initimage"):
+            if(controlimageparams.model is None or controlimageparams.type == IMAGETYPE_INITIMAGE):
                 initimage = controlimageparams.image.convert("RGB")
             elif(controlimageparams.model == "maskimage"):
                 maskimage = controlimageparams.image.convert("RGB")
@@ -241,9 +241,9 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
         controlnet_conditioning_scale = []
         controlimages = []
         for controlimageparams in params.controlimages:
-            if(controlimageparams.model is None or controlimageparams.model == "initimage"):
+            if(controlimageparams.model is None or controlimageparams.type == IMAGETYPE_INITIMAGE):
                 initimage = controlimageparams.image.convert("RGB")
-            elif(controlimageparams.model == "maskimage"):
+            elif(controlimageparams.type == IMAGETYPE_MASKIMAGE):
                 maskimage = controlimageparams.image.convert("RGB")
             else:
                 controlimages.append(pil_to_pt(controlimageparams.image.convert("RGB")))
