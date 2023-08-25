@@ -226,7 +226,7 @@ class DiffusersView(FlaskView):
             initimage = self.prescaleBefore([initimage], prescale)[0]
             controlimages = self.prescaleBefore(controlimages, prescale)
 
-            controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE), ControlImageParameters(image=maskimage, model=IMAGETYPE_MASKIMAGE)]
+            controlimageparams = [ControlImageParameters(image=initimage, type=IMAGETYPE_INITIMAGE), ControlImageParameters(image=maskimage, type=IMAGETYPE_MASKIMAGE)]
             for i in range(0, len(controlimages)):
                 controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
             params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
