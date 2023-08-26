@@ -33,7 +33,7 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
         return image, seed
 
 
-class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
+class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionXLPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         super().__init__(cls=StableDiffusionXLPipeline, preset=preset, params=params, device=device)
 
@@ -42,7 +42,7 @@ class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionPipelineWrapper
                                            guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler)
 
 
-class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
+class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionXLPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         super().__init__(cls=StableDiffusionXLImg2ImgPipeline, preset=preset, params=params, device=device)
 
@@ -52,7 +52,7 @@ class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionPipelineWrappe
                                            strength=params.strength, scheduler=params.scheduler)
     
 
-class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
+class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionXLPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
         super().__init__(cls=StableDiffusionXLInpaintPipeline, preset=preset, params=params, device=device)
 
