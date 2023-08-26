@@ -1,10 +1,12 @@
 from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
+from .GenerationParameters import GenerationParameters
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
+from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
-                        StableDiffusionXLControlNetPipeline,
+                        StableDiffusionXLControlNetPipeline, ControlNetModel,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -14,10 +16,10 @@ from compel import Compel, ReturnedEmbeddingsType
 
 
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(cls, preset, device, safety_checker=safety_checker, **kwargs)
+    def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
+        super().__init__(cls=cls, preset=preset, params=params, device=device, **kwargs)
 
-    def inference(self, prompt, seed, scheduler=None, tiling=False, **kwargs):
+    def diffusers_inference(self, prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
@@ -32,37 +34,49 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(StableDiffusionXLPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLPipeline, preset=preset, params=params, device=device)
 
-    def inference(self, prompt, negprompt, width, height, seed, scale, steps, scheduler, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, width=width, height=height, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler)
+    def inference(self, params:GenerationParameters):
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
+                                           guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler)
 
 
 class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(StableDiffusionXLImg2ImgPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLImg2ImgPipeline, preset=preset, params=params, device=device)
 
-    def inference(self, prompt, negprompt, seed, initimage, scale, scheduler, strength, **kwargs):
-        initimage = initimage.convert("RGB")
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, guidance_scale=scale, strength=strength, scheduler=scheduler)
-
+    def inference(self, params:GenerationParameters):
+        initimage = params.controlimages[0].image.convert("RGB")
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
+                                           strength=params.strength, scheduler=params.scheduler)
+    
 
 class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(StableDiffusionXLInpaintPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLInpaintPipeline, preset=preset, params=params, device=device)
 
-    def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, strength=1.0, **kwargs):
-        initimage = initimage.convert("RGB")
-        maskimage = maskimage.convert("RGB")
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, 
-                                 strength=strength, scheduler=scheduler, width=initimage.width, height=initimage.height)
+    def inference(self, params:GenerationParameters):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getMaskImage()
+        if(initimageparams is None or maskimageparams is None):
+            raise ValueError("Must provide both initimage and maskimage")
+        initimage = initimageparams.image.convert("RGB")
+        maskimage = maskimageparams.image.convert("RGB")
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
+                                           guidance_scale=params.cfgscale, num_inference_steps=params.steps, strength=params.strength, scheduler=params.scheduler, 
+                                           width=initimage.width, height=initimage.height)
 
 
 class StableDiffusionXLControlNetPipelineWrapper(StableDiffusionXLPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, controlmodel, cls=DiffusionPipeline, safety_checker=True, **kwargs):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline, extracontrolmodels:List[str]=[]):
+        controlmodel = []
+        for extracontrolmodel in extracontrolmodels:
+            controlmodel.append(extracontrolmodel)
+        for controlimageparams in params.getControlImages():
+            controlmodel.append(controlimageparams.model)
         controlnet = self.createControlNets(controlmodel)
-        super().__init__(preset=preset, device=device, cls=cls, controlnet=controlnet, safety_checker=safety_checker)
+        super().__init__(preset=preset, params=params, device=device, cls=cls, controlnet=controlnet)
 
     def createControlNets(self, controlmodel):
         self.controlmodel = controlmodel
@@ -84,9 +98,19 @@ class StableDiffusionXLControlNetPipelineWrapper(StableDiffusionXLPipelineWrappe
         
 
 class StableDiffusionXLTextToImageControlNetPipelineWrapper(StableDiffusionXLControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, controlmodel=[], safety_checker=True, **kwargs):
-        super().__init__(cls=StableDiffusionXLControlNetPipeline, preset=preset, device=device, controlmodel=controlmodel, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLControlNetPipeline, preset=preset, params=params, device=device)
 
-    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, controlimage, controlnet_conditioning_scale, **kwargs):
-        return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=controlimage, guidance_scale=scale, 
-                                 num_inference_steps=steps, scheduler=scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
+    def inference(self, params:GenerationParameters):
+        if(len(params.controlimages) == 1):
+            controlnet_conditioning_scale = params.controlimages[0].condscale
+        else:
+            controlnet_conditioning_scale = []
+            for controlimage in params.controlimages:
+                controlnet_conditioning_scale.append(controlimage.condscale)
+        controlimages = []
+        for controlimage in params.controlimages:
+            controlimages.append(controlimage.image.convert("RGB"))
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=controlimages, guidance_scale=params.cfgscale, 
+                                           num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
+    

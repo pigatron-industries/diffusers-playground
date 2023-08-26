@@ -1,4 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
+from .GenerationParameters import GenerationParameters
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
 from diffusers import IFPipeline, IFSuperResolutionPipeline, DiffusionPipeline
@@ -10,9 +11,9 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
     def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, **kwargs):
         self.safety_checker = safety_checker
         self.device = device
-        self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
+        inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset)
+        super().__init__(preset, inferencedevice)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
@@ -30,7 +31,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
                 args['torch_dtype'] = torch.float16
         return mergeDicts(args, kwargs)
     
-    def inference(self, prompt, negprompt, seed, width, height, scheduler=None, **kwargs):
+    def diffusers_inference(self, prompt, negprompt, seed, width, height, scheduler=None, **kwargs):
         generator, seed = self.createGenerator(seed)
         # if(scheduler is not None):
         #     self.loadScheduler(scheduler)
@@ -42,8 +43,9 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
 
 
 class DeepFloydTextToImagePipelineWrapper(DeepFloydPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(IFPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(cls=IFPipeline, preset=preset, params=params, device=device)
 
-    def inference(self, prompt, negprompt, seed, scale, steps, scheduler, width, height, **kwargs):
-        return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, scheduler=scheduler, width=width, height=height)
+    def inference(self, params:GenerationParameters):
+        return super().diffusers_inference(prompt=params.prompt, negprompt=params.negprompt, seed=params.seed, guidance_scale=params.cfgscale, 
+                                           num_inference_steps=params.steps, scheduler=params.scheduler, width=params.width, height=params.height)
