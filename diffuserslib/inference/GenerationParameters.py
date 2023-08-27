@@ -1,5 +1,6 @@
 from typing import List
 from PIL import Image
+from dataclasses import dataclass, field
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
@@ -7,55 +8,39 @@ IMAGETYPE_CONTROLIMAGE = "controlimage"
 
 
 
+@dataclass
 class ModelParameters:
-    def __init__(self, name:str, weight:float = 1.0):
-        self.name = name
-        self.weight = weight
+    name:str
+    weight:float = 1.0
 
 
+@dataclass
 class ControlImageParameters:
-    def __init__(self, 
-                 image:Image.Image, 
-                 type:str = IMAGETYPE_INITIMAGE,
-                 model:str|None = None, 
-                 condscale:float = 1.0):
-        self.image = image
-        self.type = type
-        self.model = model
-        self.condscale = condscale  # only affects controlnet images
+    image:Image.Image
+    type:str = IMAGETYPE_INITIMAGE
+    model:str|None = None
+    condscale:float = 1.0
 
 
+@dataclass
 class GenerationParameters:
-    def __init__(self, 
-                 generationtype:str|None = None,
-                 safetychecker:bool = True,
-                 prompt:str = "",
-                 negprompt:str = "",
-                 steps:int = 40,
-                 cfgscale:float = 7.0,
-                 strength:float = 1.0,
-                 width:int = 512,
-                 height:int = 512,
-                 seed:int|None = None,
-                 scheduler:str = "DPMSolverMultistepScheduler",
-                 models:List[ModelParameters] = [],
-                 tiling:bool = False,
-                 controlimages:List[ControlImageParameters] = []):
-        self.generationtype = generationtype
-        self.safetychecker = safetychecker
-        self.original_prompt = prompt
-        self.prompt = prompt
-        self.negprompt = negprompt
-        self.steps = steps
-        self.cfgscale = cfgscale
-        self.strength = strength
-        self.width = width
-        self.height = height
-        self.seed = seed
-        self.scheduler = scheduler
-        self.models = models
-        self.tiling = tiling
-        self.controlimages = controlimages
+    generationtype:str|None = None
+    safetychecker:bool = True
+    prompt:str = ""
+    negprompt:str = ""
+    steps:int = 40
+    cfgscale:float = 7.0
+    strength:float = 1.0
+    width:int = 512
+    height:int = 512
+    seed:int|None = None
+    scheduler:str = "DPMSolverMultistepScheduler"
+    models:List[ModelParameters] = field(default_factory=list)
+    tiling:bool = False
+    controlimages:List[ControlImageParameters] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.original_prompt:str = self.prompt
 
     def getImage(self, type:str) -> ControlImageParameters|None:
         for controlimage in self.controlimages:
@@ -117,7 +102,7 @@ class GenerationParameters:
         raise Exception("Control image index out of range")
 
 
-
+@dataclass
 class TileGenerationParameters(GenerationParameters):
     tilemethod:str = "singlepass"
     tilealignmentx:str = "tile_centre"
