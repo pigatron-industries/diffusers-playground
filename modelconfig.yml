@@ -160,6 +160,7 @@ controlnet:
       - id: lllyasviel/control_v11e_sd15_shuffle
       - id: lllyasviel/control_v11f1e_sd15_tile
       - id: ioclab/control_v1p_sd15_brightness
+      - id: monster-labs/control_v1p_sd15_qrcode_monster
      
   - base: sd_2_1
     pipelines:

@@ -1,3 +1,4 @@
+from .GenerationParameters import GenerationParameters
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
 from typing import Tuple
@@ -11,10 +12,11 @@ MAX_SEED = 4294967295
 
 
 class DiffusersPipelineWrapper:
-    def __init__(self, preset:DiffusersModel):
+    def __init__(self, preset:DiffusersModel, inferencedevice:str):
         self.preset = preset
+        self.inferencedevice = inferencedevice
 
-    def inference(self, **kwargs) -> Tuple[Image.Image, int]: # type: ignore
+    def inference(self, params:GenerationParameters) -> Tuple[Image.Image, int]: # type: ignore
         pass
 
     def createGenerator(self, seed=None):

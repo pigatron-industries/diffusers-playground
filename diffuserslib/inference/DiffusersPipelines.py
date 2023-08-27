@@ -54,7 +54,7 @@ class DiffusersPipelines:
         self.cache_dir = cache_dir
         self.lora_use = []
 
-        self.pipeline: DiffusersPipelineWrapper = None
+        self.pipeline: DiffusersPipelineWrapper|None = None
 
         self.vae = None
         self.baseModelData: Dict[str, BaseModelData] = {}
@@ -158,7 +158,7 @@ class DiffusersPipelines:
 
     #=============== MODEL MERGING ==============
 
-    def mergeModel(self, modelid, weight=0.5):
+    def mergeModel(self, modelid:str, weight:float=0.5):
         preset = self.getModel(modelid)
         mergePipeline = self.pipeline.__class__(preset=preset, device=self.device, safety_checker=self.safety_checker)
         for moduleName in self.pipeline.pipeline.config.keys():
@@ -188,7 +188,7 @@ class DiffusersPipelines:
         self.clip_model = CLIPModel.from_pretrained(model, torch_dtype=torch.float16)
 
 
-    def getModel(self, modelid):
+    def getModel(self, modelid:str):
         return self.presets.getModel(modelid)
 
 
@@ -202,74 +202,99 @@ class DiffusersPipelines:
 
     #=============== LOAD PIPELINES ==============
 
-    def createPipeline(self, pipelinetype, model, model_weight=None, **kwargs):
-        if(isinstance(model, list)):
-            preset = self.getModel(model[0])
-        else:
-            preset = self.getModel(model)
-        pipelineWrapperClass = str_to_class(preset.pipelinetypes[pipelinetype]+"Wrapper")
-        if(self.pipeline is not None and self.pipeline.isEqual(pipelineWrapperClass, model, **kwargs)):
-            return self.pipeline
-        
-        print(f"Creating {pipelinetype} pipeline from model {model}")
+    def createPipeline(self, params:GenerationParameters):
+        # TODO check if pipline is already created based on params
+
+        print(f"Creating {params.getGenerationType()} pipeline from model {params.models[0].name}")
         if (self.pipeline is not None):
             del self.pipeline
+
+        preset = self.getModel(params.models[0].name)
+        pipelineWrapperClass = str_to_class(preset.pipelinetypes[params.getGenerationType()]+"Wrapper")
         gc.collect()
         torch.cuda.empty_cache()
-        pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
-        self.pipeline = pipelineWrapper
 
-        if(isinstance(model, list)):
-            for modelid in model[1:]:
-                self.mergeModel(modelid, model_weight)
-        self._addLORAsToPipeline(pipelineWrapper)
+        pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, params=params)
+        self.pipeline = pipelineWrapper
+        
+        if(len(params.models) > 1):
+            for modelparams in params.models[1:]:
+                self.mergeModel(modelparams.name, modelparams.weight)
+        self._addLORAsToPipeline(pipelineWrapper)  # TODO add these to generation params
         return self.pipeline
+
+
+    # def createPipeline(self, pipelinetype, model, model_weight=None, **kwargs):
+    #     if(isinstance(model, list)):
+    #         preset = self.getModel(model[0])
+    #     else:
+    #         preset = self.getModel(model)
+    #     pipelineWrapperClass = str_to_class(preset.pipelinetypes[pipelinetype]+"Wrapper")
+    #     if(self.pipeline is not None and self.pipeline.isEqual(pipelineWrapperClass, model, **kwargs)):
+    #         return self.pipeline
+        
+    #     print(f"Creating {pipelinetype} pipeline from model {model}")
+    #     if (self.pipeline is not None):
+    #         del self.pipeline
+    #     gc.collect()
+    #     torch.cuda.empty_cache()
+    #     pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, safety_checker=self.safety_checker, **kwargs)
+    #     self.pipeline = pipelineWrapper
+
+    #     if(isinstance(model, list)):
+    #         for modelid in model[1:]:
+    #             self.mergeModel(modelid, model_weight)
+    #     self._addLORAsToPipeline(pipelineWrapper)
+    #     return self.pipeline
 
 
     #=============== INFERENCE ==============
 
-    def inference(self, pipeline:DiffusersPipelineWrapper, prompt, seed, **kwargs):
-        prompt = self.processPrompt(prompt, pipeline)
-        return pipeline.inference(prompt=prompt, seed=seed, **kwargs)
+    def generate(self, params:GenerationParameters) -> Tuple[Image.Image, int]:
+        params.safetychecker = self.safety_checker
+        pipelineWrapper = self.createPipeline(params)
+        params.prompt = self.processPrompt(params.original_prompt, pipelineWrapper)
+        return pipelineWrapper.inference(params)
+
     
 
-    def run(self, pipelinetype, model, prompt, **kwargs) -> Tuple[Image.Image, int]:
-        pipelineWrapper = self.createPipeline(pipelinetype, model, **kwargs)
-        prompt = self.processPrompt(prompt, pipelineWrapper)
-        return pipelineWrapper.inference(prompt=prompt, **kwargs)
+    # def run(self, pipelinetype, model, prompt, **kwargs) -> Tuple[Image.Image, int]:
+    #     pipelineWrapper = self.createPipeline(pipelinetype, model, **kwargs)
+    #     prompt = self.processPrompt(prompt, pipelineWrapper)
+    #     return pipelineWrapper.inference(prompt=prompt, **kwargs)
 
 
-    def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
-        return self.run(pipelinetype="txt2img", model=model, model_weight=model_weight, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, 
-                 width=width, height=height, seed=seed, scheduler=scheduler, tiling=tiling)
+    # def textToImage(self, prompt, negprompt, steps, scale, width, height, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
+    #     return self.run(pipelinetype="txt2img", model=model, model_weight=model_weight, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, 
+    #              width=width, height=height, seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
-        return self.run(pipelinetype="img2img", model=model, model_weight=model_weight, prompt=prompt, initimage=initimage, negprompt=negprompt, strength=strength, scale=scale, 
-                        seed=seed, scheduler=scheduler, tiling=tiling)
+    # def imageToImage(self, initimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
+    #     return self.run(pipelinetype="img2img", model=model, model_weight=model_weight, prompt=prompt, initimage=initimage, negprompt=negprompt, strength=strength, scale=scale, 
+    #                     seed=seed, scheduler=scheduler, tiling=tiling)
 
 
-    def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, strength=1.0, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
-        return self.run(pipelinetype="inpaint", model=model, model_weight=model_weight, prompt=prompt, initimage=initimage, maskimage=maskimage, width=initimage.width, height=initimage.height,
-                        negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, tiling=tiling)
+    # def inpaint(self, initimage, maskimage, prompt, negprompt, steps, scale, strength=1.0, seed=None, scheduler=None, model=None, model_weight=None, tiling=False, **kwargs) -> Tuple[Image.Image, int]:
+    #     return self.run(pipelinetype="inpaint", model=model, model_weight=model_weight, prompt=prompt, initimage=initimage, maskimage=maskimage, width=initimage.width, height=initimage.height,
+    #                     negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, tiling=tiling)
     
 
-    def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, 
-                              controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
-        return self.run(pipelinetype="txt2img_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, controlimage=controlimage, negprompt=negprompt, steps=steps, scale=scale, 
-                        seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
+    # def textToImageControlNet(self, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, 
+    #                           controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
+    #     return self.run(pipelinetype="txt2img_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, controlimage=controlimage, negprompt=negprompt, steps=steps, scale=scale, 
+    #                     seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
-    def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, model_weight=None, 
-                               controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
-        return self.run(pipelinetype="img2img_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, controlimage=controlimage, negprompt=negprompt, 
-                              strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
+    # def imageToImageControlNet(self, initimage, controlimage, prompt, negprompt, strength, scale, seed=None, scheduler=None, model=None, model_weight=None, 
+    #                            controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
+    #     return self.run(pipelinetype="img2img_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, controlimage=controlimage, negprompt=negprompt, 
+    #                           strength=strength, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
     
 
-    def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, 
-                          controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
-        return self.run(pipelinetype="inpaint_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
-                              negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
+    # def inpaintControlNet(self, initimage, maskimage, controlimage, prompt, negprompt, steps, scale, seed=None, scheduler=None, model=None, model_weight=None, 
+    #                       controlmodel=None, tiling=False, controlnet_conditioning_scale:List[float]=[1.0], **kwargs) -> Tuple[Image.Image, int]:
+    #     return self.run(pipelinetype="inpaint_controlnet", model=model, model_weight=model_weight, controlmodel=controlmodel, prompt=prompt, initimage=initimage, maskimage=maskimage, controlimage=controlimage, 
+    #                           negprompt=negprompt, steps=steps, scale=scale, seed=seed, scheduler=scheduler, tiling=tiling, controlnet_conditioning_scale=controlnet_conditioning_scale)
 
 
     def upscale(self, initimage, prompt, negprompt, scale, steps=40, seed=None, scheduler=None, model=None) -> Tuple[Image.Image, int]:

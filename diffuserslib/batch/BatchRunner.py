@@ -47,8 +47,8 @@ def evaluateArguments(args, **kwargs):
 
 class BatchRunner:
 
-    def __init__(self, pipeline, outputdir=".", startCallback:Callable[[Dict], Tuple[int, widgets.Output]]|None=None, endCallback:Callable[[int, Dict, Image.Image], None]|None=None):
-        self.pipeline = pipeline
+    def __init__(self, genfunc, outputdir=".", startCallback:Callable[[Dict], Tuple[int, widgets.Output]]|None=None, endCallback:Callable[[int, Dict, Image.Image], None]|None=None):
+        self.genfunc = genfunc
         self.outputdir = outputdir
         self.argsbatch = []
         self.startCallback = startCallback
@@ -89,7 +89,7 @@ class BatchRunner:
                     print(f"Generating {i}/{len(self.argsbatch)}")
                     self.logArgs(args)
 
-                    image, seed = self.pipeline(**args)
+                    image, seed = self.genfunc(**args)
                     self.argsbatch[i]["image"] = image
                     self.argsbatch[i]["seed"] = seed
                     self.argsbatch[i]["timestamp"] = int(time.time())

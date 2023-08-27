@@ -1,9 +1,10 @@
 from PIL import Image
-import math, random
+import random, copy
 from ..ImageUtils import compositeImages, tiledImageProcessor
 from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
+from .arch.GenerationParameters import GenerationParameters
 from huggingface_hub import login
-from typing import List, Optional
+from typing import List
 
 from IPython.display import display
 
@@ -12,63 +13,76 @@ def loginHuggingFace(token):
     login(token=token)
 
 
-def tiledImageToImage(pipelines:DiffusersPipelines, initimage, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                      controlimages=None, controlmodels=None, model=None, tilewidth=768, tileheight=768, overlap=128, callback=None):
-    if(seed is None):
-        seed = random.randint(0, MAX_SEED)
+def tiledImageToImage(pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=768, tileheight=768, overlap=128, callback=None):
+    initimageparams = params.getInitImage()
+    if initimageparams is None:
+        raise Exception("tiledImageToImage requires initimage to be set in params")
+    controlimages = [ controlimageparams.image for controlimageparams in params.getControlImages() ]
+    if(params.seed is None):
+        params.seed = random.randint(0, MAX_SEED)
     
-    def imageToImageFunc(initimagetile, controlimagetiles=None):
-        if(controlimagetiles is None or len(controlimagetiles) == 0):
-            image, _ = pipelines.imageToImage(initimage=initimagetile, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, 
-                                              scheduler=scheduler, seed=seed, model=model)
-        else:
-            image, _ = pipelines.imageToImageControlNet(initimage=initimagetile, controlimage=controlimagetiles, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, 
-                                                        scheduler=scheduler, seed=seed, model=model, controlmodel=controlmodels)
+    def imageToImageFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
+        tileparams = copy.deepcopy(params)
+        tileparams.setInitImage(initimagetile)
+        for i in range(len(controlimagetiles)):
+            tileparams.setControlImage(i, controlimagetiles[i])
+        image, _ = pipelines.generate(tileparams)
         return image
     
-    return tiledImageProcessor(processor=imageToImageFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), seed
+    return tiledImageProcessor(processor=imageToImageFunc, initimage=initimageparams.image, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
 
 
-def tiledInpaint(pipelines:DiffusersPipelines, initimage, prompt, negprompt, strength, scale, scheduler=None, seed=None, 
-                      controlimages=None, controlmodels=None, model=None, tilewidth=768, tileheight=768, overlap=256, inpaintwidth=512, inpaintheight=512, callback=None):
-    if(seed is None):
-        seed = random.randint(0, MAX_SEED)
+def tiledInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=768, tileheight=768, overlap=256, inpaintwidth=512, inpaintheight=512, callback=None):
+    initimageparams = params.getInitImage()
+    if initimageparams is None:
+        raise Exception("tiledImageToImage requires initimage to be set in params")
+    controlimages = [ controlimageparams.image for controlimageparams in params.getControlImages() ]
+    if(params.seed is None):
+        params.seed = random.randint(0, MAX_SEED)
 
-    # create mask image
-    mask = Image.new("RGB", size=(tilewidth, tileheight), color=(0, 0, 0))
-    mask.paste((255, 255, 255), (int((tilewidth/2)-(inpaintwidth/2)), int((tileheight/2)-(inpaintheight/2)), int((tilewidth/2)+(inpaintwidth/2)), int((tileheight/2)+(inpaintheight/2))))
+    # create centred rectangle mask image
+    masktile = Image.new("RGB", size=(tilewidth, tileheight), color=(0, 0, 0))
+    masktile.paste((255, 255, 255), (int((tilewidth/2)-(inpaintwidth/2)), int((tileheight/2)-(inpaintheight/2)), int((tilewidth/2)+(inpaintwidth/2)), int((tileheight/2)+(inpaintheight/2))))
     
-    def inpaintFunc(initimagetile, controlimagetiles=None):
-        image, _ = compositedInpaint(pipelines=pipelines, initimage=initimagetile, maskimage=mask, controlimage=controlimagetiles, prompt=prompt, negprompt=negprompt, 
-                                     strength=strength, scale=scale, steps=50, scheduler=scheduler, seed=seed, model=model, controlmodel=controlmodels)
+    def inpaintFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
+        tileparams = copy.deepcopy(params)
+        tileparams.setInitImage(initimagetile)
+        tileparams.setMaskImage(masktile)
+        for i in range(len(controlimagetiles)):
+            tileparams.setControlImage(i, controlimagetiles[i])
+        image, _ = pipelines.generate(tileparams)
         return image
     
-    return tiledImageProcessor(processor=inpaintFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), seed
+    return tiledImageProcessor(processor=inpaintFunc, initimage=initimageparams.image, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
 
 
-
-def tiledProcessorOffset(tileprocessor, initimage:Image.Image, controlimages:List[Image.Image]|None=None, 
-                         tilewidth:int=640, tileheight:int=640, overlap:int=128, offsetx:int=0, offsety:int=0, **kwargs):
+def tiledProcessorOffset(tileprocessor, pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth:int=640, tileheight:int=640, overlap:int=128, offsetx:int=0, offsety:int=0):
     # creates a new image slightly bigger than original image to allow tiling to start at negative offset
-    offsetimage = Image.new(initimage.mode, (initimage.width-offsetx, initimage.height-offsety))
-    offsetimage.paste(initimage, (-offsetx, -offsety, -offsetx+initimage.width, -offsety+initimage.height))
-    offsetcontrolimages = None
-    if controlimages is not None:
-        offsetcontrolimages = []
-        for controlimage in controlimages:
-            offsetcontrolimage = Image.new(controlimage.mode, (controlimage.width-offsetx, controlimage.height-offsety))
-            offsetcontrolimage.paste(controlimage, (-offsetx, -offsety, -offsetx+controlimage.width, -offsety+controlimage.height))
-            offsetcontrolimages.append(offsetcontrolimage)
-    outimage, seed = tileprocessor(initimage=offsetimage, controlimages=offsetcontrolimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, **kwargs)
+    initimageparams = params.getInitImage()
+    if initimageparams is None:
+        raise Exception("tiledImageToImage requires initimage to be set in params")
+    
+    params = copy.deepcopy(params)
+
+    for controlimageparams in params.controlimages:
+        offsetcontrolimage = Image.new(controlimageparams.image.mode, (controlimageparams.image.width-offsetx, controlimageparams.image.height-offsety))
+        offsetcontrolimage.paste(controlimageparams.image, (-offsetx, -offsety, -offsetx+controlimageparams.image.width, -offsety+controlimageparams.image.height))
+        controlimageparams.image = offsetcontrolimage
+
+    outimage, seed = tileprocessor(pipelines=pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap)
     image = outimage.crop((-offsetx, -offsety, outimage.width, outimage.height))
     return image, seed
 
 
-def tiledProcessorCentred(tileprocessor, initimage, controlimages=None, tilewidth=640, tileheight=640, overlap=128, 
-                             alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0, **kwargs):
+def tiledProcessorCentred(tileprocessor, pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=640, tileheight=640, overlap=128, 
+                             alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0):
+    initimageparams = params.getInitImage()
+    if initimageparams is None:
+        raise Exception("tiledImageToImage requires initimage to be set in params")
+
     # find top left of initial centre tile 
-    offsetx = offsetx + int(initimage.width/2)
-    offsety = offsety + int(initimage.height/2)
+    offsetx = offsetx + int(initimageparams.image.width/2)
+    offsety = offsety + int(initimageparams.image.height/2)
     if(alignmentx == 'tile_centre'):
         offsetx = offsetx - int(tilewidth/2)
     else:
@@ -84,32 +98,34 @@ def tiledProcessorCentred(tileprocessor, initimage, controlimages=None, tilewidt
     while offsety > 0:
         offsety = offsety - (tileheight-overlap)
 
-    return tiledProcessorOffset(tileprocessor, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety, **kwargs)
+    return tiledProcessorOffset(tileprocessor, pipelines=pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, offsetx=offsetx, offsety=offsety)
 
 
-def compositedInpaint(pipelines:DiffusersPipelines, initimage, maskimage, prompt, negprompt, scale, steps=50, strength=1.0, scheduler=None, seed=None, maskDilation=21, maskFeather=3, model=None, controlmodel=None, controlimage=None):
+def compositedInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, maskDilation=21, maskFeather=3):
     """ Standard inpaint but the result is composited back to the original using a feathered mask """
-    if(controlmodel is None or len(controlmodel) == 0):
-        outimage, usedseed = pipelines.inpaint(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, scheduler=scheduler, seed=seed, model=model)
-    else:
-        outimage, usedseed = pipelines.inpaintControlNet(initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, scheduler=scheduler, seed=seed, model=model, 
-                                                         controlmodel=controlmodel, controlimage=controlimage)
-    outimage = compositeImages(outimage, initimage, maskimage, maskDilation=maskDilation, maskFeather=maskFeather)
+    outimage, usedseed = pipelines.generate(params)
+    initimageparams = params.getInitImage()
+    maskimageparams = params.getMaskImage()
+    if initimageparams is None or maskimageparams is None:
+        raise Exception("compositedInpaint requires initimage and maskimage to be set in params")
+    outimage = compositeImages(outimage, initimageparams.image, maskimageparams.image, maskDilation=maskDilation, maskFeather=maskFeather)
     return outimage, usedseed
 
 
-def tiledImageToImageMultipass(tileprocessor, initimage, tilewidth=640, tileheight=640, overlap=128, passes=2, strength=0.2, strengthMult=0.5, **kwargs):
+def tiledImageToImageMultipass(tileprocessor, pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=640, tileheight=640, overlap=128, passes=2, strength=0.2, strengthMult=0.5):
     offsetEven = (0, 0)
     offsetOdd = (-int((tilewidth - overlap)/2), -int((tileheight - overlap)/2))
-    image = initimage
+    image = None
+    usedseed = None
 
     for i in range(0, passes):
         if (i%2==0):
             offset = offsetEven
         else:
             offset = offsetOdd
-        image, usedseed = tiledProcessorOffset(tileprocessor=tileprocessor, initimage=image, strength=strength, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, 
-                                               offsetx=offset[0], offsety=offset[1], **kwargs)
-        strength = strength * strengthMult
+        image, usedseed = tiledProcessorOffset(tileprocessor=tileprocessor, pipelines=pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, 
+                                               offsetx=offset[0], offsety=offset[1])
+        params = copy.deepcopy(params)
+        params.strength = strength * strengthMult
 
     return image, usedseed

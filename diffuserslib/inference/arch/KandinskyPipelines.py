@@ -1,4 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
+from .GenerationParameters import GenerationParameters
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
 from diffusers import KandinskyPriorPipeline, KandinskyPipeline, KandinskyImg2ImgPipeline, KandinskyInpaintPipeline
@@ -6,12 +7,12 @@ import torch
 
 
 class KandinskyPipelineWrapper(DiffusersPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        self.safety_checker = safety_checker
+    def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
+        self.safety_checker = params.safetychecker
         self.device = device
-        self.inferencedevice = 'cpu' if self.device == 'mps' else self.device
+        inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset)
+        super().__init__(preset, inferencedevice)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
@@ -28,48 +29,54 @@ class KandinskyPipelineWrapper(DiffusersPipelineWrapper):
                 args['torch_dtype'] = torch.float16
         return mergeDicts(args, kwargs)
     
-    def inference(self, prompt, negprompt, seed, guidance_scale=4.0, **kwargs):
+    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, **kwargs):
         generator, seed = self.createGenerator(seed)
-        image_embeds, negimage_embeds = self.pipeline_prior(prompt=prompt, negative_prompt=negprompt, generator=generator, guidance_scale=guidance_scale, return_dict=False)
+        image_embeds, negimage_embeds = self.pipeline_prior(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=False)
         image = self.pipeline(prompt=prompt, image_embeds=image_embeds, negative_image_embeds=negimage_embeds, guidance_scale=guidance_scale, **kwargs).images[0]
         return image, seed
 
 
 class KandinskyTextToImagePipelineWrapper(KandinskyPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(KandinskyPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(KandinskyPipeline, preset, params, device)
 
-    def inference(self, prompt, negprompt, seed, scale, steps, width, height, **kwargs):
-        return super().inference(prompt=prompt, negprompt=negprompt, seed=seed, guidance_scale=scale, num_inference_steps=steps, width=width, height=height)
+    def inference(self, params:GenerationParameters):
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
+                                 guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler)
 
 
 class KandinskyImageToImagePipelineWrapper(KandinskyPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(KandinskyImg2ImgPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(KandinskyImg2ImgPipeline, preset, params, device)
 
-    def inference(self, prompt, negprompt, initimage, seed, scale, steps, strength, width, height, **kwargs):
-        initimage = initimage.convert("RGB")
-        return super().inference(prompt=prompt, negprompt=negprompt, image=initimage, seed=seed, guidance_scale=scale, num_inference_steps=steps, strength=strength, 
-                                 width=initimage.width, height=initimage.height)
+    def inference(self, params:GenerationParameters):
+        initimage = params.controlimages[0].image.convert("RGB")
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
+                                 strength=params.strength, scheduler=params.scheduler)
 
 
 class KandinskyInpaintPipelineWrapper(KandinskyPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(KandinskyInpaintPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(KandinskyInpaintPipeline, preset, params, device)
 
-    def inference(self, prompt, negprompt, initimage, maskimage, seed, scale, steps, width, height, **kwargs):
-        initimage = initimage.convert("RGB")
-        maskimage = maskimage.convert("RGB")
-        return super().inference(prompt=prompt, negprompt=negprompt, image=initimage, mask_image=maskimage, seed=seed, guidance_scale=scale, num_inference_steps=steps,
-                                 width=initimage.width, height=initimage.height)
+    def inference(self, params:GenerationParameters):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getMaskImage()
+        if(initimageparams is None or maskimageparams is None):
+            raise ValueError("Must provide both initimage and maskimage")
+        initimage = initimageparams.image.convert("RGB")
+        maskimage = maskimageparams.image.convert("RGB")
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
+                                           guidance_scale=params.cfgscale, num_inference_steps=params.steps, strength=params.strength, scheduler=params.scheduler, 
+                                           width=initimage.width, height=initimage.height)
 
 
 class KandinskyInterpolatePipelineWrapper(KandinskyPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, safety_checker=True, **kwargs):
-        super().__init__(KandinskyPipeline, preset, device, safety_checker=safety_checker)
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+        super().__init__(KandinskyPipeline, preset, params, device)
 
-    def inference(self, images_prompts, weights, seed, scale, steps, width, height, **kwargs):
-        generator, seed = self.createGenerator(seed)
-        prior_interpolate = self.pipeline_prior.interpolate(images_prompts, weights)
-        image = self.pipeline("", **prior_interpolate, guidance_scale=scale, num_inference_steps=steps, width=width, height=height, **kwargs).images[0]
+    def inference(self, params:GenerationParameters):
+        generator, seed = self.createGenerator(params.seed)
+        prior_interpolate = self.pipeline_prior.interpolate(params.prompt, params.promptweights)
+        image = self.pipeline("", **prior_interpolate, guidance_scale=params.cfgscale, num_inference_steps=params.steps, width=params.width, height=params.height).images[0]
         return image, seed

@@ -67,7 +67,7 @@ def removeAlpha(image):
     return rgb_image
 
 
-def compositeImages(foreground, background, mask, maskDilation=21, maskFeather=3):
+def compositeImages(foreground:Image.Image, background:Image.Image, mask:Image.Image, maskDilation:int=21, maskFeather:int=3):
     foreground = foreground.convert("RGBA")
     background = background.convert("RGBA")
     mask = mask.convert("L")

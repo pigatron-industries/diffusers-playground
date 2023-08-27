@@ -4,6 +4,7 @@ from threading import Thread
 from typing import List
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledImageToImage, tiledInpaint, compositedInpaint
+from .inference.arch.GenerationParameters import GenerationParameters, ModelParameters, ControlImageParameters, IMAGETYPE_INITIMAGE, IMAGETYPE_MASKIMAGE, IMAGETYPE_CONTROLIMAGE
 from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
 from .imagetools.ImageTools import ImageTools
 from .processing.processors.TransformerProcessors import *
@@ -87,8 +88,8 @@ class DiffusersView(FlaskView):
         self.job.status['done'] = done
 
     
-    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model=None, 
-                   controlimages=[], controlmodels=None, controlscales:List[float]=[1.0], batch=1, **kwargs):
+    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model:str="", 
+                   controlimages=[], controlmodels=[], controlscales:List[float]=[1.0], batch=1, **kwargs):
         try:
             print('=== txt2img ===')
             print(f'Prompt: {prompt}')
@@ -97,15 +98,18 @@ class DiffusersView(FlaskView):
             print(f'Control Models: {controlmodels}')
 
             controlimages = base64DecodeImages(controlimages)
+
+            # create params TODO pass in object as is to api
+            controlimageparams = []
+            for i in range(0, len(controlimages)):
+                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
+            params = GenerationParameters(prompt=prompt, negprompt=negprompt, steps=steps, cfgscale=scale, width=width, height=height, scheduler=scheduler, seed=seed, 
+                                          models=[ModelParameters(name=model)], controlimages=controlimageparams)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                if(controlimages is None or len(controlimages) == 0):
-                    outimage, usedseed = self.pipelines.textToImage(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, scheduler=scheduler, seed=seed, model=model)
-                else:
-                    outimage, usedseed = self.pipelines.textToImageControlNet(prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, width=width, height=height, 
-                                                                              scheduler=scheduler, seed=seed, model=model, 
-                                                                              controlimage=controlimages, controlmodel=controlmodels, controlnet_conditioning_scale=controlscales)
+                outimage, usedseed = self.pipelines.generate(params)
                 display(outimage)
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
@@ -118,7 +122,7 @@ class DiffusersView(FlaskView):
 
 
     def img2imgRun(self, seed:int|None=None, prompt:str="", negprompt:str="", strength:float=0.5, scale:float=9, 
-                   prescale:float=1, scheduler:str="EulerDiscreteScheduler", model:str|None=None, 
+                   prescale:float=1, scheduler:str="EulerDiscreteScheduler", model:str="",
                    controlimages:List[Image.Image]=[], controlmodels:List[str]=[], controlscales:List[float]=[1.0], batch:int=1, **kwargs):
         try:
             print('=== img2img ===')
@@ -134,13 +138,17 @@ class DiffusersView(FlaskView):
             initimage = controlimages[0]
             controlimages.pop(0)
 
+            # create params TODO pass in object as is to api
+            controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
+            for i in range(0, len(controlimages)):
+                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
+            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
+                                          models=[ModelParameters(name=model)], controlimages=controlimageparams)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                if(len(controlmodels) == 0):
-                    outimage, usedseed = self.pipelines.imageToImage(initimage=initimage, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model)
-                else:
-                    outimage, usedseed = self.pipelines.imageToImageControlNet(initimage=initimage, controlimage=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, scale=scale, seed=seed, scheduler=scheduler, model=model, controlmodel=controlmodels, controlnet_conditioning_scale=controlscales)
+                outimage, usedseed = self.pipelines.generate(params)
                 display(outimage)
                 outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -153,8 +161,9 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model=None, controlmodels=None,
-                        method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, batch=1, **kwargs):
+    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model:str="", controlmodels=[],
+                        method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, 
+                        controlscales:List[float]=[1.0], batch=1, **kwargs):
         try:
             print('=== img2imgTiled ===')
             print(f'Method: {method}')
@@ -167,21 +176,25 @@ class DiffusersView(FlaskView):
             initimage = controlimages[0]
             controlimages.pop(0)
 
+            # create params TODO pass in object as is to api
+            controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
+            for i in range(0, len(controlimages)):
+                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
+            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, 
+                                          seed=seed, models=[ModelParameters(name=model)], controlimages=controlimageparams)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
                 if (method=="singlepass"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                  scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                  alignmentx=tilealignmentx, alignmenty=tilealignmenty, model=model, controlmodels=controlmodels, callback=self.updateProgress)
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
+                                                               overlap=tileoverlap, alignmentx=tilealignmentx, alignmenty=tilealignmenty)
                 elif (method=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                    scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap, 
-                                                                    passes=2, strengthMult=0.5, model=model, controlmodels=controlmodels, callback=self.updateProgress)
+                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
+                                                                    overlap=tileoverlap, passes=2, strengthMult=0.5)
                 elif (method=="inpaint"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=self.pipelines, initimage=initimage, controlimages=controlimages, prompt=prompt, negprompt=negprompt, strength=strength, 
-                                                                       scale=scale, scheduler=scheduler, seed=seed, tilewidth=tilewidth, tileheight=tileheight, 
-                                                                       model=model, controlmodels=controlmodels, overlap=tileoverlap)
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
+                                                               overlap=tileoverlap)
                 else:
                     raise Exception(f"Unknown method: {method}")
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
@@ -195,7 +208,7 @@ class DiffusersView(FlaskView):
 
 
     def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, prescale:float=1, strength=1.0, 
-                   scheduler="EulerDiscreteScheduler", model=None, controlmodels=None, controlscales:List[float]=[1.0], batch=1, **kwargs):
+                   scheduler="EulerDiscreteScheduler", model:str="", controlmodels=None, controlscales:List[float]=[1.0], batch=1, **kwargs):
         try:
             print('=== inpaint ===')
             print(f'Prompt: {prompt}')
@@ -218,11 +231,16 @@ class DiffusersView(FlaskView):
             initimage = self.prescaleBefore([initimage], prescale)[0]
             controlimages = self.prescaleBefore(controlimages, prescale)
 
+            controlimageparams = [ControlImageParameters(image=initimage, type=IMAGETYPE_INITIMAGE), ControlImageParameters(image=maskimage, type=IMAGETYPE_MASKIMAGE)]
+            for i in range(0, len(controlimages)):
+                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
+            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
+                                          models=[ModelParameters(name=model)], controlimages=controlimageparams)
+
             outputimages = []
             for i in range(0, batch):
                 self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = compositedInpaint(self.pipelines, initimage=initimage, maskimage=maskimage, prompt=prompt, negprompt=negprompt, steps=steps, scale=scale, strength=strength, seed=seed, scheduler=scheduler, 
-                                                       model=model, controlimage=controlimages, controlmodel=controlmodels,  controlnet_conditioning_scale=controlscales)
+                outimage, usedseed = compositedInpaint(self.pipelines, params)
                 # outimage = applyColourCorrection(initimage, outimage)
                 outimage = self.prescaleAfter([outimage], prescale)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
