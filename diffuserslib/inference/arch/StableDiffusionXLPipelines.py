@@ -1,5 +1,5 @@
 from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
-from .GenerationParameters import GenerationParameters
+from ..GenerationParameters import GenerationParameters
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
 from typing import List

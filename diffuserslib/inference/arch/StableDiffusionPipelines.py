@@ -1,5 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from .GenerationParameters import GenerationParameters, ControlImageParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
+from ..GenerationParameters import GenerationParameters, ControlImageParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
 from typing import Callable, List

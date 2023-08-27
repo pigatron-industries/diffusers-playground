@@ -2,7 +2,7 @@ from PIL import Image
 import random, copy
 from ..ImageUtils import compositeImages, tiledImageProcessor
 from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
-from .arch.GenerationParameters import GenerationParameters
+from .GenerationParameters import GenerationParameters
 from huggingface_hub import login
 from typing import List
 

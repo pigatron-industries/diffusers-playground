@@ -1,7 +1,7 @@
 from ..batch import BatchRunner
 from ..batch.argument import RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
 from ..inference import DiffusersPipelines, LORAUse
-from ..inference.arch.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
+from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ..processing import *
 from ..processing.ProcessingPipeline import ImageProcessorPipeline
 from ..processing.processors.FilterProcessors import *

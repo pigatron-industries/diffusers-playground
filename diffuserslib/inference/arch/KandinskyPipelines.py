@@ -1,5 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from .GenerationParameters import GenerationParameters
+from ..GenerationParameters import GenerationParameters
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
 from diffusers import KandinskyPriorPipeline, KandinskyPipeline, KandinskyImg2ImgPipeline, KandinskyInpaintPipeline

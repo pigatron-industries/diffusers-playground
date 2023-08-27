@@ -4,7 +4,7 @@ from threading import Thread
 from typing import List
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledImageToImage, tiledInpaint, compositedInpaint
-from .inference.arch.GenerationParameters import GenerationParameters, ModelParameters, ControlImageParameters, IMAGETYPE_INITIMAGE, IMAGETYPE_MASKIMAGE, IMAGETYPE_CONTROLIMAGE
+from .inference.GenerationParameters import GenerationParameters, ModelParameters, ControlImageParameters, IMAGETYPE_INITIMAGE, IMAGETYPE_MASKIMAGE, IMAGETYPE_CONTROLIMAGE
 from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
 from .imagetools.ImageTools import ImageTools
 from .processing.processors.TransformerProcessors import *
