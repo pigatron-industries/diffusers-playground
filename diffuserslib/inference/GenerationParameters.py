@@ -1,11 +1,19 @@
 from typing import List
 from PIL import Image
 from dataclasses import dataclass, field
+from ..ImageUtils import base64DecodeImage
+import json
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
 IMAGETYPE_CONTROLIMAGE = "controlimage"
 
+
+GENERATIONTYPE_TXT2IMG = "txt2img"
+GENERATIONTYPE_IMG2IMG = "img2img"
+GENERATIONTYPE_INPAINT = "inpaint"
+GENERATIONTYPE_UPSCALE = "upscale"
+GENERATIONTYPE_CONTROLNET_SUFFIX = "_controlnet"
 
 
 @dataclass
@@ -17,14 +25,21 @@ class ModelParameters:
 @dataclass
 class ControlImageParameters:
     image:Image.Image
+    image64:str = ""
     type:str = IMAGETYPE_INITIMAGE
     model:str|None = None
     condscale:float = 1.0
+
+    def __post_init__(self):
+        if(self.image64 is not None):
+            self.image = base64DecodeImage(self.image64)
 
 
 @dataclass
 class GenerationParameters:
     generationtype:str|None = None
+    batch:int = 1
+    prescale:float = 1.0
     safetychecker:bool = True
     prompt:str = ""
     negprompt:str = ""
@@ -38,6 +53,15 @@ class GenerationParameters:
     models:List[ModelParameters] = field(default_factory=list)
     tiling:bool = False
     controlimages:List[ControlImageParameters] = field(default_factory=list)
+
+    @classmethod
+    def from_json(cls, jsonbytes:bytes):
+        dict = json.loads(jsonbytes)
+        if("models" in dict):
+            dict["models"] = [ModelParameters(**model) for model in dict["models"]]
+        if("controlimages" in dict):
+            dict["controlimages"] = [ControlImageParameters(**controlimage) for controlimage in dict["controlimages"]]
+        return cls(**dict)
 
     def __post_init__(self):
         self.original_prompt:str = self.prompt
@@ -70,13 +94,13 @@ class GenerationParameters:
         else:
             generationtype = ""
             if(self.getMaskImage() is not None):
-                generationtype += "inpaint"
+                generationtype += GENERATIONTYPE_INPAINT
             elif(self.getInitImage() is not None):
-                generationtype += "img2img"
+                generationtype += GENERATIONTYPE_IMG2IMG
             else:
-                generationtype += "txt2img"
+                generationtype += GENERATIONTYPE_TXT2IMG
             if(len(self.getControlImages()) > 0):
-                generationtype += "_controlnet"
+                generationtype += GENERATIONTYPE_CONTROLNET_SUFFIX
             return generationtype
         
     def setImage(self, image:Image.Image, type:str):
@@ -84,7 +108,7 @@ class GenerationParameters:
             if(controlimage.type == type):
                 controlimage.image = image
                 return
-        self.controlimages.append(ControlImageParameters(image, type))
+        self.controlimages.append(ControlImageParameters(image=image, type=type))
 
     def setInitImage(self, image:Image.Image):
         self.setImage(image, IMAGETYPE_INITIMAGE)
@@ -103,10 +127,16 @@ class GenerationParameters:
 
 
 @dataclass
-class TileGenerationParameters(GenerationParameters):
+class TiledGenerationParameters(GenerationParameters):
     tilemethod:str = "singlepass"
     tilealignmentx:str = "tile_centre"
     tilealignmenty:str = "tile_centre"
     tilewidth:int = 512
     tileheight:int = 512
     tileoverlap:int = 0
+
+
+@dataclass
+class UpscaleGenerationParameters(GenerationParameters):
+    upscalemethod:str = "esrgan"
+    upscaleamount:int = 4
