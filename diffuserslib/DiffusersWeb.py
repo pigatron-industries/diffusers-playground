@@ -54,7 +54,7 @@ class DiffusersView(FlaskView):
 
     @route("/api/async", methods=["GET"])
     def getJobAsync(self):
-        print(self.job.status)
+        # print(self.job.status)
         return jsonify(self.job.status)
     
 
@@ -68,7 +68,7 @@ class DiffusersView(FlaskView):
         self.job.thread = Thread(target = runfunc, args=[r.data])
         self.job.thread.start()
         self.job.status = {"status":"running", "action": action}
-        print(self.job.status)
+        # print(self.job.status)
         return jsonify(self.job.status)
 
 
