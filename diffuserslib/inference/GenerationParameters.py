@@ -2,7 +2,7 @@ from typing import List
 from PIL import Image
 from dataclasses import dataclass, field
 from ..ImageUtils import base64DecodeImage
-import json
+import json, inspect
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
@@ -16,26 +16,26 @@ GENERATIONTYPE_UPSCALE = "upscale"
 GENERATIONTYPE_CONTROLNET_SUFFIX = "_controlnet"
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ModelParameters:
     name:str
     weight:float = 1.0
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class ControlImageParameters:
-    image:Image.Image
+    image:Image.Image|None = None
     image64:str = ""
     type:str = IMAGETYPE_INITIMAGE
     model:str|None = None
     condscale:float = 1.0
 
     def __post_init__(self):
-        if(self.image64 is not None):
+        if(self.image64 is not None and self.image64 != ""):
             self.image = base64DecodeImage(self.image64)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class GenerationParameters:
     generationtype:str|None = None
     batch:int = 1
@@ -61,7 +61,15 @@ class GenerationParameters:
             dict["models"] = [ModelParameters(**model) for model in dict["models"]]
         if("controlimages" in dict):
             dict["controlimages"] = [ControlImageParameters(**controlimage) for controlimage in dict["controlimages"]]
-        return cls(**dict)
+        return cls.from_dict(dict)
+
+    @classmethod
+    def from_dict(cls, dict:dict):
+        """ Create a GenerationParameters object from a dictionary, ignoring any keys that are not parameters of the class """
+        return cls(**{
+            k: v for k, v in dict.items() 
+            if k in inspect.signature(cls).parameters
+        })
 
     def __post_init__(self):
         self.original_prompt:str = self.prompt
