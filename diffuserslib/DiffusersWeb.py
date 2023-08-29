@@ -88,7 +88,7 @@ class DiffusersView(FlaskView):
 
     def generateRun(self, data:bytes):
         params = GenerationParameters.from_json(data)
-        print(params)
+        # print(params)
         try:
             print('=== generate ===')
             self.prescaleBefore(params)
@@ -111,7 +111,7 @@ class DiffusersView(FlaskView):
 
     def inpaintRun(self, data:bytes):
         params = GenerationParameters.from_json(data)
-        print(params)
+        # print(params)
         try:
             print('=== generate ===')
             initimageparams = params.getInitImage()
@@ -143,7 +143,7 @@ class DiffusersView(FlaskView):
 
     def generateTiledRun(self, data:bytes):
         params = TiledGenerationParameters.from_json(data)
-        print(params)
+        # print(params)
         try:
             print('=== generateTiled ===')
             outputimages = []
@@ -173,7 +173,7 @@ class DiffusersView(FlaskView):
     def upscaleRun(self, data:bytes):
         params = UpscaleGenerationParameters.from_json(data)
         params.generationtype = "upscale"
-        print(params)
+        # print(params)
         try:
             print('=== upscale ===')
             initimageparams = params.getInitImage()
@@ -201,7 +201,7 @@ class DiffusersView(FlaskView):
 
     def preprocessRun(self, data:bytes):
         params = GenerationParameters.from_json(data)
-        print(params)
+        # print(params)
         try:
             print('=== preprocess ===')
             processor = str_to_class(params.models[0].name + 'Processor')()
