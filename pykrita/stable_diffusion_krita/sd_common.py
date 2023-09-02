@@ -1,5 +1,6 @@
-from krita import *
-from PyQt5.Qt import QByteArray, QBuffer, QImage
+from krita import Krita, Document, Node, QMessageBox # type: ignore
+from PyQt5.Qt import QByteArray, QBuffer, QImage # type: ignore
+from typing import List
 
 def errorMessage(text,detailed):
     msgBox= QMessageBox()
@@ -11,42 +12,45 @@ def errorMessage(text,detailed):
     msgBox.exec()
 
 
-def getDocument():
-    d = Application.activeDocument()
-    if (d==None):  
+def getDocument() -> "Document|None":
+    doc = Krita.instance().activeDocument()
+    if (doc == None):  
         errorMessage("Please add a document", "Needs document with a layer and selection.")
-    return d
+    return doc
 
 
-def getLayer():
-    d = getDocument()
-    if (d==None):  
+def getLayer() -> "Node|None":
+    doc = getDocument()
+    if (doc==None):  
         return
-    n = d.activeNode()
-    print(n.type())
-    if(n.type() == "paintlayer"):
-        return [n]
-    elif(n.type() == "grouplayer"):
-        return n.childNodes()
+    node = doc.activeNode()
+    print(node.type())
+    if(node.type() == "paintlayer"):
+        return [node]
+    elif(node.type() == "grouplayer"):
+        return node.childNodes()
     errorMessage("Select a paint layer or group layer",  "Selected layer must be a paint layer or group layer.")
     return
 
 
 def getSelection():
-    d = getDocument()
-    if (d==None): 
-        return
-    s = d.selection()
-    if (s==None):  
-        errorMessage("Please make a selection", "Operation runs on a selection only. Please use rectangle select tool.")
-    return s   
-
-
-def getLayerSelections():
     doc = getDocument()
+    if (doc==None): 
+        return
+    selection = doc.selection()
+    if (selection==None):  
+        return doc
+        # errorMessage("Please make a selection", "Operation runs on a selection only. Please use rectangle select tool.")
+    return selection
+
+
+def getLayerSelections() -> List[QImage]:
+    doc = getDocument()
+    if (doc == None):
+        return []
     layers = getLayer()
     if (layers==None or len(layers)==0):
-        return  
+        return []
     selection = doc.selection()
     images = []
     for layer in layers:
