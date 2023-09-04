@@ -4,7 +4,7 @@ from threading import Thread
 from typing import List
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledImageToImage, tiledInpaint, compositedInpaint
-from .inference.GenerationParameters import GenerationParameters, ModelParameters, ControlImageParameters, IMAGETYPE_INITIMAGE, IMAGETYPE_MASKIMAGE, IMAGETYPE_CONTROLIMAGE
+from .inference.GenerationParameters import GenerationParameters, TiledGenerationParameters, UpscaleGenerationParameters
 from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
 from .imagetools.ImageTools import ImageTools
 from .processing.processors.TransformerProcessors import *
@@ -54,9 +54,9 @@ class DiffusersView(FlaskView):
 
     @route("/api/async", methods=["GET"])
     def getJobAsync(self):
-        print(self.job.status)
+        # print(self.job.status)
         return jsonify(self.job.status)
-
+    
 
     @route("/api/async/<action>", methods=["POST"])
     def asyncAction(self, action):
@@ -64,21 +64,19 @@ class DiffusersView(FlaskView):
             return self.getJobAsync()
         clear_output()
         r = request
-        params = json.loads(r.data)
         runfunc = getattr(self, f'{action}Run')
-        self.job.thread = Thread(target = runfunc, kwargs=params)
+        self.job.thread = Thread(target = runfunc, args=[r.data])
         self.job.thread.start()
         self.job.status = {"status":"running", "action": action}
-        print(self.job.status)
+        # print(self.job.status)
         return jsonify(self.job.status)
 
 
     @route("/api/<action>", methods=["POST"])
     def syncAction(self, action):
         r = request
-        params = json.loads(r.data)
         runfunc = getattr(self, f'{action}Run')
-        output = runfunc(**params)
+        output = runfunc(r.data)
         return jsonify(output)
 
 
@@ -87,116 +85,81 @@ class DiffusersView(FlaskView):
         self.job.status['total'] = total
         self.job.status['done'] = done
 
-    
-    def txt2imgRun(self, seed=None, prompt="", negprompt="", steps=20, scale=9, width=512, height=512, scheduler="DPMSolverMultistepScheduler", model:str="", 
-                   controlimages=[], controlmodels=[], controlscales:List[float]=[1.0], batch=1, **kwargs):
+
+    def generateRun(self, data:bytes):
+        params = GenerationParameters.from_json(data)
+        # print(params)
         try:
-            print('=== txt2img ===')
-            print(f'Prompt: {prompt}')
-            print(f'Negative: {negprompt}')
-            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Width: {width}, Height: {height}, Scheduler: {scheduler}')
-            print(f'Control Models: {controlmodels}')
-
-            controlimages = base64DecodeImages(controlimages)
-
-            # create params TODO pass in object as is to api
-            controlimageparams = []
-            for i in range(0, len(controlimages)):
-                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
-            params = GenerationParameters(prompt=prompt, negprompt=negprompt, steps=steps, cfgscale=scale, width=width, height=height, scheduler=scheduler, seed=seed, 
-                                          models=[ModelParameters(name=model)], controlimages=controlimageparams)
+            print('=== generate ===')
+            self.prescaleBefore(params)
 
             outputimages = []
-            for i in range(0, batch):
-                self.updateProgress(f"Running", batch, i)
+            for i in range(0, params.batch):
+                self.updateProgress(f"Running", params.batch, i)
                 outimage, usedseed = self.pipelines.generate(params)
                 display(outimage)
+                outimage = self.prescaleAfter([outimage], params)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-            self.job.status = { "status":"finished", "action":"txt2img", "images": outputimages }
+            self.job.status = { "status":"finished", "action":"generate", "images": outputimages }
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"txt2img", "error":str(e) }
+            self.job.status = { "status":"error", "action":"generate", "error":str(e) }
             raise e
+        
 
-
-    def img2imgRun(self, seed:int|None=None, prompt:str="", negprompt:str="", strength:float=0.5, scale:float=9, 
-                   prescale:float=1, scheduler:str="EulerDiscreteScheduler", model:str="",
-                   controlimages:List[Image.Image]=[], controlmodels:List[str]=[], controlscales:List[float]=[1.0], batch:int=1, **kwargs):
+    def inpaintRun(self, data:bytes):
+        params = GenerationParameters.from_json(data)
+        # print(params)
         try:
-            print('=== img2img ===')
-            print(f'Prompt: {prompt}')
-            print(f'Negative: {negprompt}')
-            print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
-            print(f'Control Models: {controlmodels}')
-            print(f'Control Images: {len(controlimages)}')
+            print('=== generate ===')
+            initimageparams = params.getInitImage()
+            if (initimageparams is None):
+                raise Exception("No init image provided")
+            if (params.getMaskImage() is None):
+                maskimage = alphaToMask(initimageparams.image)
+                params.setMaskImage(maskimage)
 
-            controlimages = base64DecodeImages(controlimages)
-            controlimages = self.prescaleBefore(controlimages, prescale)
-
-            initimage = controlimages[0]
-            controlimages.pop(0)
-
-            # create params TODO pass in object as is to api
-            controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
-            for i in range(0, len(controlimages)):
-                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
-            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
-                                          models=[ModelParameters(name=model)], controlimages=controlimageparams)
+            self.prescaleBefore(params)
 
             outputimages = []
-            for i in range(0, batch):
-                self.updateProgress(f"Running", batch, i)
+            for i in range(0, params.batch):
+                self.updateProgress(f"Running", params.batch, i)
+
                 outimage, usedseed = self.pipelines.generate(params)
+
                 display(outimage)
-                outimage = self.prescaleAfter([outimage], prescale)[0]
+                outimage = self.prescaleAfter([outimage], params)[0]
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
-            self.job.status = { "status":"finished", "action":"img2img", "images": outputimages }
+            self.job.status = { "status":"finished", "action":"generate", "images": outputimages }
             return self.job.status
 
         except Exception as e:
-            self.job.status = { "status":"error", "action":"img2img", "error":str(e) }
+            self.job.status = { "status":"error", "action":"generate", "error":str(e) }
             raise e
 
 
-    def img2imgTiledRun(self, controlimages, seed=None, prompt="", negprompt="", strength=0.4, scale=9, scheduler="EulerDiscreteScheduler", model:str="", controlmodels=[],
-                        method="singlepass", tilealignmentx="tile_centre", tilealignmenty="tile_centre", tilewidth=640, tileheight=640, tileoverlap=128, 
-                        controlscales:List[float]=[1.0], batch=1, **kwargs):
+    def generateTiledRun(self, data:bytes):
+        params = TiledGenerationParameters.from_json(data)
+        # print(params)
         try:
-            print('=== img2imgTiled ===')
-            print(f'Method: {method}')
-            print(f'Prompt: {prompt}')
-            print(f'Negative: {negprompt}')
-            print(f'Seed: {seed}, Scale: {scale}, Strength: {strength}, Scheduler: {scheduler}')
-            print(f'Method: {method}, Tile width: {tilewidth}, Tile height: {tileheight}, Tile Overlap: {tileoverlap}')
-
-            controlimages = base64DecodeImages(controlimages)
-            initimage = controlimages[0]
-            controlimages.pop(0)
-
-            # create params TODO pass in object as is to api
-            controlimageparams = [ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE)]
-            for i in range(0, len(controlimages)):
-                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
-            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, 
-                                          seed=seed, models=[ModelParameters(name=model)], controlimages=controlimageparams)
-
+            print('=== generateTiled ===')
             outputimages = []
-            for i in range(0, batch):
-                self.updateProgress(f"Running", batch, i)
-                if (method=="singlepass"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
-                                                               overlap=tileoverlap, alignmentx=tilealignmentx, alignmenty=tilealignmenty)
-                elif (method=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
-                                                                    overlap=tileoverlap, passes=2, strengthMult=0.5)
-                elif (method=="inpaint"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=self.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, 
-                                                               overlap=tileoverlap)
+            for i in range(0, params.batch):
+                self.updateProgress(f"Running", params.batch, i)
+                if (params.tilemethod=="singlepass"):
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
+                                                               overlap=params.tileoverlap, alignmentx=params.tilealignmentx, alignmenty=params.tilealignmenty)
+                elif (params.tilemethod=="multipass"):
+                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=self.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
+                                                                    overlap=params.tileoverlap, passes=2, strengthMult=0.5)
+                elif (params.tilemethod=="inpaint"):
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=self.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
+                                                               overlap=params.tileoverlap)
                 else:
-                    raise Exception(f"Unknown method: {method}")
+                    raise Exception(f"Unknown method: {params.tilemethod}")
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"img2imgTiled", "images": outputimages }
@@ -207,71 +170,25 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def inpaintRun(self, controlimages, maskimage=None, seed=None, prompt="", negprompt="", steps=30, scale=9, prescale:float=1, strength=1.0, 
-                   scheduler="EulerDiscreteScheduler", model:str="", controlmodels=None, controlscales:List[float]=[1.0], batch=1, **kwargs):
-        try:
-            print('=== inpaint ===')
-            print(f'Prompt: {prompt}')
-            print(f'Negative: {negprompt}')
-            print(f'Seed: {seed}, Scale: {scale}, Steps: {steps}, Scheduler: {scheduler}')
-
-            controlimages = base64DecodeImages(controlimages)
-            initimage = controlimages[0]
-            if maskimage is None:
-                maskimage = alphaToMask(initimage)
-            else:
-                maskimage = base64DecodeImage(maskimage)
-            if(controlmodels is not None and len(controlmodels) > 0):
-                controlimages.pop(0)
-            else:
-                controlimages = []
-                controlmodels = []
-
-            maskimage = self.prescaleBefore([maskimage], prescale)[0]
-            initimage = self.prescaleBefore([initimage], prescale)[0]
-            controlimages = self.prescaleBefore(controlimages, prescale)
-
-            controlimageparams = [ControlImageParameters(image=initimage, type=IMAGETYPE_INITIMAGE), ControlImageParameters(image=maskimage, type=IMAGETYPE_MASKIMAGE)]
-            for i in range(0, len(controlimages)):
-                controlimageparams.append(ControlImageParameters(image=controlimages[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodels[i], condscale=controlscales[i]))
-            params = GenerationParameters(prompt=prompt, negprompt=negprompt, cfgscale=scale, strength=strength, width=initimage.width, height=initimage.height, scheduler=scheduler, seed=seed, 
-                                          models=[ModelParameters(name=model)], controlimages=controlimageparams)
-
-            outputimages = []
-            for i in range(0, batch):
-                self.updateProgress(f"Running", batch, i)
-                outimage, usedseed = compositedInpaint(self.pipelines, params)
-                # outimage = applyColourCorrection(initimage, outimage)
-                outimage = self.prescaleAfter([outimage], prescale)[0]
-                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
-
-            self.job.status = { "status":"finished", "action":"inpaint", "images": outputimages }
-            return self.job.status
-
-        except Exception as e:
-            self.job.status = { "status":"error", "action":"inpaint", "error":str(e) }
-            raise e
-
-
-    def upscaleRun(self, controlimages, method="esrgan/remacri", amount=4, prompt="", negprompt="", steps=30, scale=7.0, scheduler="EulerDiscreteScheduler", batch=1, model="stabilityai/stable-diffusion-x4-upscaler", **kwargs):
+    def upscaleRun(self, data:bytes):
+        params = UpscaleGenerationParameters.from_json(data)
+        params.generationtype = "upscale"
+        # print(params)
         try:
             print('=== upscale ===')
-            print(f'Method: {method}')
-            if(model is None):
-                model = "stabilityai/stable-diffusion-x4-upscaler"
-            if(steps == 0):
-                steps = 75
+            initimageparams = params.getInitImage()
+            if (initimageparams is None):
+                raise Exception("No init image provided")
 
-            controlimages = base64DecodeImages(controlimages)
             outputimages = []
-            for i in range(0, batch):
-                self.updateProgress(f"Running", batch, i)
-                if(method == "stable-diffusion"):
-                    outimage, seed = self.pipelines.upscale(initimage=controlimages[0], prompt=prompt, negprompt=negprompt, scheduler=scheduler, scale=scale, steps=steps, model=model)
-                elif(method.startswith("esrgan")):
-                    outimage = self.tools.upscaleEsrgan(controlimages[0], scale=amount, model=method.split('/')[1])
+            for i in range(0, params.batch):
+                self.updateProgress(f"Running", params.batch, i)
+                if(params.upscalemethod == "diffusers"):
+                    outimage, seed = self.pipelines.generate(params)
+                elif(params.upscalemethod == "esrgan"):
+                    outimage = self.tools.upscaleEsrgan(initimageparams.image, scale=params.upscaleamount, model=params.models[0].name)
                 else:
-                    outimage = self.tools.upscaleEsrgan(controlimages[0], scale=amount)
+                    outimage = self.tools.upscaleEsrgan(initimageparams.image, scale=params.upscaleamount)
                 outputimages.append({ "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"upscale", "images": outputimages }
@@ -282,15 +199,18 @@ class DiffusersView(FlaskView):
             raise e
         
 
-    def preprocessRun(self, controlimages, process, **kwargs):
+    def preprocessRun(self, data:bytes):
+        params = GenerationParameters.from_json(data)
+        # print(params)
         try:
             print('=== preprocess ===')
-            print(f'Process: {process}')
-
-            controlimages = base64DecodeImages(controlimages)
-            processor = str_to_class(process + 'Processor')()
+            processor = str_to_class(params.models[0].name + 'Processor')()
             
-            pipeline = ProcessingPipelineBuilder.fromImage(controlimages[0])
+            initimageparams = params.getInitImage()
+            if (initimageparams is None):
+                raise Exception("No init image provided")
+            
+            pipeline = ProcessingPipelineBuilder.fromImage(initimageparams.image)
             pipeline.addTask(processor)
             outimage = pipeline()
 
@@ -302,34 +222,26 @@ class DiffusersView(FlaskView):
             raise e
 
 
-    def prescaleBefore(self, images:List[Image.Image], prescale:float) -> List[Image.Image]:
-        if (float(prescale) > 1):
-            prescaledimages = []
-            for image in images:
-                image = self.tools.upscaleEsrgan(image, int(prescale), "remacri")
-                prescaledimages.append(image)
-            return prescaledimages
-        elif (float(prescale) < 1):
-            prescaledimages = []
-            for image in images:
-                image = image.resize((int(image.width * float(prescale)), int(image.height * float(prescale))), Image.LANCZOS)
-                prescaledimages.append(image)
-            return prescaledimages
-        else:
-            return images
+    def prescaleBefore(self, params:GenerationParameters):
+        if (float(params.prescale) > 1):
+            for controlimage in params.controlimages:
+                controlimage.image = self.tools.upscaleEsrgan(controlimage.image, int(params.prescale), "remacri")
+        elif (float(params.prescale) < 1):
+            for controlimage in params.controlimages:
+                controlimage.image = controlimage.image.resize((int(controlimage.image.width * float(params.prescale)), int(controlimage.image.height * float(params.prescale))), Image.LANCZOS)
         
 
-    def prescaleAfter(self, images:List[Image.Image], prescale:float) -> List[Image.Image]:
-        if (float(prescale) > 1):
+    def prescaleAfter(self, images:List[Image.Image], params:GenerationParameters) -> List[Image.Image]:
+        if (params.prescale > 1):
             prescaledimages = []
             for image in images:
-                image = image.resize((int(image.width / float(prescale)), int(image.height / float(prescale))), Image.LANCZOS)
+                image = image.resize((int(image.width / params.prescale), int(image.height / params.prescale)), Image.LANCZOS)
                 prescaledimages.append(image)
             return prescaledimages
-        elif (float(prescale) < 1):
+        elif (params.prescale < 1):
             prescaledimages = []
             for image in images:
-                image = self.tools.upscaleEsrgan(image, int(1 / float(prescale)), "remacri")
+                image = self.tools.upscaleEsrgan(image, int(1 / params.prescale), "remacri")
                 prescaledimages.append(image)
             return prescaledimages
         else:

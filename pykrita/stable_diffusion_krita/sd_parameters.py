@@ -1,8 +1,6 @@
 from typing import List
-from PIL import Image
-from dataclasses import dataclass, field
-from ..ImageUtils import base64DecodeImage
-import json, inspect
+from dataclasses import dataclass, fields, field, asdict
+import json
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
@@ -16,28 +14,23 @@ GENERATIONTYPE_UPSCALE = "upscale"
 GENERATIONTYPE_CONTROLNET_SUFFIX = "_controlnet"
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
 class ModelParameters:
     name:str
     weight:float = 1.0
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
 class ControlImageParameters:
-    image:Image.Image|None = None
     image64:str = ""
     type:str = IMAGETYPE_INITIMAGE
-    model:str|None = None
+    model:"str|None" = None
     condscale:float = 1.0
 
-    def __post_init__(self):
-        if(self.image64 is not None and self.image64 != ""):
-            self.image = base64DecodeImage(self.image64)
 
-
-@dataclass(unsafe_hash=True)
+@dataclass
 class GenerationParameters:
-    generationtype:str|None = None
+    generationtype:"str|None" = None
     batch:int = 1
     prescale:float = 1.0
     safetychecker:bool = True
@@ -48,33 +41,38 @@ class GenerationParameters:
     strength:float = 1.0
     width:int = 512
     height:int = 512
-    seed:int|None = None
+    seed:"int|None" = None
     scheduler:str = "DPMSolverMultistepScheduler"
     models:List[ModelParameters] = field(default_factory=list)
     tiling:bool = False
     controlimages:List[ControlImageParameters] = field(default_factory=list)
 
+    # Tiling parameters
+    tilemethod:str = "singlepass"
+    tilealignmentx:str = "tile_centre"
+    tilealignmenty:str = "tile_centre"
+    tilewidth:int = 512
+    tileheight:int = 512
+    tileoverlap:int = 0
+
+    # Upscale parameters
+    upscalemethod:str = "esrgan"
+    upscaleamount:int = 4
+
     @classmethod
-    def from_json(cls, jsonbytes:bytes):
+    def fromJson(cls, jsonbytes:bytes):
         dict = json.loads(jsonbytes)
+        return cls.fromDict(dict)
+    
+    @classmethod
+    def fromDict(cls, dict:dict):
         if("models" in dict):
             dict["models"] = [ModelParameters(**model) for model in dict["models"]]
         if("controlimages" in dict):
             dict["controlimages"] = [ControlImageParameters(**controlimage) for controlimage in dict["controlimages"]]
-        return cls.from_dict(dict)
+        return cls(**dict)
 
-    @classmethod
-    def from_dict(cls, dict:dict):
-        """ Create a GenerationParameters object from a dictionary, ignoring any keys that are not parameters of the class """
-        return cls(**{
-            k: v for k, v in dict.items() 
-            if k in inspect.signature(cls).parameters
-        })
-
-    def __post_init__(self):
-        self.original_prompt:str = self.prompt
-
-    def getImage(self, type:str) -> ControlImageParameters|None:
+    def getImage(self, type:str) -> "ControlImageParameters|None":
         for controlimage in self.controlimages:
             if(controlimage.type == type):
                 return controlimage
@@ -87,10 +85,10 @@ class GenerationParameters:
                 controlimages.append(controlimage)
         return controlimages
 
-    def getMaskImage(self) -> ControlImageParameters|None:
+    def getMaskImage(self) -> "ControlImageParameters|None":
         return self.getImage(IMAGETYPE_MASKIMAGE)
     
-    def getInitImage(self) -> ControlImageParameters|None:
+    def getInitImage(self) -> "ControlImageParameters|None":
         return self.getImage(IMAGETYPE_INITIMAGE)
     
     def getControlImages(self) -> List[ControlImageParameters]:
@@ -111,40 +109,39 @@ class GenerationParameters:
                 generationtype += GENERATIONTYPE_CONTROLNET_SUFFIX
             return generationtype
         
-    def setImage(self, image:Image.Image, type:str):
+    def setImage(self, image64:str, type:str):
         for controlimage in self.controlimages:
             if(controlimage.type == type):
-                controlimage.image = image
+                controlimage.image64 = image64
                 return
-        self.controlimages.append(ControlImageParameters(image=image, type=type))
+        self.controlimages.append(ControlImageParameters(image64=image64, type=type))
 
-    def setInitImage(self, image:Image.Image):
-        self.setImage(image, IMAGETYPE_INITIMAGE)
+    def setInitImage(self, image64:str):
+        self.setImage(image64, IMAGETYPE_INITIMAGE)
 
-    def setMaskImage(self, image:Image.Image):
-        self.setImage(image, IMAGETYPE_MASKIMAGE)
+    def setMaskImage(self, image64:str):
+        self.setImage(image64, IMAGETYPE_MASKIMAGE)
                 
-    def setControlImage(self, index:int, image:Image.Image):
+    def setControlImage(self, index:int, image64:str):
         for controlimage in self.controlimages:
             if(controlimage.type == IMAGETYPE_CONTROLIMAGE):
                 if(index == 0):
-                    controlimage.image = image
+                    controlimage.image64 = image64
                     return
                 index -= 1
         raise Exception("Control image index out of range")
+    
+    def toJson(self):
+        return json.dumps(self, cls=DataclassEncoder, indent=2)
+    
+    def copyValuesFrom(self, obj):
+        for field in fields(self):
+            if(hasattr(obj, field.name)):
+                setattr(self, field.name, getattr(obj, field.name))
 
 
-@dataclass
-class TiledGenerationParameters(GenerationParameters):
-    tilemethod:str = "singlepass"
-    tilealignmentx:str = "tile_centre"
-    tilealignmenty:str = "tile_centre"
-    tilewidth:int = 512
-    tileheight:int = 512
-    tileoverlap:int = 0
-
-
-@dataclass
-class UpscaleGenerationParameters(GenerationParameters):
-    upscalemethod:str = "esrgan"
-    upscaleamount:int = 4
+class DataclassEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (ModelParameters, ControlImageParameters, GenerationParameters)):
+            return asdict(obj)
+        return super().default(obj)
