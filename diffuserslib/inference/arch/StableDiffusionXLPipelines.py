@@ -13,23 +13,58 @@ from diffusers import ( # Pipelines
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler)
 from compel import Compel, ReturnedEmbeddingsType
+import torch
 
 
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
         super().__init__(cls=cls, preset=preset, params=params, device=device, **kwargs)
 
-    def diffusers_inference(self, prompt, seed, scheduler=None, tiling=False, **kwargs):
+    def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
 
-        compel = Compel(tokenizer=[self.pipeline.tokenizer, self.pipeline.tokenizer_2] , text_encoder=[self.pipeline.text_encoder, self.pipeline.text_encoder_2], 
-                        returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED, requires_pooled=[False, True])
-        conditioning, pooled = compel(prompt)
+        if "|" in prompt:
+            prompt1, prompt2 = prompt.split("|")
+        else:
+            prompt1 = prompt
+            prompt2 = prompt
 
-        image = self.pipeline(prompt_embeds=conditioning, pooled_prompt_embeds=pooled, generator=generator, **kwargs).images[0]
+        if "|" in negative_prompt:
+            negative_prompt1, negative_prompt2 = negative_prompt.split("|")
+        else:
+            negative_prompt1 = negative_prompt
+            negative_prompt2 = negative_prompt
+
+        compel1 = Compel(
+            tokenizer=self.pipeline.tokenizer,
+            text_encoder=self.pipeline.text_encoder,
+            returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,
+            requires_pooled=False,
+        )
+
+        compel2 = Compel(
+            tokenizer=self.pipeline.tokenizer_2,
+            text_encoder=self.pipeline.text_encoder_2,
+            returned_embeddings_type=ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED,
+            requires_pooled=True,
+        )
+
+        conditioning1 = compel1(prompt1)
+        conditioning2, pooled = compel2(prompt2)
+        conditioning = torch.cat((conditioning1, conditioning2), dim=-1)
+
+        negative_conditioning1 = compel1(negative_prompt1)
+        negative_conditioning2, negative_pooled = compel2(negative_prompt2)
+        negative_conditioning = torch.cat((negative_conditioning1, negative_conditioning2), dim=-1)
+
+        image = self.pipeline(prompt_embeds=conditioning,
+                              pooled_prompt_embeds=pooled,
+                              negative_prompt_embeds=negative_conditioning,
+                              negative_pooled_prompt_embeds=negative_pooled,
+                              generator=generator, **kwargs).images[0]
         return image, seed
 
 
