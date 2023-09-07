@@ -412,14 +412,14 @@ class BatchNotebookInterface:
         return batch
     
 
-    def generate(self, prompt, negprompt, width, height, scale, scheduler, seed, model, strength, initimage=None, controlimage=None, controlmodel=None, **kwargs):
+    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, model, strength, initimage=None, controlimage=None, controlmodel=None, **kwargs):
         controlimageparams = []
         if(initimage is not None):
             controlimageparams.append(ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE))
         if(controlimage is not None and controlmodel is not None):
             for i in range(0, len(controlimage)):
                 controlimageparams.append(ControlImageParameters(image=controlimage[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodel[i]))
-        params = GenerationParameters(prompt=prompt, negprompt=negprompt, width=width, height=height, cfgscale=scale, strength=strength, scheduler=scheduler, seed=seed, 
+        params = GenerationParameters(prompt=prompt, negprompt=negprompt, width=width, height=height, steps=steps, cfgscale=scale, strength=strength, scheduler=scheduler, seed=seed, 
                                       models=[ModelParameters(name=model)], controlimages=controlimageparams)
         return self.pipelines.generate(params)
 
