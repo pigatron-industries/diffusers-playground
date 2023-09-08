@@ -52,7 +52,6 @@ class DiffusersPipelines:
             self.common_modifierdict = common_modifierdict
         self.custom_pipeline = custom_pipeline
         self.cache_dir = cache_dir
-        self.lora_use = []
 
         self.pipeline: DiffusersPipelineWrapper|None = None
 
@@ -135,26 +134,20 @@ class DiffusersPipelines:
         baseModelData.loras[lora_path] = lora
 
 
-    def useLORAs(self, lora_use = []):
-        if (set(lora_use) != set(self.lora_use)):
-            self.lora_use = lora_use
-            self.pipeline = None
-
-
     def getLORAList(self, model):
         base = self.getModel(model).base
         return list(self.getBaseModelData(base).loras.keys())
 
 
-    def _addLORAsToPipeline(self, pipeline: DiffusersPipelineWrapper):
-        for lora_use in self.lora_use:
-            self._addLORAToPipeline(pipeline, lora_use.name, lora_use.weight)
+    def _addLORAsToPipeline(self, params:GenerationParameters):
+        for loraparams in params.loras:
+            self._addLORAToPipeline(loraparams.name, loraparams.weight)
 
 
-    def _addLORAToPipeline(self, pipeline: DiffusersPipelineWrapper, lora_name, weight=1):
-        if (pipeline.preset.base in self.baseModelData and lora_name in self.baseModelData[pipeline.preset.base].loras):
+    def _addLORAToPipeline(self, lora_name, weight:float=1.0):
+        if (self.pipeline.preset.base in self.baseModelData and lora_name in self.baseModelData[self.pipeline.preset.base].loras):
             print(f"Loading LORA {lora_name}")
-            self.baseModelData[pipeline.preset.base].loras[lora_name].add_to_model(pipeline.pipeline, weight=weight, device=self.device)
+            self.baseModelData[self.pipeline.preset.base].loras[lora_name].add_to_model(self.pipeline, weight=weight, device=self.device)
 
     #=============== MODEL MERGING ==============
 
@@ -220,7 +213,7 @@ class DiffusersPipelines:
         if(len(params.models) > 1):
             for modelparams in params.models[1:]:
                 self.mergeModel(modelparams.name, modelparams.weight)
-        self._addLORAsToPipeline(pipelineWrapper)  # TODO add these to generation params
+        self._addLORAsToPipeline(params)
         return self.pipeline
 
 

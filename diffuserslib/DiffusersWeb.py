@@ -113,7 +113,7 @@ class DiffusersView(FlaskView):
         params = GenerationParameters.from_json(data)
         # print(params)
         try:
-            print('=== generate ===')
+            print('=== inpaint ===')
             initimageparams = params.getInitImage()
             if (initimageparams is None):
                 raise Exception("No init image provided")

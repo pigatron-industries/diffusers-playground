@@ -6,17 +6,6 @@ import os
 LORA_PREFIX_UNET = 'lora_unet'
 LORA_PREFIX_TEXT_ENCODER = 'lora_te'
 
-class LORAUse:
-    def __init__(self, name, weight):
-        self.name = name
-        self.weight = weight
-
-    def __hash__(self):
-        return hash(self.name + str(self.weight))
-
-    def __eq__(self,other):
-        return self.name == other.name and self.weight== other.weight
-
 
 class LORA:
     def __init__(self, name, path):

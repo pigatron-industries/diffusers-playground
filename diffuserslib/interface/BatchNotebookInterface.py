@@ -1,7 +1,7 @@
 from ..batch import BatchRunner
 from ..batch.argument import RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
-from ..inference import DiffusersPipelines, LORAUse
-from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
+from ..inference import DiffusersPipelines
+from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, LoraParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ..processing import *
 from ..processing.ProcessingPipeline import ImageProcessorPipeline
 from ..processing.processors.FilterProcessors import *
@@ -263,6 +263,12 @@ class BatchNotebookInterface:
                 break
             params[f'lora{i}_lora'] = lora_w.lora_dropdown.value
             params[f'lora{i}_loraweight'] = lora_w.loraweight_text.value
+            if('loranames' not in params):
+                params['loranames'] = []
+            if('loraweights' not in params):
+                params['loraweights'] = []
+            params['loranames'].append(lora_w.lora_dropdown.value)
+            params['loraweights'].append(lora_w.loraweight_text.value)
 
         params['strength'] = self.strength_slider.value
         params['steps'] = self.steps_slider.value
@@ -400,27 +406,26 @@ class BatchNotebookInterface:
 
 
     def creatBatch(self, params):
-         # TOOD add lora to params object
-        loras = []
-        for i, lora_w in enumerate(self.lora_widgets):
-            if(i >= self.lora_num.value):
-                break
-            loras.append(LORAUse(params[f'lora{i}_lora'], params[f'lora{i}_loraweight']))
-        self.pipelines.useLORAs(loras)
-
         batch = BatchRunner(self.generate, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
         return batch
     
 
-    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, model, strength, initimage=None, controlimage=None, controlmodel=None, **kwargs):
+    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, model, strength, initimage=None, controlimage=None, controlmodel=None, 
+                 loranames=None, loraweights=None, **kwargs):
         controlimageparams = []
         if(initimage is not None):
             controlimageparams.append(ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE))
         if(controlimage is not None and controlmodel is not None):
             for i in range(0, len(controlimage)):
                 controlimageparams.append(ControlImageParameters(image=controlimage[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodel[i]))
+
+        loraparams = []
+        if(loranames is not None and loraweights is not None):
+            for i in range(0, len(loranames)):
+                loraparams.append(LoraParameters(name=loranames[i], weight=loraweights[i]))
+
         params = GenerationParameters(prompt=prompt, negprompt=negprompt, width=width, height=height, steps=steps, cfgscale=scale, strength=strength, scheduler=scheduler, seed=seed, 
-                                      models=[ModelParameters(name=model)], controlimages=controlimageparams)
+                                      models=[ModelParameters(name=model)], loras=loraparams, controlimages=controlimageparams)
         return self.pipelines.generate(params)
 
 
