@@ -147,7 +147,7 @@ class DiffusersPipelines:
     def _addLORAToPipeline(self, lora_name, weight:float=1.0):
         if (self.pipeline.preset.base in self.baseModelData and lora_name in self.baseModelData[self.pipeline.preset.base].loras):
             print(f"Loading LORA {lora_name}")
-            self.baseModelData[self.pipeline.preset.base].loras[lora_name].add_to_model(self.pipeline, weight=weight, device=self.device)
+            self.baseModelData[self.pipeline.preset.base].loras[lora_name].add_to_model(self.pipeline.pipeline, weight=weight, device=self.device)
 
     #=============== MODEL MERGING ==============
 
