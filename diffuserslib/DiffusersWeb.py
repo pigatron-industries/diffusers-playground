@@ -50,6 +50,13 @@ class DiffusersView(FlaskView):
                 presets = self.pipelines.presets.getModelsByType("txt2img")
         models = [model.toDict() for model in presets.values()]
         return jsonify(models)
+    
+
+    @route("/api/loras", methods=["GET"])
+    def loras(self):
+        if("model" in request.args):
+            loranames = self.pipelines.getLORAList(request.args["model"])
+            return jsonify(loranames)
 
 
     @route("/api/async", methods=["GET"])
