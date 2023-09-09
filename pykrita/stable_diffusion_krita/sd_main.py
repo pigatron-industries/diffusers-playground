@@ -212,10 +212,10 @@ class ModifierDialog(QDialog):
 
 
 dialogfields = {
-    'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'batch', 'scheduler'],
-    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale'],
+    'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'batch', 'scheduler', 'lora'],
+    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
     'upscale':         ['prompt', 'model', 'upscale_amount', 'scale', 'scheduler', 'image'],
-    'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'strength', 'seed', 'batch', 'image', 'scheduler', 'prescale'],
+    'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'strength', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
     'generateTiled':   ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image'],
     'imagevariation':  ['steps', 'seed', 'scale', 'batch', 'image', 'scheduler'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler'],
@@ -240,10 +240,10 @@ class SDDialog(QDialog):
         formLayout= QVBoxLayout()
         self.layout.addLayout(formLayout)
 
-        actionfields = dialogfields[action]
+        self.actionfields = dialogfields[action]
         modeltype = action
 
-        if('prompt' in actionfields):
+        if('prompt' in self.actionfields):
             formLayout.addWidget(QLabel("Prompt"))
             self.prompt = QPlainTextEdit()
             self.prompt.setPlainText(self.config.params.prompt)
@@ -251,13 +251,13 @@ class SDDialog(QDialog):
             self.modifiers= ModifierDialog.modifierInput(self, formLayout)
             self.modifiers.setPlainText(self.config.params.modifiers)
 
-        if('negprompt' in actionfields):
+        if('negprompt' in self.actionfields):
             formLayout.addWidget(QLabel("Negative"))
             self.negprompt = QLineEdit()
             self.negprompt.setText(self.config.params.negprompt)
             formLayout.addWidget(self.negprompt) 
 
-        if('tile_method' in actionfields):
+        if('tile_method' in self.actionfields):
             tilemethod_label = QLabel("Tile method")
             formLayout.addWidget(tilemethod_label)
             self.tile_method = QComboBox()
@@ -271,7 +271,7 @@ class SDDialog(QDialog):
             self.tile_method.currentIndexChanged.connect(self.tileMethodChanged)
             formLayout.addWidget(self.tile_method)
 
-        if('model' in actionfields):
+        if('model' in self.actionfields):
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
             models = getModels(modeltype)
@@ -282,14 +282,28 @@ class SDDialog(QDialog):
                 self.model.setCurrentText(self.config.params.modelPreprocess)
             else:
                 self.model.setCurrentText(self.config.params.modelGeneration)
+            self.model.currentIndexChanged.connect(self.modelChanged)
             formLayout.addWidget(self.model)
 
-        if('upscale_amount' in actionfields):
+        if('lora' in self.actionfields):
+            formLayout.addWidget(QLabel("LORA"))
+            self.lora = QComboBox()
+            loras = getLORAs(self.model.currentText())
+            self.lora.addItems([""] + loras)
+            formLayout.addWidget(self.lora)
+            self.loraweight_label = QLabel("LORA Weight:")
+            formLayout.addWidget(self.loraweight_label)
+            self.loraweight, _ = self.addSlider(formLayout,100,-200,200,1,100)
+            if(self.config.params.loras and len(self.config.params.loras) > 0):
+                self.lora.setCurrentText(self.config.params.loras[0].name)
+                self.loraweight.setValue(self.config.params.loras[0].weight*100)
+
+        if('upscale_amount' in self.actionfields):
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
             self.upscale_amount, _ = self.addSlider(formLayout, self.config.params.upscaleamount, 2,4,1,1)
 
-        if('tile_method' in actionfields):
+        if('tile_method' in self.actionfields):
             tilewidth_label = QLabel("Tile width")
             formLayout.addWidget(tilewidth_label)
             self.tile_width=createSlider(self, formLayout, self.config.params.tilewidth, 256, 1024, 64, 1)
@@ -314,23 +328,23 @@ class SDDialog(QDialog):
             self.tile_alignmenty.setCurrentText(self.config.params.tilealignmenty)
             formLayout.addWidget(self.tile_alignmenty)
 
-        if('strength' in actionfields):
+        if('strength' in self.actionfields):
             self.strength_label = QLabel("Strength")
             formLayout.addWidget(self.strength_label)
             self.strength, self.strength_value = self.addSlider(formLayout,self.config.params.strength*100,0,100,1,100)
 
-        if('steps' in actionfields):
+        if('steps' in self.actionfields):
             self.steps_label=QLabel("Steps")
             formLayout.addWidget(self.steps_label)        
             self.steps, self.steps_value = self.addSlider(formLayout,self.config.params.steps,1,250,5,1)
 
-        if('scale' in actionfields):
+        if('scale' in self.actionfields):
             scale_label=QLabel("Guidance Scale")
             scale_label.setToolTip("how strongly the image should follow the prompt")
             formLayout.addWidget(scale_label)        
             self.scale, _ = self.addSlider(formLayout,self.config.params.cfgscale*10,10,300,5,10)
      
-        if('seed' in actionfields):
+        if('seed' in self.actionfields):
             seed_label=QLabel("Seed (empty=random)")
             seed_label.setToolTip("same seed and same prompt = same image")
             formLayout.addWidget(seed_label)      
@@ -338,11 +352,11 @@ class SDDialog(QDialog):
             self.seed.setText(self.config.params.seed)
             formLayout.addWidget(self.seed)
 
-        if('batch' in actionfields):
+        if('batch' in self.actionfields):
             formLayout.addWidget(QLabel("Number images"))        
             self.batch, _ = self.addSlider(formLayout, self.config.params.batch,1,4,1,1)
    
-        if('scheduler' in actionfields):
+        if('scheduler' in self.actionfields):
             scheduler_label=QLabel("Scheduler")
             formLayout.addWidget(scheduler_label)           
             self.scheduler = QComboBox()
@@ -360,7 +374,7 @@ class SDDialog(QDialog):
             self.scheduler.setCurrentText(self.config.params.scheduler)
             formLayout.addWidget(self.scheduler)
 
-        if('prescale' in actionfields):
+        if('prescale' in self.actionfields):
             prescale_label = QLabel("Prescale")
             formLayout.addWidget(prescale_label)  
             self.prescale = QComboBox()
@@ -371,7 +385,7 @@ class SDDialog(QDialog):
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
 
-        if('image' in actionfields):
+        if('image' in self.actionfields):
             control_models = getModels("control")
             self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
             self.control_model_dropdowns = []
@@ -390,9 +404,16 @@ class SDDialog(QDialog):
         else:
             modeltype = 'inpaint'
         models = getModels(modeltype)
-        # update itesm in model dropdown
+        # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
+
+
+    def modelChanged(self, index):
+        if('lora' in self.actionfields):
+            loras = getLORAs(self.model.currentText())
+            self.lora.clear()
+            self.lora.addItems([""] + loras)
 
 
     def addImageTab(self, tabs, image, i):
@@ -447,16 +468,16 @@ class SDDialog(QDialog):
         slider.setSingleStep(steps)
         slider.setPageStep(steps)
         slider.setTickInterval
-        label = QLabel(str(value), self)
+        valuelabel = QLabel(str(value), self)
         h_layout.addWidget(slider, stretch=9)
-        h_layout.addWidget(label, stretch=1)
+        h_layout.addWidget(valuelabel, stretch=1)
         if (divider!=1):
-            slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or label.setText( str(slider.value()/divider)))
+            slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or valuelabel.setText( str(slider.value()/divider)))
         else:
-            slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or label.setText( str(slider.value())))
+            slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or valuelabel.setText( str(slider.value())))
         slider.setValue(int(value))
         layout.addLayout(h_layout)
-        return slider, label
+        return slider, valuelabel
         
     # put data from dialog in configuration and save it
     def saveParams(self):
@@ -494,6 +515,9 @@ class SDDialog(QDialog):
             else:
                 self.config.params.modelGeneration = self.model.currentText()
                 genParams.models = [ModelParameters(name=self.model.currentText())]
+        if('lora' in actionfields):
+            self.config.params.loras = [LoraParameters(name=self.lora.currentText(), weight=self.loraweight.value()/100)]
+            genParams.loras = [LoraParameters(name=self.lora.currentText(), weight=self.loraweight.value()/100)]
         if('batch' in actionfields):
             self.config.params.batch = int(self.batch.value())
             genParams.batch = int(self.batch.value())
@@ -727,6 +751,22 @@ def getModels(type) -> List[str]:
     modelids = [model["modelid"] for model in models]
     modelids.sort()
     return modelids
+
+
+def getLORAs(model) -> List[str]:
+    config = SDConfig()
+    endpoint=config.url
+    endpoint=endpoint.strip("/")
+    endpoint+=f"/api/loras?model={model}"
+    headers = {
+        "Accept": "application/json",
+    } 
+    req = urllib.request.Request(endpoint, None, headers, method="GET")
+    with urllib.request.urlopen(req) as f:
+        res = f.read()
+    loranames = json.loads(res)
+    loranames.sort()
+    return loranames
 
 
 def runSD(params:GenerationParameters, asynchronous=True):

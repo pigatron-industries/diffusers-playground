@@ -29,6 +29,12 @@ class ControlImageParameters:
 
 
 @dataclass
+class LoraParameters:
+    name:str
+    weight:float = 1.0
+
+
+@dataclass
 class GenerationParameters:
     generationtype:"str|None" = None
     batch:int = 1
@@ -44,6 +50,7 @@ class GenerationParameters:
     seed:"int|None" = None
     scheduler:str = "DPMSolverMultistepScheduler"
     models:List[ModelParameters] = field(default_factory=list)
+    loras:List[LoraParameters] = field(default_factory=list)
     tiling:bool = False
     controlimages:List[ControlImageParameters] = field(default_factory=list)
 
@@ -70,6 +77,8 @@ class GenerationParameters:
             dict["models"] = [ModelParameters(**model) for model in dict["models"]]
         if("controlimages" in dict):
             dict["controlimages"] = [ControlImageParameters(**controlimage) for controlimage in dict["controlimages"]]
+        if("loras" in dict):
+            dict["loras"] = [LoraParameters(**lora) for lora in dict["loras"]]
         return cls(**dict)
 
     def getImage(self, type:str) -> "ControlImageParameters|None":
