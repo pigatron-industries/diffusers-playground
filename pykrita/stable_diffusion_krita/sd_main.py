@@ -301,7 +301,7 @@ class SDDialog(QDialog):
         if('upscale_amount' in self.actionfields):
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
-            self.upscale_amount, _ = self.addSlider(formLayout, self.config.params.upscaleamount, 2,4,1,1)
+            self.upscale_amount, _ = self.addSlider(formLayout, self.config.params.upscaleamount, 1,4,1,1)
 
         if('tile_method' in self.actionfields):
             tilewidth_label = QLabel("Tile width")
@@ -725,9 +725,10 @@ def getModels(type) -> List[str]:
     config = SDConfig()
     # TODO build into models endpoint
     if(type == "upscale"):
-        return ["esrgan/remacri", 
-                "esrgan/lollipop", 
-                "esrgan/ultrasharp"]
+        return ["esrgan/4x_remacri", 
+                "esrgan/4x_lollipop", 
+                "esrgan/4x_ultrasharp", 
+                "esrgan/1x_mdeblur"]
     if(type == "preprocess"):
         return ['DepthEstimation',
                 'NormalEstimation',

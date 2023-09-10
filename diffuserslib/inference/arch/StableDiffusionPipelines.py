@@ -15,6 +15,7 @@ from diffusers import ( # Pipelines
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler)
+from transformers import CLIPTextModel
 import torch
 import sys
 import numpy as np
@@ -38,14 +39,14 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
-        # Allow custom pipeline to be specified by name
-        # if (isinstance(cls, str)):
-        #     args['custom_pipeline'] = cls
-        #     cls = DiffusionPipeline
         if (preset.modelpath.endswith('.safetensors') or preset.modelpath.endswith('.ckpt')):
             self.pipeline = cls.from_single_file(preset.modelpath, load_safety_checker=self.safety_checker, **args).to(self.device)
         else:
+            # CLIP skip implementation, but breaks lora loading
+            # text_encoder = CLIPTextModel.from_pretrained(preset.modelpath, subfolder="text_encoder", num_hidden_layers=11)
+            # self.pipeline = cls.from_pretrained(preset.modelpath, text_encoder=text_encoder, **args).to(self.device)
             self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+            
         self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
         # pipeline.enable_xformers_memory_efficient_attention()

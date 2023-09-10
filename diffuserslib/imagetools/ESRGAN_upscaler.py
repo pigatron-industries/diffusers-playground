@@ -13,8 +13,12 @@ class ESRGANUpscaler():
     def __init__(self, model_path, device='cuda'):
         self.device = device
         self.model = load_model(model_path, device)
+        self.scale = int(os.path.basename(model_path).split('x')[0])
 
-    def upscale(self, inputimage, scale=4):
+
+    def upscale(self, inputimage, scale=None):
+        if(scale is None):
+            scale = self.scale
         img = np.array(inputimage)
         img = img[:, :, ::-1]
         img = np.ascontiguousarray(np.transpose(img, (2, 0, 1))) / 255
@@ -27,13 +31,14 @@ class ESRGANUpscaler():
         output = output.astype(np.uint8)
         output = output[:, :, ::-1]
         outimage = Image.fromarray(output, 'RGB')
-        if (scale != 4):
+        if (scale != self.scale):
             outimage = outimage.resize((inputimage.width*scale, inputimage.height*scale))
         return outimage
     
+
     def upscaleTiled(self, img, scale=4, tilewidth=768, tileheight=768, overlap=64):
         # return img
-        return tiledImageProcessor(partial(self.upscale, scale=scale), img, scale=scale,  tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, reduceEdges=True)
+        return tiledImageProcessor(partial(self.upscale, scale=scale), img, scale=scale, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, reduceEdges=True)
 
 
     def __call__(self, img):

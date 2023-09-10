@@ -38,13 +38,10 @@ class ImageTools():
         addToolPath("nafnet")
 
 
-    def upscaleEsrgan(self, inimage, scale=4, model="remacri", tilewidth=512+64, tileheight=512+64, overlap=64):
+    def upscaleEsrgan(self, inimage, scale=4, model="4x_remacri", tilewidth=512+64, tileheight=512+64, overlap=64):
         chdirRootDirectory()
-        upscaler = ESRGANUpscaler(f'models/esrgan/4x_{model}.pth', device=self.device)
+        upscaler = ESRGANUpscaler(f'models/esrgan/{model}.pth', device=self.device)
         outimage = upscaler.upscaleTiled(inimage, scale=scale, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap)
-        # outimage = upscaler.upscale(inimage)
-        if (scale != 4):
-            outimage = outimage.resize((inimage.width*scale, inimage.height*scale))
         return outimage
 
 
