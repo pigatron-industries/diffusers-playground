@@ -12,7 +12,7 @@ class KandinskyPipelineWrapper(DiffusersPipelineWrapper):
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset, inferencedevice)
+        super().__init__(preset, params, inferencedevice)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)

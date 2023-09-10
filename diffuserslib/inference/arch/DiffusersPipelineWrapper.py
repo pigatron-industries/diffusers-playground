@@ -12,8 +12,9 @@ MAX_SEED = 4294967295
 
 
 class DiffusersPipelineWrapper:
-    def __init__(self, preset:DiffusersModel, inferencedevice:str):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, inferencedevice:str):
         self.preset = preset
+        self.params = params
         self.inferencedevice = inferencedevice
 
     def inference(self, params:GenerationParameters) -> Tuple[Image.Image, int]: # type: ignore
@@ -24,6 +25,24 @@ class DiffusersPipelineWrapper:
             seed = random.randint(0, MAX_SEED)
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
     
-    def isEqual(self, cls, modelid, **kwargs):
-        # print("isEqual", cls, modelid, self.preset.modelid)
-        return cls == self.__class__ and self.preset.modelid == modelid
+    def paramsMatch(self, params:GenerationParameters) -> bool:
+        match = (self.params.getGenerationType() == self.params.getGenerationType() and 
+                 len(self.params.models) == len(params.models) and
+                 len(self.params.loras) == len(params.loras) and
+                 len(self.params.controlimages) == len(params.controlimages))
+        if(not match):
+           return False
+
+        for i in range(len(self.params.models)):
+            if(self.params.models[i].name != params.models[i].name or self.params.models[i].weight != params.models[i].weight):
+                return False
+
+        for i in range(len(self.params.loras)):
+            if(self.params.loras[i].name != params.loras[i].name or self.params.loras[i].weight != params.loras[i].weight):
+                return False
+            
+        for i in range(len(self.params.controlimages)):
+            if(self.params.controlimages[i].type != params.controlimages[i].type):
+                return False
+            
+        return True

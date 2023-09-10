@@ -196,7 +196,8 @@ class DiffusersPipelines:
     #=============== LOAD PIPELINES ==============
 
     def createPipeline(self, params:GenerationParameters):
-        # TODO check if pipline is already created based on params
+        if(self.pipeline is not None and self.pipeline.paramsMatch(params)):
+            return self.pipeline
 
         print(f"Creating {params.getGenerationType()} pipeline from model {params.models[0].name}")
         if (self.pipeline is not None):
