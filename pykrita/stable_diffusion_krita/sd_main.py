@@ -728,7 +728,8 @@ def getModels(type) -> List[str]:
         return ["esrgan/4x_remacri", 
                 "esrgan/4x_lollipop", 
                 "esrgan/4x_ultrasharp", 
-                "esrgan/1x_mdeblur"]
+                "esrgan/1x_ReFocus-V3",
+                "esrgan/1x_ITF-SkinDiffDetail-Lite-v1",]
     if(type == "preprocess"):
         return ['DepthEstimation',
                 'NormalEstimation',

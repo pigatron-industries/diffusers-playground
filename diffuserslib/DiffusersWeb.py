@@ -248,7 +248,7 @@ class DiffusersView(FlaskView):
         elif (params.prescale < 1):
             prescaledimages = []
             for image in images:
-                image = self.tools.upscaleEsrgan(image, int(1 / params.prescale), "remacri")
+                image = self.tools.upscaleEsrgan(image, int(1 / params.prescale), "4x_remacri")
                 prescaledimages.append(image)
             return prescaledimages
         else:
