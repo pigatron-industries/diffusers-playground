@@ -48,6 +48,7 @@ def tiledInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, tile
         tileparams = copy.deepcopy(params)
         tileparams.setInitImage(initimagetile)
         tileparams.setMaskImage(masktile)
+        tileparams.generationtype = "inpaint"
         for i in range(len(controlimagetiles)):
             tileparams.setControlImage(i, controlimagetiles[i])
         image, _ = pipelines.generate(tileparams)
