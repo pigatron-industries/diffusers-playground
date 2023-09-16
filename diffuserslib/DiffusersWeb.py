@@ -232,7 +232,7 @@ class DiffusersView(FlaskView):
     def prescaleBefore(self, params:GenerationParameters):
         if (float(params.prescale) > 1):
             for controlimage in params.controlimages:
-                controlimage.image = self.tools.upscaleEsrgan(controlimage.image, int(params.prescale), "remacri")
+                controlimage.image = self.tools.upscaleEsrgan(controlimage.image, int(params.prescale), "4x_remacri")
         elif (float(params.prescale) < 1):
             for controlimage in params.controlimages:
                 controlimage.image = controlimage.image.resize((int(controlimage.image.width * float(params.prescale)), int(controlimage.image.height * float(params.prescale))), Image.LANCZOS)
