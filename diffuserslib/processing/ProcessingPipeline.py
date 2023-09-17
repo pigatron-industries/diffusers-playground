@@ -55,6 +55,7 @@ class ImageProcessorPipeline():
         initargs = evaluateArguments(self.initargs)
         self.context = ImageContext(size=initargs["size"], oversize=self.oversize)
         for task in self.tasks:
+            print(task)
             task(self.context)
         return self.context.getViewportImage()
     

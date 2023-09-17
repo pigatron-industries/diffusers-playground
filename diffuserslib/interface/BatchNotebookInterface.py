@@ -33,7 +33,7 @@ DEFAULT_PREPROCESSORS = {
     'normal estimation': NormalEstimationProcessor,
     'segmentation': SegmentationProcessor,
     'content shuffle': ContentShuffleProcessor,
-    'monochrome': partial(SaturationProcessor, saturation=0),
+    'monochrome': partial(SaturationProcessor, saturation=-1),
     'blur': partial(GaussianBlurProcessor, radius=2),
     'noise': partial(GaussianNoiseProcessor, sigma=10),
 }
@@ -405,7 +405,7 @@ class BatchNotebookInterface:
             self.refine(outputItem.image, outputItem.args, outputItem.preserveprompt_checkbox.value, outputItem.preservecontrol_checkbox.value)
 
 
-    def creatBatch(self, params):
+    def createBatch(self, params):
         batch = BatchRunner(self.generate, self.output_dir, self.startGenerationCallback, self.endGenerationCallback)
         return batch
     
@@ -431,7 +431,7 @@ class BatchNotebookInterface:
 
     def run(self):
         params = self.saveParams()
-        batch = self.creatBatch(params)
+        batch = self.createBatch(params)
         batch.appendBatchArguments(params, params['batch'])
         batch.run()
 
@@ -449,7 +449,7 @@ class BatchNotebookInterface:
             del params['controlimage']
             del params['controlmodel']
 
-        batch = self.creatBatch(params)
+        batch = self.createBatch(params)
         batch.appendBatchArguments(params, params['batch'])
         # self.batchQueue.append(batch)
         batch.run()
