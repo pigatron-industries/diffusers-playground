@@ -122,6 +122,7 @@ class DiffusersView(FlaskView):
         try:
             print('=== inpaint ===')
             initimageparams = params.getInitImage()
+            initimage = initimageparams.image
             if (initimageparams is None):
                 raise Exception("No init image provided")
             if (params.getMaskImage() is None):
@@ -134,10 +135,13 @@ class DiffusersView(FlaskView):
             for i in range(0, params.batch):
                 self.updateProgress(f"Running", params.batch, i)
 
-                outimage, usedseed = self.pipelines.generate(params)
+                outimage, usedseed = compositedInpaint(self.pipelines, params)
 
                 display(outimage)
                 outimage = self.prescaleAfter([outimage], params)[0]
+
+                # outimage = applyColourCorrection(initimage, outimage)
+
                 outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
 
             self.job.status = { "status":"finished", "action":"generate", "images": outputimages }
