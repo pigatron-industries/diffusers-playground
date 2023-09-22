@@ -220,9 +220,9 @@ class BatchNotebookInterface:
         params = OrderedDict()
 
         if(self.mergemodel_dropdown.value is None):
-            params['model'] = self.model_dropdown.value
+            params['models'] = [self.model_dropdown.value]
         else:
-            params['model'] = [self.model_dropdown.value, self.mergemodel_dropdown.value]
+            params['models'] = [self.model_dropdown.value, self.mergemodel_dropdown.value]
         params['model_weight'] = self.mergeweight_slider.value
         params['init_prompt'] = self.prompt_text.value
         params['shuffle'] = self.shuffle_checkbox.value
@@ -291,12 +291,10 @@ class BatchNotebookInterface:
                 initimage_w.input_select_dropdown.value = params.get(f'initimage{i}_input_select', None)
                 initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
 
-            model = params.get('model', None)
-            if(isinstance(model, list)):
-                self.model_dropdown.value = model[0]
+            model = params.get('models', None)
+            self.model_dropdown.value = model[0]
+            if (len(model) > 1):
                 self.mergemodel_dropdown.value = model[1]
-            else:
-                self.model_dropdown.value = model
             self.mergeweight_slider.value = params.get('model_weight', 1)
 
             self.lora_num.value = params.get('lora_num', 0)
@@ -410,8 +408,8 @@ class BatchNotebookInterface:
         return batch
     
 
-    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, model, strength, initimage=None, controlimage=None, controlmodel=None, 
-                 loranames=None, loraweights=None, **kwargs):
+    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, models, strength, initimage=None, controlimage=None, controlmodel=None, 
+                 loranames=None, loraweights=None, model_weight=1.0, **kwargs):
         controlimageparams = []
         if(initimage is not None):
             controlimageparams.append(ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE))
@@ -424,8 +422,12 @@ class BatchNotebookInterface:
             for i in range(0, len(loranames)):
                 loraparams.append(LoraParameters(name=loranames[i], weight=loraweights[i]))
 
+        modelparams = [ModelParameters(name=models[0], weight=1.0)]
+        if(len(models) > 1):
+            modelparams.append(ModelParameters(name=models[1], weight=model_weight))
+
         params = GenerationParameters(prompt=prompt, negprompt=negprompt, width=width, height=height, steps=steps, cfgscale=scale, strength=strength, scheduler=scheduler, seed=seed, 
-                                      models=[ModelParameters(name=model)], loras=loraparams, controlimages=controlimageparams)
+                                      models=modelparams, loras=loraparams, controlimages=controlimageparams)
         return self.pipelines.generate(params)
 
 

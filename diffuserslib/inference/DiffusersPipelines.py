@@ -151,9 +151,10 @@ class DiffusersPipelines:
 
     #=============== MODEL MERGING ==============
 
-    def mergeModel(self, modelid:str, weight:float=0.5):
+    def mergeModel(self, modelid:str, weight:float, params:GenerationParameters):
+        print(f"Merging model {modelid}")
         preset = self.getModel(modelid)
-        mergePipeline = self.pipeline.__class__(preset=preset, device=self.device, safety_checker=self.safety_checker)
+        mergePipeline = self.pipeline.__class__(preset=preset, device=self.device, params=params)
         for moduleName in self.pipeline.pipeline.config.keys():
             module1 = getattr(self.pipeline.pipeline, moduleName)
             module2 = getattr(mergePipeline.pipeline, moduleName)
@@ -213,7 +214,7 @@ class DiffusersPipelines:
         
         if(len(params.models) > 1):
             for modelparams in params.models[1:]:
-                self.mergeModel(modelparams.name, modelparams.weight)
+                self.mergeModel(modelparams.name, modelparams.weight, params)
         self._addLORAsToPipeline(params)
         return self.pipeline
 
