@@ -9,6 +9,7 @@ class DiffusersBaseModel:
     sd_1_5 = 'sd_1_5'
     sd_2_0 = 'sd_2_0'
     sd_2_1 = 'sd_2_1'
+    sdxl_1_0 = 'sdxl_1_0'
 
 
 class DiffusersPipelineType:

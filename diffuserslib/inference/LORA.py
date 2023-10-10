@@ -3,9 +3,6 @@ from collections import defaultdict
 import torch
 import os
 
-LORA_PREFIX_UNET = 'lora_unet'
-LORA_PREFIX_TEXT_ENCODER = 'lora_te'
-
 
 class LORA:
     def __init__(self, name, path):
