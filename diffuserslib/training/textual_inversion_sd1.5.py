@@ -15,7 +15,6 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
-from huggingface_hub import create_repo, upload_folder
 
 # TODO: remove and import from diffusers.utils when the new version of diffusers is released
 from packaging import version
@@ -34,8 +33,7 @@ from diffusers import (
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version
 from diffusers.utils.import_utils import is_xformers_available
-
-# ------------------------------------------------------------------------------
+from IPython.display import display
 
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
@@ -43,20 +41,19 @@ check_min_version("0.22.0.dev0")
 
 logger = get_logger(__name__)
 
-def log_validation(text_encoder, tokenizer, unet, vae, args, accelerator, weight_dtype, epoch):
+def log_validation(text_encoder, tokenizer, unet, vae, params:TrainingParameters, accelerator, weight_dtype, epoch):
     logger.info(
-        f"Running validation... \n Generating {args.num_validation_images} images with prompt:"
-        f" {args.validation_prompt}."
+        f"Running validation... \n Generating {params.numValidtionImages} images with prompt:"
+        f" {params.validationPrompt}."
     )
     # create pipeline (note: unet and vae are loaded again in float32)
     pipeline = DiffusionPipeline.from_pretrained(
-        args.pretrained_model_name_or_path,
+        params.model,
         text_encoder=accelerator.unwrap_model(text_encoder),
         tokenizer=tokenizer,
         unet=unet,
         vae=vae,
         safety_checker=None,
-        revision=args.revision,
         torch_dtype=weight_dtype,
     )
     pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
@@ -64,35 +61,44 @@ def log_validation(text_encoder, tokenizer, unet, vae, args, accelerator, weight
     pipeline.set_progress_bar_config(disable=True)
 
     # run inference
-    generator = None if args.seed is None else torch.Generator(device=accelerator.device).manual_seed(args.seed)
+    generator = None if params.seed is None else torch.Generator(device=accelerator.device).manual_seed(params.seed)
     images = []
-    for _ in range(args.num_validation_images):
-        with torch.autocast("cuda"):
-            image = pipeline(args.validation_prompt, num_inference_steps=25, generator=generator).images[0]
+    for _ in range(params.numValidtionImages):
+        # with torch.autocast("cuda"):
+        image = pipeline(args.validation_prompt, num_inference_steps=25, generator=generator).images[0]
+        display(image)
         images.append(image)
 
     del pipeline
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     return images
 
 
-def save_progress(text_encoder, placeholder_token_ids, accelerator, args, save_path, safe_serialization=True):
+def save_progress(global_step, text_encoder, placeholder_token_ids, accelerator, params:TrainingParameters):
     logger.info("Saving embeddings")
+
+    weight_name = (
+        f"learned_embeds-steps-{global_step}.safetensors"
+        if params.safetensors
+        else f"learned_embeds-steps-{global_step}.bin"
+    )
+    save_path = os.path.join(params.outputDir, weight_name)
+
     learned_embeds = (
         accelerator.unwrap_model(text_encoder)
         .get_input_embeddings()
         .weight[min(placeholder_token_ids) : max(placeholder_token_ids) + 1]
     )
-    learned_embeds_dict = {args.placeholder_token: learned_embeds.detach().cpu()}
+    learned_embeds_dict = {params.placeholderToken: learned_embeds.detach().cpu()}
 
-    if safe_serialization:
+    if params.safetensors:
         safetensors.torch.save_file(learned_embeds_dict, save_path, metadata={"format": "pt"})
     else:
         torch.save(learned_embeds_dict, save_path)
 
 
 
-def main(params: TrainingParameters):
+def train(params: TrainingParameters):
     accelerator_project_config = ProjectConfiguration(project_dir=params.outputDir)
     accelerator = Accelerator(
         gradient_accumulation_steps=params.gradientAccumulationSteps,
@@ -212,17 +218,17 @@ def main(params: TrainingParameters):
 
     # Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
-    if args.max_train_steps is None:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / params.gradientAccumulationSteps)
+    if params.maxSteps is None:
+        params.maxSteps = params.numEpochs * num_update_steps_per_epoch
         overrode_max_train_steps = True
 
     lr_scheduler = get_scheduler(
-        args.lr_scheduler,
+        params.learningRateSchedule,
         optimizer=optimizer,
-        num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
-        num_training_steps=args.max_train_steps * accelerator.num_processes,
-        num_cycles=args.lr_num_cycles,
+        num_warmup_steps=params.learningRateWarmupSteps * accelerator.num_processes,
+        num_training_steps=params.maxSteps * accelerator.num_processes,
+        num_cycles=params.learningRateNumCycles,
     )
 
     # Prepare everything with our `accelerator`.
@@ -243,59 +249,33 @@ def main(params: TrainingParameters):
     vae.to(accelerator.device, dtype=weight_dtype)
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / params.gradientAccumulationSteps)
     if overrode_max_train_steps:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
-    # Afterwards we recalculate our number of training epochs
-    args.num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
+        params.maxSteps = params.numEpochs * num_update_steps_per_epoch
+    params.numEpochs = math.ceil(params.maxSteps / num_update_steps_per_epoch)
 
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
-        accelerator.init_trackers("textual_inversion", config=vars(args))
+        accelerator.init_trackers("textual_inversion", config=vars(params))
 
     # Train!
-    total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
+    total_batch_size = params.batchSize * accelerator.num_processes * params.gradientAccumulationSteps
 
     logger.info("***** Running training *****")
     logger.info(f"  Num examples = {len(train_dataset)}")
-    logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    logger.info(f"  Instantaneous batch size per device = {args.train_batch_size}")
+    logger.info(f"  Num Epochs = {params.numEpochs}")
+    logger.info(f"  Instantaneous batch size per device = {params.batchSize}")
     logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
-    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    logger.info(f"  Total optimization steps = {args.max_train_steps}")
+    logger.info(f"  Gradient Accumulation steps = {params.gradientAccumulationSteps}")
+    logger.info(f"  Total optimization steps = {params.maxSteps}")
     global_step = 0
     first_epoch = 0
-    # Potentially load in the weights and states from a previous save
-    if args.resume_from_checkpoint:
-        if args.resume_from_checkpoint != "latest":
-            path = os.path.basename(args.resume_from_checkpoint)
-        else:
-            # Get the most recent checkpoint
-            dirs = os.listdir(args.output_dir)
-            dirs = [d for d in dirs if d.startswith("checkpoint")]
-            dirs = sorted(dirs, key=lambda x: int(x.split("-")[1]))
-            path = dirs[-1] if len(dirs) > 0 else None
-
-        if path is None:
-            accelerator.print(
-                f"Checkpoint '{args.resume_from_checkpoint}' does not exist. Starting a new training run."
-            )
-            args.resume_from_checkpoint = None
-            initial_global_step = 0
-        else:
-            accelerator.print(f"Resuming from checkpoint {path}")
-            accelerator.load_state(os.path.join(args.output_dir, path))
-            global_step = int(path.split("-")[1])
-
-            initial_global_step = global_step
-            first_epoch = global_step // num_update_steps_per_epoch
-
-    else:
-        initial_global_step = 0
+   
+    initial_global_step = 0
 
     progress_bar = tqdm(
-        range(0, args.max_train_steps),
+        range(0, params.maxSteps),
         initial=initial_global_step,
         desc="Steps",
         # Only show the progress bar once on each machine.
@@ -305,7 +285,7 @@ def main(params: TrainingParameters):
     # keep original embeddings as reference
     orig_embeds_params = accelerator.unwrap_model(text_encoder).get_input_embeddings().weight.data.clone()
 
-    for epoch in range(first_epoch, args.num_train_epochs):
+    for epoch in range(first_epoch, params.numEpochs):
         text_encoder.train()
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(text_encoder):
@@ -357,107 +337,26 @@ def main(params: TrainingParameters):
 
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
-                images = []
                 progress_bar.update(1)
                 global_step += 1
-                if global_step % args.save_steps == 0:
-                    weight_name = (
-                        f"learned_embeds-steps-{global_step}.bin"
-                        if args.no_safe_serialization
-                        else f"learned_embeds-steps-{global_step}.safetensors"
-                    )
-                    save_path = os.path.join(args.output_dir, weight_name)
-                    save_progress(
-                        text_encoder,
-                        placeholder_token_ids,
-                        accelerator,
-                        args,
-                        save_path,
-                        safe_serialization=not args.no_safe_serialization,
-                    )
+                if global_step % params.saveSteps == 0:
+                    save_progress(global_step, text_encoder, placeholder_token_ids, accelerator, params)
 
                 if accelerator.is_main_process:
-                    if global_step % args.checkpointing_steps == 0:
-                        # _before_ saving state, check if this save would set us over the `checkpoints_total_limit`
-                        if args.checkpoints_total_limit is not None:
-                            checkpoints = os.listdir(args.output_dir)
-                            checkpoints = [d for d in checkpoints if d.startswith("checkpoint")]
-                            checkpoints = sorted(checkpoints, key=lambda x: int(x.split("-")[1]))
-
-                            # before we save the new checkpoint, we need to have at _most_ `checkpoints_total_limit - 1` checkpoints
-                            if len(checkpoints) >= args.checkpoints_total_limit:
-                                num_to_remove = len(checkpoints) - args.checkpoints_total_limit + 1
-                                removing_checkpoints = checkpoints[0:num_to_remove]
-
-                                logger.info(
-                                    f"{len(checkpoints)} checkpoints already exist, removing {len(removing_checkpoints)} checkpoints"
-                                )
-                                logger.info(f"removing checkpoints: {', '.join(removing_checkpoints)}")
-
-                                for removing_checkpoint in removing_checkpoints:
-                                    removing_checkpoint = os.path.join(args.output_dir, removing_checkpoint)
-                                    shutil.rmtree(removing_checkpoint)
-
-                        save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}")
-                        accelerator.save_state(save_path)
-                        logger.info(f"Saved state to {save_path}")
-
-                    if args.validation_prompt is not None and global_step % args.validation_steps == 0:
-                        images = log_validation(
-                            text_encoder, tokenizer, unet, vae, args, accelerator, weight_dtype, epoch
-                        )
+                    if params.validationPrompt is not None and global_step % params.validationSteps == 0:
+                        log_validation(text_encoder, tokenizer, unet, vae, params, accelerator, weight_dtype, epoch)
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
-            if global_step >= args.max_train_steps:
+            if global_step >= params.maxSteps:
                 break
+
     # Create the pipeline using the trained modules and save it.
     accelerator.wait_for_everyone()
-    if accelerator.is_main_process:
-        if args.push_to_hub and not args.save_as_full_pipeline:
-            logger.warn("Enabling full model saving because --push_to_hub=True was specified.")
-            save_full_model = True
-        else:
-            save_full_model = args.save_as_full_pipeline
-        if save_full_model:
-            pipeline = StableDiffusionPipeline.from_pretrained(
-                args.pretrained_model_name_or_path,
-                text_encoder=accelerator.unwrap_model(text_encoder),
-                vae=vae,
-                unet=unet,
-                tokenizer=tokenizer,
-            )
-            pipeline.save_pretrained(args.output_dir)
+    if accelerator.is_main_process:       
         # Save the newly trained embeddings
-        weight_name = "learned_embeds.bin" if args.no_safe_serialization else "learned_embeds.safetensors"
-        save_path = os.path.join(args.output_dir, weight_name)
-        save_progress(
-            text_encoder,
-            placeholder_token_ids,
-            accelerator,
-            args,
-            save_path,
-            safe_serialization=not args.no_safe_serialization,
-        )
-
-        if args.push_to_hub:
-            save_model_card(
-                repo_id,
-                images=images,
-                base_model=args.pretrained_model_name_or_path,
-                repo_folder=args.output_dir,
-            )
-            upload_folder(
-                repo_id=repo_id,
-                folder_path=args.output_dir,
-                commit_message="End of training",
-                ignore_patterns=["step_*", "epoch_*"],
-            )
+        save_progress(global_step, text_encoder, placeholder_token_ids, accelerator, params)
 
     accelerator.end_training()
-
-
-if __name__ == "__main__":
-    main()

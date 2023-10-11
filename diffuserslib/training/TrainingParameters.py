@@ -13,10 +13,16 @@ class TrainingParameters:
     centreCrop: bool = False            # Whether to center crop images before resizing to resolution.
     repeats: int = 100                  # Number of times to repeat the dataset.
     numVectors: int = 1                 # Number of vectors to train.
+    safetensors: bool = True            # Whether to save in savetensor format.
+
+    validationPrompt: str = ''          # A prompt that is used during validation to verify that the model is learning.
+    validationSteps: int = 100          # Run validation every X steps. Validation consists of running the prompt `args.validation_prompt` multiple times: `args.num_validation_images` and logging the images.
+    numValidtionImages: int = 4         # Number of images that should be generated during validation with `validation_prompt`.
 
     batchSize: int = 16                 # Batch size (per device) for the training dataloader.
     saveSteps: int = 500                # Save a checkpoint of the training state every X updates.
     maxSteps: int = 1000                # Total number of training steps to perform.
+    numEpochs: int = 100                # Number of epochs to train for.
     gradientAccumulationSteps: int = 1  # Number of updates steps to accumulate before performing a backward/update pass.
     gradientCheckpointing: bool = False # Whether or not to use gradient checkpointing to save memory at the expense of slower backward pass.
     enableXformers: bool = False        # Whether or not to use Xformers for the training.
@@ -29,39 +35,3 @@ class TrainingParameters:
     adamBeta2: float = 0.999            # The beta2 parameter for the Adam optimizer.
     adamWeightDecay: float = 1e-2       # Weight decay to use.
     adamEpsilon: float = 1e-08          # Epsilon value for the Adam optimizer
-
-
-
-
-#     parser.add_argument(
-#         "--validation_prompt",
-#         type=str,
-#         default=None,
-#         help="A prompt that is used during validation to verify that the model is learning.",
-#     )
-#     parser.add_argument(
-#         "--num_validation_images",
-#         type=int,
-#         default=4,
-#         help="Number of images that should be generated during validation with `validation_prompt`.",
-#     )
-#     parser.add_argument(
-#         "--validation_steps",
-#         type=int,
-#         default=100,
-#         help=(
-#             "Run validation every X steps. Validation consists of running the prompt"
-#             " `args.validation_prompt` multiple times: `args.num_validation_images`"
-#             " and logging the images."
-#         ),
-#     )
-#     parser.add_argument(
-#         "--validation_epochs",
-#         type=int,
-#         default=None,
-#         help=(
-#             "Deprecated in favor of validation_steps. Run validation every X epochs. Validation consists of running the prompt"
-#             " `args.validation_prompt` multiple times: `args.num_validation_images`"
-#             " and logging the images."
-#         ),
-#     )
