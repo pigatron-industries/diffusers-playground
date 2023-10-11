@@ -11,6 +11,7 @@ class TrainingParameters:
     seed: int|None = None               # A seed for reproducible training.
     resolution: int = 512               # The resolution for input images, all the images in the train/validation dataset will be resized to this resolution
     centreCrop: bool = False            # Whether to center crop images before resizing to resolution.
+    repeats: int = 100                  # Number of times to repeat the dataset.
     numVectors: int = 1                 # Number of vectors to train.
 
     batchSize: int = 16                 # Batch size (per device) for the training dataloader.
@@ -18,19 +19,18 @@ class TrainingParameters:
     maxSteps: int = 1000                # Total number of training steps to perform.
     gradientAccumulationSteps: int = 1  # Number of updates steps to accumulate before performing a backward/update pass.
     gradientCheckpointing: bool = False # Whether or not to use gradient checkpointing to save memory at the expense of slower backward pass.
-    initialLearningRate: float = 1e-4   # Initial learning rate (after the potential warmup period) to use.
+    enableXformers: bool = False        # Whether or not to use Xformers for the training.
+    learningRate: float = 1e-4          # Initial learning rate (after the potential warmup period) to use.
     scaleLearningRate: bool = True      # Scale the learning rate by the number of GPUs, gradient accumulation steps, and batch size.
     learningRateSchedule: str = 'constant' # The scheduler type to use. Choose between ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]
     learningRateWarmupSteps: int = 500  # Number of steps for the warmup in the lr scheduler.
     learningRateNumCycles: int = 1      # Number of hard resets of the lr in cosine_with_restarts scheduler.
+    adamBeta1: float = 0.9              # The beta1 parameter for the Adam optimizer.
+    adamBeta2: float = 0.999            # The beta2 parameter for the Adam optimizer.
+    adamWeightDecay: float = 1e-2       # Weight decay to use.
+    adamEpsilon: float = 1e-08          # Epsilon value for the Adam optimizer
 
 
-
-
-#     parser.add_argument("--adam_beta1", type=float, default=0.9, help="The beta1 parameter for the Adam optimizer.")
-#     parser.add_argument("--adam_beta2", type=float, default=0.999, help="The beta2 parameter for the Adam optimizer.")
-#     parser.add_argument("--adam_weight_decay", type=float, default=1e-2, help="Weight decay to use.")
-#     parser.add_argument("--adam_epsilon", type=float, default=1e-08, help="Epsilon value for the Adam optimizer")
 
 
 #     parser.add_argument(
