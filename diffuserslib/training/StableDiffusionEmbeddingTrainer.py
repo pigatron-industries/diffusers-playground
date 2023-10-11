@@ -38,62 +38,6 @@ logger = get_logger(__name__)
 class StableDiffusionEmbeddingTrainer():
 
 
-    def log_validation(self, text_encoder, tokenizer, unet, vae, params:TrainingParameters, accelerator, weight_dtype, epoch):
-        logger.info(
-            f"Running validation... \n Generating {params.numValidtionImages} images with prompt:"
-            f" {params.validationPrompt}."
-        )
-        # create pipeline (note: unet and vae are loaded again in float32)
-        pipeline = DiffusionPipeline.from_pretrained(
-            params.model,
-            text_encoder=accelerator.unwrap_model(text_encoder),
-            tokenizer=tokenizer,
-            unet=unet,
-            vae=vae,
-            safety_checker=None,
-            torch_dtype=weight_dtype,
-        )
-        pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
-        pipeline = pipeline.to(accelerator.device)
-        pipeline.set_progress_bar_config(disable=True)
-
-        # run inference
-        generator = None if params.seed is None else torch.Generator(device=accelerator.device).manual_seed(params.seed)
-        images = []
-        for _ in range(params.numValidtionImages):
-            # with torch.autocast("cuda"):
-            image = pipeline(params.validationPrompt, num_inference_steps=25, generator=generator).images[0]
-            display(image)
-            images.append(image)
-
-        del pipeline
-        # torch.cuda.empty_cache()
-        return images
-
-
-    def save_progress(self, global_step, text_encoder, placeholder_token_ids, accelerator, params:TrainingParameters):
-        logger.info("Saving embeddings")
-
-        weight_name = (
-            f"learned_embeds-steps-{global_step}.safetensors"
-            if params.safetensors
-            else f"learned_embeds-steps-{global_step}.bin"
-        )
-        save_path = os.path.join(params.outputDir, weight_name)
-
-        learned_embeds = (
-            accelerator.unwrap_model(text_encoder)
-            .get_input_embeddings()
-            .weight[min(placeholder_token_ids) : max(placeholder_token_ids) + 1]
-        )
-        learned_embeds_dict = {params.placeholderToken: learned_embeds.detach().cpu()}
-
-        if params.safetensors:
-            safetensors.torch.save_file(learned_embeds_dict, save_path, metadata={"format": "pt"})
-        else:
-            torch.save(learned_embeds_dict, save_path)
-
-
 
     def train(self, params: TrainingParameters):
         accelerator_project_config = ProjectConfiguration(project_dir=params.outputDir)
@@ -341,7 +285,7 @@ class StableDiffusionEmbeddingTrainer():
 
                     if accelerator.is_main_process:
                         if params.validationPrompt is not None and global_step % params.validationSteps == 0:
-                            self.log_validation(text_encoder, tokenizer, unet, vae, params, accelerator, weight_dtype, epoch)
+                            self.log_validation(global_step, text_encoder, tokenizer, unet, vae, params, accelerator, weight_dtype, epoch)
 
                 logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
                 progress_bar.set_postfix(**logs)
@@ -357,3 +301,59 @@ class StableDiffusionEmbeddingTrainer():
             self.save_progress(global_step, text_encoder, placeholder_token_ids, accelerator, params)
 
         accelerator.end_training()
+
+
+    def log_validation(self, global_step, text_encoder, tokenizer, unet, vae, params:TrainingParameters, accelerator, weight_dtype, epoch):
+        logger.info(
+            f"Running validation for step {global_step}... \n Generating {params.numValidtionImages} images with prompt:"
+            f" {params.validationPrompt}."
+        )
+        # create pipeline (note: unet and vae are loaded again in float32)
+        pipeline = DiffusionPipeline.from_pretrained(
+            params.model,
+            text_encoder=accelerator.unwrap_model(text_encoder),
+            tokenizer=tokenizer,
+            unet=unet,
+            vae=vae,
+            safety_checker=None,
+            torch_dtype=weight_dtype,
+        )
+        pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
+        pipeline = pipeline.to(accelerator.device)
+        pipeline.set_progress_bar_config(disable=True)
+
+        # run inference
+        generator = None if params.validationSeed is None else torch.Generator(device=accelerator.device).manual_seed(params.validationSeed)
+        images = []
+        for _ in range(params.numValidtionImages):
+            # with torch.autocast("cuda"):
+            image = pipeline(params.validationPrompt, num_inference_steps=25, generator=generator).images[0]
+            display(image)
+            images.append(image)
+
+        del pipeline
+        # torch.cuda.empty_cache()
+        return images
+
+
+    def save_progress(self, global_step, text_encoder, placeholder_token_ids, accelerator, params:TrainingParameters):
+        logger.info("Saving embeddings")
+
+        weight_name = (
+            f"learned_embeds-steps-{global_step}.safetensors"
+            if params.safetensors
+            else f"learned_embeds-steps-{global_step}.bin"
+        )
+        save_path = os.path.join(params.outputDir, weight_name)
+
+        learned_embeds = (
+            accelerator.unwrap_model(text_encoder)
+            .get_input_embeddings()
+            .weight[min(placeholder_token_ids) : max(placeholder_token_ids) + 1]
+        )
+        learned_embeds_dict = {params.placeholderToken: learned_embeds.detach().cpu()}
+
+        if params.safetensors:
+            safetensors.torch.save_file(learned_embeds_dict, save_path, metadata={"format": "pt"})
+        else:
+            torch.save(learned_embeds_dict, save_path)

@@ -17,6 +17,7 @@ class TrainingParameters:
 
     validationPrompt: str = ''          # A prompt that is used during validation to verify that the model is learning.
     validationSteps: int = 100          # Run validation every X steps. Validation consists of running the prompt `args.validation_prompt` multiple times: `args.num_validation_images` and logging the images.
+    validationSeed: int = 0             # Seed to use for validation images.
     numValidtionImages: int = 4         # Number of images that should be generated during validation with `validation_prompt`.
 
     batchSize: int = 16                 # Batch size (per device) for the training dataloader.
