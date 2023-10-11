@@ -1,8 +1,6 @@
 import logging
 import math
 import os
-import shutil
-import warnings
 
 from .TrainingParameters import TrainingParameters
 from .TextualInversionDataset import TextualInversionDataset
@@ -34,10 +32,6 @@ from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version
 from diffusers.utils.import_utils import is_xformers_available
 from IPython.display import display
-
-
-# Will error if the minimal version of diffusers is not installed. Remove at your own risks.
-check_min_version("0.22.0.dev0")
 
 logger = get_logger(__name__)
 
