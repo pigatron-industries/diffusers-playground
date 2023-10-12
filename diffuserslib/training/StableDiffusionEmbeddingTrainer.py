@@ -171,7 +171,6 @@ class StableDiffusionEmbeddingTrainer():
         first_epoch = 0
     
         initial_global_step = 0
-
         progress_bar = tqdm(
             range(0, self.params.maxSteps),
             initial=initial_global_step,
@@ -186,7 +185,7 @@ class StableDiffusionEmbeddingTrainer():
         # Initial validation to see what prompt looks liike without training
         if self.accelerator.is_main_process:
             if self.params.validationPrompt is not None and global_step % self.params.validationSteps == 0:
-                self.log_validation(global_step, weight_dtype, epoch)
+                self.log_validation(global_step, weight_dtype, 0)
 
         for epoch in range(first_epoch, self.params.numEpochs):
             self.text_encoder.train()
