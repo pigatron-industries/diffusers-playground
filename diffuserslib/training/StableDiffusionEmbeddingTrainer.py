@@ -40,7 +40,6 @@ class StableDiffusionEmbeddingTrainer():
     def __init__(self, params:TrainingParameters):
         if self.params.numVectors < 1:
             raise ValueError(f"--num_vectors has to be larger or equal to 1, but is {self.params.numVectors}")
-
         self.params = params
         self.accelerator = Accelerator(
             gradient_accumulation_steps = params.gradientAccumulationSteps,
@@ -65,36 +64,8 @@ class StableDiffusionEmbeddingTrainer():
         if self.params.outputDir is not None:
             os.makedirs(self.params.outputDir, exist_ok=True)
 
-        # Load models
         self.load_models()
-
-        # Add the placeholder tokens in tokenizer
-        placeholder_tokens = [self.params.placeholderToken]
-        additional_tokens = []
-        for i in range(1, self.params.numVectors):
-            additional_tokens.append(f"{self.params.placeholderToken}_{i}")
-        placeholder_tokens += additional_tokens
-        num_added_tokens = self.tokenizer.add_tokens(placeholder_tokens)
-        if num_added_tokens != self.params.numVectors:
-            raise ValueError(f"The tokenizer already contains the token {self.params.placeholderToken}. Please pass a different"
-                " `placeholder_token` that is not already in the tokenizer."
-            )
-        placeholder_token_ids = self.tokenizer.convert_tokens_to_ids(placeholder_tokens)
-
-        # Convert the initializer_token to ids
-        token_ids = self.tokenizer.encode(self.params.initializerToken, add_special_tokens=False)
-        if len(token_ids) > 1:
-            raise ValueError("The initializer token must be a single token.")      # TODO use all tokens in the initializer instead of erroring
-        initializer_token_id = token_ids[0]
-
-        # Resize the token embeddings as we are adding new special tokens to the tokenizer
-        self.text_encoder.resize_token_embeddings(len(self.tokenizer))
-
-        # Initialise the newly added placeholder token with the embeddings of the initializer token
-        token_embeds = self.text_encoder.get_input_embeddings().weight.data
-        with torch.no_grad():
-            for token_id in placeholder_token_ids:
-                token_embeds[token_id] = token_embeds[initializer_token_id].clone()
+        self.init_tokenizer()
 
         # Freeze vae and unet
         self.vae.requires_grad_(False)
@@ -112,17 +83,7 @@ class StableDiffusionEmbeddingTrainer():
             self.unet.enable_gradient_checkpointing()
 
         if self.params.enableXformers:
-            if is_xformers_available():
-                import xformers
-
-                xformers_version = version.parse(xformers.__version__)
-                if xformers_version == version.parse("0.0.16"):
-                    logger.warn(
-                        "xFormers 0.0.16 cannot be used for training in some GPUs. If you observe problems during training, please update xFormers to at least 0.0.17. See https://huggingface.co/docs/diffusers/main/en/optimization/xformers for more details."
-                    )
-                self.unet.enable_xformers_memory_efficient_attention()
-            else:
-                raise ValueError("xformers is not available. Make sure it is installed correctly")
+            self.unet.enable_xformers_memory_efficient_attention()
 
         if self.params.scaleLearningRate:
             self.params.learningRate = (
@@ -143,7 +104,7 @@ class StableDiffusionEmbeddingTrainer():
             data_root=self.params.trainDataDir,
             tokenizer=self.tokenizer,
             size=self.params.resolution,
-            placeholder_token=(" ".join(self.tokenizer.convert_ids_to_tokens(placeholder_token_ids))),
+            placeholder_token=(" ".join(self.tokenizer.convert_ids_to_tokens(self.placeholder_token_ids))),
             repeats=self.params.repeats,
             learnable_property=self.params.learnableProperty,
             center_crop=self.params.centreCrop,
@@ -265,7 +226,7 @@ class StableDiffusionEmbeddingTrainer():
 
                     # Let's make sure we don't update any embedding weights besides the newly added token
                     index_no_updates = torch.ones((len(self.tokenizer),), dtype=torch.bool)
-                    index_no_updates[min(placeholder_token_ids) : max(placeholder_token_ids) + 1] = False
+                    index_no_updates[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1] = False
 
                     with torch.no_grad():
                         self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight[
@@ -277,7 +238,7 @@ class StableDiffusionEmbeddingTrainer():
                     progress_bar.update(1)
                     global_step += 1
                     if global_step % self.params.saveSteps == 0:
-                        self.save_progress(global_step, placeholder_token_ids)
+                        self.save_progress(global_step)
 
                     if self.accelerator.is_main_process:
                         if self.params.validationPrompt is not None and global_step % self.params.validationSteps == 0:
@@ -294,7 +255,7 @@ class StableDiffusionEmbeddingTrainer():
         self.accelerator.wait_for_everyone()
         if self.accelerator.is_main_process:       
             # Save the newly trained embeddings
-            self.save_progress(global_step, placeholder_token_ids)
+            self.save_progress(global_step)
 
         self.accelerator.end_training()
 
@@ -307,7 +268,37 @@ class StableDiffusionEmbeddingTrainer():
         self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
 
 
-    def log_validation(self, global_step, unet, vae, weight_dtype, epoch):
+    def init_tokenizer(self):
+        # Add the placeholder tokens in tokenizer
+        placeholder_tokens = [self.params.placeholderToken]
+        additional_tokens = []
+        for i in range(1, self.params.numVectors):
+            additional_tokens.append(f"{self.params.placeholderToken}_{i}")
+        placeholder_tokens += additional_tokens
+        num_added_tokens = self.tokenizer.add_tokens(placeholder_tokens)
+        if num_added_tokens != self.params.numVectors:
+            raise ValueError(f"The tokenizer already contains the token {self.params.placeholderToken}. Please pass a different"
+                " `placeholder_token` that is not already in the tokenizer."
+            )
+        self.placeholder_token_ids = self.tokenizer.convert_tokens_to_ids(placeholder_tokens)
+
+        # Convert the initializer_token to ids
+        initializer_token_ids = self.tokenizer.encode(self.params.initializerToken, add_special_tokens=False)
+        if len(initializer_token_ids) > 1:
+            raise ValueError("The initializer token must be a single token.")      # TODO use all tokens in the initializer instead of erroring
+        initializer_token_id = initializer_token_ids[0]
+
+        # Resize the token embeddings as we are adding new special tokens to the tokenizer
+        self.text_encoder.resize_token_embeddings(len(self.tokenizer))
+
+        # Initialise the newly added placeholder token with the embeddings of the initializer token
+        token_embeds = self.text_encoder.get_input_embeddings().weight.data
+        with torch.no_grad():
+            for placeholder_token_id in self.placeholder_token_ids:
+                token_embeds[placeholder_token_id] = token_embeds[initializer_token_id].clone()
+
+
+    def log_validation(self, global_step, weight_dtype, epoch):
         logger.info(
             f"Running validation for step {global_step}... \n Generating {self.params.numValidtionImages} images with prompt:"
             f" {self.params.validationPrompt}."
@@ -317,8 +308,8 @@ class StableDiffusionEmbeddingTrainer():
             self.params.model,
             text_encoder=self.accelerator.unwrap_model(self.text_encoder),
             tokenizer=self.tokenizer,
-            unet=unet,
-            vae=vae,
+            unet=self.unet,
+            vae=self.vae,
             safety_checker=None,
             torch_dtype=weight_dtype,
         )
@@ -340,7 +331,7 @@ class StableDiffusionEmbeddingTrainer():
         return images
 
 
-    def save_progress(self, global_step, placeholder_token_ids):
+    def save_progress(self, global_step):
         logger.info("Saving embeddings")
 
         weight_name = (
@@ -353,7 +344,7 @@ class StableDiffusionEmbeddingTrainer():
         learned_embeds = (
             self.accelerator.unwrap_model(self.text_encoder)
             .get_input_embeddings()
-            .weight[min(placeholder_token_ids) : max(placeholder_token_ids) + 1]
+            .weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1]
         )
         learned_embeds_dict = {self.params.placeholderToken: learned_embeds.detach().cpu()}
 
