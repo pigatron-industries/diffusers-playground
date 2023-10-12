@@ -38,7 +38,7 @@ logger = get_logger(__name__)
 class StableDiffusionEmbeddingTrainer():
 
     def __init__(self, params:TrainingParameters):
-        if self.params.numVectors < 1:
+        if params.numVectors < 1:
             raise ValueError(f"--num_vectors has to be larger or equal to 1, but is {self.params.numVectors}")
         self.params = params
         self.accelerator = Accelerator(
