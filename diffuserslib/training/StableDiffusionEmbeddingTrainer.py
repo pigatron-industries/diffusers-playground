@@ -23,6 +23,7 @@ from diffusers import (
     AutoencoderKL,
     DDPMScheduler,
     DiffusionPipeline,
+    EulerDiscreteScheduler,
     DPMSolverMultistepScheduler,
     StableDiffusionPipeline,
     UNet2DConditionModel,
@@ -332,7 +333,7 @@ class StableDiffusionEmbeddingTrainer():
             safety_checker=None,
             torch_dtype=self.weight_dtype,
         )
-        pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
+        pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
         pipeline = pipeline.to(self.accelerator.device)
         pipeline.set_progress_bar_config(disable=True)
 
@@ -340,8 +341,13 @@ class StableDiffusionEmbeddingTrainer():
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
         images = []
         for _ in range(self.params.numValidationImages):
-            image = pipeline(self.params.validationPrompt, num_inference_steps=self.params.validationSteps, 
-                             generator=generator, width=self.params.resolution, height=self.params.resolution).images[0]
+            image = pipeline(self.params.validationPrompt, 
+                             negative_prompt = self.params.validationNegativePrompt,
+                             num_inference_steps = self.params.validationSteps, 
+                             cfg_sclae=9.0,
+                             generator = generator,
+                             width = self.params.resolution, 
+                             height = self.params.resolution).images[0]
             display(image)
             images.append(image)
 
