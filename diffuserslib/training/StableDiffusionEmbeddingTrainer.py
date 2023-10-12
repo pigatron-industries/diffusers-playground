@@ -10,6 +10,7 @@ import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
 import transformers
+from dataclasses import dataclass
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
@@ -32,6 +33,15 @@ from diffusers.utils.import_utils import is_xformers_available
 from IPython.display import display
 
 logger = get_logger(__name__)
+
+class TextEncoderTrainer():
+
+    def __init__(self, tokenizer, text_encoder):
+        self.tokenizer = tokenizer
+        self.text_encoder = text_encoder
+
+
+
 
 class StableDiffusionEmbeddingTrainer():
 
@@ -69,15 +79,15 @@ class StableDiffusionEmbeddingTrainer():
         self.vae.requires_grad_(False)
         self.unet.requires_grad_(False)
         # Freeze all parameters except for the token embeddings in text encoder
-        self.text_encoders[0].text_model.encoder.requires_grad_(False)
-        self.text_encoders[0].text_model.final_layer_norm.requires_grad_(False)
-        self.text_encoders[0].text_model.embeddings.position_embedding.requires_grad_(False)
+        self.text_encoder_trainers[0].text_encoder.text_model.encoder.requires_grad_(False)
+        self.text_encoder_trainers[0].text_encoder.text_model.final_layer_norm.requires_grad_(False)
+        self.text_encoder_trainers[0].text_encoder.text_model.embeddings.position_embedding.requires_grad_(False)
 
         if self.params.gradientCheckpointing:
             # Keep unet in train mode if we are using gradient checkpointing to save memory.
             # The dropout cannot be != 0 so it doesn't matter if we are in eval or train mode.
             self.unet.train()
-            self.text_encoders[0].gradient_checkpointing_enable()
+            self.text_encoder_trainers[0].text_encoder.gradient_checkpointing_enable()
             self.unet.enable_gradient_checkpointing()
 
         if self.params.enableXformers:
@@ -90,7 +100,7 @@ class StableDiffusionEmbeddingTrainer():
 
         # Initialize the optimizer
         self.optimizer = torch.optim.AdamW(
-            self.text_encoders[0].get_input_embeddings().parameters(),  # only optimize the embeddings
+            self.text_encoder_trainers[0].text_encoder.get_input_embeddings().parameters(),  # only optimize the embeddings
             lr=self.params.learningRate,
             betas=(self.params.adamBeta1, self.params.adamBeta2),
             weight_decay=self.params.adamWeightDecay,
@@ -100,9 +110,9 @@ class StableDiffusionEmbeddingTrainer():
         # Dataset and DataLoaders creation:
         train_dataset = TextualInversionDataset(
             data_root=self.params.trainDataDir,
-            tokenizer=self.tokenizers[0],
+            tokenizer=self.text_encoder_trainers[0].tokenizer,
             size=self.params.resolution,
-            placeholder_token=(" ".join(self.tokenizers[0].convert_ids_to_tokens(self.placeholder_token_ids))),
+            placeholder_token=(" ".join(self.text_encoder_trainers[0].tokenizer.convert_ids_to_tokens(self.placeholder_token_ids))),
             repeats=self.params.repeats,
             learnable_property=self.params.learnableProperty,
             center_crop=self.params.centreCrop,
@@ -128,8 +138,8 @@ class StableDiffusionEmbeddingTrainer():
         )
 
         # Prepare everything with our `accelerator`.
-        self.text_encoders[0], self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(
-            self.text_encoders[0], self.optimizer, self.train_dataloader, self.lr_scheduler
+        self.text_encoder_trainers[0].text_encoder, self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(
+            self.text_encoder_trainers[0].text_encoder, self.optimizer, self.train_dataloader, self.lr_scheduler
         )
 
         # For mixed precision training we cast all non-trainable weigths (vae, non-lora text_encoder and non-lora unet) to half-precision
@@ -178,7 +188,7 @@ class StableDiffusionEmbeddingTrainer():
         )
 
         # keep original embeddings as reference
-        self.orig_embeds_params = self.accelerator.unwrap_model(self.text_encoders[0]).get_input_embeddings().weight.data.clone()
+        self.orig_embeds_params = self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder).get_input_embeddings().weight.data.clone()
 
         # Initial validation to see what prompt looks liike without training
         if self.accelerator.is_main_process:
@@ -190,7 +200,7 @@ class StableDiffusionEmbeddingTrainer():
 
     def train_loop(self):
         for epoch in range(self.start_epoch, self.params.numEpochs):
-            self.text_encoders[0].train()
+            self.text_encoder_trainers[0].text_encoder.train()
             for step, batch in enumerate(self.train_dataloader):
                 loss = self.train_step(batch)
 
@@ -217,7 +227,7 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def train_step(self, batch):
-        with self.accelerator.accumulate(self.text_encoders[0]):
+        with self.accelerator.accumulate(self.text_encoder_trainers[0].text_encoder):
             # Convert images to latent space
             latents = self.vae.encode(batch["pixel_values"].to(dtype=self.weight_dtype)).latent_dist.sample().detach()
             latents = latents * self.vae.config.scaling_factor
@@ -234,7 +244,7 @@ class StableDiffusionEmbeddingTrainer():
             noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
 
             # Get the text embedding for conditioning
-            encoder_hidden_states = self.text_encoders[0](batch["input_ids"])[0].to(dtype=self.weight_dtype)
+            encoder_hidden_states = self.text_encoder_trainers[0].text_encoder(batch["input_ids"])[0].to(dtype=self.weight_dtype)
 
             # Predict the noise residual
             model_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample
@@ -256,11 +266,11 @@ class StableDiffusionEmbeddingTrainer():
             self.optimizer.zero_grad()
 
             # Let's make sure we don't update any embedding weights besides the newly added token
-            index_no_updates = torch.ones((len(self.tokenizers[0]),), dtype=torch.bool)
+            index_no_updates = torch.ones((len(self.text_encoder_trainers[0].tokenizer[0]),), dtype=torch.bool)
             index_no_updates[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1] = False
 
             with torch.no_grad():
-                self.accelerator.unwrap_model(self.text_encoders[0]).get_input_embeddings().weight[
+                self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder).get_input_embeddings().weight[
                     index_no_updates
                 ] = self.orig_embeds_params[index_no_updates]
 
@@ -268,8 +278,10 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def load_models(self):
-        self.tokenizers = [CLIPTokenizer.from_pretrained(self.params.model, subfolder="tokenizer")]
-        self.text_encoders = [CLIPTextModel.from_pretrained(self.params.model, subfolder="text_encoder")]
+        self.text_encoder_trainers = [TextEncoderTrainer(
+            CLIPTokenizer.from_pretrained(self.params.model, subfolder="tokenizer"), 
+            CLIPTextModel.from_pretrained(self.params.model, subfolder="text_encoder")
+        )]
         self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
         self.vae = AutoencoderKL.from_pretrained(self.params.model, subfolder="vae")
         self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
@@ -282,24 +294,24 @@ class StableDiffusionEmbeddingTrainer():
         for i in range(1, self.params.numVectors):
             additional_tokens.append(f"{self.params.placeholderToken}_{i}")
         placeholder_tokens += additional_tokens
-        num_added_tokens = self.tokenizers[0].add_tokens(placeholder_tokens)
+        num_added_tokens = self.text_encoder_trainers[0].tokenizer.add_tokens(placeholder_tokens)
         if num_added_tokens != self.params.numVectors:
             raise ValueError(f"The tokenizer already contains the token {self.params.placeholderToken}. Please pass a different"
                 " `placeholder_token` that is not already in the tokenizer."
             )
-        self.placeholder_token_ids = self.tokenizers[0].convert_tokens_to_ids(placeholder_tokens)
+        self.placeholder_token_ids = self.text_encoder_trainers[0].tokenizer.convert_tokens_to_ids(placeholder_tokens)
 
         # Convert the initializer_token to ids
-        initializer_token_ids = self.tokenizers[0].encode(self.params.initializerToken, add_special_tokens=False)
+        initializer_token_ids = self.text_encoder_trainers[0].tokenizer.encode(self.params.initializerToken, add_special_tokens=False)
         if len(initializer_token_ids) > 1:
             raise ValueError("The initializer token must be a single token.")      # TODO use all tokens in the initializer instead of erroring
         initializer_token_id = initializer_token_ids[0]
 
         # Resize the token embeddings as we are adding new special tokens to the tokenizer
-        self.text_encoder.resize_token_embeddings(len(self.tokenizers[0]))
+        self.text_encoder_trainers[0].text_encoder.resize_token_embeddings(len(self.text_encoder_trainers[0].tokenizer))
 
         # Initialise the newly added placeholder token with the embeddings of the initializer token
-        token_embeds = self.text_encoders[0].get_input_embeddings().weight.data
+        token_embeds = self.text_encoder_trainers[0].text_encoder.get_input_embeddings().weight.data
         with torch.no_grad():
             for placeholder_token_id in self.placeholder_token_ids:
                 token_embeds[placeholder_token_id] = token_embeds[initializer_token_id].clone()
@@ -313,8 +325,8 @@ class StableDiffusionEmbeddingTrainer():
         # create pipeline (note: unet and vae are loaded again in float32)
         pipeline = DiffusionPipeline.from_pretrained(
             self.params.model,
-            text_encoder=self.accelerator.unwrap_model(self.text_encoders[0]),
-            tokenizer=self.tokenizers[0],
+            text_encoder=self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder),
+            tokenizer=self.text_encoder_trainers[0].tokenizer,
             unet=self.unet,
             vae=self.vae,
             safety_checker=None,
@@ -349,7 +361,7 @@ class StableDiffusionEmbeddingTrainer():
         save_path = os.path.join(self.params.outputDir, weight_name)
 
         learned_embeds = (
-            self.accelerator.unwrap_model(self.text_encoders[0])
+            self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder)
             .get_input_embeddings()
             .weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1]
         )
