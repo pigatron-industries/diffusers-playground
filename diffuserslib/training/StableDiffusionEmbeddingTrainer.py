@@ -14,8 +14,6 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
-# TODO: remove and import from diffusers.utils when the new version of diffusers is released
-from packaging import version
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
@@ -91,7 +89,7 @@ class StableDiffusionEmbeddingTrainer():
             )
 
         # Initialize the optimizer
-        optimizer = torch.optim.AdamW(
+        self.optimizer = torch.optim.AdamW(
             self.text_encoder.get_input_embeddings().parameters(),  # only optimize the embeddings
             lr=self.params.learningRate,
             betas=(self.params.adamBeta1, self.params.adamBeta2),
@@ -110,44 +108,44 @@ class StableDiffusionEmbeddingTrainer():
             center_crop=self.params.centreCrop,
             set="train",
         )
-        train_dataloader = torch.utils.data.DataLoader(
+        self.train_dataloader = torch.utils.data.DataLoader(
             train_dataset, batch_size=self.params.batchSize, shuffle=True, num_workers=0
         )
 
         # Scheduler and math around the number of training steps.
         overrode_max_train_steps = False
-        num_update_steps_per_epoch = math.ceil(len(train_dataloader) / self.params.gradientAccumulationSteps)
+        num_update_steps_per_epoch = math.ceil(len(self.train_dataloader) / self.params.gradientAccumulationSteps)
         if self.params.maxSteps is None:
             self.params.maxSteps = self.params.numEpochs * num_update_steps_per_epoch
             overrode_max_train_steps = True
 
-        lr_scheduler = get_scheduler(
+        self.lr_scheduler = get_scheduler(
             self.params.learningRateSchedule,
-            optimizer=optimizer,
+            optimizer=self.optimizer,
             num_warmup_steps=self.params.learningRateWarmupSteps * self.accelerator.num_processes,
             num_training_steps=self.params.maxSteps * self.accelerator.num_processes,
             num_cycles=self.params.learningRateNumCycles,
         )
 
         # Prepare everything with our `accelerator`.
-        self.text_encoder, optimizer, train_dataloader, lr_scheduler = self.accelerator.prepare(
-            self.text_encoder, optimizer, train_dataloader, lr_scheduler
+        self.text_encoder, self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(
+            self.text_encoder, self.optimizer, self.train_dataloader, self.lr_scheduler
         )
 
         # For mixed precision training we cast all non-trainable weigths (vae, non-lora text_encoder and non-lora unet) to half-precision
         # as these weights are only used for inference, keeping weights in full precision is not required.
-        weight_dtype = torch.float32
+        self.weight_dtype = torch.float32
         if self.accelerator.mixed_precision == "fp16":
-            weight_dtype = torch.float16
+            self.weight_dtype = torch.float16
         elif self.accelerator.mixed_precision == "bf16":
-            weight_dtype = torch.bfloat16
+            self.weight_dtype = torch.bfloat16
 
         # Move vae and unet to device and cast to weight_dtype
-        self.unet.to(self.accelerator.device, dtype=weight_dtype)
-        self.vae.to(self.accelerator.device, dtype=weight_dtype)
+        self.unet.to(self.accelerator.device, dtype=self.weight_dtype)
+        self.vae.to(self.accelerator.device, dtype=self.weight_dtype)
 
         # We need to recalculate our total training steps as the size of the training dataloader may have changed.
-        num_update_steps_per_epoch = math.ceil(len(train_dataloader) / self.params.gradientAccumulationSteps)
+        num_update_steps_per_epoch = math.ceil(len(self.train_dataloader) / self.params.gradientAccumulationSteps)
         if overrode_max_train_steps:
             self.params.maxSteps = self.params.numEpochs * num_update_steps_per_epoch
         self.params.numEpochs = math.ceil(self.params.maxSteps / num_update_steps_per_epoch)
@@ -167,11 +165,11 @@ class StableDiffusionEmbeddingTrainer():
         logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
         logger.info(f"  Gradient Accumulation steps = {self.params.gradientAccumulationSteps}")
         logger.info(f"  Total optimization steps = {self.params.maxSteps}")
-        global_step = 0
-        first_epoch = 0
+        self.global_step = 0
+        self.start_epoch = 0
     
         initial_global_step = 0
-        progress_bar = tqdm(
+        self.progress_bar = tqdm(
             range(0, self.params.maxSteps),
             initial=initial_global_step,
             desc="Steps",
@@ -180,88 +178,93 @@ class StableDiffusionEmbeddingTrainer():
         )
 
         # keep original embeddings as reference
-        orig_embeds_params = self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight.data.clone()
+        self.orig_embeds_params = self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight.data.clone()
 
         # Initial validation to see what prompt looks liike without training
         if self.accelerator.is_main_process:
-            if self.params.validationPrompt is not None and global_step % self.params.validationSteps == 0:
-                self.log_validation(global_step, weight_dtype, 0)
+            if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0:
+                self.log_validation(self.global_step, self.weight_dtype, 0)
 
-        for epoch in range(first_epoch, self.params.numEpochs):
+        self.train_loop()
+
+
+    def train_loop(self):
+        for epoch in range(self.start_epoch, self.params.numEpochs):
             self.text_encoder.train()
-            for step, batch in enumerate(train_dataloader):
-                with self.accelerator.accumulate(self.text_encoder):
-                    # Convert images to latent space
-                    latents = self.vae.encode(batch["pixel_values"].to(dtype=weight_dtype)).latent_dist.sample().detach()
-                    latents = latents * self.vae.config.scaling_factor
-
-                    # Sample noise that we'll add to the latents
-                    noise = torch.randn_like(latents)
-                    bsz = latents.shape[0]
-                    # Sample a random timestep for each image
-                    timesteps = torch.randint(0, self.noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device)
-                    timesteps = timesteps.long()
-
-                    # Add noise to the latents according to the noise magnitude at each timestep
-                    # (this is the forward diffusion process)
-                    noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
-
-                    # Get the text embedding for conditioning
-                    encoder_hidden_states = self.text_encoder(batch["input_ids"])[0].to(dtype=weight_dtype)
-
-                    # Predict the noise residual
-                    model_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample
-
-                    # Get the target for loss depending on the prediction type
-                    if self.noise_scheduler.config.prediction_type == "epsilon":
-                        target = noise
-                    elif self.noise_scheduler.config.prediction_type == "v_prediction":
-                        target = self.noise_scheduler.get_velocity(latents, noise, timesteps)
-                    else:
-                        raise ValueError(f"Unknown prediction type {self.noise_scheduler.config.prediction_type}")
-
-                    loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
-
-                    self.accelerator.backward(loss)
-
-                    optimizer.step()
-                    lr_scheduler.step()
-                    optimizer.zero_grad()
-
-                    # Let's make sure we don't update any embedding weights besides the newly added token
-                    index_no_updates = torch.ones((len(self.tokenizer),), dtype=torch.bool)
-                    index_no_updates[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1] = False
-
-                    with torch.no_grad():
-                        self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight[
-                            index_no_updates
-                        ] = orig_embeds_params[index_no_updates]
+            for step, batch in enumerate(self.train_dataloader):
+                loss = self.train_step()
 
                 # Checks if the accelerator has performed an optimization step behind the scenes
                 if self.accelerator.sync_gradients:
-                    progress_bar.update(1)
-                    global_step += 1
-                    if global_step % self.params.saveSteps == 0:
-                        self.save_progress(global_step)
-
+                    self.progress_bar.update(1)
+                    self.global_step += 1
+                    if self.global_step % self.params.saveSteps == 0:
+                        self.save_progress()
                     if self.accelerator.is_main_process:
-                        if self.params.validationPrompt is not None and global_step % self.params.validationSteps == 0:
-                            self.log_validation(global_step, weight_dtype, epoch)
+                        if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0:
+                            self.log_validation(epoch)
 
-                logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
-                progress_bar.set_postfix(**logs)
-                self.accelerator.log(logs, step=global_step)
-
-                if global_step >= self.params.maxSteps:
+                logs = {"loss": loss.detach().item(), "lr": self.lr_scheduler.get_last_lr()[0]}
+                self.progress_bar.set_postfix(**logs)
+                self.accelerator.log(logs, step=self.global_step)
+                if self.global_step >= self.params.maxSteps:
                     break
 
-        # Create the pipeline using the trained modules and save it.
         self.accelerator.wait_for_everyone()
-        if self.accelerator.is_main_process:       
-            # Save the newly trained embeddings
-            self.save_progress(global_step)
-
+        if self.accelerator.is_main_process:      
+            self.save_progress()
         self.accelerator.end_training()
+
+
+    def train_step(self):
+        with self.accelerator.accumulate(self.text_encoder):
+            # Convert images to latent space
+            latents = self.vae.encode(batch["pixel_values"].to(dtype=self.weight_dtype)).latent_dist.sample().detach()
+            latents = latents * self.vae.config.scaling_factor
+
+            # Sample noise that we'll add to the latents
+            noise = torch.randn_like(latents)
+            bsz = latents.shape[0]
+            # Sample a random timestep for each image
+            timesteps = torch.randint(0, self.noise_scheduler.config.num_train_timesteps, (bsz,), device=latents.device)
+            timesteps = timesteps.long()
+
+            # Add noise to the latents according to the noise magnitude at each timestep
+            # (this is the forward diffusion process)
+            noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
+
+            # Get the text embedding for conditioning
+            encoder_hidden_states = self.text_encoder(batch["input_ids"])[0].to(dtype=self.weight_dtype)
+
+            # Predict the noise residual
+            model_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample
+
+            # Get the target for loss depending on the prediction type
+            if self.noise_scheduler.config.prediction_type == "epsilon":
+                target = noise
+            elif self.noise_scheduler.config.prediction_type == "v_prediction":
+                target = self.noise_scheduler.get_velocity(latents, noise, timesteps)
+            else:
+                raise ValueError(f"Unknown prediction type {self.noise_scheduler.config.prediction_type}")
+
+            loss = F.mse_loss(model_pred.float(), target.float(), reduction="mean")
+
+            self.accelerator.backward(loss)
+
+            self.optimizer.step()
+            self.lr_scheduler.step()
+            self.optimizer.zero_grad()
+
+            # Let's make sure we don't update any embedding weights besides the newly added token
+            index_no_updates = torch.ones((len(self.tokenizer),), dtype=torch.bool)
+            index_no_updates[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1] = False
+
+            with torch.no_grad():
+                self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight[
+                    index_no_updates
+                ] = self.orig_embeds_params[index_no_updates]
+
+            return loss
 
 
     def load_models(self):
@@ -302,9 +305,9 @@ class StableDiffusionEmbeddingTrainer():
                 token_embeds[placeholder_token_id] = token_embeds[initializer_token_id].clone()
 
 
-    def log_validation(self, global_step, weight_dtype, epoch):
+    def log_validation(self, epoch):
         logger.info(
-            f"Running validation for step {global_step}... \n Generating {self.params.numValidtionImages} images with prompt:"
+            f"Running validation for step {self.global_step}... \n Generating {self.params.numValidationImages} images with prompt:"
             f" {self.params.validationPrompt}."
         )
         # create pipeline (note: unet and vae are loaded again in float32)
@@ -315,7 +318,7 @@ class StableDiffusionEmbeddingTrainer():
             unet=self.unet,
             vae=self.vae,
             safety_checker=None,
-            torch_dtype=weight_dtype,
+            torch_dtype=self.weight_dtype,
         )
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
         pipeline = pipeline.to(self.accelerator.device)
@@ -324,7 +327,7 @@ class StableDiffusionEmbeddingTrainer():
         # run inference
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
         images = []
-        for _ in range(self.params.numValidtionImages):
+        for _ in range(self.params.numValidationImages):
             # with torch.autocast("cuda"):
             image = pipeline(self.params.validationPrompt, num_inference_steps=25, generator=generator).images[0]
             display(image)
@@ -335,13 +338,13 @@ class StableDiffusionEmbeddingTrainer():
         return images
 
 
-    def save_progress(self, global_step):
+    def save_progress(self):
         logger.info("Saving embeddings")
 
         weight_name = (
-            f"learned_embeds-steps-{global_step}.safetensors"
+            f"learned_embeds-steps-{self.global_step}.safetensors"
             if self.params.safetensors
-            else f"learned_embeds-steps-{global_step}.bin"
+            else f"learned_embeds-steps-{self.global_step}.bin"
         )
         save_path = os.path.join(self.params.outputDir, weight_name)
 
