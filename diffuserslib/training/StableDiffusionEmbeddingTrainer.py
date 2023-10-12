@@ -192,7 +192,7 @@ class StableDiffusionEmbeddingTrainer():
         for epoch in range(self.start_epoch, self.params.numEpochs):
             self.text_encoder.train()
             for step, batch in enumerate(self.train_dataloader):
-                loss = self.train_step()
+                loss = self.train_step(batch)
 
                 # Checks if the accelerator has performed an optimization step behind the scenes
                 if self.accelerator.sync_gradients:
@@ -216,7 +216,7 @@ class StableDiffusionEmbeddingTrainer():
         self.accelerator.end_training()
 
 
-    def train_step(self):
+    def train_step(self, batch):
         with self.accelerator.accumulate(self.text_encoder):
             # Convert images to latent space
             latents = self.vae.encode(batch["pixel_values"].to(dtype=self.weight_dtype)).latent_dist.sample().detach()
