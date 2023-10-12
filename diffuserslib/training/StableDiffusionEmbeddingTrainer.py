@@ -340,13 +340,11 @@ class StableDiffusionEmbeddingTrainer():
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
         images = []
         for _ in range(self.params.numValidationImages):
-            # with torch.autocast("cuda"):
-            image = pipeline(self.params.validationPrompt, num_inference_steps=25, generator=generator).images[0]
+            image = pipeline(self.params.validationPrompt, num_inference_steps=40, generator=generator, width=self.params.resolution, height=self.params.resolution).images[0]
             display(image)
             images.append(image)
 
         del pipeline
-        # torch.cuda.empty_cache()
         return images
 
 
