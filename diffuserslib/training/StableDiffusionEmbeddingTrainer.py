@@ -340,7 +340,8 @@ class StableDiffusionEmbeddingTrainer():
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
         images = []
         for _ in range(self.params.numValidationImages):
-            image = pipeline(self.params.validationPrompt, num_inference_steps=40, generator=generator, width=self.params.resolution, height=self.params.resolution).images[0]
+            image = pipeline(self.params.validationPrompt, num_inference_steps=self.params.validationSteps, 
+                             generator=generator, width=self.params.resolution, height=self.params.resolution).images[0]
             display(image)
             images.append(image)
 
