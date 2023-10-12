@@ -245,10 +245,10 @@ class StableDiffusionEmbeddingTrainer():
             noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
 
             # Get the text embedding for conditioning
-            encoder_hidden_states = self.text_encoder_trainers[0].text_encoder(batch["input_ids"])[0].to(dtype=self.weight_dtype)
+            text_encoder_conds = batch.get_text_conds(batch)
 
             # Predict the noise residual
-            model_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample
+            model_pred = self.call_unet(noisy_latents, timesteps, text_encoder_conds, batch)
 
             # Get the target for loss depending on the prediction type
             if self.noise_scheduler.config.prediction_type == "epsilon":
@@ -286,6 +286,14 @@ class StableDiffusionEmbeddingTrainer():
         self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
         self.vae = AutoencoderKL.from_pretrained(self.params.model, subfolder="vae")
         self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
+
+
+    def get_text_conds(self, batch):
+        return self.text_encoder_trainers[0].text_encoder(batch["input_ids"])[0].to(dtype=self.weight_dtype)
+    
+
+    def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
+        return self.unet(noisy_latents, timesteps, text_encoder_conds).sample
 
 
     def init_tokenizer(self):
