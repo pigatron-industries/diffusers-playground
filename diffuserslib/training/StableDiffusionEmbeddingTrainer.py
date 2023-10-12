@@ -245,7 +245,7 @@ class StableDiffusionEmbeddingTrainer():
             noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
 
             # Get the text embedding for conditioning
-            text_encoder_conds = batch.get_text_conds(batch)
+            text_encoder_conds = self.get_text_conds(batch)
 
             # Predict the noise residual
             model_pred = self.call_unet(noisy_latents, timesteps, text_encoder_conds, batch)
