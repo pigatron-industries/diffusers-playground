@@ -183,6 +183,11 @@ class StableDiffusionEmbeddingTrainer():
         # keep original embeddings as reference
         orig_embeds_params = self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight.data.clone()
 
+        # Initial validation to see what prompt looks liike without training
+        if self.accelerator.is_main_process:
+            if self.params.validationPrompt is not None and global_step % self.params.validationSteps == 0:
+                self.log_validation(global_step, weight_dtype, epoch)
+
         for epoch in range(first_epoch, self.params.numEpochs):
             self.text_encoder.train()
             for step, batch in enumerate(train_dataloader):
