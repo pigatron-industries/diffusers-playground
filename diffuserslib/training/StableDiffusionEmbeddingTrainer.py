@@ -87,7 +87,7 @@ class StableDiffusionEmbeddingTrainer():
 
         if self.params.scaleLearningRate:
             self.params.learningRate = (
-                self.params.learningRate * self.params.gradientAccumulationSteps * self.params.batchSize * accelerator.num_processes
+                self.params.learningRate * self.params.gradientAccumulationSteps * self.params.batchSize * self.accelerator.num_processes
             )
 
         # Initialize the optimizer
