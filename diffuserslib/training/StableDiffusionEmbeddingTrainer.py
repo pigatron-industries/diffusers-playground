@@ -344,7 +344,7 @@ class StableDiffusionEmbeddingTrainer():
             image = pipeline(self.params.validationPrompt, 
                              negative_prompt = self.params.validationNegativePrompt,
                              num_inference_steps = self.params.validationSteps, 
-                             cfg_sclae=9.0,
+                             cfg_scale=9.0,
                              generator = generator,
                              width = self.params.resolution, 
                              height = self.params.resolution).images[0]
