@@ -266,7 +266,7 @@ class StableDiffusionEmbeddingTrainer():
             self.optimizer.zero_grad()
 
             # Let's make sure we don't update any embedding weights besides the newly added token
-            index_no_updates = torch.ones((len(self.text_encoder_trainers[0].tokenizer[0]),), dtype=torch.bool)
+            index_no_updates = torch.ones((len(self.text_encoder_trainers[0].tokenizer),), dtype=torch.bool)
             index_no_updates[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1] = False
 
             with torch.no_grad():
