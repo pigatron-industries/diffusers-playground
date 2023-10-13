@@ -289,20 +289,24 @@ class StableDiffusionEmbeddingTrainer():
         
 
     def get_text_conds(self, batch):
-        tokenizer = self.text_encoder_trainers[0].tokenizer
-        input_ids = tokenizer(batch["caption"], padding="max_length", truncation=True, max_length=tokenizer.model_max_length, return_tensors="pt").input_ids[0]
-        input_ids = input_ids.to(self.accelerator.device)
-        # b_size = input_ids.size()[0]
-        # input_ids = input_ids.reshape((-1, self.text_encoder_trainers[0].tokenizer.model_max_length))  # batch_size*3, 77
-        encoder_hidden_states = self.text_encoder_trainers[0].text_encoder(input_ids)[0]
-        # # bs*3, 77, 768 or 1024
-        # encoder_hidden_states = encoder_hidden_states.reshape((b_size, -1, encoder_hidden_states.shape[-1]))
-        return encoder_hidden_states.to(dtype=self.weight_dtype)
+        text_conds = []
+        for text_encoder_trainer in self.text_encoder_trainers:
+            tokenizer = text_encoder_trainer.tokenizer
+            input_ids = tokenizer(batch["caption"], padding="max_length", truncation=True, max_length=tokenizer.model_max_length, return_tensors="pt").input_ids
+            input_ids = input_ids.to(self.accelerator.device)
+            encoder_hidden_states = text_encoder_trainer.text_encoder(input_ids)[0]
+            text_conds.append(encoder_hidden_states.to(dtype=self.weight_dtype))
+        return text_conds
     
-
+    
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
         noisy_latents = noisy_latents.to(self.weight_dtype)
-        return self.unet(noisy_latents, timesteps, text_encoder_conds).sample
+        return self.unet(noisy_latents, timesteps, text_encoder_conds[0]).sample
+
+    # def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
+    #     noisy_latents = noisy_latents.to(self.weight_dtype)
+    #     text_embedding = torch.cat([text_encoder_conds[0], text_encoder_conds[1]], dim=2).to(weight_dtype)
+    #     return self.unet(noisy_latents, timesteps, text_embedding).sample
 
 
     def init_tokenizer(self):
