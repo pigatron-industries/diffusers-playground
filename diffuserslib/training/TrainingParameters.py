@@ -16,6 +16,7 @@ class TrainingParameters:
     safetensors: bool = True            # Whether to save in savetensor format.
 
     numValidationImages: int = 4        # Number of images that should be generated during validation with `validation_prompt`.
+    validationModel: str|None = None    # A path to a model that should be used for validation.
     validationPrompt: str = ''          # A prompt that is used during validation to verify that the model is learning.
     validationNegativePrompt: str = ''  # A negative prompt that is used during validation to verify that the model is learning.
     validationSteps: int = 100          # Run validation every X steps. Validation consists of running the prompt `args.validation_prompt` multiple times: `args.num_validation_images` and logging the images.

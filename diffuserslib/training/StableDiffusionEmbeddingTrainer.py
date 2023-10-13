@@ -334,8 +334,12 @@ class StableDiffusionEmbeddingTrainer():
             f" {self.params.validationPrompt}."
         )
         # create pipeline (note: unet and vae are loaded again in float32)
+        if self.params.validationModel is None:
+            validationModel = self.params.model
+        else
+            validationModel = self.params.validationModel
         pipeline = DiffusionPipeline.from_pretrained(
-            self.params.model,
+            validationModel,
             text_encoder=self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder),
             tokenizer=self.text_encoder_trainers[0].tokenizer,
             unet=self.unet,
