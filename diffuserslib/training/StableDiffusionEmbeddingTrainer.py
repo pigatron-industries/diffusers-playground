@@ -144,9 +144,9 @@ class StableDiffusionEmbeddingTrainer():
         )
 
         # Prepare everything with our `accelerator`.
-        self.text_encoder_trainers[0].text_encoder, self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(
-            self.text_encoder_trainers[0].text_encoder, self.optimizer, self.train_dataloader, self.lr_scheduler
-        )
+        for text_encoder_trainer in self.text_encoder_trainers:
+            text_encoder_trainer.text_encoder = self.accelerator.prepare(text_encoder_trainer.text_encoder)
+        self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(self.optimizer, self.train_dataloader, self.lr_scheduler)
 
         # For mixed precision training we cast all non-trainable weigths (vae, non-lora text_encoder and non-lora unet) to half-precision
         # as these weights are only used for inference, keeping weights in full precision is not required.
