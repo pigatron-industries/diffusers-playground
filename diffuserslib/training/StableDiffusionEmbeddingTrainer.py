@@ -102,8 +102,11 @@ class StableDiffusionEmbeddingTrainer():
             )
 
         # Initialize the optimizer
+        trainable_params = []
+        for text_encoder_trainer in self.text_encoder_trainers:
+            trainable_params += text_encoder_trainer.text_encoder.get_input_embeddings().parameters()
         self.optimizer = torch.optim.AdamW(
-            self.text_encoder_trainers[0].text_encoder.get_input_embeddings().parameters(),  # only optimize the embeddings
+            trainable_params,  # only optimize the embeddings
             lr=self.params.learningRate,
             betas=(self.params.adamBeta1, self.params.adamBeta2),
             weight_decay=self.params.adamWeightDecay,
