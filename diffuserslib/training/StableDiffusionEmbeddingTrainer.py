@@ -212,8 +212,8 @@ class StableDiffusionEmbeddingTrainer():
     def train_loop(self):
         for epoch in range(self.start_epoch, self.params.numEpochs):
             self.text_encoder_trainers[0].text_encoder.train()
-            for step, batch in enumerate(self.train_dataloader):
-                loss = self.train_step(batch)
+            for step, batchitem in enumerate(self.train_dataloader):
+                loss = self.train_step(batchitem)
 
                 # Checks if the accelerator has performed an optimization step behind the scenes
                 if self.accelerator.sync_gradients:
@@ -237,10 +237,10 @@ class StableDiffusionEmbeddingTrainer():
         self.accelerator.end_training()
 
 
-    def train_step(self, batch):
+    def train_step(self, batchitem):
         with self.accelerator.accumulate(self.text_encoder_trainers[0].text_encoder):
             # Convert images to latent space
-            latents = self.vae.encode(batch["pixel_values"].to(dtype=self.weight_dtype)).latent_dist.sample().detach()
+            latents = self.vae.encode(batchitem["pixel_values"].to(dtype=self.weight_dtype)).latent_dist.sample().detach()
             latents = latents * self.vae.config.scaling_factor
 
             # Sample noise that we'll add to the latents
@@ -255,10 +255,10 @@ class StableDiffusionEmbeddingTrainer():
             noisy_latents = self.noise_scheduler.add_noise(latents, noise, timesteps)
 
             # Get the text embedding for conditioning
-            text_encoder_conds = self.get_text_conds(batch)
+            text_encoder_conds = self.get_text_conds(batchitem)
 
             # Predict the noise residual
-            model_pred = self.call_unet(noisy_latents, timesteps, text_encoder_conds, batch)
+            model_pred = self.call_unet(noisy_latents, timesteps, text_encoder_conds, batchitem)
 
             # Get the target for loss depending on the prediction type
             if self.noise_scheduler.config.prediction_type == "epsilon":
@@ -289,16 +289,19 @@ class StableDiffusionEmbeddingTrainer():
         
 
     def get_text_conds(self, batch):
-        input_ids = batch["input_ids"].to(self.accelerator.device)
-        b_size = input_ids.size()[0]
-        input_ids = input_ids.reshape((-1, self.text_encoder_trainers[0].tokenizer.model_max_length))  # batch_size*3, 77
+        tokenizer = self.text_encoder_trainers[0].tokenizer
+        input_ids = tokenizer(batch["caption"], padding="max_length", truncation=True, max_length=tokenizer.model_max_length, return_tensors="pt").input_ids[0]
+        input_ids = input_ids.to(self.accelerator.device)
+        # b_size = input_ids.size()[0]
+        # input_ids = input_ids.reshape((-1, self.text_encoder_trainers[0].tokenizer.model_max_length))  # batch_size*3, 77
         encoder_hidden_states = self.text_encoder_trainers[0].text_encoder(input_ids)[0]
-        # bs*3, 77, 768 or 1024
-        encoder_hidden_states = encoder_hidden_states.reshape((b_size, -1, encoder_hidden_states.shape[-1]))
+        # # bs*3, 77, 768 or 1024
+        # encoder_hidden_states = encoder_hidden_states.reshape((b_size, -1, encoder_hidden_states.shape[-1]))
         return encoder_hidden_states.to(dtype=self.weight_dtype)
     
 
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
+        noisy_latents = noisy_latents.to(self.weight_dtype)
         return self.unet(noisy_latents, timesteps, text_encoder_conds).sample
 
 
@@ -346,14 +349,11 @@ class StableDiffusionEmbeddingTrainer():
             validationModel,
             text_encoder=self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder),
             tokenizer=self.text_encoder_trainers[0].tokenizer,
-            unet=self.unet,
-            vae=self.vae,
             safety_checker=None,
             torch_dtype=self.weight_dtype,
         )
         pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
         pipeline = pipeline.to(self.accelerator.device)
-        pipeline.set_progress_bar_config(disable=True)
 
         # run inference
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
