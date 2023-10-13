@@ -290,7 +290,11 @@ class StableDiffusionEmbeddingTrainer():
 
     def get_text_conds(self, batch):
         input_ids = batch["input_ids"].to(self.accelerator.device)
+        b_size = input_ids.size()[0]
+        input_ids = input_ids.reshape((-1, self.text_encoder_trainers[0].tokenizer.model_max_length))  # batch_size*3, 77
         encoder_hidden_states = self.text_encoder_trainers[0].text_encoder(input_ids)[0]
+        # bs*3, 77, 768 or 1024
+        encoder_hidden_states = encoder_hidden_states.reshape((b_size, -1, encoder_hidden_states.shape[-1]))
         return encoder_hidden_states.to(dtype=self.weight_dtype)
     
 
