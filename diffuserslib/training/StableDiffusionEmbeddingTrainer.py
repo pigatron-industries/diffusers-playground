@@ -340,7 +340,7 @@ class StableDiffusionEmbeddingTrainer():
         # create pipeline (note: unet and vae are loaded again in float32)
         if self.params.validationModel is None:
             validationModel = self.params.model
-        else
+        else:
             validationModel = self.params.validationModel
         pipeline = DiffusionPipeline.from_pretrained(
             validationModel,
