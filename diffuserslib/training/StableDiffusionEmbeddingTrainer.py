@@ -80,16 +80,18 @@ class StableDiffusionEmbeddingTrainer():
         self.vae.requires_grad_(False)
         self.unet.requires_grad_(False)
         # Freeze all parameters except for the token embeddings in text encoder
-        self.text_encoder_trainers[0].text_encoder.text_model.encoder.requires_grad_(False)
-        self.text_encoder_trainers[0].text_encoder.text_model.final_layer_norm.requires_grad_(False)
-        self.text_encoder_trainers[0].text_encoder.text_model.embeddings.position_embedding.requires_grad_(False)
+        for text_encoder_trainer in self.text_encoder_trainers:
+            text_encoder_trainer.text_encoder.text_model.encoder.requires_grad_(False)
+            text_encoder_trainer.text_encoder.text_model.final_layer_norm.requires_grad_(False)
+            text_encoder_trainer.text_encoder.text_model.embeddings.position_embedding.requires_grad_(False)
 
         if self.params.gradientCheckpointing:
             # Keep unet in train mode if we are using gradient checkpointing to save memory.
             # The dropout cannot be != 0 so it doesn't matter if we are in eval or train mode.
             self.unet.train()
-            self.text_encoder_trainers[0].text_encoder.gradient_checkpointing_enable()
             self.unet.enable_gradient_checkpointing()
+            for text_encoder_trainer in self.text_encoder_trainers:
+                text_encoder_trainer.text_encoder.gradient_checkpointing_enable()
 
         if self.params.enableXformers:
             self.unet.enable_xformers_memory_efficient_attention()
@@ -109,11 +111,11 @@ class StableDiffusionEmbeddingTrainer():
         )
 
         # Dataset and DataLoaders creation:
+        placeholder_token_string = " ".join(self.text_encoder_trainers[0].tokenizer.convert_ids_to_tokens(self.placeholder_token_ids))
         train_dataset = TextualInversionDataset(
             data_root=self.params.trainDataDir,
-            tokenizer=self.text_encoder_trainers[0].tokenizer,
             size=self.params.resolution,
-            placeholder_token=(" ".join(self.text_encoder_trainers[0].tokenizer.convert_ids_to_tokens(self.placeholder_token_ids))),
+            placeholder_token=placeholder_token_string,
             repeats=self.params.repeats,
             learnable_property=self.params.learnableProperty,
             center_crop=self.params.centreCrop,
@@ -298,7 +300,7 @@ class StableDiffusionEmbeddingTrainer():
             text_conds.append(encoder_hidden_states.to(dtype=self.weight_dtype))
         return text_conds
     
-    
+
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
         noisy_latents = noisy_latents.to(self.weight_dtype)
         return self.unet(noisy_latents, timesteps, text_encoder_conds[0]).sample

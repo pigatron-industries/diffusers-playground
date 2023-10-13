@@ -76,7 +76,6 @@ class TextualInversionDataset(Dataset):
     def __init__(
         self,
         data_root,
-        tokenizer,
         learnable_property="object",  # [object, style]
         size=512,
         repeats=100,
@@ -87,7 +86,6 @@ class TextualInversionDataset(Dataset):
         center_crop=False,
     ):
         self.data_root = data_root
-        self.tokenizer = tokenizer
         self.learnable_property = learnable_property
         self.size = size
         self.placeholder_token = placeholder_token
@@ -122,8 +120,7 @@ class TextualInversionDataset(Dataset):
         if not image.mode == "RGB":
             image = image.convert("RGB")
 
-        placeholder_string = self.placeholder_token
-        text = random.choice(self.templates).format(placeholder_string)
+        text = random.choice(self.templates).format(self.placeholder_token)
         example["caption"] = text
 
         # default to score-sde preprocessing
