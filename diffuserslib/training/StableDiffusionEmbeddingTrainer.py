@@ -199,6 +199,16 @@ class StableDiffusionEmbeddingTrainer():
         self.train_loop()
 
 
+    def load_models(self):
+        self.text_encoder_trainers = [TextEncoderTrainer(
+            CLIPTokenizer.from_pretrained(self.params.model, subfolder="tokenizer"), 
+            CLIPTextModel.from_pretrained(self.params.model, subfolder="text_encoder")
+        )]
+        self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
+        self.vae = AutoencoderKL.from_pretrained(self.params.model, subfolder="vae")
+        self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
+
+
     def train_loop(self):
         for epoch in range(self.start_epoch, self.params.numEpochs):
             self.text_encoder_trainers[0].text_encoder.train()
@@ -276,20 +286,12 @@ class StableDiffusionEmbeddingTrainer():
                 ] = self.orig_embeds_params[index_no_updates]
 
             return loss
-
-
-    def load_models(self):
-        self.text_encoder_trainers = [TextEncoderTrainer(
-            CLIPTokenizer.from_pretrained(self.params.model, subfolder="tokenizer"), 
-            CLIPTextModel.from_pretrained(self.params.model, subfolder="text_encoder")
-        )]
-        self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
-        self.vae = AutoencoderKL.from_pretrained(self.params.model, subfolder="vae")
-        self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
-
+        
 
     def get_text_conds(self, batch):
-        return self.text_encoder_trainers[0].text_encoder(batch["input_ids"])[0].to(dtype=self.weight_dtype)
+        input_ids = batch["input_ids"].to(self.accelerator.device)
+        encoder_hidden_states = self.text_encoder_trainers[0].text_encoder(input_ids)[0]
+        return encoder_hidden_states.to(dtype=self.weight_dtype)
     
 
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
