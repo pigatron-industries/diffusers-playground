@@ -33,26 +33,27 @@ class TextEmbedding:
         if(embedding_path.endswith('.safetensors')):
             with safe_open(embedding_path, framework='pt') as f:
                 for key in f.keys():
-                    learned_embeds = f.get_tensor(key)
+                    if(token is None):
+                        token = key
+                    embedding_vectors = f.get_tensor(key)
         else:
             learned_embeds = torch.load(embedding_path, map_location="cpu")
-
-        if ('string_to_param' in learned_embeds):  # .pt embedding
-            string_to_token = learned_embeds['string_to_token']
-            trained_token = list(string_to_token.keys())[0]
-            if(token is None):
-                token = trained_token
-            string_to_param = learned_embeds['string_to_param']
-            embedding_vectors = string_to_param[trained_token]
-        else: # .bin diffusers concept
-            trained_token = list(learned_embeds.keys())[0]
-            if(token is None):
-                token = trained_token
-            embedding_vector = learned_embeds[trained_token]
-            if (embedding_vector.ndim == 1):
-                embedding_vectors = [embedding_vector]
-            else:
-                embedding_vectors = embedding_vector
+            if ('string_to_param' in learned_embeds):  # .pt embedding
+                string_to_token = learned_embeds['string_to_token']
+                trained_token = list(string_to_token.keys())[0]
+                if(token is None):
+                    token = trained_token
+                string_to_param = learned_embeds['string_to_param']
+                embedding_vectors = string_to_param[trained_token]
+            else: # .bin diffusers concept
+                trained_token = list(learned_embeds.keys())[0]
+                if(token is None):
+                    token = trained_token
+                embedding_vector = learned_embeds[trained_token]
+                if (embedding_vector.ndim == 1):
+                    embedding_vectors = [embedding_vector]
+                else:
+                    embedding_vectors = embedding_vector
         return cls(embedding_vectors, token, embedclass, embedding_path)
 
 
