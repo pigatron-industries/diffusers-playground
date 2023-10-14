@@ -1,6 +1,9 @@
 from typing import List
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer
+from accelerate.logging import get_logger
+
+logger = get_logger(__name__)
 
 class TextEncoderTrainer():
 
@@ -21,16 +24,18 @@ class TextEncoderTrainer():
         self.placeholder_token_ids = self.tokenizer.convert_tokens_to_ids(placeholder_tokens)
 
         self.initializer_token_ids = self.tokenizer.encode(initializer_tokens, add_special_tokens=False)
-        if len(self.initializer_token_ids) > 1:
-            raise ValueError("The initializer token must be a single token.")      # TODO use all tokens in the initializer instead of erroring
+        logger.info(f"initializer phrase has {len(self.initializer_token_ids)} tokens")
         
         self.text_encoder.resize_token_embeddings(len(self.tokenizer))
 
         # Initialise the newly added placeholder token with the embeddings of the initializer token
         token_embeds = self.text_encoder.get_input_embeddings().weight.data
         with torch.no_grad():
-            for placeholder_token_id in self.placeholder_token_ids:
-                token_embeds[placeholder_token_id] = token_embeds[self.initializer_token_ids[0]].clone()
+            for i, placeholder_token_id in enumerate(self.placeholder_token_ids):
+                if i < len(self.initializer_token_ids):
+                    token_embeds[placeholder_token_id] = token_embeds[self.initializer_token_ids[i]].clone()
+                else:
+                    token_embeds[placeholder_token_id] = torch.randn_like(token_embeds[0])
 
 
     def store_original_embeddings(self):
