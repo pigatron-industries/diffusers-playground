@@ -6,6 +6,8 @@ from .arch.StableDiffusionPipelines import DiffusersPipelineWrapper
 from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
+from safetensors import safe_open
+
 
 def getClassFromFilename(path):
     filename = os.path.basename(path)
@@ -17,17 +19,22 @@ def getClassFromFilename(path):
 
 
 class TextEmbedding:
-    def __init__(self, embedding_vectors, token: str, embedclass: str = None):
+    def __init__(self, embedding_vectors, token: str, embedclass: str = None, path: str = None):
         self.embedding_vectors = embedding_vectors
         self.token = token
         self.embedclass = embedclass
+        self.path = path
 
     @classmethod
     def from_file(cls, embedding_path, token = None):
         if(token is None):
             token = findBetween(embedding_path, '<', '>', True)
         embedclass = getClassFromFilename(embedding_path)
-        learned_embeds = torch.load(embedding_path, map_location="cpu")
+        if(embedding_path.endswith('.safetensors')):
+            learned_embeds = safe_open(embedding_path, framework='pt')
+        else:
+            learned_embeds = torch.load(embedding_path, map_location="cpu")
+
         if ('string_to_param' in learned_embeds):  # .pt embedding
             string_to_token = learned_embeds['string_to_token']
             trained_token = list(string_to_token.keys())[0]
@@ -44,7 +51,7 @@ class TextEmbedding:
                 embedding_vectors = [embedding_vector]
             else:
                 embedding_vectors = embedding_vector
-        return cls(embedding_vectors, token, embedclass)
+        return cls(embedding_vectors, token, embedclass, embedding_path)
 
 
     def add_to_model(self, text_encoder, tokenizer):
@@ -71,7 +78,7 @@ class TextEmbeddings:
     def load_directory(self, path: str, base: str):
         print(f'Loading text embeddings for base {base} from path {path}')
         for embedding_path, embedding_file in getPathsFiles(f"{path}/*"):
-            if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
+            if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt') or embedding_file.endswith('.safetensors')):
                 self.load_file(embedding_path)
 
 
