@@ -367,7 +367,7 @@ class StableDiffusionEmbeddingTrainer():
         learned_embeds = (
             self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder)
             .get_input_embeddings()
-            .weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1]
+            .weight[min(self.text_encoder_trainers[0].placeholder_token_ids) : max(self.text_encoder_trainers[0].placeholder_token_ids) + 1]
         )
         learned_embeds_dict = {self.params.placeholderToken: learned_embeds.detach().cpu()}
 
