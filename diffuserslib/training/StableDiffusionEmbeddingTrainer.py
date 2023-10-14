@@ -360,10 +360,11 @@ class StableDiffusionEmbeddingTrainer():
     def save_progress(self):
         logger.info("Saving embeddings")
 
+        filename = f"{self.params.outputPrefix}-{self.params.placeholderToken}-{self.params.numVectors}-{self.global_step}"
         weight_name = (
-            f"learned_embeds-steps-{self.global_step}.safetensors"
+            f"{filename}.safetensors"
             if self.params.safetensors
-            else f"learned_embeds-steps-{self.global_step}.bin"
+            else f"{filename}.bin"
         )
         save_path = os.path.join(self.params.outputDir, weight_name)
 

@@ -5,6 +5,7 @@ class TrainingParameters:
     model: str = 'runwayml/stable-diffusion-v1-5'
     trainDataDir: str = '/train'        # A folder containing the training data.
     outputDir: str = '/output'          # A folder where the checkpoints will be saved.
+    outputPrefix: str = 'object'        # The filename of the checkpoint.
     placeholderToken: str = '<token>'   # A token to use as a placeholder for the concept.
     initializerToken: str = 'person'    # A token to use as initializer word.
     learnableProperty: str = 'object'   # Choose between 'object' and 'style'
