@@ -200,16 +200,17 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def load_models(self):
+        self.pipeline = DiffusionPipeline.from_pretrained(self.params.model, safety_checker=None, torch_dtype=self.weight_dtype)
         self.text_encoder_trainers = [self.createTextEncoderTrainer("tokenizer", "text_encoder")]
-        self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
-        self.vae = AutoencoderKL.from_pretrained(self.params.model, subfolder="vae")
-        self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
+        self.noise_scheduler = self.pipeline.components["scheduler"]
+        self.vae = self.pipeline.components["vae"]
+        self.unet = self.pipeline.components["unet"]
 
 
     def createTextEncoderTrainer(self, tokenizer_subfolder:str, text_encoder_subfolder:str):
         return TextEncoderTrainer(
-            CLIPTokenizer.from_pretrained(self.params.model, subfolder=tokenizer_subfolder), 
-            CLIPTextModel.from_pretrained(self.params.model, subfolder=text_encoder_subfolder), 
+            self.pipeline.components[tokenizer_subfolder],
+            self.pipeline.components[text_encoder_subfolder],
             self.accelerator)
 
 

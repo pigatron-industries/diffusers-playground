@@ -24,7 +24,7 @@ class TextEncoderTrainer():
         self.placeholder_token_ids = self.tokenizer.convert_tokens_to_ids(placeholder_tokens)
 
         self.initializer_token_ids = self.tokenizer.encode(initializer_tokens, add_special_tokens=False)
-        logger.info(f"initializer phrase has {len(self.initializer_token_ids)} tokens")
+        print(f"initializer phrase has {len(self.initializer_token_ids)} tokens")
         
         self.text_encoder.resize_token_embeddings(len(self.tokenizer))
 

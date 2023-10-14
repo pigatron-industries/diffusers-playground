@@ -5,9 +5,7 @@ from .TextEncoderTrainer import TextEncoderTrainer
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import (
-    AutoencoderKL,
-    DDPMScheduler,
-    UNet2DConditionModel,
+    DiffusionPipeline,
     EulerDiscreteScheduler
 )
 
@@ -19,18 +17,21 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
 
 
     def load_models(self):
-        self.text_encoder_trainers = [self.createTextEncoderTrainer("tokenizer", "text_encoder"), 
-                                      self.createTextEncoderTrainer("tokenizer_2", "text_encoder_2")]
-        self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
-        self.vae = AutoencoderKL.from_pretrained(self.params.model, subfolder="vae")
-        self.unet = UNet2DConditionModel.from_pretrained(self.params.model, subfolder="unet")
+        self.pipeline = DiffusionPipeline.from_pretrained(self.params.model, safety_checker=None, torch_dtype=self.weight_dtype)
+        self.text_encoder_trainers = [self.createTextEncoderTrainer("tokenizer", "text_encoder"), self.createTextEncoderTrainer("tokenizer_2", "text_encoder_2")]
+        self.noise_scheduler = self.pipeline.components["scheduler"]
+        self.vae = self.pipeline.components["vae"]
+        self.unet = self.pipeline.components["unet"]
 
 
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
         noisy_latents = noisy_latents.to(self.weight_dtype)
-        text_embedding = torch.cat(text_encoder_conds, dim=-1).to(self.weight_dtype)
-        # added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
-        return self.unet(noisy_latents, timesteps, text_embedding).sample
+        (prompt_embeds,negative_prompt_embeds,pooled_prompt_embeds,negative_pooled_prompt_embeds) = self.pipeline.encode_prompt(prompt=batch["caption"])
+        time_ids = self.pipeline._get_add_time_ids(list(batch["pixel_values"].shape[2:4]), [0,0], [1024,1024], dtype=self.weight_dtype).to(self.accelerator.device)
+
+        cond_kwargs = {"text_embeds": pooled_prompt_embeds, "time_ids": time_ids}
+        # prompt_embeds = torch.cat(text_encoder_conds, dim=-1).to(self.weight_dtype)
+        return self.unet(noisy_latents, timesteps, prompt_embeds, cond_kwargs).sample
 
 
     def load_validation_pipeline(self):
