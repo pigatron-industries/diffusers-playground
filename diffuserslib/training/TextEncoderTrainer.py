@@ -31,6 +31,8 @@ class TextEncoderTrainer():
             for placeholder_token_id in self.placeholder_token_ids:
                 token_embeds[placeholder_token_id] = token_embeds[self.initializer_token_ids[0]].clone()
 
+
+    def store_original_embeddings(self):
         # keep original embeddings as reference
         self.orig_embeds = self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight.data.clone()
 

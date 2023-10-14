@@ -188,6 +188,8 @@ class StableDiffusionEmbeddingTrainer():
         )
 
         # keep original embeddings as reference
+        for text_encoder_trainer in self.text_encoder_trainers:
+            text_encoder_trainer.store_original_embeddings()
         # self.orig_embeds_params = self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder).get_input_embeddings().weight.data.clone()
 
         # Initial validation to see what prompt looks liike without training
