@@ -1,9 +1,10 @@
 from typing import List
 import torch
+from transformers import CLIPTextModel, CLIPTokenizer
 
 class TextEncoderTrainer():
 
-    def __init__(self, tokenizer, text_encoder, accelerator):
+    def __init__(self, tokenizer:CLIPTokenizer, text_encoder:CLIPTextModel, accelerator):
         self.accelerator = accelerator
         self.tokenizer = tokenizer
         self.text_encoder = text_encoder

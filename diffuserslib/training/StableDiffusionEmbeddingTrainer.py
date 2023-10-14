@@ -314,12 +314,7 @@ class StableDiffusionEmbeddingTrainer():
             text_encoder_trainer.add_tokens(placeholder_tokens, self.params.initializerToken)
 
 
-    def log_validation(self, epoch):
-        logger.info(
-            f"Running validation for step {self.global_step}... \n Generating {self.params.numValidationImages} images with prompt:"
-            f" {self.params.validationPrompt}."
-        )
-        # create pipeline (note: unet and vae are loaded again in float32)
+    def load_validation_pipeline(self):
         if self.params.validationModel is None:
             validationModel = self.params.model
         else:
@@ -333,6 +328,15 @@ class StableDiffusionEmbeddingTrainer():
         )
         pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
         pipeline = pipeline.to(self.accelerator.device)
+        return pipeline
+
+
+    def log_validation(self, epoch):
+        logger.info(
+            f"Running validation for step {self.global_step}... \n Generating {self.params.numValidationImages} images with prompt:"
+            f" {self.params.validationPrompt}."
+        )
+        pipeline = self.load_validation_pipeline()
 
         prompt = self.params.validationPrompt.replace(self.params.placeholderToken, self.placeholder_token_string)
 
