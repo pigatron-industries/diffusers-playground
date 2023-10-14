@@ -31,7 +31,9 @@ class TextEmbedding:
             token = findBetween(embedding_path, '<', '>', True)
         embedclass = getClassFromFilename(embedding_path)
         if(embedding_path.endswith('.safetensors')):
-            learned_embeds = safe_open(embedding_path, framework='pt')
+            with safe_open(embedding_path, framework='pt') as f:
+                for key in f.keys():
+                    learned_embeds = f.get_tensor(key)
         else:
             learned_embeds = torch.load(embedding_path, map_location="cpu")
 
