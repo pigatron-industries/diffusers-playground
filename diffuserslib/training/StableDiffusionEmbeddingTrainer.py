@@ -1,6 +1,7 @@
 import logging
 import math
 import os
+from typing import List
 
 from .TrainingParameters import TrainingParameters
 from .TextualInversionDataset import TextualInversionDataset
@@ -17,6 +18,7 @@ from accelerate.utils import ProjectConfiguration, set_seed
 
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
+from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 import diffusers
 from diffusers import (
@@ -293,25 +295,20 @@ class StableDiffusionEmbeddingTrainer():
             return loss
         
 
-    def get_text_conds(self, batch):
+    def get_text_conds(self, batch) -> List[BaseModelOutputWithPooling]:
         text_conds = []
         for text_encoder_trainer in self.text_encoder_trainers:
             tokenizer = text_encoder_trainer.tokenizer
             input_ids = tokenizer(batch["caption"], padding="max_length", truncation=True, max_length=tokenizer.model_max_length, return_tensors="pt").input_ids
             input_ids = input_ids.to(self.accelerator.device)
-            encoder_hidden_states = text_encoder_trainer.text_encoder(input_ids)[0]
-            text_conds.append(encoder_hidden_states.to(dtype=self.weight_dtype))
+            prompt_embeds = text_encoder_trainer.text_encoder(input_ids, output_hidden_states=True)
+            text_conds.append(prompt_embeds)
         return text_conds
     
 
-    def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
+    def call_unet(self, noisy_latents, timesteps, text_encoder_conds: List[BaseModelOutputWithPooling], batch):
         noisy_latents = noisy_latents.to(self.weight_dtype)
-        return self.unet(noisy_latents, timesteps, text_encoder_conds[0]).sample
-
-    # def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
-    #     noisy_latents = noisy_latents.to(self.weight_dtype)
-    #     text_embedding = torch.cat([text_encoder_conds[0], text_encoder_conds[1]], dim=2).to(weight_dtype)
-    #     return self.unet(noisy_latents, timesteps, text_embedding).sample
+        return self.unet(noisy_latents, timesteps, text_encoder_conds[0][0]).sample
 
 
     def init_tokenizer(self):
@@ -370,7 +367,7 @@ class StableDiffusionEmbeddingTrainer():
         for _ in range(self.params.numValidationImages):
             image = pipeline(self.params.validationPrompt, 
                              negative_prompt = self.params.validationNegativePrompt,
-                             num_inference_steps = self.params.validationSteps, 
+                             num_inference_steps = self.params.validationInferenceSteps, 
                              guidance_scale=9.0,
                              generator = generator,
                              width = self.params.resolution, 
