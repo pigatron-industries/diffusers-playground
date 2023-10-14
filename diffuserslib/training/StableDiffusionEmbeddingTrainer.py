@@ -339,13 +339,11 @@ class StableDiffusionEmbeddingTrainer():
         )
         pipeline = self.load_validation_pipeline()
 
-        prompt = self.params.validationPrompt.replace(self.params.placeholderToken, self.placeholder_token_string)
-
         # run inference
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
         images = []
         for _ in range(self.params.numValidationImages):
-            image = pipeline(prompt, 
+            image = pipeline(self.params.validationPrompt, 
                              negative_prompt = self.params.validationNegativePrompt,
                              num_inference_steps = self.params.validationInferenceSteps, 
                              guidance_scale=9.0,
