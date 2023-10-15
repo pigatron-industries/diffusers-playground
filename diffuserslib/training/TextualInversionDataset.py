@@ -77,7 +77,7 @@ class TextualInversionDataset(Dataset):
         self,
         data_root,
         learnable_property="object",  # [object, style]
-        size=512,
+        size=(512, 512),
         repeats=100,
         interpolation="bicubic",
         flip_p=0.5,
@@ -138,7 +138,7 @@ class TextualInversionDataset(Dataset):
             img = img[(h - crop) // 2 : (h + crop) // 2, (w - crop) // 2 : (w + crop) // 2]
 
         image = Image.fromarray(img)
-        image = image.resize((self.size, self.size), resample=self.interpolation)
+        image = image.resize((self.size[0], self.size[1]), resample=self.interpolation)
 
         image = self.flip_transform(image)
         image = np.array(image).astype(np.uint8)

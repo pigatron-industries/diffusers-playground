@@ -60,6 +60,7 @@ class TextEmbedding:
 
     def add_to_model(self, pipeline: DiffusersPipelineWrapper):
         print(f"adding embedding token {self.token}")
+        # TODO add multiple embeddings to multiple text encoders for sdxl
         dtype = pipeline.pipeline.text_encoder.get_input_embeddings().weight.dtype
         for embedding in self.embeddings:
             for i, embedding_vector in enumerate(embedding):

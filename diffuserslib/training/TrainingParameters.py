@@ -12,7 +12,7 @@ class TrainingParameters:
     initializerToken: str = 'person'    # A token to use as initializer word.
     learnableProperty: str = 'object'   # Choose between 'object' and 'style'
     seed: int|None = None               # A seed for reproducible training.
-    resolution: int = 512               # The resolution for input images, all the images in the train/validation dataset will be resized to this resolution
+    resolution: Tuple[int, int] = (512, 512) # The resolution for input images, all the images in the train/validation dataset will be resized to this resolution
     centreCrop: bool = False            # Whether to center crop images before resizing to resolution.
     repeats: int = 100                  # Number of times to repeat the dataset.
     numVectors: int = 1                 # Number of vectors to train.
