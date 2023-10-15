@@ -78,6 +78,7 @@ class StableDiffusionEmbeddingTrainer():
             os.makedirs(self.params.outputDir, exist_ok=True)
 
         self.load_models()
+        self.load_validation_pipeline()
         self.init_tokenizer()
 
         # Freeze vae and unet
@@ -318,20 +319,15 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def load_validation_pipeline(self):
-        if self.params.validationModel is None:
-            validationModel = self.params.model
-        else:
-            validationModel = self.params.validationModel
-        pipeline = DiffusionPipeline.from_pretrained(
-            validationModel,
-            text_encoder=self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder),
-            tokenizer=self.text_encoder_trainers[0].tokenizer,
-            safety_checker=None,
-            torch_dtype=self.weight_dtype,
-        )
-        pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
-        pipeline = pipeline.to(self.accelerator.device)
-        return pipeline
+        if(self.params.numValidationImages > 0):
+            self.validationPipeline = DiffusionPipeline.from_pretrained(validationModel, safety_checker=None, torch_dtype=self.weight_dtype)
+            self.validationPipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
+            self.validationPipeline = pipeline.to(self.accelerator.device)
+
+    
+    def update_validation_pipeline(self):
+        self.validationPipeline.text_encoder = self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder)
+        self.validationPipeline.tokenizer = self.text_encoder_trainers[0].tokenizer
 
 
     def log_validation(self, epoch):
@@ -339,13 +335,13 @@ class StableDiffusionEmbeddingTrainer():
             f"Running validation for step {self.global_step}... \n Generating {self.params.numValidationImages} images with prompt:"
             f" {self.params.validationPrompt}."
         )
-        pipeline = self.load_validation_pipeline()
+        self.update_validation_pipeline()
 
         # run inference
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
         images = []
         for _ in range(self.params.numValidationImages):
-            image = pipeline(self.params.validationPrompt, 
+            image = self.validationPipeline(self.params.validationPrompt, 
                              negative_prompt = self.params.validationNegativePrompt,
                              num_inference_steps = self.params.validationInferenceSteps, 
                              guidance_scale=9.0,

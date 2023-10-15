@@ -3,6 +3,7 @@ from typing import Tuple
 
 @dataclass
 class TrainingParameters:
+    base: str
     model: str = 'runwayml/stable-diffusion-v1-5'
     trainDataDir: str = '/train'        # A folder containing the training data.
     outputDir: str = '/output'          # A folder where the checkpoints will be saved.
@@ -21,7 +22,7 @@ class TrainingParameters:
     numValidationImages: int = 4        # Number of images that should be generated during validation with `validation_prompt`.
     validationSize: Tuple[int, int] = (512, 512) # The resolution for validation images.
     validationSteps: int = 100          # Run validation every X steps. Validation consists of running the prompt `args.validation_prompt` multiple times: `args.num_validation_images` and logging the images.
-    validationModel: str|None = None    # A path to a model that should be used for validation.
+    validationModel: str = 'runwayml/stable-diffusion-v1-5' # A path to a model that should be used for validation.
     validationPrompt: str = ''          # A prompt that is used during validation to verify that the model is learning.
     validationNegativePrompt: str = ''  # A negative prompt that is used during validation to verify that the model is learning.
     validationSeed: int = 0             # Seed to use for validation images.
@@ -43,3 +44,21 @@ class TrainingParameters:
     adamBeta2: float = 0.999            # The beta2 parameter for the Adam optimizer.
     adamWeightDecay: float = 1e-2       # Weight decay to use.
     adamEpsilon: float = 1e-08          # Epsilon value for the Adam optimizer
+
+
+    def __init__(self, base:str, outputDirPrefix:str=None, **kwargs):
+        self.base = base
+        if base == 'sd_1_5':
+            self.model = 'runwayml/stable-diffusion-v1-5'
+        elif base == 'sd_2_1':
+            self.model = 'stabilityai/stable-diffusion-2-1'
+        elif base == 'sdxl_1_0':
+            self.model = 'stabilityai/stable-diffusion-xl-base-1.0'
+        self.validationModel = self.model
+
+        for k,v in kwargs.items():
+            setattr(self, k, v)
+
+        if outputDirPrefix is not None:
+            tokenfolder = self.placeholderToken.replace('<', '').replace('>', '')
+            self.outputDir = f"{outputDirPrefix}/{self.base}/{tokenfolder}"

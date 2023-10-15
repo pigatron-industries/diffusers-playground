@@ -35,20 +35,8 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
         return self.unet(noisy_latents, timesteps, prompt_embeds, added_cond_kwargs=cond_kwargs).sample
 
 
-    def load_validation_pipeline(self):
-        if self.params.validationModel is None:
-            validationModel = self.params.model
-        else:
-            validationModel = self.params.validationModel
-        pipeline = DiffusionPipeline.from_pretrained(
-            validationModel,
-            text_encoder=self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder),
-            text_encoder_2=self.accelerator.unwrap_model(self.text_encoder_trainers[1].text_encoder),
-            tokenizer=self.text_encoder_trainers[0].tokenizer,
-            tokenizer_2=self.text_encoder_trainers[1].tokenizer,
-            safety_checker=None,
-            torch_dtype=self.weight_dtype,
-        )
-        pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
-        pipeline = pipeline.to(self.accelerator.device)
-        return pipeline
+    def update_validation_pipeline(self):
+        self.validationPipeline.text_encoder = self.accelerator.unwrap_model(self.text_encoder_trainers[0].text_encoder)
+        self.validationPipeline.text_encoder_2 = self.accelerator.unwrap_model(self.text_encoder_trainers[1].text_encoder)
+        self.validationPipeline.tokenizer = self.text_encoder_trainers[0].tokenizer
+        self.validationPipeline.tokenizer_2 = self.text_encoder_trainers[1].tokenizer

@@ -1,5 +1,4 @@
 from .DiffusersWeb import *
-from .TrainTextEmbedding import *
 from .imagetools.ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
