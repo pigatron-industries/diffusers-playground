@@ -53,9 +53,6 @@ class TextEncoderTrainer():
     
     def get_learned_embeds(self):
         """Return the embeddings of the placeholder tokens"""
-        return self.accelerator.unwrap_model(text_encoder)
-            .get_input_embeddings()
-            .weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1]
-            .detach().cpu()
+        return self.accelerator.unwrap_model(text_encoder).get_input_embeddings().weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1].detach().cpu()
 
             
