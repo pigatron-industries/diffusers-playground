@@ -94,13 +94,15 @@ class TextEmbeddings:
         if(embedding.embedclass not in self.modifiers):
             self.modifiers[embedding.embedclass] = []
         self.modifiers[embedding.embedclass].append(embedding.token)
-        print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embedding_vectors)} vectors")
+        print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embeddings[0])} vectors")
         return embedding
 
 
-    def add_all_to_model(self, text_encoder, tokenizer):
-        for embedding in self.embeddings.values():
-            embedding.add_to_model(text_encoder, tokenizer)
+    def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
+        tokens = self.get_tokens_from_prompt(prompt)
+        self.add_tokens_to_model(pipeline, tokens)
+        prompt = self.process_prompt(prompt)
+        return prompt
 
 
     def add_tokens_to_model(self, pipeline: DiffusersPipelineWrapper, tokens: List[str]):
@@ -110,13 +112,6 @@ class TextEmbeddings:
                 embedding.add_to_model(pipeline)
             except ValueError:
                 pass
-
-
-    def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
-        tokens = self.get_tokens_from_prompt(prompt)
-        self.add_tokens_to_model(pipeline, tokens)
-        prompt = self.process_prompt(prompt)
-        return prompt
 
 
     def get_tokens_from_prompt(self, prompt: str):
