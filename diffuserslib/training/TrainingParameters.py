@@ -15,6 +15,7 @@ class TrainingParameters:
     centreCrop: bool = False            # Whether to center crop images before resizing to resolution.
     repeats: int = 100                  # Number of times to repeat the dataset.
     numVectors: int = 1                 # Number of vectors to train.
+    mixedPrecision: str = 'no'          # Whether to use mixed precision training. Choose between ['no', 'fp16', 'bf16']
     safetensors: bool = True            # Whether to save in savetensor format.
 
     numValidationImages: int = 4        # Number of images that should be generated during validation with `validation_prompt`.

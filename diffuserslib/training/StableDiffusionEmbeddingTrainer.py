@@ -48,6 +48,7 @@ class StableDiffusionEmbeddingTrainer():
         self.accelerator = Accelerator(
             gradient_accumulation_steps = params.gradientAccumulationSteps,
             project_config = ProjectConfiguration(project_dir=params.outputDir),
+            mixed_precision = mixedPrecision
         )
 
         # Make one log on every process with the configuration for debugging.
