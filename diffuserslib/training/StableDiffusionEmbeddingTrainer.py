@@ -351,7 +351,7 @@ class StableDiffusionEmbeddingTrainer():
             display(image)
             images.append(image)
 
-        del pipeline
+        # del pipeline
         return images
 
 
