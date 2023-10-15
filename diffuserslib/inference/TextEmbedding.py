@@ -137,7 +137,7 @@ class TextEmbeddings:
                 expandedtoken = ''
                 if(len(options) == 0):
                     # use all vectors in token
-                    for i, _ in enumerate(embedding.embedding_vectors):
+                    for i in range(len(embedding.embeddings[0])):
                         expandedtoken = expandedtoken + ' ' + embedding.token + str(i)
                 else:
                     # use selected vectors
