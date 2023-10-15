@@ -6,7 +6,8 @@ import torch
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import (
     DiffusionPipeline,
-    EulerDiscreteScheduler
+    EulerDiscreteScheduler,
+    DDPMScheduler
 )
 
 
@@ -19,7 +20,7 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
     def load_models(self):
         self.pipeline = DiffusionPipeline.from_pretrained(self.params.model, safety_checker=None, torch_dtype=self.weight_dtype)
         self.text_encoder_trainers = [self.createTextEncoderTrainer("tokenizer", "text_encoder"), self.createTextEncoderTrainer("tokenizer_2", "text_encoder_2")]
-        self.noise_scheduler = self.pipeline.components["scheduler"]
+        self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
         self.vae = self.pipeline.components["vae"]
         self.unet = self.pipeline.components["unet"]
 

@@ -60,6 +60,14 @@ class StableDiffusionEmbeddingTrainer():
         transformers.utils.logging.set_verbosity_warning()
         diffusers.utils.logging.set_verbosity_info()
 
+        # For mixed precision training we cast all non-trainable weigths (vae, non-lora text_encoder and non-lora unet) to half-precision
+        # as these weights are only used for inference, keeping weights in full precision is not required.
+        self.weight_dtype = torch.float32
+        if self.accelerator.mixed_precision == "fp16":
+            self.weight_dtype = torch.float16
+        elif self.accelerator.mixed_precision == "bf16":
+            self.weight_dtype = torch.bfloat16
+
 
     def train(self):
         if self.params.seed is not None:
@@ -141,14 +149,6 @@ class StableDiffusionEmbeddingTrainer():
         for text_encoder_trainer in self.text_encoder_trainers:
             text_encoder_trainer.text_encoder = self.accelerator.prepare(text_encoder_trainer.text_encoder)
         self.optimizer, self.train_dataloader, self.lr_scheduler = self.accelerator.prepare(self.optimizer, self.train_dataloader, self.lr_scheduler)
-
-        # For mixed precision training we cast all non-trainable weigths (vae, non-lora text_encoder and non-lora unet) to half-precision
-        # as these weights are only used for inference, keeping weights in full precision is not required.
-        self.weight_dtype = torch.float32
-        if self.accelerator.mixed_precision == "fp16":
-            self.weight_dtype = torch.float16
-        elif self.accelerator.mixed_precision == "bf16":
-            self.weight_dtype = torch.bfloat16
 
         # Move vae and unet to device and cast to weight_dtype
         self.unet.to(self.accelerator.device, dtype=self.weight_dtype)
