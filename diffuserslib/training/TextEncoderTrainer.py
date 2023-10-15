@@ -49,3 +49,13 @@ class TextEncoderTrainer():
         index_no_updates[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1] = False
         with torch.no_grad():
             self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight[index_no_updates] = self.orig_embeds[index_no_updates]
+
+    
+    def get_learned_embeds(self):
+        """Return the embeddings of the placeholder tokens"""
+        return self.accelerator.unwrap_model(text_encoder)
+            .get_input_embeddings()
+            .weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1]
+            .detach().cpu()
+
+            

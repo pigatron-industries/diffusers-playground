@@ -40,3 +40,11 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
         self.validationPipeline.text_encoder_2 = self.accelerator.unwrap_model(self.text_encoder_trainers[1].text_encoder)
         self.validationPipeline.tokenizer = self.text_encoder_trainers[0].tokenizer
         self.validationPipeline.tokenizer_2 = self.text_encoder_trainers[1].tokenizer
+
+
+    def to_state_dict(self, learned_embeds):
+        """ convert embed to state dict for saving to file """
+        return state_dict = {
+            "clip_l": learned_embeds[0],
+            "clip_g": learned_embeds[1]
+        }
