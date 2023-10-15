@@ -44,7 +44,7 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
 
     def to_state_dict(self, learned_embeds):
         """ convert embed to state dict for saving to file """
-        return state_dict = {
+        return {
             "clip_l": learned_embeds[0],
             "clip_g": learned_embeds[1]
         }

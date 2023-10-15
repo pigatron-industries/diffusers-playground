@@ -381,6 +381,6 @@ class StableDiffusionEmbeddingTrainer():
 
         def to_state_dict(self, learned_embeds):
             """ convert embed to state dict for saving to file """
-            return state_dict = {
+            return {
                 self.params.placeholderToken: learned_embeds[0]
             }
