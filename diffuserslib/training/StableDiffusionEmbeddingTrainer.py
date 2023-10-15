@@ -321,7 +321,7 @@ class StableDiffusionEmbeddingTrainer():
     def load_validation_pipeline(self):
         if(self.params.numValidationImages > 0):
             self.validationPipeline = DiffusionPipeline.from_pretrained(self.params.validationModel, safety_checker=None, torch_dtype=self.weight_dtype)
-            self.validationPipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
+            self.validationPipeline.scheduler = EulerDiscreteScheduler.from_config(self.validationPipeline.scheduler.config)
             self.validationPipeline = pipeline.to(self.accelerator.device)
 
     
