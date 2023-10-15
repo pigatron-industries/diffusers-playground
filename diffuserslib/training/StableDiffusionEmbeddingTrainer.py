@@ -349,8 +349,8 @@ class StableDiffusionEmbeddingTrainer():
                              num_inference_steps = self.params.validationInferenceSteps, 
                              guidance_scale=9.0,
                              generator = generator,
-                             width = self.params.resolution, 
-                             height = self.params.resolution).images[0]
+                             width = self.params.validationSize[0], 
+                             height = self.params.validationSize[1]).images[0]
             display(image)
             images.append(image)
 
