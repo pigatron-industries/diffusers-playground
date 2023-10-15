@@ -32,7 +32,7 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
 
         cond_kwargs = {"text_embeds": pooled_prompt_embeds, "time_ids": time_ids}
         # prompt_embeds = torch.cat(text_encoder_conds, dim=-1).to(self.weight_dtype)
-        return self.unet(noisy_latents, timesteps, prompt_embeds, cond_kwargs).sample
+        return self.unet(noisy_latents, timesteps, prompt_embeds, added_cond_kwargs=cond_kwargs).sample
 
 
     def load_validation_pipeline(self):
