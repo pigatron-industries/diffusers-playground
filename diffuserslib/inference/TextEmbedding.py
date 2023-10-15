@@ -19,8 +19,8 @@ def getClassFromFilename(path):
 
 
 class TextEmbedding:
-    def __init__(self, embedding_vectors, token: str, embedclass: str = None, path: str = None):
-        self.embedding_vectors = embedding_vectors
+    def __init__(self, embeddings, token: str, embedclass: str = None, path: str = None):
+        self.embeddings = embeddings
         self.token = token
         self.embedclass = embedclass
         self.path = path
@@ -54,21 +54,24 @@ class TextEmbedding:
                     embedding_vectors = [embedding_vector]
                 else:
                     embedding_vectors = embedding_vector
-        return cls(embedding_vectors, token, embedclass, embedding_path)
+        embeddings = [embedding_vectors]
+        return cls(embeddings, token, embedclass, embedding_path)
 
 
-    def add_to_model(self, text_encoder, tokenizer):
+    def add_to_model(self, pipeline: DiffusersPipelineWrapper):
         print(f"adding embedding token {self.token}")
-        dtype = text_encoder.get_input_embeddings().weight.dtype
-        for i, embedding_vector in enumerate(self.embedding_vectors):
-            tokenpart = self.token + str(i)
-            embedding_vector.to(dtype)
-            num_added_tokens = tokenizer.add_tokens(tokenpart)
-            if(num_added_tokens == 0):
-                raise ValueError(f"The tokenizer already contains the token {tokenpart}")
-            text_encoder.resize_token_embeddings(len(tokenizer))
-            token_id = tokenizer.convert_tokens_to_ids(tokenpart)
-            text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
+        dtype = pipeline.pipeline.text_encoder.get_input_embeddings().weight.dtype
+        for embedding in self.embeddings:
+            for i, embedding_vector in enumerate(embedding):
+                #  add token for each vector in embedding
+                tokenpart = self.token + str(i)
+                embedding_vector.to(dtype)
+                num_added_tokens = pipeline.pipeline.tokenizer.add_tokens(tokenpart)
+                if(num_added_tokens == 0):
+                    raise ValueError(f"The tokenizer already contains the token {tokenpart}")
+                pipeline.pipeline.text_encoder.resize_token_embeddings(len(pipeline.pipeline.tokenizer))
+                token_id = pipeline.pipeline.tokenizer.convert_tokens_to_ids(tokenpart)
+                pipeline.pipeline.text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
 
 
 class TextEmbeddings:
@@ -100,18 +103,18 @@ class TextEmbeddings:
             embedding.add_to_model(text_encoder, tokenizer)
 
 
-    def add_tokens_to_model(self, text_encoder, tokenizer, tokens: List[str]):
+    def add_tokens_to_model(self, pipeline: DiffusersPipelineWrapper, tokens: List[str]):
         for token in tokens:
             embedding = self.embeddings[token]
             try:
-                embedding.add_to_model(text_encoder, tokenizer)
+                embedding.add_to_model(pipeline)
             except ValueError:
                 pass
 
 
     def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         tokens = self.get_tokens_from_prompt(prompt)
-        self.add_tokens_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer, tokens)
+        self.add_tokens_to_model(pipeline, tokens)
         prompt = self.process_prompt(prompt)
         return prompt
 

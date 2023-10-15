@@ -104,11 +104,6 @@ class DiffusersPipelines:
         base.textembeddings.load_file(path, token)
 
 
-    def _addTextEmbeddingsToPipeline(self, pipeline: DiffusersPipelineWrapper):
-        if (pipeline.preset.base in self.baseModelData):
-            self.baseModelData[pipeline.preset.base].textembeddings.add_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer)
-
-
     def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
         if (pipeline.preset.base in self.baseModelData):
