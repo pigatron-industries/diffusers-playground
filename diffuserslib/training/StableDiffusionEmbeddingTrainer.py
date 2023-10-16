@@ -373,7 +373,7 @@ class StableDiffusionEmbeddingTrainer():
         learned_embeds = []
         for text_encoder_trainer in self.text_encoder_trainers:
             learned_embeds.append(text_encoder_trainer.get_learned_embeds())        
-        state_dict = self.to_state_dict(learned_embed)
+        state_dict = self.to_state_dict(learned_embeds)
 
         if self.params.safetensors:
             safetensors.torch.save_file(state_dict, save_path, metadata={"format": "pt"})
@@ -381,8 +381,8 @@ class StableDiffusionEmbeddingTrainer():
             torch.save(state_dict, save_path)
 
 
-        def to_state_dict(self, learned_embeds):
-            """ convert embed to state dict for saving to file """
-            return {
-                self.params.placeholderToken: learned_embeds[0]
-            }
+    def to_state_dict(self, learned_embeds):
+        """ convert embed to state dict for saving to file """
+        return {
+            self.params.placeholderToken: learned_embeds[0]
+        }
