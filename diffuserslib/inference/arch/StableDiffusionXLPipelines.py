@@ -67,6 +67,10 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
                               generator=generator, **kwargs).images[0]
         return image, seed
 
+    def add_embeddings(self, token, embeddings):
+        self.add_embedding_to_text_encoder(token, embeddings[0], self.pipeline.tokenizer, self.pipeline.text_encoder)
+        self.add_embedding_to_text_encoder(token, embeddings[1], self.pipeline.tokenizer_2, self.pipeline.text_encoder_2)
+
 
 class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionXLPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):

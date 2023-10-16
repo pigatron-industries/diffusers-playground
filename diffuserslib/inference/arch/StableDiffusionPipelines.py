@@ -86,6 +86,22 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             image = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs).images[0]
         return image, seed
     
+    def add_embeddings(self, token, embeddings):
+        self.add_embedding_to_text_encoder(token, embeddings[0], self.pipeline.tokenizer, self.pipeline.text_encoder)
+
+    def add_embedding_to_text_encoder(self, token, embedding, tokenizer, text_encoder):
+        dtype = self.pipeline.text_encoder.get_input_embeddings().weight.dtype
+        for i, embedding_vector in enumerate(embedding):
+            #  add token for each vector in embedding
+            tokenpart = token + str(i)
+            embedding_vector.to(dtype)
+            num_added_tokens = tokenizer.add_tokens(tokenpart)
+            if(num_added_tokens == 0):
+                raise ValueError(f"The tokenizer already contains the token {tokenpart}")
+            text_encoder.resize_token_embeddings(len(tokenizer))
+            token_id = tokenizer.convert_tokens_to_ids(tokenpart)
+            text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
+    
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
