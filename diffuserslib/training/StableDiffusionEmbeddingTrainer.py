@@ -362,7 +362,8 @@ class StableDiffusionEmbeddingTrainer():
     def save_progress(self):
         logger.info("Saving embeddings")
 
-        filename = f"{self.params.outputPrefix}-{self.params.placeholderToken}-{self.params.numVectors}-{self.global_step}"
+        tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
+        filename = f"{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}-{self.global_step}>"
         weight_name = (
             f"{filename}.safetensors"
             if self.params.safetensors
