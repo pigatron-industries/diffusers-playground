@@ -352,7 +352,8 @@ class StableDiffusionEmbeddingTrainer():
                              height = self.params.validationSize[1]).images[0]
             display(image)
             images.append(image)
-            filename = f"{self.params.outputPrefix}-{self.params.placeholderToken}-{self.params.numVectors}-{self.global_step}-{i}"
+            tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
+            filename = f"{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}-{self.global_step}>-{i}"
             image.save(f"{self.params.outputDir}/{filename}.png")
 
         # del pipeline
