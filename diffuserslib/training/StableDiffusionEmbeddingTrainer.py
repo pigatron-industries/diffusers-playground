@@ -195,7 +195,7 @@ class StableDiffusionEmbeddingTrainer():
 
         # Initial validation to see what prompt looks liike without training
         if self.accelerator.is_main_process:
-            if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0:
+            if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0 and self.params.numValidationImages > 0:
                 self.log_validation(0)
 
         self.train_loop()
