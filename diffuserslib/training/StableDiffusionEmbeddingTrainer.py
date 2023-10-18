@@ -12,28 +12,19 @@ import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
 import transformers
-from dataclasses import dataclass
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
 from tqdm.auto import tqdm
-from transformers import CLIPTextModel, CLIPTokenizer
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 import diffusers
 from diffusers import (
-    AutoencoderKL,
-    DDPMScheduler,
     DiffusionPipeline,
-    EulerDiscreteScheduler,
-    DPMSolverMultistepScheduler,
-    StableDiffusionPipeline,
-    UNet2DConditionModel,
+    EulerDiscreteScheduler
 )
 from diffusers.optimization import get_scheduler
-from diffusers.utils import check_min_version
-from diffusers.utils.import_utils import is_xformers_available
 from IPython.display import display
 
 logger = get_logger(__name__)
@@ -195,7 +186,7 @@ class StableDiffusionEmbeddingTrainer():
 
         # Initial validation to see what prompt looks liike without training
         if self.accelerator.is_main_process:
-            if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0:
+            if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0 and self.params.numValidationImages > 0:
                 self.log_validation(0)
 
         self.train_loop()
