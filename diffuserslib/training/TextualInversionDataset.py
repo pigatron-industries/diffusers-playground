@@ -2,7 +2,6 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from pathlib import Path
-from packaging import version
 import PIL
 import os
 import random

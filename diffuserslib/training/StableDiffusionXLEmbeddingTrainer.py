@@ -2,11 +2,8 @@ from .StableDiffusionEmbeddingTrainer import StableDiffusionEmbeddingTrainer, Te
 from .TrainingParameters import TrainingParameters
 from .TextEncoderTrainer import TextEncoderTrainer
 
-import torch
-from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import (
     DiffusionPipeline,
-    EulerDiscreteScheduler,
     DDPMScheduler
 )
 
