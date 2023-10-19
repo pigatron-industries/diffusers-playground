@@ -91,7 +91,11 @@ class TextualInversionDataset(Dataset):
         self.center_crop = center_crop
         self.flip_p = flip_p
 
-        self.image_paths = [os.path.join(self.data_root, file_path) for file_path in os.listdir(self.data_root)]
+        # if is directory
+        if os.path.isdir(self.data_root):
+            self.image_paths = [os.path.join(self.data_root, file_path) for file_path in os.listdir(self.data_root)]
+        else:
+            self.image_paths = [self.data_root]
 
         self.num_images = len(self.image_paths)
         self._length = self.num_images
