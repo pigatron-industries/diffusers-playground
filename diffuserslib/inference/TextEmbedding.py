@@ -82,7 +82,7 @@ class TextEmbeddings:
 
     def load_directory(self, path: str, base: str):
         print(f'Loading text embeddings for base {base} from path {path}')
-        for embedding_path, embedding_file in getPathsFiles(f"{path}/*"):
+        for embedding_path, embedding_file in getPathsFiles(f"{path}/*") + getPathsFiles(f"{path}/**/*"):
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt') or embedding_file.endswith('.safetensors')):
                 self.load_file(embedding_path)
 
