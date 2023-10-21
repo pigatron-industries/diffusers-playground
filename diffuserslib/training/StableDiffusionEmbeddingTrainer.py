@@ -328,7 +328,7 @@ class StableDiffusionEmbeddingTrainer():
         )
         self.update_validation_pipeline()
 
-        prompt = self.params.validationPrompt.replace('*', self.params.placeholderToken)
+        prompt = self.params.validationPrompt.replace('*', self.placeholder_token_string)
 
         # run inference
         generator = None if self.params.validationSeed is None else torch.Generator(device=self.accelerator.device).manual_seed(self.params.validationSeed)
