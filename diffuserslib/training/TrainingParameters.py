@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Tuple
+import json
 
 @dataclass
 class TrainingParameters:
@@ -62,3 +63,17 @@ class TrainingParameters:
         if outputDirPrefix is not None:
             tokenfolder = self.placeholderToken.replace('<', '').replace('>', '')
             self.outputDir = f"{outputDirPrefix}/{self.base}/{tokenfolder}"
+
+
+    def save(self):
+        with open(self.outputDir + "train_params.json", 'w') as f:
+            f.write(self.toJson())
+
+
+    def toJson(self):
+        return json.dumps(self, cls=DataclassEncoder, indent=2)
+    
+
+class DataclassEncoder(json.JSONEncoder):
+    def default(self, obj):
+        return super().default(obj)

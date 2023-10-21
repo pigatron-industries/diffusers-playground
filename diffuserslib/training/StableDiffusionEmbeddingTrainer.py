@@ -62,6 +62,7 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def train(self):
+        self.params.save()
         if self.params.seed is not None:
             set_seed(self.params.seed)
 
