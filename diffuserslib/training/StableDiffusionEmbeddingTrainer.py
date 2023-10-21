@@ -300,8 +300,8 @@ class StableDiffusionEmbeddingTrainer():
 
     def init_tokenizer(self):
         # Add the placeholder tokens in tokenizer
-        placeholder_tokens = [self.params.placeholderToken]
-        for i in range(1, self.params.numVectors):
+        placeholder_tokens = []
+        for i in range(0, self.params.numVectors):
             placeholder_tokens.append(f"{self.params.placeholderToken}_{i}")
         self.placeholder_token_string = " ".join(placeholder_tokens)
 
