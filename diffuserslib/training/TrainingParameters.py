@@ -65,11 +65,6 @@ class TrainingParameters:
             self.outputDir = f"{outputDirPrefix}/{self.base}/{tokenfolder}"
 
 
-    def save(self):
-        with open(self.outputDir + "train_params.json", 'w') as f:
-            f.write(self.toJson())
-
-
     def toJson(self):
         return json.dumps(self, cls=DataclassEncoder, indent=2)
     

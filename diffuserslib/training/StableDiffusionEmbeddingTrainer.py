@@ -62,7 +62,11 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def train(self):
-        self.params.save()
+        tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
+        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-{tokenName}-{self.params.numVectors}"
+        with open(trainparamsfile, 'w') as f:
+            f.write(self.params.toJson())
+
         if self.params.seed is not None:
             set_seed(self.params.seed)
 
