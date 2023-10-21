@@ -62,16 +62,10 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def train(self):
-        tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
-        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-{tokenName}-{self.params.numVectors}"
-        with open(trainparamsfile, 'w') as f:
-            f.write(self.params.toJson())
+        self.save_params()
 
         if self.params.seed is not None:
             set_seed(self.params.seed)
-
-        if self.params.outputDir is not None:
-            os.makedirs(self.params.outputDir, exist_ok=True)
 
         self.load_models()
         self.load_validation_pipeline()
@@ -354,6 +348,15 @@ class StableDiffusionEmbeddingTrainer():
 
         # del pipeline
         return images
+
+
+    def save_params(self):
+        if self.params.outputDir is not None:
+            os.makedirs(self.params.outputDir, exist_ok=True)
+        tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
+        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-{tokenName}-{self.params.numVectors}"
+        with open(trainparamsfile, 'w') as f:
+            f.write(self.params.toJson())
 
 
     def save_progress(self):
