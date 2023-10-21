@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, asdict
 from typing import Tuple
 import json
 
@@ -76,4 +76,6 @@ class TrainingParameters:
 
 class DataclassEncoder(json.JSONEncoder):
     def default(self, obj):
+        if isinstance(obj, (TrainingParameters)):
+            return asdict(obj)
         return super().default(obj)
