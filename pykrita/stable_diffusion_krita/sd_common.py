@@ -1,5 +1,5 @@
 from krita import Krita, Document, Node, QMessageBox # type: ignore
-from PyQt5.Qt import QByteArray, QBuffer, QImage # type: ignore
+from PyQt5.Qt import QByteArray, QBuffer, QImage, QPushButton # type: ignore
 from typing import List
 
 def errorMessage(text,detailed):
@@ -10,6 +10,23 @@ def errorMessage(text,detailed):
     msgBox.setDetailedText(detailed)
     msgBox.setStyleSheet("QLabel{min-width: 700px;}")
     msgBox.exec()
+
+
+def errorMessageRetry(text,detailed):
+    msgBox= QMessageBox()
+    msgBox.resize(500,200)
+    msgBox.setWindowTitle("Stable Diffusion")
+    msgBox.setText(text)
+    msgBox.setDetailedText(detailed)
+    msgBox.setStyleSheet("QLabel{min-width: 700px;}")
+    cancel_button = QPushButton("Cancel")
+    retry_button = QPushButton("Retry")
+    msgBox.addButton(cancel_button, QMessageBox.RejectRole)
+    msgBox.addButton(retry_button, QMessageBox.AcceptRole)
+    msgBox.setDefaultButton(retry_button)
+    result = msgBox.exec()
+    return result == QMessageBox.AcceptRole
+
 
 
 def getDocument() -> "Document|None":

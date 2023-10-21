@@ -46,3 +46,6 @@ class DiffusersPipelineWrapper:
                 return False
             
         return True
+
+    def add_embeddings(self, token, embeddings):
+        raise ValueError(f"add_embeddings not implemented for pipeline")

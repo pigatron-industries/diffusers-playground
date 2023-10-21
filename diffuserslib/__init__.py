@@ -1,5 +1,4 @@
 from .DiffusersWeb import *
-from .TrainTextEmbedding import *
 from .imagetools.ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
@@ -13,3 +12,4 @@ from .animation import *
 from .processing import *
 from .imagetools import *
 from .interface import *
+from .training import *

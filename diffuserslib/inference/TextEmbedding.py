@@ -6,6 +6,8 @@ from .arch.StableDiffusionPipelines import DiffusersPipelineWrapper
 from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
+from safetensors import safe_open
+
 
 def getClassFromFilename(path):
     filename = os.path.basename(path)
@@ -17,48 +19,58 @@ def getClassFromFilename(path):
 
 
 class TextEmbedding:
-    def __init__(self, embedding_vectors, token: str, embedclass: str = None):
-        self.embedding_vectors = embedding_vectors
+    def __init__(self, embeddings, token: str, embedclass: str = None, path: str = None):
+        self.embeddings = embeddings
         self.token = token
         self.embedclass = embedclass
+        self.path = path
 
     @classmethod
     def from_file(cls, embedding_path, token = None):
         if(token is None):
             token = findBetween(embedding_path, '<', '>', True)
         embedclass = getClassFromFilename(embedding_path)
-        learned_embeds = torch.load(embedding_path, map_location="cpu")
-        if ('string_to_param' in learned_embeds):  # .pt embedding
-            string_to_token = learned_embeds['string_to_token']
-            trained_token = list(string_to_token.keys())[0]
-            if(token is None):
-                token = trained_token
-            string_to_param = learned_embeds['string_to_param']
-            embedding_vectors = string_to_param[trained_token]
-        else: # .bin diffusers concept
-            trained_token = list(learned_embeds.keys())[0]
-            if(token is None):
-                token = trained_token
-            embedding_vector = learned_embeds[trained_token]
-            if (embedding_vector.ndim == 1):
-                embedding_vectors = [embedding_vector]
-            else:
-                embedding_vectors = embedding_vector
-        return cls(embedding_vectors, token, embedclass)
+        embeddings = []
+        if(embedding_path.endswith('.safetensors')):
+            with safe_open(embedding_path, framework='pt') as f:
+                if ('clip_l' in f.keys()):
+                    # Multiple embeddings with tokenizer as key
+                    embeddings = []
+                    embeddings.append(f.get_tensor('clip_l'))
+                    embeddings.append(f.get_tensor('clip_g'))
+                else:
+                    # Single embedding with token as key
+                    for key in f.keys():
+                        if(token is None):
+                            token = key
+                        embeddings.append(f.get_tensor(key))
+        else:
+            learned_embeds = torch.load(embedding_path, map_location="cpu")
+            if ('string_to_param' in learned_embeds):  
+                # .pt embedding
+                string_to_token = learned_embeds['string_to_token']
+                trained_token = list(string_to_token.keys())[0]
+                if(token is None):
+                    token = trained_token
+                string_to_param = learned_embeds['string_to_param']
+                embedding_vectors = string_to_param[trained_token]
+                embeddings.append(embedding_vectors)
+            else: 
+                # .bin diffusers concept
+                trained_token = list(learned_embeds.keys())[0]
+                if(token is None):
+                    token = trained_token
+                embedding_vector = learned_embeds[trained_token]
+                if (embedding_vector.ndim == 1):
+                    embeddings.append([embedding_vector])
+                else:
+                    embeddings.append(embedding_vector)
+        return cls(embeddings, token, embedclass, embedding_path)
 
 
-    def add_to_model(self, text_encoder, tokenizer):
+    def add_to_model(self, pipeline: DiffusersPipelineWrapper):
         print(f"adding embedding token {self.token}")
-        dtype = text_encoder.get_input_embeddings().weight.dtype
-        for i, embedding_vector in enumerate(self.embedding_vectors):
-            tokenpart = self.token + str(i)
-            embedding_vector.to(dtype)
-            num_added_tokens = tokenizer.add_tokens(tokenpart)
-            if(num_added_tokens == 0):
-                raise ValueError(f"The tokenizer already contains the token {tokenpart}")
-            text_encoder.resize_token_embeddings(len(tokenizer))
-            token_id = tokenizer.convert_tokens_to_ids(tokenpart)
-            text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
+        pipeline.add_embeddings(self.token, self.embeddings)
 
 
 class TextEmbeddings:
@@ -70,8 +82,8 @@ class TextEmbeddings:
 
     def load_directory(self, path: str, base: str):
         print(f'Loading text embeddings for base {base} from path {path}')
-        for embedding_path, embedding_file in getPathsFiles(f"{path}/*"):
-            if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt')):
+        for embedding_path, embedding_file in getPathsFiles(f"{path}/*") + getPathsFiles(f"{path}/**/*"):
+            if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt') or embedding_file.endswith('.safetensors')):
                 self.load_file(embedding_path)
 
 
@@ -81,29 +93,24 @@ class TextEmbeddings:
         if(embedding.embedclass not in self.modifiers):
             self.modifiers[embedding.embedclass] = []
         self.modifiers[embedding.embedclass].append(embedding.token)
-        print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embedding_vectors)} vectors")
+        print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embeddings[0])} vectors")
         return embedding
-
-
-    def add_all_to_model(self, text_encoder, tokenizer):
-        for embedding in self.embeddings.values():
-            embedding.add_to_model(text_encoder, tokenizer)
-
-
-    def add_tokens_to_model(self, text_encoder, tokenizer, tokens: List[str]):
-        for token in tokens:
-            embedding = self.embeddings[token]
-            try:
-                embedding.add_to_model(text_encoder, tokenizer)
-            except ValueError:
-                pass
 
 
     def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         tokens = self.get_tokens_from_prompt(prompt)
-        self.add_tokens_to_model(pipeline.pipeline.text_encoder, pipeline.pipeline.tokenizer, tokens)
+        self.add_tokens_to_model(pipeline, tokens)
         prompt = self.process_prompt(prompt)
         return prompt
+
+
+    def add_tokens_to_model(self, pipeline: DiffusersPipelineWrapper, tokens: List[str]):
+        for token in tokens:
+            embedding = self.embeddings[token]
+            try:
+                embedding.add_to_model(pipeline)
+            except ValueError:
+                pass
 
 
     def get_tokens_from_prompt(self, prompt: str):
@@ -129,7 +136,7 @@ class TextEmbeddings:
                 expandedtoken = ''
                 if(len(options) == 0):
                     # use all vectors in token
-                    for i, _ in enumerate(embedding.embedding_vectors):
+                    for i in range(len(embedding.embeddings[0])):
                         expandedtoken = expandedtoken + ' ' + embedding.token + str(i)
                 else:
                     # use selected vectors
