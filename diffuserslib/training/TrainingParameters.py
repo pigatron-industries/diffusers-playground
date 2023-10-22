@@ -60,6 +60,7 @@ class TrainingParameters:
         for k,v in kwargs.items():
             setattr(self, k, v)
 
+        self.validationSteps = self.saveSteps
         if outputDirPrefix is not None:
             tokenfolder = self.placeholderToken.replace('<', '').replace('>', '')
             self.outputDir = f"{outputDirPrefix}/{self.base}/{tokenfolder}"
