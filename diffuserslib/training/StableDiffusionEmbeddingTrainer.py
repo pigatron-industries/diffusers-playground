@@ -354,7 +354,7 @@ class StableDiffusionEmbeddingTrainer():
         if self.params.outputDir is not None:
             os.makedirs(self.params.outputDir, exist_ok=True)
         tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
-        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-{tokenName}-{self.params.numVectors}-params.json"
+        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}>-params.json"
         with open(trainparamsfile, 'w') as f:
             f.write(self.params.toJson())
 
