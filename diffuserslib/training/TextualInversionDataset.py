@@ -2,11 +2,13 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from pathlib import Path
+from typing import List
 import PIL
 import os
 import random
 import numpy as np
 import torch
+import glob
 
 
 PIL_INTERPOLATION = {
@@ -74,7 +76,8 @@ imagenet_style_templates_small = [
 class TextualInversionDataset(Dataset):
     def __init__(
         self,
-        data_root,
+        data_root:str,
+        data_files:List[str],
         learnable_property="object",  # [object, style]
         size=(512, 512),
         repeats=100,
@@ -85,17 +88,17 @@ class TextualInversionDataset(Dataset):
         center_crop=False,
     ):
         self.data_root = data_root
+        self.data_files = data_files
         self.learnable_property = learnable_property
         self.size = size
         self.placeholder_token = placeholder_token
         self.center_crop = center_crop
         self.flip_p = flip_p
 
-        # if is directory
-        if os.path.isdir(self.data_root):
-            self.image_paths = [os.path.join(self.data_root, file_path) for file_path in os.listdir(self.data_root)]
-        else:
-            self.image_paths = [self.data_root]
+        self.image_paths = []
+        for filename in self.data_files:
+            image_paths = glob.glob(f"{self.data_root}/{filename}")
+            self.image_paths.extend(image_paths)
 
         self.num_images = len(self.image_paths)
         self._length = self.num_images

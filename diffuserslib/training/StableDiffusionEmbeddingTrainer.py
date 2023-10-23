@@ -111,6 +111,7 @@ class StableDiffusionEmbeddingTrainer():
         # Dataset and DataLoaders creation:
         train_dataset = TextualInversionDataset(
             data_root=self.params.trainDataDir,
+            data_files=self.params.trainDataFiles,
             size=self.params.resolution,
             placeholder_token=self.placeholder_token_string,
             repeats=self.params.repeats,

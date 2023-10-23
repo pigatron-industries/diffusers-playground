@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Tuple
+from typing import Tuple, List
 import json
 
 @dataclass
@@ -7,6 +7,7 @@ class TrainingParameters:
     base: str
     model: str = 'runwayml/stable-diffusion-v1-5'
     trainDataDir: str = '/train'        # A folder containing the training data.
+    trainDataFiles: List[str] = ["*"]   # A list of files containing the training data.
     outputDir: str = '/output'          # A folder where the checkpoints will be saved.
     outputPrefix: str = 'object'        # The filename of the checkpoint.
     placeholderToken: str = '<token>'   # A token to use as a placeholder for the concept.
