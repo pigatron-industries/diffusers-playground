@@ -5,6 +5,7 @@ import json
 @dataclass
 class TrainingParameters:
     base: str
+    description: str = ''
     model: str = 'runwayml/stable-diffusion-v1-5'
     trainDataDir: str = '/train'        # A folder containing the training data.
     trainDataFiles: List[str] = field(default_factory=lambda: ["*"])
