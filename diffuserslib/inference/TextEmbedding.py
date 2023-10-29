@@ -93,7 +93,7 @@ class TextEmbeddings:
         if(embedding.embedclass not in self.modifiers):
             self.modifiers[embedding.embedclass] = []
         self.modifiers[embedding.embedclass].append(embedding.token)
-        print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embeddings[0])} vectors")
+        # print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embeddings[0])} vectors")
         return embedding
 
 
