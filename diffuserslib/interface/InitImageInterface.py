@@ -19,15 +19,12 @@ class InitImageInterface:
     def __init__(self, interface, firstImage = False):
         self.interface = interface
         self.firstImage = firstImage
-        controlnet_models = list(interface.pipelines.presets.getModelsByType("controlnet").keys())
-        if (firstImage):
-            controlnet_models = [INIT_IMAGE] + controlnet_models
         generation_pipeline_options = list(interface.generation_pipelines.keys())
         inputdirs_options = interface.input_dirs
         if (not firstImage):
             inputdirs_options = [PREV_IMAGE] + inputdirs_options
         
-        self.model_dropdown = dropdown(interface, label="Control Model:", options=controlnet_models, value=INIT_IMAGE if firstImage else None)
+        self.model_dropdown = dropdown(interface, label="Control Model:", options=[], value=INIT_IMAGE if firstImage else None)
         self.generation_dropdown = dropdown(interface, label="Generation:", options=generation_pipeline_options, value=None)
         self.input_source_dropdown = dropdown(interface, label="Input Source:", options=inputdirs_options, value=None)
         self.input_select_dropdown = dropdown(interface, label="Input Select:", options=[], value=None)
@@ -42,6 +39,12 @@ class InitImageInterface:
                 widgets.HTML("<span>&nbsp;</span>"))
         
     def updateWidgets(self):
+        self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet", self.interface.basemodel_dropdown.value)
+        controlnet_models = list(self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet").keys())
+        if (self.firstImage):
+            controlnet_models = [INIT_IMAGE] + controlnet_models
+        self.model_dropdown.options = controlnet_models
+
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
             filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
             self.input_select_dropdown.options = [RANDOM_IMAGE] + [os.path.basename(x) for x in filepaths]

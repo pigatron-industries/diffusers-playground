@@ -96,3 +96,10 @@ class DiffusersModelList:
             if model.pipelinetypes is not None and pipelinetype in model.pipelinetypes:
                 matchingmodels[modelid] = model
         return matchingmodels
+
+    def getModelsByTypeAndBase(self, pipelinetype, base) -> Dict[str, DiffusersModel]:
+        matchingmodels = {}
+        for modelid, model in self.models.items():
+            if model.pipelinetypes is not None and pipelinetype in model.pipelinetypes and model.base == base:
+                matchingmodels[modelid] = model
+        return matchingmodels

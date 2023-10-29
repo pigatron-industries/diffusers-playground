@@ -112,8 +112,9 @@ class BatchNotebookInterface:
         self.initimage_widgets.append(InitImageInterface(self))
 
         # Model options
-        self.model_dropdown = dropdown(self, label="Model:", options=list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
-        self.mergemodel_dropdown = dropdown(self, label="Model Merge:", options=[None] + list(pipelines.presets.getModelsByType("txt2img").keys()), value=None)
+        self.basemodel_dropdown = dropdown(self, label="Base Model:", options=["sd_1_5", "sd_2_1", "sdxl_1_0"], value=None)
+        self.model_dropdown = dropdown(self, label="Model:", options=[], value=None)
+        self.mergemodel_dropdown = dropdown(self, label="Model Merge:", options=[], value=None)
         self.mergeweight_slider = floatSlider(self, label='Merge Weight:', value=0.5, min=0, max=1, step=0.01)
         self.lora_num = intSlider(self, label='LORAs:', value=0, min=0, max=4, step=1)
         self.lora_widgets = []
@@ -183,6 +184,10 @@ class BatchNotebookInterface:
 
 
     def updateWidgets(self):
+        models = self.pipelines.presets.getModelsByTypeAndBase("txt2img", self.basemodel_dropdown.value)
+        self.model_dropdown.options = list(models.keys())
+        self.mergemodel_dropdown.options = [None] + list(models.keys())
+
         for i, initimage_w in enumerate(self.initimage_widgets):
             if(i < self.initimages_num.value):
                 initimage_w.show()
@@ -219,6 +224,7 @@ class BatchNotebookInterface:
     def getParams(self):
         params = OrderedDict()
 
+        params['basemodel'] = self.basemodel_dropdown.value
         if(self.mergemodel_dropdown.value is None):
             params['models'] = [self.model_dropdown.value]
         else:
@@ -291,6 +297,7 @@ class BatchNotebookInterface:
                 initimage_w.input_select_dropdown.value = params.get(f'initimage{i}_input_select', None)
                 initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
 
+            self.basemodel_dropdown.value = params.get('basemodel', 'sd_1_5')
             model = params.get('models', None)
             self.model_dropdown.value = model[0]
             if (len(model) > 1):
