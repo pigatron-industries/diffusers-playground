@@ -154,6 +154,7 @@ class BatchNotebookInterface:
         for initimage_w in self.initimage_widgets:
             initimage_w.display()
         display(widgets.HTML("<span>&nbsp;</span>"),
+                self.basemodel_dropdown,
                 self.model_dropdown, 
                 self.mergemodel_dropdown,
                 self.mergeweight_slider,
