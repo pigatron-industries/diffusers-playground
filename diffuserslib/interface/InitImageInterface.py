@@ -39,8 +39,8 @@ class InitImageInterface:
                 widgets.HTML("<span>&nbsp;</span>"))
         
     def updateWidgets(self):
-        self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet", self.interface.basemodel_dropdown.value)
-        controlnet_models = list(self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet").keys())
+        models = self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet", self.interface.basemodel_dropdown.value)
+        controlnet_models = list(models.keys())
         if (self.firstImage):
             controlnet_models = [INIT_IMAGE] + controlnet_models
         self.model_dropdown.options = controlnet_models
