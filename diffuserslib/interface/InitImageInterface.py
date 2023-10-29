@@ -24,7 +24,7 @@ class InitImageInterface:
         if (not firstImage):
             inputdirs_options = [PREV_IMAGE] + inputdirs_options
         
-        self.model_dropdown = dropdown(interface, label="Control Model:", options=[], value=INIT_IMAGE if firstImage else None)
+        self.model_dropdown = dropdown(interface, label="Control Model:", options=[], value=None)
         self.generation_dropdown = dropdown(interface, label="Generation:", options=generation_pipeline_options, value=None)
         self.input_source_dropdown = dropdown(interface, label="Input Source:", options=inputdirs_options, value=None)
         self.input_select_dropdown = dropdown(interface, label="Input Select:", options=[], value=None)
