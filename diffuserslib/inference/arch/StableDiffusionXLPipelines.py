@@ -16,9 +16,15 @@ from compel import Compel, ReturnedEmbeddingsType
 import torch
 
 
+class NoWatermark:
+    def apply_watermark(self, img):
+        return img
+
+
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
         super().__init__(cls=cls, preset=preset, params=params, device=device, **kwargs)
+        self.pipeline.watermark = NoWatermark()
 
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
