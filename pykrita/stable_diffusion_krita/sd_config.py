@@ -9,6 +9,7 @@ class ConfigDialogParameters(GenerationParameters):
     modelGeneration:str = ""
     modelPreprocess:str = ""
     modelUpscale:str = ""
+    modelBase:str = ""
     
 
 @dataclass
@@ -44,8 +45,8 @@ class SDConfig:
     
     def unserialize(self, str):
         obj=json.loads(str)
-        print("loading config:")
-        print(obj)
+        # print("loading config:")
+        # print(obj)
         self.url=obj.get("url","http://localhost:7860")
         self.type=obj.get("type","Colab")
         self.inpaint_mask_blur=obj.get("inpaint_mask_blur",4)

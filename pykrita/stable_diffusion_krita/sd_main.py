@@ -272,9 +272,21 @@ class SDDialog(QDialog):
             formLayout.addWidget(self.tile_method)
 
         if('model' in self.actionfields):
+            if(action == "upscale"):
+                pass
+            elif(action == "preprocess"):
+                pass
+            else:
+                formLayout.addWidget(QLabel("Base"))
+                self.base = QComboBox()
+                self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky'])
+                self.base.setCurrentText(self.config.params.modelBase)
+                self.base.currentIndexChanged.connect(self.baseChanged)
+                formLayout.addWidget(self.base)
+
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
-            models = getModels(modeltype)
+            models = getModels(modeltype, self.config.params.modelBase)
             self.model.addItems([""] + models)
             if(action == "upscale"):
                 self.model.setCurrentText(self.config.params.modelUpscale)
@@ -386,7 +398,7 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.buttonBox)
 
         if('image' in self.actionfields):
-            control_models = getModels("control")
+            control_models = getModels("control", self.config.params.modelBase)
             self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
             self.control_model_dropdowns = []
             tabs = QTabWidget()
@@ -403,10 +415,24 @@ class SDDialog(QDialog):
             modeltype = 'img2img'
         else:
             modeltype = 'inpaint'
-        models = getModels(modeltype)
+        models = getModels(modeltype, self.base.currentText())
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
+
+
+    def baseChanged(self, index):
+        print("base changed ")
+        models = getModels(self.action, self.base.currentText())
+        control_models = getModels("control", self.base.currentText())
+        # update items in model dropdown
+        self.model.clear()
+        self.model.addItems([""] + models)
+        self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
+        print(self.controlmodels)
+        for control_model_dropdown in self.control_model_dropdowns:
+            control_model_dropdown.clear()
+            control_model_dropdown.addItems(self.controlmodels)
 
 
     def modelChanged(self, index):
@@ -513,6 +539,7 @@ class SDDialog(QDialog):
                 self.config.params.modelPreprocess = self.model.currentText()
                 genParams.models = [ModelParameters(name=self.model.currentText())]
             else:
+                self.config.params.modelBase = self.base.currentText()
                 self.config.params.modelGeneration = self.model.currentText()
                 genParams.models = [ModelParameters(name=self.model.currentText())]
         if('lora' in actionfields):
@@ -721,7 +748,7 @@ def base64ToQImage(data):
      return imagen
 
 
-def getModels(type) -> List[str]:
+def getModels(modeltype, modelbase) -> List[str]:
     config = SDConfig()
     # TODO build into models endpoint
     if(type == "upscale"):
@@ -742,7 +769,7 @@ def getModels(type) -> List[str]:
                 'ContentShuffle']
     endpoint=config.url
     endpoint=endpoint.strip("/")
-    endpoint+=f"/api/models?type={type}"
+    endpoint+=f"/api/models?type={modeltype}&base={modelbase}"
     headers = {
         "Accept": "application/json",
     } 

@@ -68,10 +68,13 @@ class DiffusersPipelines:
         self.presets.addModels(presets)
 
 
-    def addPreset(self, modelid, base, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
+    def addPreset(self, types, base, modelid, revision=None, stylephrase=None, vae=None, autocast=True, location='hf', modelpath=None):
         if(modelpath == None and location == 'local'):
             modelpath = self.localmodelpath + '/' + modelid
-        self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath)
+        pipelinetypes = {}
+        for type in types:
+            pipelinetypes[type] = self.presets.getBaseModel(base).pipelinetypes[type]
+        self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, pipelinetypes=pipelinetypes)
 
 
     def getModifierDict(self, base):

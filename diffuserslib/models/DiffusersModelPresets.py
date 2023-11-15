@@ -4,7 +4,7 @@ from typing import Dict, List, Union
 
 AUTOENCODER_MODEL_1_5 = 'stabilityai/sd-vae-ft-mse'
 
-class DiffusersBaseModel:
+class DiffusersBaseModelType:
     sd_1_4 = 'sd_1_4'
     sd_1_5 = 'sd_1_5'
     sd_2_0 = 'sd_2_0'
@@ -22,6 +22,11 @@ class DiffusersPipelineType:
     img2img_controlnet = 'img2img_controlnet'
     inpaint_controlnet = 'inpaint_controlnet'
  
+
+class DiffusersBaseModel:
+    def __init__(self, pipelinetypes:Dict[str, str]):
+        self.pipelinetypes = pipelinetypes
+
 
 class DiffusersModel:
     def __init__(self, modelid: str, base: str, pipelinetypes: Dict[str, str], revision: str = None, stylephrase: str = None, vae = None, 
@@ -46,12 +51,13 @@ class DiffusersModel:
             'base': self.base,
             'stylephrase': self.stylephrase,
         }
+    
 
 
 class DiffusersModelList:
     def __init__(self):
-        self.models = {}
-        self.basemodels = {}
+        self.models:Dict[str, DiffusersModel] = {}
+        self.basemodels:Dict[str, DiffusersBaseModel] = {}
 
     def load_from_file(self, filepath: str):
         filedata = yaml.safe_load(open(filepath, "r"))
@@ -66,24 +72,27 @@ class DiffusersModelList:
                     else:
                         autocast = False
                     self.addModel(modelid=modeldata['id'], base=basedata['base'], revision=modeldata.get('revision'), 
-                                    stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast, pipelinetypes = basedata['pipelines'], data=modeldata)
+                                    stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast, pipelinetypes = basedata['pipelines'].copy(), data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
-            self.basemodels[base] = {}
-        if 'pipelines' not in self.basemodels[base]:
-            self.basemodels[base]['pipelines'] = {}
+            self.basemodels[base] = DiffusersBaseModel(pipelinetypes)
         for pipelinetype in pipelinetypes:
-            self.basemodels[base]['pipelines'][pipelinetype] = pipelinetypes[pipelinetype]
+            self.basemodels[base].pipelinetypes[pipelinetype] = pipelinetypes[pipelinetype]
 
-    def addModel(self, modelid: str, base: str, revision: str=None, stylephrase:str=None, vae=None, autocast=True, location='hf', modelpath=None, pipelinetypes=None, data=None):
+    def addModel(self, modelid: str, base: str, revision: str|None=None, stylephrase:str|None=None, vae=None, autocast=True, location='hf', modelpath=None, 
+                 pipelinetypes:Dict[str, str]|None=None, data=None):
         if pipelinetypes is None:
-            pipelinetypes = self.basemodels[base]['pipelines']
-        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=pipelinetypes, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, data=data)
+            pipelinetypes = self.basemodels[base].pipelinetypes
+        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=pipelinetypes, revision=revision, 
+                                              stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, data=data)
 
     def addModels(self, models):
         self.models.update(models.models)
 
+    def getBaseModel(self, base):
+        return self.basemodels[base]
+    
     def getModel(self, modelid):
         if modelid in self.models:
             return self.models[modelid]

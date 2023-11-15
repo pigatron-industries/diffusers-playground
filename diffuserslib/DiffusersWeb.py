@@ -43,11 +43,13 @@ class DiffusersView(FlaskView):
     def models(self):
         if("type" in request.args):
             if(request.args["type"] == "inpaint"):
-                presets = self.pipelines.presets.getModelsByType("inpaint")
+                presets = self.pipelines.presets.getModelsByTypeAndBase("inpaint", request.args["base"])
             elif(request.args["type"] == "control"):
-                presets = self.pipelines.presets.getModelsByType("controlnet")
+                presets = self.pipelines.presets.getModelsByTypeAndBase("controlnet", request.args["base"])
+            elif(request.args["type"] == "upscale"):
+                presets = self.pipelines.presets.getModelsByType("upscale")
             else:
-                presets = self.pipelines.presets.getModelsByType("txt2img")
+                presets = self.pipelines.presets.getModelsByTypeAndBase("txt2img", request.args["base"])
         models = [model.toDict() for model in presets.values()]
         return jsonify(models)
     

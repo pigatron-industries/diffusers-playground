@@ -1,6 +1,6 @@
 from PIL import Image
 import random, copy
-from ..ImageUtils import compositeImages, tiledImageProcessor
+from ..ImageUtils import compositeImages, tiledImageProcessor, applyColourCorrection
 from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
 from .GenerationParameters import GenerationParameters
 from huggingface_hub import login
@@ -109,6 +109,7 @@ def compositedInpaint(pipelines:DiffusersPipelines, params:GenerationParameters,
     maskimageparams = params.getMaskImage()
     if initimageparams is None or maskimageparams is None:
         raise Exception("compositedInpaint requires initimage and maskimage to be set in params")
+    # outimage = applyColourCorrection(initimageparams.image, outimage)
     outimage = compositeImages(outimage, initimageparams.image, maskimageparams.image, maskDilation=maskDilation, maskFeather=maskFeather)
     return outimage, usedseed
 
