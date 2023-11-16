@@ -751,13 +751,13 @@ def base64ToQImage(data):
 def getModels(modeltype, modelbase) -> List[str]:
     config = SDConfig()
     # TODO build into models endpoint
-    if(type == "upscale"):
+    if(modeltype == "upscale"):
         return ["esrgan/4x_remacri", 
                 "esrgan/4x_lollipop", 
                 "esrgan/4x_ultrasharp", 
                 "esrgan/1x_ReFocus-V3",
                 "esrgan/1x_ITF-SkinDiffDetail-Lite-v1",]
-    if(type == "preprocess"):
+    if(modeltype == "preprocess"):
         return ['DepthEstimation',
                 'NormalEstimation',
                 'CannyEdge',
