@@ -60,7 +60,7 @@ def createSlider(dialog,layout,value,min,max,steps,divider):
         slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or label.setText( str(slider.value())))
     slider.setValue(int(value))
     layout.addLayout(h_layout)
-    return slider
+    return slider, label
 
 
 class SDConfigDialog(QDialog):
@@ -85,13 +85,13 @@ class SDConfigDialog(QDialog):
         h_layout_width=QHBoxLayout()
 
         h_layout_width.addWidget(QLabel('Width:'))
-        self.width=createSlider(self, h_layout_width, self.config.width, 256, 2048, 64, 1)      
+        self.width, _ = createSlider(self, h_layout_width, self.config.width, 256, 2048, 64, 1)      
         h_layout_width.addWidget(self.width)
         self.layout.addLayout(h_layout_width)
 
         h_layout_height=QHBoxLayout()
         h_layout_height.addWidget(QLabel('Height:'))
-        self.height=createSlider(self, h_layout_height, self.config.height, 256, 2048, 64, 1)
+        self.height, _ = createSlider(self, h_layout_height, self.config.height, 256, 2048, 64, 1)
         h_layout_height.addWidget(self.height)
         self.layout.addLayout(h_layout_height)
 
@@ -305,7 +305,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(self.lora)
             self.loraweight_label = QLabel("LORA Weight:")
             formLayout.addWidget(self.loraweight_label)
-            self.loraweight, _ = createSlider(self, formLayout, 100, -200, 200, 1, 100)
+            self.loraweight, _  = createSlider(self, formLayout, 100, -200, 200, 1, 100)
             if(self.config.params.loras and len(self.config.params.loras) > 0):
                 self.lora.setCurrentText(self.config.params.loras[0].name)
                 self.loraweight.setValue(self.config.params.loras[0].weight*100)
@@ -313,18 +313,18 @@ class SDDialog(QDialog):
         if('upscale_amount' in self.actionfields):
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
-            self.upscale_amount, _ = createSlider(self, formLayout, self.config.params.upscaleamount, 1,4,1,1)
+            self.upscale_amount, _  = createSlider(self, formLayout, self.config.params.upscaleamount, 1,4,1,1)
 
         if('tile_method' in self.actionfields):
             tilewidth_label = QLabel("Tile width")
             formLayout.addWidget(tilewidth_label)
-            self.tile_width = createSlider(self, formLayout, self.config.params.tilewidth, 256, 1024, 64, 1)
+            self.tile_width, _  = createSlider(self, formLayout, self.config.params.tilewidth, 256, 1024, 64, 1)
             tileheight_label = QLabel("Tile height")
             formLayout.addWidget(tileheight_label)
-            self.tile_height = createSlider(self, formLayout, self.config.params.tileheight, 256, 1024, 64, 1)
+            self.tile_height, _  = createSlider(self, formLayout, self.config.params.tileheight, 256, 1024, 64, 1)
             tileoverlap_label = QLabel("Tile overlap")
             formLayout.addWidget(tileoverlap_label)
-            self.tile_overlap = createSlider(self, formLayout, self.config.params.tileoverlap, 0, 384, 2, 1)
+            self.tile_overlap, _  = createSlider(self, formLayout, self.config.params.tileoverlap, 0, 384, 2, 1)
 
             tilealignmentx_label = QLabel("Tile alignment x")
             formLayout.addWidget(tilealignmentx_label)
