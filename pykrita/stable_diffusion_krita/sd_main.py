@@ -402,6 +402,7 @@ class SDDialog(QDialog):
             control_models = getModels("control", self.config.params.modelBase)
             self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
             self.control_model_dropdowns = []
+            self.control_scale_sliders = []
             tabs = QTabWidget()
             for i, image in enumerate(images):
                 self.addImageTab(tabs, image, i)
@@ -458,8 +459,9 @@ class SDDialog(QDialog):
         self.control_model_dropdowns.append(control_model_dropdown)
         tabLayout.addWidget(control_model_dropdown)
 
-        # TODO add control scale slider
-        # control_scale = createSlider(self, tabLayout, 0.8, 256, 2048, 64, 1)
+        # TODO load previous scale value
+        control_scale_slider = createSlider(self, tabLayout, 0.8*100, 0, 100, 1, 100)
+        self.control_scale_sliders.append(control_scale_slider)
 
         imgLabel = QLabel()
         imgLabel.setPixmap(self.maxSizePixmap(image, (896, 896)))
