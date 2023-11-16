@@ -11,9 +11,12 @@ from diffusers import ( # Pipelines
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
-                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler)
+                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler)
 from compel import Compel, ReturnedEmbeddingsType
 import torch
+
+
+LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
 
 
 class NoWatermark:

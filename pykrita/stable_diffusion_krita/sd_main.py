@@ -305,7 +305,7 @@ class SDDialog(QDialog):
             formLayout.addWidget(self.lora)
             self.loraweight_label = QLabel("LORA Weight:")
             formLayout.addWidget(self.loraweight_label)
-            self.loraweight, _ = self.addSlider(formLayout,100,-200,200,1,100)
+            self.loraweight, _ = createSlider(self, formLayout, 100, -200, 200, 1, 100)
             if(self.config.params.loras and len(self.config.params.loras) > 0):
                 self.lora.setCurrentText(self.config.params.loras[0].name)
                 self.loraweight.setValue(self.config.params.loras[0].weight*100)
@@ -313,15 +313,15 @@ class SDDialog(QDialog):
         if('upscale_amount' in self.actionfields):
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
-            self.upscale_amount, _ = self.addSlider(formLayout, self.config.params.upscaleamount, 1,4,1,1)
+            self.upscale_amount, _ = createSlider(self, formLayout, self.config.params.upscaleamount, 1,4,1,1)
 
         if('tile_method' in self.actionfields):
             tilewidth_label = QLabel("Tile width")
             formLayout.addWidget(tilewidth_label)
-            self.tile_width=createSlider(self, formLayout, self.config.params.tilewidth, 256, 1024, 64, 1)
+            self.tile_width = createSlider(self, formLayout, self.config.params.tilewidth, 256, 1024, 64, 1)
             tileheight_label = QLabel("Tile height")
             formLayout.addWidget(tileheight_label)
-            self.tile_height=createSlider(self, formLayout, self.config.params.tileheight, 256, 1024, 64, 1)
+            self.tile_height = createSlider(self, formLayout, self.config.params.tileheight, 256, 1024, 64, 1)
             tileoverlap_label = QLabel("Tile overlap")
             formLayout.addWidget(tileoverlap_label)
             self.tile_overlap = createSlider(self, formLayout, self.config.params.tileoverlap, 0, 384, 2, 1)
@@ -343,18 +343,18 @@ class SDDialog(QDialog):
         if('strength' in self.actionfields):
             self.strength_label = QLabel("Strength")
             formLayout.addWidget(self.strength_label)
-            self.strength, self.strength_value = self.addSlider(formLayout,self.config.params.strength*100,0,100,1,100)
+            self.strength, self.strength_value = createSlider(self, formLayout, self.config.params.strength*100, 0, 100, 1, 100)
 
         if('steps' in self.actionfields):
             self.steps_label=QLabel("Steps")
             formLayout.addWidget(self.steps_label)        
-            self.steps, self.steps_value = self.addSlider(formLayout,self.config.params.steps,1,250,5,1)
+            self.steps, self.steps_value = createSlider(self, formLayout, self.config.params.steps, 1, 250, 5, 1)
 
         if('scale' in self.actionfields):
             scale_label=QLabel("Guidance Scale")
             scale_label.setToolTip("how strongly the image should follow the prompt")
             formLayout.addWidget(scale_label)        
-            self.scale, _ = self.addSlider(formLayout,self.config.params.cfgscale*10,10,300,5,10)
+            self.scale, _ = createSlider(self, formLayout, self.config.params.cfgscale*10, 10, 300, 5, 10)
      
         if('seed' in self.actionfields):
             seed_label=QLabel("Seed (empty=random)")
@@ -366,7 +366,7 @@ class SDDialog(QDialog):
 
         if('batch' in self.actionfields):
             formLayout.addWidget(QLabel("Number images"))        
-            self.batch, _ = self.addSlider(formLayout, self.config.params.batch,1,4,1,1)
+            self.batch, _ = createSlider(self, formLayout, self.config.params.batch, 1, 4, 1, 1)
    
         if('scheduler' in self.actionfields):
             scheduler_label=QLabel("Scheduler")
@@ -377,6 +377,7 @@ class SDDialog(QDialog):
                 'DPMSolverMultistepScheduler', 
                 'EulerAncestralDiscreteScheduler',
                 'EulerDiscreteScheduler',
+                'LCMScheduler'
                 # 'HeunDiscreteScheduler',
                 # 'KDPM2AncestralDiscreteScheduler',
                 # 'KDPM2DiscreteScheduler', 
@@ -445,6 +446,7 @@ class SDDialog(QDialog):
     def addImageTab(self, tabs, image, i):
         tabWidget = QWidget()
         tabLayout = QVBoxLayout()      
+
         control_model_dropdown = QComboBox()
         control_model_dropdown.addItems(self.controlmodels)
         control_model_dropdown.currentIndexChanged.connect(self.controlModelChanged)
@@ -454,9 +456,14 @@ class SDDialog(QDialog):
                 control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
             control_model_dropdown.setCurrentText(controlimageparams[i].model)
         self.control_model_dropdowns.append(control_model_dropdown)
+        tabLayout.addWidget(control_model_dropdown)
+
+        # TODO add control scale slider
+        # control_scale = createSlider(self, tabLayout, 0.8, 256, 2048, 64, 1)
+
         imgLabel = QLabel()
         imgLabel.setPixmap(self.maxSizePixmap(image, (896, 896)))
-        tabLayout.addWidget(control_model_dropdown)
+        
         tabLayout.addWidget(imgLabel)
         tabWidget.setLayout(tabLayout)
         tabs.addTab(tabWidget, f"Image {i}")
@@ -485,26 +492,7 @@ class SDDialog(QDialog):
         else:
             return QPixmap.fromImage(image)
 
-    # TODO replace with common createSlider 
-    def addSlider(self,layout,value,min,max,steps,divider):
-        h_layout = QHBoxLayout()
-        slider = QSlider(Qt.Orientation.Horizontal, self)
-        slider.setRange(min, max)
 
-        slider.setSingleStep(steps)
-        slider.setPageStep(steps)
-        slider.setTickInterval
-        valuelabel = QLabel(str(value), self)
-        h_layout.addWidget(slider, stretch=9)
-        h_layout.addWidget(valuelabel, stretch=1)
-        if (divider!=1):
-            slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or valuelabel.setText( str(slider.value()/divider)))
-        else:
-            slider.valueChanged.connect(lambda: slider.setValue(slider.value()//steps*steps) or valuelabel.setText( str(slider.value())))
-        slider.setValue(int(value))
-        layout.addLayout(h_layout)
-        return slider, valuelabel
-        
     # put data from dialog in configuration and save it
     def saveParams(self):
         genParams = GenerationParameters()
@@ -670,11 +658,11 @@ class ImageResutDialog(QDialog):
         #TODO add scale control here
         
         top_layout.addWidget(QLabel("Update one image with new Steps value"))
-        self.steps_update, _ = SDDialog.addSlider(self,top_layout,self.config.params.steps,1,250,5,1)
+        self.steps_update, _ = createSlider(self, top_layout, self.config.params.steps, 1, 250, 5, 1)
         
         if (params.generationtype in ("img2img", "inpaint", "generateTiled")):
             top_layout.addWidget(QLabel("Update with new Strengths value"))
-            self.strength_update, _ = SDDialog.addSlider(self,top_layout,self.config.params.strength*100,0,100,1,100)
+            self.strength_update, _ = createSlider(self, top_layout,self.config.params.strength*100, 0, 100, 1, 100)
 
         self.setLayout(top_layout)
 
