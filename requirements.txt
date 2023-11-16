@@ -8,7 +8,7 @@ ftfy
 torchvision
 controlnet-aux
 ipywidgets
-invisible-watermark>=2.0
+invisible-watermark>=0.2.0
 compel
 
 # diffusers conversion script
