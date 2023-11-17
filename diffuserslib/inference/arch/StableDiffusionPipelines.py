@@ -152,10 +152,8 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline, extracontrolmodels:List[str]=[]):
+    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline):
         controlmodel = []
-        for extracontrolmodel in extracontrolmodels:
-            controlmodel.append(extracontrolmodel)
         for controlimageparams in params.getControlImages():
             controlmodel.append(controlimageparams.model)
         controlnet = self.createControlNets(controlmodel)
@@ -232,7 +230,8 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
     def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device, extracontrolmodels = [INPAINT_CONTROL_MODEL])
+        params.controlimages.insert(0, ControlImageParameters(type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         initimageparams = params.getInitImage()
