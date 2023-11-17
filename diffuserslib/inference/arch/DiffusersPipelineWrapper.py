@@ -1,7 +1,7 @@
 from ..GenerationParameters import GenerationParameters
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
-from typing import Tuple
+from typing import Tuple, List
 from PIL import Image
 import sys
 import random
@@ -66,7 +66,7 @@ class DiffusersPipelineWrapper:
                 conditioningtype = currentconditioningtype
         return conditioningtype
 
-    def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass=ControlNetModel):
+    def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass):
         conditioningmodels = []
         for conditioningmodelid in conditioningmodelids:
             conditioningmodels.append(conditioningClass.from_pretrained(conditioningmodelid))
