@@ -8,12 +8,12 @@ import torch
 
 
 class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, safety_checker=True, **kwargs):
+    def __init__(self, cls, params:GenerationParameters, device, safety_checker=True, **kwargs):
         self.safety_checker = safety_checker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset, params, inferencedevice)
+        self.createPipeline(params.modelConfig, cls, **kwargs)
+        super().__init__(params, inferencedevice)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
@@ -21,7 +21,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
         self.pipeline2 = IFSuperResolutionPipeline.from_pretrained(preset.data['id2'], text_encoder=None, **args)
         self.pipeline3 = DiffusionPipeline.from_pretrained(preset.data['id3'], **args)
 
-    def createPipelineArgs(self, preset, **kwargs):
+    def createPipelineArgs(self, preset:DiffusersModel, **kwargs):
         args = {}
         if (not self.safety_checker):
             args['safety_checker'] = None
@@ -43,8 +43,8 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
 
 
 class DeepFloydTextToImagePipelineWrapper(DeepFloydPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=IFPipeline, preset=preset, params=params, device=device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(cls=IFPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         return super().diffusers_inference(prompt=params.prompt, negprompt=params.negprompt, seed=params.seed, guidance_scale=params.cfgscale, 

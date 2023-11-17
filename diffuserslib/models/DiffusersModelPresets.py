@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import yaml
 from typing import Dict, List, Union
 
@@ -27,23 +28,24 @@ class DiffusersBaseModel:
     def __init__(self, pipelinetypes:Dict[str, str]):
         self.pipelinetypes = pipelinetypes
 
-
+@dataclass
 class DiffusersModel:
-    def __init__(self, modelid: str, base: str, pipelinetypes: Dict[str, str], revision: str = None, stylephrase: str = None, vae = None, 
-                 autocast: bool = True, location: str = 'hf', modelpath: str = None, data = None):
-        self.modelid: Union[str, List[str]] = modelid
-        self.base = base
-        self.pipelinetypes = pipelinetypes
-        self.revision = revision
-        self.stylephrase = stylephrase
-        self.vae = vae
-        self.autocast = autocast
-        self.location = location
-        self.data = data
-        if(modelpath is None):
-            self.modelpath = modelid
+    modelid: Union[str, List[str]]
+    base: str
+    pipelinetypes: Dict[str, str]
+    revision: str|None = None
+    stylephrase: str|None = None
+    vae: str|None = None
+    autocast: bool = True
+    location: str = 'hf'
+    modelpath: str|None = None
+    data:Dict|None = None
+
+    def __post_init__(self):
+        if(self.modelpath is None and isinstance(self.modelid, str)):
+            self.modelpath = self.modelid
         else:
-            self.modelpath = modelpath
+            self.modelpath = self.modelpath
 
     def toDict(self):
         return {
@@ -51,6 +53,13 @@ class DiffusersModel:
             'base': self.base,
             'stylephrase': self.stylephrase,
         }
+    
+
+@dataclass
+class DiffusersConditioningModel:
+    modelid: str
+    type: str
+    inputtype: str = "RGB"
     
 
 

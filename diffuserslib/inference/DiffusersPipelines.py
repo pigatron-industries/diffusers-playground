@@ -109,8 +109,8 @@ class DiffusersPipelines:
 
     def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
-        if (pipeline.preset.base in self.baseModelData):
-            prompt = self.baseModelData[pipeline.preset.base].textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
+        if (pipeline.params.modelConfig.base in self.baseModelData):
+            prompt = self.baseModelData[pipeline.params.modelConfig.base].textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
         return prompt
 
 
@@ -143,9 +143,9 @@ class DiffusersPipelines:
 
 
     def _addLORAToPipeline(self, lora_name, weight:float=1.0):
-        if (self.pipeline.preset.base in self.baseModelData and lora_name in self.baseModelData[self.pipeline.preset.base].loras):
+        if (self.pipeline.params.modelConfig.base in self.baseModelData and lora_name in self.baseModelData[self.pipeline.params.modelConfig.base].loras):
             print(f"Loading LORA {lora_name}")
-            self.baseModelData[self.pipeline.preset.base].loras[lora_name].add_to_model(self.pipeline.pipeline, weight=weight, device=self.device)
+            self.baseModelData[self.pipeline.params.modelConfig.base].loras[lora_name].add_to_model(self.pipeline.pipeline, weight=weight, device=self.device)
 
     #=============== MODEL MERGING ==============
 
@@ -168,10 +168,10 @@ class DiffusersPipelines:
                     if key not in theta_0:
                         theta_0[key] = theta_1[key]
                 updateStateDictFunc(theta_0)
-        if(isinstance(self.pipeline.preset.modelid, list)):
-            self.pipeline.preset.modelid.append(modelid)
+        if(isinstance(self.pipeline.params.modelConfig.modelid, list)):
+            self.pipeline.params.modelConfig.modelid.append(modelid)
         else:
-            self.pipeline.preset.modelid = [self.pipeline.preset.modelid, modelid]
+            self.pipeline.params.modelConfig.modelid = [self.pipeline.params.modelConfig.modelid, modelid]
 
     #===============  ==============
 
@@ -195,6 +195,7 @@ class DiffusersPipelines:
     #=============== LOAD PIPELINES ==============
 
     def createPipeline(self, params:GenerationParameters):
+        self.loadModelConfigs(params)
         if(self.pipeline is not None and self.pipeline.paramsMatch(params)):
             return self.pipeline
 
@@ -202,12 +203,12 @@ class DiffusersPipelines:
         if (self.pipeline is not None):
             del self.pipeline
 
-        preset = self.getModel(params.models[0].name)
-        pipelineWrapperClass = str_to_class(preset.pipelinetypes[params.getGenerationType()]+"Wrapper")
         gc.collect()
         torch.cuda.empty_cache()
 
-        pipelineWrapper = pipelineWrapperClass(preset=preset, device=self.device, params=params)
+        # TODO load conditioning config/preset
+        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getGenerationType()]+"Wrapper")
+        pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
         self.pipeline = pipelineWrapper
         
         if(len(params.models) > 1):
@@ -215,6 +216,13 @@ class DiffusersPipelines:
                 self.mergeModel(modelparams.name, modelparams.weight, params)
         self._addLORAsToPipeline(params)
         return self.pipeline
+    
+    def loadModelConfigs(self, params:GenerationParameters):
+        params.modelConfig = self.getModel(params.models[0].name)
+        for controlimage in params.controlimages:
+            if (controlimage.model is not None):
+                controlimage.modelConfig = self.getModel(controlimage.model)
+        return params
 
 
     #=============== INFERENCE ==============

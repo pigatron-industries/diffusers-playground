@@ -12,8 +12,7 @@ MAX_SEED = 4294967295
 
 
 class DiffusersPipelineWrapper:
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, inferencedevice:str):
-        self.preset = preset
+    def __init__(self, params:GenerationParameters, inferencedevice:str):
         self.params = params
         self.inferencedevice = inferencedevice
 
@@ -42,7 +41,7 @@ class DiffusersPipelineWrapper:
                 return False
             
         for i in range(len(self.params.controlimages)):
-            if(self.params.controlimages[i].type != params.controlimages[i].type):
+            if(self.params.controlimages[i].type != params.controlimages[i].type and self.params.controlimages[i].model != params.controlimages[i].model):
                 return False
             
         return True

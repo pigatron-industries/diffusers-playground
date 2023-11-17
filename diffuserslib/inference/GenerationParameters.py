@@ -2,6 +2,7 @@ from typing import List
 from PIL import Image
 from dataclasses import dataclass, field
 from ..ImageUtils import base64DecodeImage
+from ..models.DiffusersModelPresets import DiffusersModel, DiffusersConditioningModel
 import json, inspect
 
 IMAGETYPE_INITIMAGE = "initimage"
@@ -36,6 +37,8 @@ class ControlImageParameters:
     preprocessor:str|None = None
     model:str|None = None
     condscale:float = 1.0
+    # extra 
+    modelConfig:DiffusersModel|None = None
 
     def __post_init__(self):
         if(self.image64 is not None and self.image64 != ""):
@@ -61,6 +64,8 @@ class GenerationParameters:
     loras:List[LoraParameters] = field(default_factory=list)
     tiling:bool = False
     controlimages:List[ControlImageParameters] = field(default_factory=list)
+    # extras
+    modelConfig:DiffusersModel|None = None
 
     @classmethod
     def from_json(cls, jsonbytes:bytes):

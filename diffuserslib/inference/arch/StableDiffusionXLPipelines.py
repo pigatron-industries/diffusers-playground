@@ -25,8 +25,8 @@ class NoWatermark:
 
 
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
-        super().__init__(cls=cls, preset=preset, params=params, device=device, **kwargs)
+    def __init__(self, cls, params:GenerationParameters, device, **kwargs):
+        super().__init__(cls=cls, params=params, device=device, **kwargs)
         self.pipeline.watermark = NoWatermark()
 
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
@@ -82,8 +82,8 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionXLPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionXLPipeline, preset=preset, params=params, device=device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
@@ -91,8 +91,8 @@ class StableDiffusionXLTextToImagePipelineWrapper(StableDiffusionXLPipelineWrapp
 
 
 class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionXLPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionXLImg2ImgPipeline, preset=preset, params=params, device=device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLImg2ImgPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         initimage = params.controlimages[0].image.convert("RGB")
@@ -101,8 +101,8 @@ class StableDiffusionXLImageToImagePipelineWrapper(StableDiffusionXLPipelineWrap
     
 
 class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionXLPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionXLInpaintPipeline, preset=preset, params=params, device=device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLInpaintPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         initimageparams = params.getInitImage()
@@ -117,14 +117,14 @@ class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionXLPipelineWrapper):
 
 
 class StableDiffusionXLControlNetPipelineWrapper(StableDiffusionXLPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline, extracontrolmodels:List[str]=[]):
+    def __init__(self, params:GenerationParameters, device, cls=DiffusionPipeline, extracontrolmodels:List[str]=[]):
         controlmodel = []
         for extracontrolmodel in extracontrolmodels:
             controlmodel.append(extracontrolmodel)
         for controlimageparams in params.getControlImages():
             controlmodel.append(controlimageparams.model)
         controlnet = self.createControlNets(controlmodel)
-        super().__init__(preset=preset, params=params, device=device, cls=cls, controlnet=controlnet)
+        super().__init__(params=params, device=device, cls=cls, controlnet=controlnet)
 
     def createControlNets(self, controlmodel):
         self.controlmodel = controlmodel
@@ -137,17 +137,11 @@ class StableDiffusionXLControlNetPipelineWrapper(StableDiffusionXLPipelineWrappe
         else:
             controlnet = ControlNetModel.from_pretrained(controlmodel)
         return controlnet
-    
-    def isEqual(self, cls, modelid, controlmodel=None, **kwargs):
-        if(controlmodel is None):
-            return super().isEqual(cls, modelid)
-        else:
-            return super().isEqual(cls, modelid) and self.controlmodel == controlmodel
         
 
 class StableDiffusionXLTextToImageControlNetPipelineWrapper(StableDiffusionXLControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionXLControlNetPipeline, preset=preset, params=params, device=device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(cls=StableDiffusionXLControlNetPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         if(len(params.controlimages) == 1):

@@ -8,8 +8,11 @@ from diffusers import DiffusionPipeline
 from diffusers.models import AutoencoderKL
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
-                        StableDiffusionInpaintPipeline, ControlNetModel, StableDiffusionControlNetPipeline,
+                        StableDiffusionInpaintPipeline, StableDiffusionControlNetPipeline,
                         StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
+                        StableDiffusionAdapterPipeline, 
+                        # Conditioning models
+                        T2IAdapter, ControlNetModel,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -30,12 +33,12 @@ def str_to_class(str):
 
 
 class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
-    def __init__(self, cls, preset:DiffusersModel, params:GenerationParameters, device, **kwargs):
+    def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(preset, cls, **kwargs)
-        super().__init__(preset, params, inferencedevice)
+        self.createPipeline(params.modelConfig, cls, **kwargs)
+        super().__init__(params, inferencedevice)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)
@@ -51,7 +54,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         # pipeline.enable_model_cpu_offload()
         # pipeline.enable_xformers_memory_efficient_attention()
 
-    def createPipelineArgs(self, preset, **kwargs):
+    def createPipelineArgs(self, preset:DiffusersModel, **kwargs):
         args = {}
         if (not self.safety_checker):
             args['safety_checker'] = None
@@ -79,7 +82,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         negative_conditioning = compel(negative_prompt)
         # [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
 
-        if(self.preset.autocast):
+        if(self.params.modelConfig.autocast):
             with torch.autocast(self.inferencedevice):
                 image = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs).images[0]
         else:
@@ -104,11 +107,11 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     
 
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+    def __init__(self, params:GenerationParameters, device):
         # self.custom_pipeline = 'composable_stable_diffusion'
         # self.custom_pipeline = 'lpw_stable_diffusion'
         self.custom_pipeline = StableDiffusionPipeline
-        super().__init__(self.custom_pipeline, preset, params, device)
+        super().__init__(self.custom_pipeline, params, device)
 
     def inference(self, params:GenerationParameters):
         # args = {}
@@ -132,8 +135,8 @@ class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(StableDiffusionImg2ImgPipeline, preset, params, device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(StableDiffusionImg2ImgPipeline, params, device)
 
     def inference(self, params:GenerationParameters):
         initimage = params.controlimages[0].image.convert("RGB")
@@ -142,8 +145,8 @@ class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper)
 
 
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(DiffusionPipeline, preset, params, device)
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(DiffusionPipeline, params, device)
 
     def inference(self, params:GenerationParameters):
         initimage = params.controlimages[0].image.convert("RGB")
@@ -152,53 +155,82 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device, cls=DiffusionPipeline):
-        controlmodel = []
+    def __init__(self, params:GenerationParameters, device, cls=DiffusionPipeline):
+        controlmodelids = []
         for controlimageparams in params.getControlImages():
-            controlmodel.append(controlimageparams.model)
-        controlnet = self.createControlNets(controlmodel)
-        super().__init__(preset=preset, params=params, device=device, cls=cls, controlnet=controlnet)
+            controlmodelids.append(controlimageparams.model)
+        conditioningtype = self.getConditioningType(params)
+        if(conditioningtype == "t2iadapter"):
+            conditioningmodels = self.createConditioningModels(controlmodelids, T2IAdapter)
+            super().__init__(params=params, device=device, cls=cls, adapter=conditioningmodels)
+        elif(conditioningtype == "controlnet"):
+            conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
+            super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
 
-    def createControlNets(self, controlmodel):
-        self.controlmodel = controlmodel
-        if(isinstance(controlmodel, list)):
-            controlnet = []
-            for cmodel in controlmodel:
-                controlnet.append(ControlNetModel.from_pretrained(cmodel))
-            if(len(controlnet) == 1):
-                controlnet = controlnet[0]
-        else:
-            controlnet = ControlNetModel.from_pretrained(controlmodel)
-        return controlnet
+    def getConditioningType(self, params:GenerationParameters):
+        conditioningtype = None
+        for controlimage in params.getControlImages():
+            if(controlimage.model is not None):
+                # TODO relying on the word t2iadapter in model name is not ideal
+                if("adapter" in controlimage.model):
+                    currentconditioningtype = "t2iadapter"
+                else:
+                    currentconditioningtype = "controlnet"
+                if conditioningtype is not None and currentconditioningtype != conditioningtype:
+                    raise ValueError("Cannot mix t2iadapter and controlnet conditioning")
+                conditioningtype = currentconditioningtype
+        return conditioningtype
+
+    def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass=ControlNetModel):
+        self.conditioningmodelids = conditioningmodelids
+        conditioningmodels = []
+        for conditioningmodelid in conditioningmodelids:
+            conditioningmodels.append(conditioningClass.from_pretrained(conditioningmodelid))
+        if(len(conditioningmodels) == 1):
+            conditioningmodels = conditioningmodels[0]
+        return conditioningmodels
     
-    def isEqual(self, cls, modelid, controlmodel=None, **kwargs):
-        if(controlmodel is None):
-            return super().isEqual(cls, modelid)
-        else:
-            return super().isEqual(cls, modelid) and self.controlmodel == controlmodel
+    def getConditioningScales(self, params:GenerationParameters):
+        condscales = []
+        for controlimage in params.getControlImages():
+            condscales.append(controlimage.condscale)
+        if len(condscales) == 1:
+            return condscales[0]
+        return condscales
     
+    def getConditioningImages(self, params:GenerationParameters):
+        conditioningimages = []
+        for conditioningimage in params.getControlImages():
+            colourspace = "RGB"
+            if ("colourspace" in conditioningimage.modelConfig.data):
+                colourspace = conditioningimage.modelConfig.data["colourspace"]
+            conditioningimages.append(conditioningimage.image.convert(colourspace))
+        return conditioningimages
+        
 
 class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionControlNetPipeline, preset=preset, params=params, device=device)
+    def __init__(self, params:GenerationParameters, device):
+        self.conditioningtype = self.getConditioningType(params)
+        if(self.conditioningtype == "t2iadapter"):
+            super().__init__(cls=StableDiffusionAdapterPipeline, params=params, device=device)
+        elif(self.conditioningtype == "controlnet"):
+            super().__init__(cls=StableDiffusionControlNetPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
-        if(len(params.controlimages) == 1):
-            controlnet_conditioning_scale = params.controlimages[0].condscale
-        else:
-            controlnet_conditioning_scale = []
-            for controlimage in params.controlimages:
-                controlnet_conditioning_scale.append(controlimage.condscale)
-        controlimages = []
-        for controlimage in params.controlimages:
-            controlimages.append(controlimage.image.convert("RGB"))
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=controlimages, guidance_scale=params.cfgscale, 
-                                 num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
+        condscales = self.getConditioningScales(params)
+        conditioningimages = self.getConditioningImages(params)
+        if(self.conditioningtype == "t2iadapter"):
+            return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=conditioningimages, guidance_scale=params.cfgscale, 
+                                 num_inference_steps=params.steps, scheduler=params.scheduler, adapter_conditioning_scale=condscales)
+        elif(self.conditioningtype == "controlnet"):
+            return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=conditioningimages, guidance_scale=params.cfgscale, 
+                                 num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=condscales)
+
     
 
 class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, device, params:GenerationParameters):
-        super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, preset=preset, params=params, device=device)
+    def __init__(self, device, params:GenerationParameters):
+        super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         controlimages = []
@@ -229,9 +261,10 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
 
 
 class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
+    def __init__(self, params:GenerationParameters, device):
+        # The inpaint controlnet model is supposed to make non inpaint models work with inpaint
         params.controlimages.insert(0, ControlImageParameters(type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device)
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         initimageparams = params.getInitImage()
@@ -246,9 +279,10 @@ class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWra
     
 
 class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, preset:DiffusersModel, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, preset=preset, params=params, device=device, extracontrolmodels = [INPAINT_CONTROL_MODEL])
-
+    def __init__(self, params:GenerationParameters, device):
+        # The inpaint controlnet model is supposed to make non inpaint models work with inpaint
+        params.controlimages.insert(0, ControlImageParameters(type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
+        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
         initimageparams = params.getInitImage()

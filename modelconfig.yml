@@ -152,6 +152,7 @@ controlnet:
     pipelines:
       controlnet: StableDiffusionControlNetPipeline
     models:
+      # Control Net Models
       - id: lllyasviel/control_v11p_sd15_canny
       - id: lllyasviel/control_v11f1p_sd15_depth
       - id: lllyasviel/control_v11p_sd15_inpaint
@@ -166,6 +167,9 @@ controlnet:
       - id: lllyasviel/control_v11f1e_sd15_tile
       - id: ioclab/control_v1p_sd15_brightness
       - id: monster-labs/control_v1p_sd15_qrcode_monster
+      # T2I Adapter Models
+      - id: TencentARC/t2iadapter_canny_sd15v2
+        colourspace: L
      
   - base: sd_2_1
     pipelines:
