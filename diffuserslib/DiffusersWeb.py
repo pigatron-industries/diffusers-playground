@@ -97,6 +97,8 @@ class DiffusersView(FlaskView):
 
     def generateRun(self, data:bytes):
         params = GenerationParameters.from_json(data)
+        self.validateParams(params)
+
         # print(params)
         try:
             print('=== generate ===')
@@ -120,7 +122,8 @@ class DiffusersView(FlaskView):
 
     def inpaintRun(self, data:bytes):
         params = GenerationParameters.from_json(data)
-        # print(params)
+        self.validateParams(params)
+        
         try:
             print('=== inpaint ===')
             initimageparams = params.getInitImage()
@@ -156,7 +159,8 @@ class DiffusersView(FlaskView):
 
     def generateTiledRun(self, data:bytes):
         params = TiledGenerationParameters.from_json(data)
-        # print(params)
+        self.validateParams(params)
+
         try:
             print('=== generateTiled ===')
             outputimages = []
@@ -186,6 +190,7 @@ class DiffusersView(FlaskView):
     def upscaleRun(self, data:bytes):
         params = UpscaleGenerationParameters.from_json(data)
         params.generationtype = "upscale"
+        self.validateParams(params)
         # print(params)
         try:
             print('=== upscale ===')
@@ -233,6 +238,11 @@ class DiffusersView(FlaskView):
         except Exception as e:
             self.job.status = { "status":"error", "action":"upscale", "error":str(e) }
             raise e
+        
+
+    def validateParams(self, params:GenerationParameters):
+        if (len(params.models) == 0):
+            raise Exception("Must provider at least one model")
 
 
     def prescaleBefore(self, params:GenerationParameters):
