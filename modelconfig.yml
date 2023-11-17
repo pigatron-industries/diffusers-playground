@@ -185,6 +185,10 @@ controlnet:
     pipelines:
       controlnet: StableDiffusionXLControlNetPipeline
     models:
+    # Control Net Models
       - id: diffusers/controlnet-canny-sdxl-1.0-small
       - id: diffusers/controlnet-depth-sdxl-1.0-small
       - id: thibaud/controlnet-openpose-sdxl-1.0
+    # T2I Adapter Models
+      - id: TencentARC/t2i-adapter-canny-sdxl-1.0
+        colourspace: L

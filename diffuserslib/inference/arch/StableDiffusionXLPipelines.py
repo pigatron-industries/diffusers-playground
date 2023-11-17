@@ -6,7 +6,9 @@ from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
-                        StableDiffusionXLControlNetPipeline, ControlNetModel,
+                        StableDiffusionXLControlNetPipeline, StableDiffusionXLAdapterPipeline,
+                        # Conditioning models
+                        T2IAdapter, ControlNetModel,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -118,41 +120,33 @@ class StableDiffusionXLInpaintPipelineWrapper(StableDiffusionXLPipelineWrapper):
 
 class StableDiffusionXLControlNetPipelineWrapper(StableDiffusionXLPipelineWrapper):
     def __init__(self, params:GenerationParameters, device, cls=DiffusionPipeline, extracontrolmodels:List[str]=[]):
-        controlmodel = []
-        for extracontrolmodel in extracontrolmodels:
-            controlmodel.append(extracontrolmodel)
-        for controlimageparams in params.getControlImages():
-            controlmodel.append(controlimageparams.model)
-        controlnet = self.createControlNets(controlmodel)
-        super().__init__(params=params, device=device, cls=cls, controlnet=controlnet)
+        controlmodelids = self.getConditioningModels(params)
+        conditioningtype = self.getConditioningType(params)
+        if(conditioningtype == "t2iadapter"):
+            conditioningmodels = self.createConditioningModels(controlmodelids, T2IAdapter)
+            super().__init__(params=params, device=device, cls=cls, adapter=conditioningmodels)
+        elif(conditioningtype == "controlnet"):
+            conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
+            super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
 
-    def createControlNets(self, controlmodel):
-        self.controlmodel = controlmodel
-        if(isinstance(controlmodel, list)):
-            controlnet = []
-            for cmodel in controlmodel:
-                controlnet.append(ControlNetModel.from_pretrained(cmodel))
-            if(len(controlnet) == 1):
-                controlnet = controlnet[0]
-        else:
-            controlnet = ControlNetModel.from_pretrained(controlmodel)
-        return controlnet
         
 
 class StableDiffusionXLTextToImageControlNetPipelineWrapper(StableDiffusionXLControlNetPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
-        super().__init__(cls=StableDiffusionXLControlNetPipeline, params=params, device=device)
+        self.conditioningtype = self.getConditioningType(params)
+        if(self.conditioningtype == "t2iadapter"):
+            super().__init__(cls=StableDiffusionXLAdapterPipeline, params=params, device=device)
+        elif(self.conditioningtype == "controlnet"):
+            super().__init__(cls=StableDiffusionXLControlNetPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
-        if(len(params.controlimages) == 1):
-            controlnet_conditioning_scale = params.controlimages[0].condscale
-        else:
-            controlnet_conditioning_scale = []
-            for controlimage in params.controlimages:
-                controlnet_conditioning_scale.append(controlimage.condscale)
-        controlimages = []
-        for controlimage in params.controlimages:
-            controlimages.append(controlimage.image.convert("RGB"))
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=controlimages, guidance_scale=params.cfgscale, 
-                                           num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
+        condscales = self.getConditioningScales(params)
+        conditioningimages = self.getConditioningImages(params)
+        if(self.conditioningtype == "t2iadapter"):
+            return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=conditioningimages, guidance_scale=params.cfgscale, 
+                                 num_inference_steps=params.steps, scheduler=params.scheduler, adapter_conditioning_scale=condscales)
+        elif(self.conditioningtype == "controlnet"):
+            return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=conditioningimages, guidance_scale=params.cfgscale, 
+                                 num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=condscales)
+
     

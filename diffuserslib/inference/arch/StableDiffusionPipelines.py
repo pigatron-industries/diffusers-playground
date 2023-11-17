@@ -156,9 +156,7 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device, cls=DiffusionPipeline):
-        controlmodelids = []
-        for controlimageparams in params.getControlImages():
-            controlmodelids.append(controlimageparams.model)
+        controlmodelids = self.getConditioningModels(params)
         conditioningtype = self.getConditioningType(params)
         if(conditioningtype == "t2iadapter"):
             conditioningmodels = self.createConditioningModels(controlmodelids, T2IAdapter)
@@ -166,46 +164,6 @@ class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
         elif(conditioningtype == "controlnet"):
             conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
             super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
-
-    def getConditioningType(self, params:GenerationParameters):
-        conditioningtype = None
-        for controlimage in params.getControlImages():
-            if(controlimage.model is not None):
-                # TODO relying on the word t2iadapter in model name is not ideal
-                if("adapter" in controlimage.model):
-                    currentconditioningtype = "t2iadapter"
-                else:
-                    currentconditioningtype = "controlnet"
-                if conditioningtype is not None and currentconditioningtype != conditioningtype:
-                    raise ValueError("Cannot mix t2iadapter and controlnet conditioning")
-                conditioningtype = currentconditioningtype
-        return conditioningtype
-
-    def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass=ControlNetModel):
-        self.conditioningmodelids = conditioningmodelids
-        conditioningmodels = []
-        for conditioningmodelid in conditioningmodelids:
-            conditioningmodels.append(conditioningClass.from_pretrained(conditioningmodelid))
-        if(len(conditioningmodels) == 1):
-            conditioningmodels = conditioningmodels[0]
-        return conditioningmodels
-    
-    def getConditioningScales(self, params:GenerationParameters):
-        condscales = []
-        for controlimage in params.getControlImages():
-            condscales.append(controlimage.condscale)
-        if len(condscales) == 1:
-            return condscales[0]
-        return condscales
-    
-    def getConditioningImages(self, params:GenerationParameters):
-        conditioningimages = []
-        for conditioningimage in params.getControlImages():
-            colourspace = "RGB"
-            if ("colourspace" in conditioningimage.modelConfig.data):
-                colourspace = conditioningimage.modelConfig.data["colourspace"]
-            conditioningimages.append(conditioningimage.image.convert(colourspace))
-        return conditioningimages
         
 
 class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
@@ -233,19 +191,11 @@ class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionContro
         super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, params=params, device=device)
 
     def inference(self, params:GenerationParameters):
-        controlimages = []
-        controlnet_conditioning_scale = []
-        initimage = None
-        for controlimageparams in params.controlimages:
-            if(controlimageparams.model is None or controlimageparams.type == IMAGETYPE_INITIMAGE):
-                initimage = controlimageparams.image.convert("RGB")
-            else:
-                controlimages.append(controlimageparams.image.convert("RGB"))
-                controlnet_conditioning_scale.append(controlimageparams.condscale)
-        if(len(controlnet_conditioning_scale) == 1):
-            controlnet_conditioning_scale = controlnet_conditioning_scale[0]
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, control_image=controlimages, 
-                                 guidance_scale=params.cfgscale, strength=params.strength, scheduler=params.scheduler, controlnet_conditioning_scale=controlnet_conditioning_scale)
+        condscales = self.getConditioningScales(params)
+        conditioningimages = self.getConditioningImages(params)
+        initimage = params.getInitImage().image.convert("RGB")
+        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, control_image=conditioningimages, 
+                                 guidance_scale=params.cfgscale, strength=params.strength, scheduler=params.scheduler, controlnet_conditioning_scale=condscales)
     
 
 # Standard stable diffusion inpaint pipeline
@@ -291,16 +241,11 @@ class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetP
             raise ValueError("Must provide both initimage and maskimage")
         initimage = initimageparams.image.convert("RGB")
         maskimage = maskimageparams.image.convert("RGB")
-
-        controlnet_conditioning_scale = [1.0]
-        controlimages = [make_inpaint_condition(initimage=initimage, maskimage=maskimage)]
-        for controlimageparams in params.controlimages:
-            controlimages.append(pil_to_pt(controlimageparams.image))
-            controlnet_conditioning_scale.append(controlimageparams.condscale)
-
+        condscales = self.getConditioningScales(params)
+        conditioningimages = self.getConditioningImages(params)
         return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
-                                 control_image=controlimages, guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler, 
-                                 width=initimage.width, height=initimage.height, controlnet_conditioning_scale=controlnet_conditioning_scale)
+                                 control_image=conditioningimages, guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler, 
+                                 width=initimage.width, height=initimage.height, controlnet_conditioning_scale=condscales)
     
 
 def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:

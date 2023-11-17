@@ -48,3 +48,51 @@ class DiffusersPipelineWrapper:
 
     def add_embeddings(self, token, embeddings):
         raise ValueError(f"add_embeddings not implemented for pipeline")
+    
+
+    # Useful function to get conditioning models and images
+
+    def getConditioningType(self, params:GenerationParameters):
+        conditioningtype = None
+        for controlimage in params.getControlImages():
+            if(controlimage.model is not None):
+                # TODO relying on the word t2iadapter in model name is not ideal
+                if("adapter" in controlimage.model):
+                    currentconditioningtype = "t2iadapter"
+                else:
+                    currentconditioningtype = "controlnet"
+                if conditioningtype is not None and currentconditioningtype != conditioningtype:
+                    raise ValueError("Cannot mix t2iadapter and controlnet conditioning")
+                conditioningtype = currentconditioningtype
+        return conditioningtype
+
+    def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass=ControlNetModel):
+        conditioningmodels = []
+        for conditioningmodelid in conditioningmodelids:
+            conditioningmodels.append(conditioningClass.from_pretrained(conditioningmodelid))
+        if(len(conditioningmodels) == 1):
+            conditioningmodels = conditioningmodels[0]
+        return conditioningmodels
+    
+    def getConditioningModels(self, params:GenerationParameters):
+        conditioningmodelids = []
+        for controlimageparams in params.getControlImages():
+            conditioningmodelids.append(controlimageparams.model)
+        return conditioningmodelids
+    
+    def getConditioningScales(self, params:GenerationParameters):
+        condscales = []
+        for controlimage in params.getControlImages():
+            condscales.append(controlimage.condscale)
+        if len(condscales) == 1:
+            return condscales[0]
+        return condscales
+    
+    def getConditioningImages(self, params:GenerationParameters):
+        conditioningimages = []
+        for conditioningimage in params.getControlImages():
+            colourspace = "RGB"
+            if ("colourspace" in conditioningimage.modelConfig.data):
+                colourspace = conditioningimage.modelConfig.data["colourspace"]
+            conditioningimages.append(conditioningimage.image.convert(colourspace))
+        return conditioningimages
