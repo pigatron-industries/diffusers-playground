@@ -135,3 +135,4 @@ notebooks/*.ipynb
 **/output
 cache/
 .DS_Store
+.vscode
