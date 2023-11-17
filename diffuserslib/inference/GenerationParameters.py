@@ -33,6 +33,7 @@ class ControlImageParameters:
     image:Image.Image|None = None
     image64:str = ""
     type:str = IMAGETYPE_INITIMAGE
+    preprocessor:str|None = None
     model:str|None = None
     condscale:float = 1.0
 

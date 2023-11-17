@@ -459,8 +459,10 @@ class SDDialog(QDialog):
         self.control_model_dropdowns.append(control_model_dropdown)
         tabLayout.addWidget(control_model_dropdown)
 
-        # TODO load previous scale value
-        control_scale_slider = createSlider(self, tabLayout, 0.8*100, 0, 100, 1, 100)
+        condscale = 0.8
+        if i < len(controlimageparams):
+            condscale = controlimageparams[i].condscale
+        control_scale_slider, _ = createSlider(self, tabLayout, condscale*100, 0, 100, 1, 100)
         self.control_scale_sliders.append(control_scale_slider)
 
         imgLabel = QLabel()
@@ -572,8 +574,13 @@ class SDDialog(QDialog):
                     self.config.params.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE))
                     genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, image64 = images64[i]))
                 else:
-                    self.config.params.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, model = control_model_dropdown.currentText()))
-                    genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, model = control_model_dropdown.currentText(), image64 = images64[i]))
+                    self.config.params.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
+                                                                                   model = control_model_dropdown.currentText(), 
+                                                                                   condscale = self.control_scale_sliders[i].value()/100))
+                    genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
+                                                                          model = control_model_dropdown.currentText(),
+                                                                          image64 = images64[i], 
+                                                                          condscale = self.control_scale_sliders[i].value()/100))
         self.config.save()
         return genParams
 
