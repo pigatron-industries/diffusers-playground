@@ -25,7 +25,8 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
         noisy_latents = noisy_latents.to(self.weight_dtype)
         (prompt_embeds,negative_prompt_embeds,pooled_prompt_embeds,negative_pooled_prompt_embeds) = self.pipeline.encode_prompt(prompt=batch["caption"])
-        time_ids = self.pipeline._get_add_time_ids(list(batch["pixel_values"].shape[2:4]), [0,0], [1024,1024], dtype=self.weight_dtype).to(self.accelerator.device)
+        time_ids = self.pipeline._get_add_time_ids(list(batch["pixel_values"].shape[2:4]), [0,0], [1024,1024], dtype=self.weight_dtype,
+                                                text_encoder_projection_dim = self.pipeline.text_encoder_2.config.projection_dim).to(self.accelerator.device)
 
         cond_kwargs = {"text_embeds": pooled_prompt_embeds, "time_ids": time_ids}
         # prompt_embeds = torch.cat(text_encoder_conds, dim=-1).to(self.weight_dtype)
