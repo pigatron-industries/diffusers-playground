@@ -209,8 +209,11 @@ class StableDiffusionEmbeddingTrainer():
 
     def train_loop(self):
         for epoch in range(self.start_epoch, self.params.numEpochs):
-            # TODO train all text encoders
-            self.text_encoder_trainers[0].text_encoder.train()          
+            
+            #train all text encoders
+            for text_encoder_trainer in self.text_encoder_trainers:
+                text_encoder_trainer.text_encoder.train()
+
             for step, batchitem in enumerate(self.train_dataloader):
                 loss = self.train_step(batchitem)
 
