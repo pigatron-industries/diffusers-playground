@@ -33,6 +33,8 @@ def str_to_class(str):
 
 
 class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
+    LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdv1-5"
+
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         self.safety_checker = params.safetychecker
         self.device = device
@@ -70,6 +72,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         if (isinstance(schedulerClass, str)):
             schedulerClass = str_to_class(schedulerClass)
         self.pipeline.scheduler = schedulerClass.from_config(self.pipeline.scheduler.config)
+        return schedulerClass
     
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)

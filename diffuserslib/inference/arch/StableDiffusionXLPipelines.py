@@ -18,8 +18,6 @@ from compel import Compel, ReturnedEmbeddingsType
 import torch
 
 
-LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
-
 
 class NoWatermark:
     def apply_watermark(self, img):
@@ -27,9 +25,15 @@ class NoWatermark:
 
 
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
+    LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
+
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         super().__init__(cls=cls, params=params, device=device, **kwargs)
         self.pipeline.watermark = NoWatermark()
+        if(params.scheduler == "LCMScheduler"):
+            self.pipeline.load_lora_weights(self.LCM_LORA_MODEL)
+            self.pipeline.fuse_lora()
+                
 
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
