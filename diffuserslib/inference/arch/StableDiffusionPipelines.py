@@ -17,7 +17,7 @@ from diffusers import ( # Pipelines
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
-                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler)
+                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler)
 from transformers import CLIPTextModel
 import torch
 import sys
