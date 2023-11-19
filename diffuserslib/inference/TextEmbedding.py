@@ -7,6 +7,7 @@ from ..FileUtils import getPathsFiles
 from ..StringUtils import findBetween
 
 from safetensors import safe_open
+from numpy import ndarray
 
 
 def getClassFromFilename(path):
@@ -19,7 +20,7 @@ def getClassFromFilename(path):
 
 
 class TextEmbedding:
-    def __init__(self, embeddings, token: str, embedclass: str = None, path: str = None):
+    def __init__(self, embeddings:List[ndarray], token: str, embedclass: str|None = None, path: str|None = None):
         self.embeddings = embeddings
         self.token = token
         self.embedclass = embedclass
@@ -29,48 +30,59 @@ class TextEmbedding:
     def from_file(cls, embedding_path, token = None):
         if(token is None):
             token = findBetween(embedding_path, '<', '>', True)
+        if(token is None):
+            raise ValueError("Could not find token in filename")
         embedclass = getClassFromFilename(embedding_path)
-        embeddings = []
-        if(embedding_path.endswith('.safetensors')):
-            with safe_open(embedding_path, framework='pt') as f:
+        return cls([], token, embedclass, embedding_path)
+    
+    def loadFile(self):
+        if(self.path is None):
+            raise ValueError("No path set for embedding")
+        print(f"Loading embedding token {self.token} from file {self.path}")
+        self.embeddings = []
+        if(self.path.endswith('.safetensors')):
+            with safe_open(self.path, framework='pt') as f:
                 if ('clip_l' in f.keys()):
                     # Multiple embeddings with tokenizer as key
-                    embeddings = []
-                    embeddings.append(f.get_tensor('clip_l'))
-                    embeddings.append(f.get_tensor('clip_g'))
+                    self.embeddings = []
+                    self.embeddings.append(f.get_tensor('clip_l'))
+                    self.embeddings.append(f.get_tensor('clip_g'))
                 else:
                     # Single embedding with token as key
                     for key in f.keys():
-                        if(token is None):
-                            token = key
-                        embeddings.append(f.get_tensor(key))
+                        if(self.token is None):
+                            self.token = key
+                        self.embeddings.append(f.get_tensor(key))
         else:
-            learned_embeds = torch.load(embedding_path, map_location="cpu")
+            learned_embeds = torch.load(self.path, map_location="cpu")
             if ('string_to_param' in learned_embeds):  
                 # .pt embedding
                 string_to_token = learned_embeds['string_to_token']
                 trained_token = list(string_to_token.keys())[0]
-                if(token is None):
-                    token = trained_token
+                if(self.token is None):
+                    self.token = trained_token
                 string_to_param = learned_embeds['string_to_param']
                 embedding_vectors = string_to_param[trained_token]
-                embeddings.append(embedding_vectors)
+                self.embeddings.append(embedding_vectors)
             else: 
                 # .bin diffusers concept
                 trained_token = list(learned_embeds.keys())[0]
-                if(token is None):
-                    token = trained_token
+                if(self.token is None):
+                    self.token = trained_token
                 embedding_vector = learned_embeds[trained_token]
                 if (embedding_vector.ndim == 1):
-                    embeddings.append([embedding_vector])
+                    self.embeddings.append([embedding_vector])
                 else:
-                    embeddings.append(embedding_vector)
-        return cls(embeddings, token, embedclass, embedding_path)
+                    self.embeddings.append(embedding_vector)
 
+    def getEmbedding(self):
+        if(len(self.embeddings) == 0):
+            self.loadFile()
+        return self.embeddings
 
     def add_to_model(self, pipeline: DiffusersPipelineWrapper):
         print(f"adding embedding token {self.token}")
-        pipeline.add_embeddings(self.token, self.embeddings)
+        pipeline.add_embeddings(self.token, self.getEmbedding())
 
 
 class TextEmbeddings:
@@ -84,15 +96,20 @@ class TextEmbeddings:
         print(f'Loading text embeddings for base {base} from path {path}')
         for embedding_path, embedding_file in getPathsFiles(f"{path}/*") + getPathsFiles(f"{path}/**/*"):
             if (embedding_file.endswith('.bin') or embedding_file.endswith('.pt') or embedding_file.endswith('.safetensors')):
-                self.load_file(embedding_path)
+                try:
+                    self.load_file(embedding_path)
+                except ValueError as e:
+                    print("WARNING: Could not load embedding file: " + embedding_path)
+                    print(e)
 
 
-    def load_file(self, path: str, token: str = None):
+    def load_file(self, path: str, token: str|None = None):
         embedding = TextEmbedding.from_file(path, token)
         self.embeddings[embedding.token] = embedding
-        if(embedding.embedclass not in self.modifiers):
-            self.modifiers[embedding.embedclass] = []
-        self.modifiers[embedding.embedclass].append(embedding.token)
+        if(embedding.embedclass is not None):
+            if(embedding.embedclass not in self.modifiers):
+                self.modifiers[embedding.embedclass] = []
+            self.modifiers[embedding.embedclass].append(embedding.token)
         # print(f"Loaded embedding token {embedding.token} from file {path} with {len(embedding.embeddings[0])} vectors")
         return embedding
 
