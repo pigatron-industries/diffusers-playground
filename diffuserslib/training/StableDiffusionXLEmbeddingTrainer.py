@@ -8,6 +8,11 @@ from diffusers import (
 )
 
 
+class NoWatermark:
+    def apply_watermark(self, img):
+        return img
+
+
 class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
 
     def __init__(self, params:TrainingParameters):
@@ -20,6 +25,12 @@ class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
         self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
         self.vae = self.pipeline.components["vae"]
         self.unet = self.pipeline.components["unet"]
+
+
+    def load_validation_pipeline(self):
+        if(self.params.numValidationImages > 0):
+            super().load_validation_pipeline()
+            self.validationPipeline.watermark = NoWatermark()
 
 
     def call_unet(self, noisy_latents, timesteps, text_encoder_conds, batch):
