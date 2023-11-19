@@ -133,7 +133,7 @@ class BatchNotebookInterface:
         self.steps_slider = intSlider(self, label='Steps:', value=40, min=5, max=100, step=5)
         self.strength_slider = floatSlider(self, label='Strength:', value=0.5, min=0, max=1, step=0.01)
         self.scheduler_dropdown = dropdown(self, label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
-                                                                           'EulerAncestralDiscreteScheduler', 'EulerDiscreteScheduler',
+                                                                           'EulerAncestralDiscreteScheduler', 'EulerDiscreteScheduler', 'LCMScheduler',
                                                                            'LMSDiscreteScheduler', 'UniPCMultistepScheduler'], value="EulerDiscreteScheduler")
         self.seed_text = intText(self, label='Seed:', value=None)
         self.batchsize_slider = intSlider(self, label='Batch:', value=10, min=1, max=100, step=1)
