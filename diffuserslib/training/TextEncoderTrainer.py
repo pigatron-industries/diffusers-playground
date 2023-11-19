@@ -14,6 +14,10 @@ class TextEncoderTrainer():
         self.placeholder_tokens:List[str] = []
         self.placeholder_token_ids:List[int] = []
 
+
+    def get_token_count(self, prompt:str):
+        return len(self.tokenizer.encode(prompt, add_special_tokens=False))
+
     
     def add_tokens(self, placeholder_tokens:List[str], initializer_tokens:str):
         self.placeholder_tokens = placeholder_tokens

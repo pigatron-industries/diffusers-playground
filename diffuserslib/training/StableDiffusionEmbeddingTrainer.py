@@ -33,8 +33,6 @@ logger = get_logger(__name__)
 class StableDiffusionEmbeddingTrainer():
 
     def __init__(self, params:TrainingParameters):
-        if params.numVectors < 1:
-            raise ValueError(f"--num_vectors has to be larger or equal to 1, but is {self.params.numVectors}")
         self.params = params
         self.accelerator = Accelerator(
             gradient_accumulation_steps = params.gradientAccumulationSteps,
@@ -209,7 +207,7 @@ class StableDiffusionEmbeddingTrainer():
 
     def train_loop(self):
         for epoch in range(self.start_epoch, self.params.numEpochs):
-            
+
             #train all text encoders
             for text_encoder_trainer in self.text_encoder_trainers:
                 text_encoder_trainer.text_encoder.train()
@@ -302,6 +300,11 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def init_tokenizer(self):
+        if(self.params.numVectors is None):
+            self.params.numVectors = self.text_encoder_trainers[0].get_token_count(self.params.initializerToken)
+        if self.params.numVectors < 1:
+            raise ValueError(f"--num_vectors has to be larger or equal to 1, but is {self.params.numVectors}")
+
         # Add the placeholder tokens in tokenizer
         placeholder_tokens = []
         for i in range(0, self.params.numVectors):
