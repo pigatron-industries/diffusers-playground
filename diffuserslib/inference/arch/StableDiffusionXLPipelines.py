@@ -41,6 +41,9 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
             self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
 
+        if(self.params.scheduler == "LCMScheduler"):
+            kwargs['guidance_scale'] = 0
+
         if "|" in prompt:
             prompt1, prompt2 = prompt.split("|")
         else:
