@@ -109,6 +109,73 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
     
 
+
+class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
+
+    PIPELINE_MAP = {
+        #initimage, controlnet, t2iadapter, mask
+        (False,     False,      False,      False):    StableDiffusionPipeline,
+        (False,     True,       False,      False):    StableDiffusionControlNetPipeline,
+        (False,     False,      True,       False):    StableDiffusionAdapterPipeline,
+        (True,      False,      False,      False):    StableDiffusionImg2ImgPipeline,
+        (True,      True,       False,      False):    StableDiffusionControlNetImg2ImgPipeline,
+        (True,      False,      False,      True):     StableDiffusionInpaintPipeline,
+        (True,      True,       False,      True):     StableDiffusionControlNetInpaintPipeline,
+    }
+
+    def __init__(self, params:GenerationParameters, device):
+        cls = self.getPipelineClass(params)
+        if(not self.is_controlnet and not self.is_t2iadapter):
+            super().__init__(params=params, device=device, cls=cls)
+        else:
+            controlmodelids = self.getConditioningModels(params)
+            conditioningtype = self.getConditioningType(params)
+            if(conditioningtype == "t2iadapter"):
+                conditioningmodels = self.createConditioningModels(controlmodelids, T2IAdapter)
+                super().__init__(params=params, device=device, cls=cls, adapter=conditioningmodels)
+            elif(conditioningtype == "controlnet"):
+                conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
+                super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
+
+    def getPipelineClass(self, params:GenerationParameters):
+        self.is_initimage = False
+        self.is_controlnet = False
+        self.is_t2iadapter = False
+        self.is_maskimage = False
+        for conditioningimage in params.controlimages:
+            if(conditioningimage.type == IMAGETYPE_INITIMAGE):
+                self.is_initimage = True
+            if(conditioningimage.type == IMAGETYPE_MASKIMAGE):
+                self.is_maskimage = True
+            elif(conditioningimage.modelConfig is not None and 'control' in conditioningimage.modelConfig.modelid):
+                self.is_controlnet = True
+            elif(conditioningimage.modelConfig is not None and 'adapter' in conditioningimage.modelConfig.modelid):
+                self.is_t2iadapter = True
+        return self.PIPELINE_MAP[(self.is_initimage, self.is_controlnet, self.is_t2iadapter, self.is_maskimage)]
+
+    def inference(self, params:GenerationParameters):
+        initimage = params.getInitImage()
+
+        diffusers_params = {}
+        diffusers_params['prompt'] = params.prompt
+        diffusers_params['negative_prompt'] = params.negprompt
+        diffusers_params['seed'] = params.seed
+        diffusers_params['guidance_scale'] = params.cfgscale
+        diffusers_params['scheduler'] = params.scheduler
+        if(not self.is_initimage):
+            diffusers_params['width'] = params.width
+            diffusers_params['height'] = params.height
+            diffusers_params['num_inference_steps'] = params.steps
+        if(self.is_initimage and initimage is not None and initimage.image is not None):
+            diffusers_params['image'] = initimage.image.convert("RGB")
+            diffusers_params['strength'] = params.strength
+
+        return super().diffusers_inference(**diffusers_params)
+
+
+
+
+
 class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
         # self.custom_pipeline = 'composable_stable_diffusion'
