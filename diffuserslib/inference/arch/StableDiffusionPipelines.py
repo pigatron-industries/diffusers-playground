@@ -1,5 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from ..GenerationParameters import GenerationParameters, ControlImageParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
+from ..GenerationParameters import GenerationParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
 from ...models.DiffusersModelPresets import DiffusersModel
 from ...StringUtils import mergeDicts
 from typing import Callable, List
@@ -113,7 +113,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
 
     PIPELINE_MAP = {
-        #initimage, controlnet, t2iadapter, mask
+        #img2im,    controlnet, t2iadapter, inpaint
         (False,     False,      False,      False):    StableDiffusionPipeline,
         (False,     True,       False,      False):    StableDiffusionControlNetPipeline,
         (False,     False,      True,       False):    StableDiffusionAdapterPipeline,
@@ -138,80 +138,79 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
                 super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
 
     def getPipelineClass(self, params:GenerationParameters):
-        self.is_initimage = False
+        self.is_img2img = False
         self.is_controlnet = False
         self.is_t2iadapter = False
-        self.is_maskimage = False
+        self.is_inpaint = False
         for conditioningimage in params.controlimages:
             if(conditioningimage.type == IMAGETYPE_INITIMAGE):
-                self.is_initimage = True
+                self.is_img2img = True
             if(conditioningimage.type == IMAGETYPE_MASKIMAGE):
-                self.is_maskimage = True
+                self.is_inpaint = True
             elif(conditioningimage.modelConfig is not None and 'control' in conditioningimage.modelConfig.modelid):
                 self.is_controlnet = True
             elif(conditioningimage.modelConfig is not None and 'adapter' in conditioningimage.modelConfig.modelid):
                 self.is_t2iadapter = True
-        return self.PIPELINE_MAP[(self.is_initimage, self.is_controlnet, self.is_t2iadapter, self.is_maskimage)]
+        return self.PIPELINE_MAP[(self.is_img2img, self.is_controlnet, self.is_t2iadapter, self.is_inpaint)]
 
-    def inference(self, params:GenerationParameters):
-        initimage = params.getInitImage()
 
-        diffusers_params = {}
+    def addCommonParams(self, params:GenerationParameters, diffusers_params):
         diffusers_params['prompt'] = params.prompt
         diffusers_params['negative_prompt'] = params.negprompt
         diffusers_params['seed'] = params.seed
         diffusers_params['guidance_scale'] = params.cfgscale
         diffusers_params['scheduler'] = params.scheduler
-        if(not self.is_initimage):
-            diffusers_params['width'] = params.width
-            diffusers_params['height'] = params.height
-            diffusers_params['num_inference_steps'] = params.steps
-        if(self.is_initimage and initimage is not None and initimage.image is not None):
+    
+    def addImg2ImgParams(self, params:GenerationParameters, diffusers_params):
+        initimage = params.getInitImage()
+        if(initimage is not None and initimage.image is not None):
             diffusers_params['image'] = initimage.image.convert("RGB")
             diffusers_params['strength'] = params.strength
 
+    def addTxt2ImgParams(self, params:GenerationParameters, diffusers_params):
+        diffusers_params['width'] = params.width
+        diffusers_params['height'] = params.height
+        diffusers_params['num_inference_steps'] = params.steps
+
+    def addConditioningImageParams(self, params:GenerationParameters, diffusers_params):
+        condscales = self.getConditioningScales(params)
+        conditioningimages = self.getConditioningImages(params)
+        if(self.is_img2img):
+            diffusers_params['control_image'] = conditioningimages
+        else:
+            diffusers_params['image'] = conditioningimages
+        if(self.is_controlnet):
+            diffusers_params['controlnet_conditioning_scale'] = condscales
+        else:
+            diffusers_params['adapter_conditioning_scale'] = condscales
+
+    def addInpaintParams(self, params:GenerationParameters, diffusers_params):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getMaskImage()
+        if(initimageparams is None or maskimageparams is None or initimageparams.image is None or maskimageparams.image is None):
+            raise ValueError("Must provide both initimage and maskimage")
+        diffusers_params['image'] = initimageparams.image.convert("RGB")
+        diffusers_params['mask_image'] = maskimageparams.image.convert("RGB")
+        # TODO need to append inpaint conditioning to other conditioning
+        # diffusers_params['control_image'] = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
+        diffusers_params['num_inference_steps'] = params.steps
+        diffusers_params['strength'] = params.strength
+        diffusers_params['width'] = initimageparams.image.width
+        diffusers_params['height'] = initimageparams.image.height
+    
+
+    def inference(self, params:GenerationParameters):
+        diffusers_params = {}
+        self.addCommonParams(params, diffusers_params)
+        if(not self.is_img2img):
+            self.addTxt2ImgParams(params, diffusers_params)
+        if(self.is_img2img):
+            self.addImg2ImgParams(params, diffusers_params)
+        if(self.is_controlnet or self.is_t2iadapter):
+            self.addConditioningImageParams(params, diffusers_params)
+        if(self.is_inpaint):
+            self.addInpaintParams(params, diffusers_params)
         return super().diffusers_inference(**diffusers_params)
-
-
-
-
-
-class StableDiffusionTextToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        # self.custom_pipeline = 'composable_stable_diffusion'
-        # self.custom_pipeline = 'lpw_stable_diffusion'
-        self.custom_pipeline = StableDiffusionPipeline
-        super().__init__(self.custom_pipeline, params, device)
-
-    def inference(self, params:GenerationParameters):
-        # args = {}
-        # if (self.custom_pipeline == 'composable_stable_diffusion'):
-        #     prompts = prompt.split("|")
-        #     weights = None
-        #     if (len(prompts) > 1):
-        #         negprompt = [negprompt] * len(prompts)
-        #         weights = []
-        #         for promptpart in prompts:
-        #             weight = promptpart.split(" ")[-1]
-        #             if (weight.isnumeric()):
-        #                 weights.append(weight)
-        #             else:
-        #                 weights.append("1")
-        #         weights = " | ".join(weights)
-        #     args['weights'] = weights
-
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
-                                 guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler)
-
-
-class StableDiffusionImageToImagePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        super().__init__(StableDiffusionImg2ImgPipeline, params, device)
-
-    def inference(self, params:GenerationParameters):
-        initimage = params.controlimages[0].image.convert("RGB")
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
-                                 strength=params.strength, scheduler=params.scheduler)
 
 
 class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
@@ -223,100 +222,6 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
         return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
                                  num_inference_steps=params.steps, scheduler=params.scheduler)
 
-
-class StableDiffusionControlNetPipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device, cls=DiffusionPipeline):
-        controlmodelids = self.getConditioningModels(params)
-        conditioningtype = self.getConditioningType(params)
-        if(conditioningtype == "t2iadapter"):
-            conditioningmodels = self.createConditioningModels(controlmodelids, T2IAdapter)
-            super().__init__(params=params, device=device, cls=cls, adapter=conditioningmodels)
-        elif(conditioningtype == "controlnet"):
-            conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
-            super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
-        
-
-class StableDiffusionTextToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        self.conditioningtype = self.getConditioningType(params)
-        if(self.conditioningtype == "t2iadapter"):
-            super().__init__(cls=StableDiffusionAdapterPipeline, params=params, device=device)
-        elif(self.conditioningtype == "controlnet"):
-            super().__init__(cls=StableDiffusionControlNetPipeline, params=params, device=device)
-
-    def inference(self, params:GenerationParameters):
-        condscales = self.getConditioningScales(params)
-        conditioningimages = self.getConditioningImages(params)
-        if(self.conditioningtype == "t2iadapter"):
-            return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=conditioningimages, guidance_scale=params.cfgscale, 
-                                 num_inference_steps=params.steps, scheduler=params.scheduler, adapter_conditioning_scale=condscales)
-        elif(self.conditioningtype == "controlnet"):
-            return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=conditioningimages, guidance_scale=params.cfgscale, 
-                                 num_inference_steps=params.steps, scheduler=params.scheduler, controlnet_conditioning_scale=condscales)
-
-    
-
-class StableDiffusionImageToImageControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, device, params:GenerationParameters):
-        super().__init__(cls=StableDiffusionControlNetImg2ImgPipeline, params=params, device=device)
-
-    def inference(self, params:GenerationParameters):
-        condscales = self.getConditioningScales(params)
-        conditioningimages = self.getConditioningImages(params)
-        initimage = params.getInitImage().image.convert("RGB")
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, control_image=conditioningimages, 
-                                 guidance_scale=params.cfgscale, strength=params.strength, scheduler=params.scheduler, controlnet_conditioning_scale=condscales)
-    
-
-# Standard stable diffusion inpaint pipeline
-# class StableDiffusionInpaintPipelineWrapper(StableDiffusionPipelineWrapper):
-#     def __init__(self, preset:DiffusersModel, device):
-#         super().__init__(StableDiffusionInpaintPipeline, preset, device)
-
-#     def inference(self, prompt, negprompt, seed, initimage, maskimage, scale, steps, scheduler, strength=1.0, **kwargs):
-#         initimage = initimage.convert("RGB")
-#         maskimage = maskimage.convert("RGB")
-#         return super().inference(prompt=prompt, negative_prompt=negprompt, seed=seed, image=initimage, mask_image=maskimage, guidance_scale=scale, num_inference_steps=steps, 
-#                                  strength=strength, scheduler=scheduler, width=initimage.width, height=initimage.height)
-
-
-class StableDiffusionInpaintPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        # The inpaint controlnet model is supposed to make non inpaint models work with inpaint
-        params.controlimages.insert(0, ControlImageParameters(type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, params=params, device=device)
-
-    def inference(self, params:GenerationParameters):
-        initimageparams = params.getInitImage()
-        maskimageparams = params.getMaskImage()
-        if(initimageparams is None or maskimageparams is None):
-            raise ValueError("Must provide both initimage and maskimage")
-        initimage = initimageparams.image.convert("RGB")
-        maskimage = maskimageparams.image.convert("RGB")
-        inpaint_pt = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, control_image=inpaint_pt, 
-                                 guidance_scale=params.cfgscale, num_inference_steps=params.steps, strength=params.strength, scheduler=params.scheduler, width=initimage.width, height=initimage.height)
-    
-
-class StableDiffusionInpaintControlNetPipelineWrapper(StableDiffusionControlNetPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        # The inpaint controlnet model is supposed to make non inpaint models work with inpaint
-        params.controlimages.insert(0, ControlImageParameters(type=IMAGETYPE_CONTROLIMAGE, model=INPAINT_CONTROL_MODEL))
-        super().__init__(cls=StableDiffusionControlNetInpaintPipeline, params=params, device=device)
-
-    def inference(self, params:GenerationParameters):
-        initimageparams = params.getInitImage()
-        maskimageparams = params.getMaskImage()
-        if(initimageparams is None or maskimageparams is None):
-            raise ValueError("Must provide both initimage and maskimage")
-        initimage = initimageparams.image.convert("RGB")
-        maskimage = maskimageparams.image.convert("RGB")
-        condscales = self.getConditioningScales(params)
-        conditioningimages = self.getConditioningImages(params)
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
-                                 control_image=conditioningimages, guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler, 
-                                 width=initimage.width, height=initimage.height, controlnet_conditioning_scale=condscales)
-    
 
 def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:
     npinitimage = np.array(initimage.convert("RGB")).astype(np.float32) / 255.0

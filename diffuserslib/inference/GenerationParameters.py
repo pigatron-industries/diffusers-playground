@@ -125,7 +125,13 @@ class GenerationParameters:
         if(len(self.getControlImages()) > 0):
             generationtype += GENERATIONTYPE_CONTROLNET_SUFFIX
         return generationtype
-        
+    
+    def getPipelineType(self) -> str:
+        if(self.getMaskImage() is not None):
+            return "inpaint"
+        else:
+            return "generate"
+    
     def setImage(self, image:Image.Image, type:str):
         for controlimage in self.controlimages:
             if(controlimage.type == type):

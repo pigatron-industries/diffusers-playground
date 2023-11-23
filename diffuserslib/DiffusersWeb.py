@@ -49,7 +49,7 @@ class DiffusersView(FlaskView):
             elif(request.args["type"] == "upscale"):
                 presets = self.pipelines.presets.getModelsByType("upscale")
             else:
-                presets = self.pipelines.presets.getModelsByTypeAndBase("txt2img", request.args["base"])
+                presets = self.pipelines.presets.getModelsByTypeAndBase(request.args["type"], request.args["base"])
         models = [model.toDict() for model in presets.values()]
         return jsonify(models)
     

@@ -4,10 +4,6 @@ import sys
 import gc
 from typing import Dict, Tuple, List
 from PIL import Image
-from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
-                        StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
-                        StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
-                        ControlNetModel, StableDiffusionControlNetPipeline)
 from diffusers.models import AutoencoderKL
 from transformers import CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
@@ -207,7 +203,7 @@ class DiffusersPipelines:
         torch.cuda.empty_cache()
 
         # TODO load conditioning config/preset
-        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getGenerationType()]+"Wrapper")
+        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getPipelineType()]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
         self.pipeline = pipelineWrapper
         

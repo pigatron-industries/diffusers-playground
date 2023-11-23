@@ -2,24 +2,20 @@
 image:
   - base: sdxl_1_0
     pipelines:
-      txt2img: StableDiffusionXLTextToImagePipeline
-      img2img: StableDiffusionXLImageToImagePipeline
-      inpaint: StableDiffusionXLInpaintPipeline
-      txt2img_controlnet: StableDiffusionXLTextToImageControlNetPipeline
+      generate: StableDiffusionXLGeneratePipeline
     models:
       - id: stabilityai/stable-diffusion-xl-base-1.0
       - id: stabilityai/stable-diffusion-xl-refiner-1.0
   - base: kandinsky_2_1
     pipelines:
-      txt2img: KandinskyTextToImagePipeline
-      img2img: KandinskyImageToImagePipeline
+      generate: KandinskyGeneratePipeline
       interpolate: KandinskyInterpolatePipeline
     models:
       - id: kandinsky-community/kandinsky-2-1
         id2: kandinsky-community/kandinsky-2-1-prior
   - base: df_1_0
     pipelines:
-      txt2img: DeepFloydTextToImagePipeline
+      generate: DeepFloydGeneratePipeline
     models:
       - id: DeepFloyd/IF-I-M-v1.0
         id2: DeepFloyd/IF-II-M-v1.0
@@ -32,22 +28,14 @@ image:
         id3: stabilityai/stable-diffusion-x4-upscaler
   - base: sd_2_1
     pipelines:
-      txt2img: StableDiffusionTextToImagePipeline
-      img2img: StableDiffusionImageToImagePipeline
-      txt2img_controlnet: StableDiffusionTextToImageControlNetPipeline
-      img2img_controlnet: StableDiffusionImageToImageControlNetPipeline
+      generate: StableDiffusionGeneratePipeline
     models:
       - id: stabilityai/stable-diffusion-2-1  # official
       - id: stabilityai/stable-diffusion-2-1-base  # official
       - id: stablediffusionapi/illuminati-diffusion
   - base: sd_1_5
     pipelines:
-      txt2img: StableDiffusionTextToImagePipeline
-      img2img: StableDiffusionImageToImagePipeline
-      inpaint: StableDiffusionInpaintPipeline
-      txt2img_controlnet: StableDiffusionTextToImageControlNetPipeline
-      img2img_controlnet: StableDiffusionImageToImageControlNetPipeline
-      inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
+      generate: StableDiffusionGeneratePipeline
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
         vae: stabilityai/sd-vae-ft-mse
@@ -116,20 +104,18 @@ image:
 inpaint:
   - base: kandinsky_2_1
     pipelines:
-      inpaint: KandinskyInpaintPipeline
+      inpaint: KandinskyGeneratePipeline
     models:
       - id: kandinsky-community/kandinsky-2-1-inpaint
         id2: kandinsky-community/kandinsky-2-1-prior
   - base: sd_2_0
     pipelines:
-      inpaint: StableDiffusionInpaintPipeline
-      inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
+      inpaint: StableDiffusionGeneratePipeline
     models:
       - id: stabilityai/stable-diffusion-2-inpainting # official
   - base: sd_1_5
     pipelines:
-      inpaint: StableDiffusionInpaintPipeline
-      inpaint_controlnet: StableDiffusionInpaintControlNetPipeline
+      inpaint: StableDiffusionGeneratePipeline
     models:
       - id: runwayml/stable-diffusion-inpainting # official
         vae: stabilityai/sd-vae-ft-mse

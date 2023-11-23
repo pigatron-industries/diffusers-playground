@@ -242,6 +242,8 @@ class SDDialog(QDialog):
 
         self.actionfields = dialogfields[action]
         modeltype = action
+        if(self.action in ("txt2img","img2img","inpaint","generateTiled")):
+            modeltype = "generate"
 
         if('prompt' in self.actionfields):
             formLayout.addWidget(QLabel("Prompt"))
@@ -264,10 +266,6 @@ class SDDialog(QDialog):
             self.tile_method.addItems(['singlepass', 'multipass', 'inpaint'])
             tilemethod = self.config.params.tilemethod
             self.tile_method.setCurrentText(tilemethod)
-            if(tilemethod in ('singlepass', 'multipass')):
-                modeltype = 'img2img'
-            else:
-                modeltype = 'inpaint'
             self.tile_method.currentIndexChanged.connect(self.tileMethodChanged)
             formLayout.addWidget(self.tile_method)
 
@@ -279,7 +277,7 @@ class SDDialog(QDialog):
             else:
                 formLayout.addWidget(QLabel("Base"))
                 self.base = QComboBox()
-                self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky'])
+                self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1'])
                 self.base.setCurrentText(self.config.params.modelBase)
                 self.base.currentIndexChanged.connect(self.baseChanged)
                 formLayout.addWidget(self.base)
@@ -413,11 +411,7 @@ class SDDialog(QDialog):
 
 
     def tileMethodChanged(self, index):
-        if(self.tile_method.currentText() in ('singlepass', 'multipass')):
-            modeltype = 'img2img'
-        else:
-            modeltype = 'inpaint'
-        models = getModels(modeltype, self.base.currentText())
+        models = getModels("generate", self.base.currentText())
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
@@ -425,7 +419,10 @@ class SDDialog(QDialog):
 
     def baseChanged(self, index):
         print("base changed ")
-        models = getModels(self.action, self.base.currentText())
+        modeltype = self.action
+        if(self.action in ("txt2img","img2img","inpaint","generateTiled")):
+            modeltype = "generate"
+        models = getModels(modeltype, self.base.currentText())
         control_models = getModels("control", self.base.currentText())
         # update items in model dropdown
         self.model.clear()
@@ -796,7 +793,6 @@ def getLORAs(model) -> List[str]:
 
 
 def runSD(params:GenerationParameters, asynchronous=True):
-    #TODO use generate and generateTiled instead of img2img and txt2img in backend
     if(params.generationtype == "img2img" or params.generationtype == "txt2img"):
         action = "generate"
     elif(params.generationtype == "generateTiled"):
