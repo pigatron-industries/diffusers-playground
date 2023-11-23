@@ -185,7 +185,7 @@ class BatchNotebookInterface:
 
 
     def updateWidgets(self):
-        models = self.pipelines.presets.getModelsByTypeAndBase("txt2img", self.basemodel_dropdown.value)
+        models = self.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel_dropdown.value)
         self.model_dropdown.options = list(models.keys())
         self.mergemodel_dropdown.options = [None] + list(models.keys())
 
