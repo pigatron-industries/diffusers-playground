@@ -175,6 +175,8 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
     def addConditioningImageParams(self, params:GenerationParameters, diffusers_params):
         condscales = self.getConditioningScales(params)
         conditioningimages = self.getConditioningImages(params)
+        diffusers_params['width'] = conditioningimages[0].width
+        diffusers_params['height'] = conditioningimages[0].height
         if(self.is_img2img):
             diffusers_params['control_image'] = conditioningimages
         else:
