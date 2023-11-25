@@ -420,6 +420,8 @@ class SDDialog(QDialog):
                 return "inpaint"
             else:
                 return "generate"
+        elif(self.action == "upscale"):
+            return "upscale"
 
 
     def tileMethodChanged(self, index):
