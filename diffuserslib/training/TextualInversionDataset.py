@@ -129,22 +129,18 @@ class TextualInversionDataset(Dataset):
         text = random.choice(self.templates).format(self.placeholder_token)
         example["caption"] = text
 
-        # default to score-sde preprocessing
-        img = np.array(image).astype(np.uint8)
-
         if self.center_crop:
-            crop = min(img.shape[0], img.shape[1])
-            (
-                h,
-                w,
-            ) = (
-                img.shape[0],
-                img.shape[1],
-            )
-            img = img[(h - crop) // 2 : (h + crop) // 2, (w - crop) // 2 : (w + crop) // 2]
+            # TODO
+            pass
 
-        image = Image.fromarray(img)
-        image = image.resize((self.size[0], self.size[1]), resample=self.interpolation)
+        if(self.size[1] is None):
+            ratio = self.size[0] / image.width
+            image = image.resize((self.size[0], int(image.height * ratio)), resample=self.interpolation)
+        elif(self.size[0] is None):
+            ratio = self.size[1] / image.height
+            image = image.resize((int(image.width * ratio), self.size[1]), resample=self.interpolation)
+        else:
+            image = image.resize((self.size[0], self.size[1]), resample=self.interpolation)
 
         image = self.flip_transform(image)
         image = np.array(image).astype(np.uint8)
