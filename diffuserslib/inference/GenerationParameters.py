@@ -37,7 +37,7 @@ class ControlImageParameters:
     preprocessor:str|None = None
     model:str|None = None
     condscale:float = 1.0
-    # extra 
+    # runtime 
     modelConfig:DiffusersModel|None = None
 
     def __post_init__(self):
@@ -64,7 +64,7 @@ class GenerationParameters:
     loras:List[LoraParameters] = field(default_factory=list)
     tiling:bool = False
     controlimages:List[ControlImageParameters] = field(default_factory=list)
-    # extras
+    # runtime
     modelConfig:DiffusersModel|None = None
 
     @classmethod
