@@ -293,6 +293,8 @@ class BatchNotebookInterface:
 
     def setParams(self, params):
         try:
+            self.basemodel_dropdown.value = params.get('basemodel', 'sd_1_5')
+
             self.initimages_num.value = params.get('initimages_num', 0)
             for i, initimage_w in enumerate(self.initimage_widgets):
                 initimage_w.model_dropdown.value = params.get(f'initimage{i}_model', None)
@@ -301,7 +303,6 @@ class BatchNotebookInterface:
                 initimage_w.input_select_dropdown.value = params.get(f'initimage{i}_input_select', None)
                 initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
 
-            self.basemodel_dropdown.value = params.get('basemodel', 'sd_1_5')
             model = params.get('models', None)
             self.model_dropdown.value = model[0]
             if (len(model) > 1):
