@@ -156,7 +156,7 @@ class TextEmbeddings:
                 tokenname = self.randomize_wildcard_token(tokenname)
             if (tokenname in self.embeddings):
                 embedding = self.embeddings[tokenname]
-                embedding.loadFile()
+                embedding.getEmbedding()
                 expandedtoken = ''
                 if(len(options) == 0):
                     # use all vectors in token
