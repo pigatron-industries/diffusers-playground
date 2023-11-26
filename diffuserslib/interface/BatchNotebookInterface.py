@@ -233,7 +233,10 @@ class BatchNotebookInterface:
         params['model_weight'] = self.mergeweight_slider.value
         params['init_prompt'] = self.prompt_text.value
         params['shuffle'] = self.shuffle_checkbox.value
-        params['prompt'] = RandomPromptProcessor(self.modifier_dict, str(self.prompt_text.value), shuffle=bool(self.shuffle_checkbox.value))
+        params['prompt'] = RandomPromptProcessor(modifier_dict = self.modifier_dict, 
+                                                 wildcard_dict = self.pipelines.getEmbeddingTokens(self.basemodel_dropdown.value), 
+                                                 prompt = str(self.prompt_text.value), 
+                                                 shuffle = bool(self.shuffle_checkbox.value))
         params['negprompt'] = self.negprompt_text.value
         params['width'] = self.width_slider.value
         params['height'] = self.height_slider.value

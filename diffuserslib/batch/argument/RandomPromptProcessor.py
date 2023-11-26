@@ -1,6 +1,7 @@
 import random
 import re
 from .Argument import Argument
+from typing import List, Dict
 
 
 class RandomPromptProcessor(Argument):
@@ -17,8 +18,9 @@ class RandomPromptProcessor(Argument):
                 _colour[2-3,]_  =  "red, green, blue"
                 _colour[2-3 and]_  =  "red and green and blue"
     """
-    def __init__(self, modifier_dict, prompt:str="", shuffle:bool=False):
+    def __init__(self, modifier_dict:Dict[str, List[str]], wildcard_dict:List[str], prompt:str="", shuffle:bool=False):
         self.modifier_dict = modifier_dict
+        self.wildcard_dict = wildcard_dict
         self.prompt = prompt
         self.shuffle = shuffle
 
@@ -28,6 +30,20 @@ class RandomPromptProcessor(Argument):
     def randomItemsFromDict(self, modifiername, num):
         items = self.modifier_dict[modifiername]
         return random.sample(items, num)
+    
+    def randomiseWildcards(self, prompt):
+        out_prompt = prompt
+        tokenised_brackets = re.findall(r'<.*?>', prompt)
+        for prompttoken in tokenised_brackets:
+            tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken) # ignore everything between square brackets
+            tokenregex = tokenname.replace('*', '.*')
+            matchingstrings = []
+            for wildcard_match in self.wildcard_dict:
+                if(re.match(tokenregex, wildcard_match)):
+                    matchingstrings.append(wildcard_match)
+            randomstring = random.choice(matchingstrings)
+            out_prompt = out_prompt.replace(prompttoken, randomstring)
+        return out_prompt
 
     def randomiseFromDict(self, prompt):
         # randomise from dictionary of items defined outside of prompt _colour_
@@ -81,7 +97,9 @@ class RandomPromptProcessor(Argument):
         return ', '.join(parts)
 
     def __call__(self):
-        outprompt = self.randomiseFromDict(self.prompt)
+        outprompt = self.prompt
+        outprompt = self.randomiseFromDict(outprompt)
+        outprompt = self.randomiseWildcards(outprompt)
         outprompt = self.randomiseFromPrompt(outprompt)
         if(self.shuffle):
             outprompt = self.shufflePrompt(outprompt)
