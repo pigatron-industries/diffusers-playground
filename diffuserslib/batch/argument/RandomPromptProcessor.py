@@ -36,13 +36,14 @@ class RandomPromptProcessor(Argument):
         tokenised_brackets = re.findall(r'<.*?>', prompt)
         for prompttoken in tokenised_brackets:
             tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken) # ignore everything between square brackets
-            tokenregex = tokenname.replace('*', '.*')
-            matchingstrings = []
-            for wildcard_match in self.wildcard_dict:
-                if(re.match(tokenregex, wildcard_match)):
-                    matchingstrings.append(wildcard_match)
-            randomstring = random.choice(matchingstrings)
-            out_prompt = out_prompt.replace(prompttoken, randomstring)
+            if ('*' in tokenname):
+                tokenregex = tokenname.replace('*', '.*')
+                matchingstrings = []
+                for wildcard_match in self.wildcard_dict:
+                    if(re.match(tokenregex, wildcard_match)):
+                        matchingstrings.append(wildcard_match)
+                randomstring = random.choice(matchingstrings)
+                out_prompt = out_prompt.replace(prompttoken, randomstring)
         return out_prompt
 
     def randomiseFromDict(self, prompt):
