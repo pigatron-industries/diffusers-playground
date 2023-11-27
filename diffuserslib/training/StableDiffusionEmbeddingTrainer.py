@@ -114,6 +114,7 @@ class StableDiffusionEmbeddingTrainer():
             placeholder_token=self.placeholder_token_string,
             repeats=self.params.repeats,
             learnable_property=self.params.learnableProperty,
+            subject=self.params.subject,
             center_crop=self.params.centreCrop,
             set="train",
         )

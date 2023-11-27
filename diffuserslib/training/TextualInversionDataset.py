@@ -20,7 +20,7 @@ PIL_INTERPOLATION = {
 }
 
 
-imagenet_templates_small = [
+imagenet_object_templates_small = [
     "a photo of a {}",
     "a rendering of a {}",
     "a cropped photo of the {}",
@@ -72,13 +72,35 @@ imagenet_style_templates_small = [
     "a large painting in the style of {}",
 ]
 
+subject_style_templates_small = [
+    "a painting of a {subject} in the style of {style}",
+    "a rendering of a {subject} in the style of {style}",
+    "a cropped painting of a {subject} in the style of {style}",
+    "the painting of a {subject} in the style of {style}",
+    "a clean painting of a {subject} in the style of {style}",
+    "a dirty painting of a {subject} in the style of {style}",
+    "a dark painting of a {subject} in the style of {style}",
+    "a picture of a {subject} in the style of {style}",
+    "a cool painting of a {subject} in the style of {style}",
+    "a close-up painting of a {subject} in the style of {style}",
+    "a bright painting of a {subject} in the style of {style}",
+    "a cropped painting of a {subject} in the style of {style}",
+    "a good painting of a {subject} in the style of {style}",
+    "a close-up painting of a {subject} in the style of {style}",
+    "a rendition of a {subject} in the style of {style}",
+    "a nice painting of a {subject} in the style of {style}",
+    "a small painting of a {subject} in the style of {style}",
+    "a weird painting of a {subject} in the style of {style}",
+    "a large painting of a {subject} in the style of {style}",
+]
+
 
 class TextualInversionDataset(Dataset):
     def __init__(
         self,
         data_root:str,
         data_files:List[str],
-        learnable_property="object",  # [object, style]
+        learnable_property="object",  # [object, style, subject_style]
         size=(512, 512),
         repeats=100,
         interpolation="bicubic",
@@ -86,6 +108,7 @@ class TextualInversionDataset(Dataset):
         set="train",
         placeholder_token="*",
         center_crop=False,
+        subject = "girl"
     ):
         self.data_root = data_root
         self.data_files = data_files
@@ -94,6 +117,7 @@ class TextualInversionDataset(Dataset):
         self.placeholder_token = placeholder_token
         self.center_crop = center_crop
         self.flip_p = flip_p
+        self.subject = subject
 
         self.image_paths = []
         for filename in self.data_files:
@@ -113,7 +137,13 @@ class TextualInversionDataset(Dataset):
             "lanczos": PIL_INTERPOLATION["lanczos"],
         }[interpolation]
 
-        self.templates = imagenet_style_templates_small if learnable_property == "style" else imagenet_templates_small
+        if(learnable_property == "style"):
+            self.tempaltes = imagenet_style_templates_small
+        elif(learnable_property == "object"):
+            self.templates = imagenet_object_templates_small
+        elif(learnable_property ==  "subject_style"):
+            self.templates = subject_style_templates_small
+            
         self.flip_transform = transforms.RandomHorizontalFlip(p=self.flip_p)
 
     def __len__(self):
@@ -126,7 +156,10 @@ class TextualInversionDataset(Dataset):
         if not image.mode == "RGB":
             image = image.convert("RGB")
 
-        text = random.choice(self.templates).format(self.placeholder_token)
+        if(self.learnable_property == "subject_style"):
+            text = random.choice(self.templates).format(subject = self.subject, style = self.placeholder_token)
+        else:
+            text = random.choice(self.templates).format(self.placeholder_token)
         example["caption"] = text
 
         if self.center_crop:
@@ -134,11 +167,11 @@ class TextualInversionDataset(Dataset):
             pass
 
         if(self.size[1] is None):
-            ratio = self.size[0] / image.width
-            image = image.resize((self.size[0], int(image.height * ratio)), resample=self.interpolation)
+            w, h = image.size
+            image = image.resize((self.size[0], int(h * self.size[0] / w)), resample=self.interpolation)
         elif(self.size[0] is None):
-            ratio = self.size[1] / image.height
-            image = image.resize((int(image.width * ratio), self.size[1]), resample=self.interpolation)
+            w, h = image.size
+            image = image.resize((int(w * self.size[1] / h), self.size[1]), resample=self.interpolation)
         else:
             image = image.resize((self.size[0], self.size[1]), resample=self.interpolation)
 
