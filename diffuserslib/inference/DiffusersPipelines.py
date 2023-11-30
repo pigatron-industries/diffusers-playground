@@ -203,9 +203,6 @@ class DiffusersPipelines:
         if (self.pipeline is not None):
             del self.pipeline
 
-        gc.collect()
-        torch.cuda.empty_cache()
-
         # TODO load conditioning config/preset
         pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getPipelineType()]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
@@ -231,4 +228,8 @@ class DiffusersPipelines:
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
         params.prompt = self.processPrompt(params.original_prompt, pipelineWrapper)
-        return pipelineWrapper.inference(params)
+        image, seed = pipelineWrapper.inference(params)
+        gc.collect()
+        torch.mps.empty_cache()
+        torch.cuda.empty_cache()
+        return image, seed
