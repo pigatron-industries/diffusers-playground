@@ -187,6 +187,8 @@ controlnet:
 
 ipadapter:
   - base: sd_1_5
+    pipelines:
+      ipdapter: 
     models:
       - id: h94/IP-Adapter/models/ip-adapter_sd15.bin
       - id: h94/IP-Adapter/models/ip-adapter_sd15_light.bin
@@ -194,6 +196,8 @@ ipadapter:
       - id: h94/IP-Adapter/models/ip-adapter-plus-face_sd15.bin
 
   - base: sdxl_1_0
+    pipelines:
+      ipdapter: 
     models:
       - id: h94/IP-Adapter/models/ip-adapter_sdxl.bin
       - id: h94/IP-Adapter/models/ip-adapter_sdxl_vit-h.bin

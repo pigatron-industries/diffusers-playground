@@ -11,17 +11,6 @@ class DiffusersBaseModelType:
     sd_2_0 = 'sd_2_0'
     sd_2_1 = 'sd_2_1'
     sdxl_1_0 = 'sdxl_1_0'
-
-
-class DiffusersPipelineType:
-    text2img = 'text2img'
-    img2img = 'img2img'
-    inpaint = 'inpaint'
-    upscale = 'upscale'
-    controlnet = 'controlnet'
-    text2img_controlnet = 'text2img_controlnet'
-    img2img_controlnet = 'img2img_controlnet'
-    inpaint_controlnet = 'inpaint_controlnet'
  
 
 class DiffusersBaseModel:
