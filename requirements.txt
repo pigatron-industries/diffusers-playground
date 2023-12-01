@@ -1,3 +1,5 @@
+torch==2.1.0
+
 # diffusers
 huggingface_hub
 diffusers==0.23.0
