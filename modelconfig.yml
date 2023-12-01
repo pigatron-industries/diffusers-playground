@@ -183,3 +183,19 @@ controlnet:
     # T2I Adapter Models
       - id: TencentARC/t2i-adapter-canny-sdxl-1.0
         colourspace: L
+
+
+ipadapter:
+  - base: sd_1_5
+    models:
+      - id: h94/IP-Adapter/models/ip-adapter_sd15.bin
+      - id: h94/IP-Adapter/models/ip-adapter_sd15_light.bin
+      - id: h94/IP-Adapter/models/ip-adapter-plus_sd15.bin
+      - id: h94/IP-Adapter/models/ip-adapter-plus-face_sd15.bin
+
+  - base: sdxl_1_0
+    models:
+      - id: h94/IP-Adapter/models/ip-adapter_sdxl.bin
+      - id: h94/IP-Adapter/models/ip-adapter_sdxl_vit-h.bin
+      - id: h94/IP-Adapter/models/ip-adapter-plus_sdxl_vit-h.bin
+      - id: h94/IP-Adapter/models/ip-adapter-plus-face_sdxl_vit-h.bin

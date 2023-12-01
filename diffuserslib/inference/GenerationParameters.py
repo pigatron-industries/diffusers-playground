@@ -5,9 +5,12 @@ from ..ImageUtils import base64DecodeImage
 from ..models.DiffusersModelPresets import DiffusersModel, DiffusersConditioningModel
 import json, inspect
 
-IMAGETYPE_INITIMAGE = "initimage"
-IMAGETYPE_MASKIMAGE = "maskimage"
-IMAGETYPE_CONTROLIMAGE = "controlimage"
+
+class ControlImageType:
+    IMAGETYPE_INITIMAGE = "initimage"
+    IMAGETYPE_MASKIMAGE = "maskimage"
+    IMAGETYPE_IPADAPTER = "ipadapter"
+    IMAGETYPE_CONTROLIMAGE = "controlimage"
 
 
 GENERATIONTYPE_TXT2IMG = "txt2img"
@@ -33,7 +36,7 @@ class LoraParameters:
 class ControlImageParameters:
     image:Image.Image|None = None
     image64:str = ""
-    type:str = IMAGETYPE_INITIMAGE
+    type:str = ControlImageType.IMAGETYPE_INITIMAGE
     preprocessor:str|None = None
     model:str|None = None
     condscale:float = 1.0
@@ -103,13 +106,16 @@ class GenerationParameters:
         return controlimages
 
     def getMaskImage(self) -> ControlImageParameters|None:
-        return self.getImage(IMAGETYPE_MASKIMAGE)
-    
+        return self.getImage(ControlImageType.IMAGETYPE_MASKIMAGE)
+
     def getInitImage(self) -> ControlImageParameters|None:
-        return self.getImage(IMAGETYPE_INITIMAGE)
+        return self.getImage(ControlImageType.IMAGETYPE_INITIMAGE)
+    
+    def getIpAdapterImage(self) -> ControlImageParameters|None:
+        return self.getImage(ControlImageType.IMAGETYPE_IPADAPTER)
     
     def getControlImages(self) -> List[ControlImageParameters]:
-        return self.getImages(IMAGETYPE_CONTROLIMAGE)
+        return self.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE)
 
     def getGenerationType(self) -> str:
         # if(self.generationtype is not None):
@@ -140,14 +146,14 @@ class GenerationParameters:
         self.controlimages.append(ControlImageParameters(image=image, type=type))
 
     def setInitImage(self, image:Image.Image):
-        self.setImage(image, IMAGETYPE_INITIMAGE)
+        self.setImage(image, ControlImageType.IMAGETYPE_INITIMAGE)
 
     def setMaskImage(self, image:Image.Image):
-        self.setImage(image, IMAGETYPE_MASKIMAGE)
+        self.setImage(image, ControlImageType.IMAGETYPE_MASKIMAGE)
                 
     def setControlImage(self, index:int, image:Image.Image):
         for controlimage in self.controlimages:
-            if(controlimage.type == IMAGETYPE_CONTROLIMAGE):
+            if(controlimage.type == ControlImageType.IMAGETYPE_CONTROLIMAGE):
                 if(index == 0):
                     controlimage.image = image
                     return
