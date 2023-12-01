@@ -422,6 +422,8 @@ class SDDialog(QDialog):
                 return "generate"
         elif(self.action == "upscale"):
             return "upscale"
+        elif(self.action == "preprocess"):
+            return "preprocess"
 
 
     def tileMethodChanged(self, index):
@@ -494,13 +496,13 @@ class SDDialog(QDialog):
                     action = "img2img"
                     break
         print("controlModelChanged", action)
-        if (hasattr(self, 'strength') and hasattr(self, 'steps')):
-            self.steps.setVisible(action != "img2img")
-            self.steps_label.setVisible(action != "img2img")
-            self.steps_value.setVisible(action != "img2img")
-            self.strength.setVisible(action == "img2img")
-            self.strength_label.setVisible(action == "img2img")
-            self.strength_value.setVisible(action == "img2img")
+        # if (hasattr(self, 'strength') and hasattr(self, 'steps')):
+            # self.steps.setVisible(action != "img2img")
+            # self.steps_label.setVisible(action != "img2img")
+            # self.steps_value.setVisible(action != "img2img")
+            # self.strength.setVisible(action == "img2img")
+            # self.strength_label.setVisible(action == "img2img")
+            # self.strength_value.setVisible(action == "img2img")
 
 
     def maxSizePixmap(self, image, max_size):
