@@ -1,5 +1,5 @@
 from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
-from ..GenerationParameters import GenerationParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
+from ..GenerationParameters import GenerationParameters, ControlImageType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines

@@ -4,6 +4,7 @@ import json
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
+IMAGETYPE_IPADAPTER = "ipadapter"
 IMAGETYPE_CONTROLIMAGE = "controlimage"
 
 

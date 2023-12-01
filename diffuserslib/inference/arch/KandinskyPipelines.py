@@ -1,5 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from ..GenerationParameters import GenerationParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE
+from ..GenerationParameters import GenerationParameters, ControlImageType
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
 from diffusers import KandinskyPriorPipeline, KandinskyPipeline, KandinskyImg2ImgPipeline, KandinskyInpaintPipeline
@@ -53,9 +53,9 @@ class KandinskyGeneratePipelineWrapper(KandinskyPipelineWrapper):
         self.is_img2img = False
         self.is_inpaint = False
         for conditioningimage in params.controlimages:
-            if(conditioningimage.type == IMAGETYPE_INITIMAGE):
+            if(conditioningimage.type == ControlImageType.IMAGETYPE_INITIMAGE):
                 self.is_img2img = True
-            if(conditioningimage.type == IMAGETYPE_MASKIMAGE):
+            if(conditioningimage.type == ControlImageType.IMAGETYPE_MASKIMAGE):
                 self.is_inpaint = True
         return self.PIPELINE_MAP[(self.is_img2img, self.is_inpaint)]
 
