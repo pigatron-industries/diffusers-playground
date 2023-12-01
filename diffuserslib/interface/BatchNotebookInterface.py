@@ -1,7 +1,7 @@
 from ..batch import BatchRunner
 from ..batch.argument import RandomNumberArgument, RandomImageArgument, RandomPromptProcessor
 from ..inference import DiffusersPipelines
-from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, LoraParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE, IMAGETYPE_CONTROLIMAGE
+from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, LoraParameters, ControlImageType
 from ..processing import *
 from ..processing.ProcessingPipeline import ImageProcessorPipeline
 from ..processing.processors.FilterProcessors import *
@@ -424,10 +424,10 @@ class BatchNotebookInterface:
                  loranames=None, loraweights=None, model_weight=1.0, **kwargs):
         controlimageparams = []
         if(initimage is not None):
-            controlimageparams.append(ControlImageParameters(image=initimage, model=IMAGETYPE_INITIMAGE))
+            controlimageparams.append(ControlImageParameters(image=initimage, model=ControlImageType.IMAGETYPE_INITIMAGE))
         if(controlimage is not None and controlmodel is not None):
             for i in range(0, len(controlimage)):
-                controlimageparams.append(ControlImageParameters(image=controlimage[i], type=IMAGETYPE_CONTROLIMAGE, model=controlmodel[i]))
+                controlimageparams.append(ControlImageParameters(image=controlimage[i], type=ControlImageType.IMAGETYPE_CONTROLIMAGE, model=controlmodel[i]))
 
         loraparams = []
         if(loranames is not None and loraweights is not None):

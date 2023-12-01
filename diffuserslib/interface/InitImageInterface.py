@@ -40,6 +40,7 @@ class InitImageInterface:
         
     def updateWidgets(self):
         models = self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet", self.interface.basemodel_dropdown.value)
+        models.extend(self.interface.pipelines.presets.getModelsByTypeAndBase("ipadapter", self.interface.basemodel_dropdown.value))
         controlnet_models = list(models.keys())
         if (self.firstImage):
             controlnet_models = [INIT_IMAGE] + controlnet_models
