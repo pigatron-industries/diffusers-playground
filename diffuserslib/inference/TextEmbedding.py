@@ -115,9 +115,8 @@ class TextEmbeddings:
 
 
     def process_prompt_and_add_tokens(self, prompt: str, pipeline: DiffusersPipelineWrapper):
-        tokens = self.get_tokens_from_prompt(prompt)
-        self.add_tokens_to_model(pipeline, tokens)
-        prompt = self.process_prompt(prompt)
+        prompt, tokennames = self.process_prompt(prompt)
+        self.add_tokens_to_model(pipeline, tokennames)
         return prompt
 
 
@@ -130,11 +129,14 @@ class TextEmbeddings:
                 pass
 
 
-    def get_tokens_from_prompt(self, prompt: str):
-        prompttokens = re.findall(r'<.*?>', prompt)
+    def get_tokenstrings_from_prompt(self, prompt: str):
+        return re.findall(r'<.*?>', prompt)
+    
+    def get_tokennames_from_prompt(self, prompt: str):
+        prompttokens = self.get_tokenstrings_from_prompt(prompt)
         tokennames = []
         for prompttoken in prompttokens:
-            tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken)  # remove everything between square brackets
+            tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken) # remove everything between square brackets
             tokennames.append(tokenname)
         return tokennames
     
@@ -143,13 +145,18 @@ class TextEmbeddings:
         """ Expand token between angle brackets in prompt to a token for each vector in the embedding
             Use all vectors: <token>
             Use specific vectors: <token[0][4]>
+            Randomize with a wildcard: <token*>
         """
-        prompttokens = self.get_tokens_from_prompt(prompt)
+        prompttokens = self.get_tokenstrings_from_prompt(prompt)
+        tokennames = []
         for prompttoken in prompttokens:
             tokenname = re.sub(r'\[[^\]]*\]', '', prompttoken) # remove everything between square brackets
             options = re.findall(r'\[(.*?)\]', prompttoken) # get everything between square brackets
+            if('*' in tokenname):
+                tokenname = self.randomize_wildcard_token(tokenname)
             if (tokenname in self.embeddings):
                 embedding = self.embeddings[tokenname]
+                embedding.getEmbedding()
                 expandedtoken = ''
                 if(len(options) == 0):
                     # use all vectors in token
@@ -159,7 +166,22 @@ class TextEmbeddings:
                     # use selected vectors
                     for option in options:
                         expandedtoken = expandedtoken + ' ' + embedding.token + option
+                tokennames.append(tokenname)
                 prompt = prompt.replace(prompttoken, expandedtoken)
             else:
                 print(f"WARNING: embedding token {tokenname} not found")
-        return prompt
+        return prompt, tokennames
+
+
+    def randomize_wildcard_token(self, tokenname: str) -> str:
+        """ Replace wildcard * with random token from embedding """
+        tokenregex = tokenname.replace('*', '.*')
+        print(f"Randomizing wildcard token {tokenname} with regex {tokenregex}")
+        matchingtokens = []
+        for embedding in self.embeddings.values():
+            if(re.match(tokenregex, embedding.token)):
+                matchingtokens.append(embedding.token)
+        if(len(matchingtokens) > 0):
+            return matchingtokens[torch.randint(len(matchingtokens), (1,))]
+        else:
+            raise ValueError(f"Could not find any embedding token matching wildcard {tokenname}")

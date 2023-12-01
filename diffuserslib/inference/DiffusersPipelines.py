@@ -4,10 +4,6 @@ import sys
 import gc
 from typing import Dict, Tuple, List
 from PIL import Image
-from diffusers import ( DiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionPipeline, 
-                        StableDiffusionInpaintPipeline, StableDiffusionUpscalePipeline, StableDiffusionDepth2ImgPipeline, 
-                        StableDiffusionImageVariationPipeline, StableDiffusionInstructPix2PixPipeline,
-                        ControlNetModel, StableDiffusionControlNetPipeline)
 from diffusers.models import AutoencoderKL
 from transformers import CLIPFeatureExtractor, CLIPModel
 from .TextEmbedding import TextEmbeddings
@@ -107,6 +103,10 @@ class DiffusersPipelines:
         base.textembeddings.load_file(path, token)
 
 
+    def getEmbeddingTokens(self, base) -> List[str]:
+        return list(self.getBaseModelData(base).textembeddings.embeddings.keys())
+
+
     def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
         if (pipeline.params.modelConfig.base in self.baseModelData):
@@ -203,11 +203,8 @@ class DiffusersPipelines:
         if (self.pipeline is not None):
             del self.pipeline
 
-        gc.collect()
-        torch.cuda.empty_cache()
-
         # TODO load conditioning config/preset
-        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getGenerationType()]+"Wrapper")
+        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getPipelineType()]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
         self.pipeline = pipelineWrapper
         
@@ -231,4 +228,8 @@ class DiffusersPipelines:
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
         params.prompt = self.processPrompt(params.original_prompt, pipelineWrapper)
-        return pipelineWrapper.inference(params)
+        image, seed = pipelineWrapper.inference(params)
+        gc.collect()
+        torch.mps.empty_cache()
+        torch.cuda.empty_cache()
+        return image, seed

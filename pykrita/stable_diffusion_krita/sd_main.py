@@ -1,5 +1,6 @@
 from cmd import PROMPT
 from multiprocessing import dummy
+from pyexpat import model
 import urllib.request
 import json
 from krita import (Krita, Qt, QApplication, QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QSlider, QVBoxLayout,  # type: ignore
@@ -225,6 +226,7 @@ dialogfields = {
 
 # default dialog for image generation: txt2img, img2img and inpainting
 class SDDialog(QDialog):
+
     def __init__(self, action, images):
         super().__init__(None)
         self.config = SDConfig()
@@ -241,7 +243,6 @@ class SDDialog(QDialog):
         self.layout.addLayout(formLayout)
 
         self.actionfields = dialogfields[action]
-        modeltype = action
 
         if('prompt' in self.actionfields):
             formLayout.addWidget(QLabel("Prompt"))
@@ -264,10 +265,6 @@ class SDDialog(QDialog):
             self.tile_method.addItems(['singlepass', 'multipass', 'inpaint'])
             tilemethod = self.config.params.tilemethod
             self.tile_method.setCurrentText(tilemethod)
-            if(tilemethod in ('singlepass', 'multipass')):
-                modeltype = 'img2img'
-            else:
-                modeltype = 'inpaint'
             self.tile_method.currentIndexChanged.connect(self.tileMethodChanged)
             formLayout.addWidget(self.tile_method)
 
@@ -279,13 +276,14 @@ class SDDialog(QDialog):
             else:
                 formLayout.addWidget(QLabel("Base"))
                 self.base = QComboBox()
-                self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky'])
+                self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1'])
                 self.base.setCurrentText(self.config.params.modelBase)
                 self.base.currentIndexChanged.connect(self.baseChanged)
                 formLayout.addWidget(self.base)
 
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
+            modeltype = self.getModelType()
             models = getModels(modeltype, self.config.params.modelBase)
             self.model.addItems([""] + models)
             if(action == "upscale"):
@@ -412,11 +410,22 @@ class SDDialog(QDialog):
         self.setLayout(self.layout)
 
 
+    def getModelType(self):
+        if(self.action in ("txt2img","img2img")):
+            return "generate"
+        elif(self.action == "inpaint"):
+            return "inpaint"
+        elif(self.action == "generateTiled"):
+            if(self.tile_method.currentText() == "inpaint"):
+                return "inpaint"
+            else:
+                return "generate"
+        elif(self.action == "upscale"):
+            return "upscale"
+
+
     def tileMethodChanged(self, index):
-        if(self.tile_method.currentText() in ('singlepass', 'multipass')):
-            modeltype = 'img2img'
-        else:
-            modeltype = 'inpaint'
+        modeltype = self.getModelType()
         models = getModels(modeltype, self.base.currentText())
         # update items in model dropdown
         self.model.clear()
@@ -425,7 +434,10 @@ class SDDialog(QDialog):
 
     def baseChanged(self, index):
         print("base changed ")
-        models = getModels(self.action, self.base.currentText())
+        modeltype = self.action
+        if(self.action in ("txt2img","img2img","inpaint","generateTiled")):
+            modeltype = "generate"
+        models = getModels(modeltype, self.base.currentText())
         control_models = getModels("control", self.base.currentText())
         # update items in model dropdown
         self.model.clear()
@@ -475,16 +487,17 @@ class SDDialog(QDialog):
     
     def controlModelChanged(self, index):
         # TODO no need to change action, just put strength slider in the image tab
-        action = "txt2img"
-        for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
-            if (control_model_dropdown.currentText() == IMAGETYPE_INITIMAGE):
-                action = "img2img"
-                break
+        action = self.action
+        if (self.action != "inpaint"):
+            for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
+                if (control_model_dropdown.currentText() == IMAGETYPE_INITIMAGE):
+                    action = "img2img"
+                    break
         print("controlModelChanged", action)
         if (hasattr(self, 'strength') and hasattr(self, 'steps')):
-            self.steps.setVisible(action == "txt2img")
-            self.steps_label.setVisible(action == "txt2img")
-            self.steps_value.setVisible(action == "txt2img")
+            self.steps.setVisible(action != "img2img")
+            self.steps_label.setVisible(action != "img2img")
+            self.steps_value.setVisible(action != "img2img")
             self.strength.setVisible(action == "img2img")
             self.strength_label.setVisible(action == "img2img")
             self.strength_value.setVisible(action == "img2img")
@@ -581,6 +594,9 @@ class SDDialog(QDialog):
                                                                           model = control_model_dropdown.currentText(),
                                                                           image64 = images64[i], 
                                                                           condscale = self.control_scale_sliders[i].value()/100))
+        else:
+            genParams.width = self.images[0].width()
+            genParams.height = self.images[0].height()
         self.config.save()
         return genParams
 
@@ -796,7 +812,6 @@ def getLORAs(model) -> List[str]:
 
 
 def runSD(params:GenerationParameters, asynchronous=True):
-    #TODO use generate and generateTiled instead of img2img and txt2img in backend
     if(params.generationtype == "img2img" or params.generationtype == "txt2img"):
         action = "generate"
     elif(params.generationtype == "generateTiled"):
@@ -842,10 +857,8 @@ def getFullPrompt(dlg):
     return prompt
 
 def TxtToImage():
-    s=getSelection()
-    if (s==None):
-        return
-    dlg = SDDialog("txt2img",None)
+    images = getLayerSelections()
+    dlg = SDDialog("txt2img",images)
     dlg.resize(700,200)
     if dlg.exec():
         params = dlg.saveParams()

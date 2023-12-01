@@ -1,5 +1,5 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from ..GenerationParameters import GenerationParameters
+from ..GenerationParameters import GenerationParameters, IMAGETYPE_MASKIMAGE, IMAGETYPE_INITIMAGE
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
 from diffusers import KandinskyPriorPipeline, KandinskyPipeline, KandinskyImg2ImgPipeline, KandinskyInpaintPipeline
@@ -36,39 +36,73 @@ class KandinskyPipelineWrapper(DiffusersPipelineWrapper):
         return image, seed
 
 
-class KandinskyTextToImagePipelineWrapper(KandinskyPipelineWrapper):
+class KandinskyGeneratePipelineWrapper(KandinskyPipelineWrapper):
+
+    PIPELINE_MAP = {
+        #img2im,    inpaint
+        (False,     False):    KandinskyPipeline,
+        (True,      False):    KandinskyImg2ImgPipeline,
+        (True,      True):     KandinskyInpaintPipeline,
+    }
+
     def __init__(self, params:GenerationParameters, device):
-        super().__init__(KandinskyPipeline, params, device)
+        cls = self.getPipelineClass(params)
+        super().__init__(params=params, device=device, cls=cls)
 
-    def inference(self, params:GenerationParameters):
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, width=params.width, height=params.height, seed=params.seed, 
-                                 guidance_scale=params.cfgscale, num_inference_steps=params.steps, scheduler=params.scheduler)
-
-
-class KandinskyImageToImagePipelineWrapper(KandinskyPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        super().__init__(KandinskyImg2ImgPipeline, params, device)
-
-    def inference(self, params:GenerationParameters):
-        initimage = params.controlimages[0].image.convert("RGB")
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
-                                 strength=params.strength, scheduler=params.scheduler)
+    def getPipelineClass(self, params:GenerationParameters):
+        self.is_img2img = False
+        self.is_inpaint = False
+        for conditioningimage in params.controlimages:
+            if(conditioningimage.type == IMAGETYPE_INITIMAGE):
+                self.is_img2img = True
+            if(conditioningimage.type == IMAGETYPE_MASKIMAGE):
+                self.is_inpaint = True
+        return self.PIPELINE_MAP[(self.is_img2img, self.is_inpaint)]
 
 
-class KandinskyInpaintPipelineWrapper(KandinskyPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        super().__init__(KandinskyInpaintPipeline, params, device)
+    def addCommonParams(self, params:GenerationParameters, diffusers_params):
+        diffusers_params['prompt'] = params.prompt
+        diffusers_params['negative_prompt'] = params.negprompt
+        diffusers_params['seed'] = params.seed
+        diffusers_params['guidance_scale'] = params.cfgscale
+        # diffusers_params['scheduler'] = params.scheduler
+    
+    def addImg2ImgParams(self, params:GenerationParameters, diffusers_params):
+        initimage = params.getInitImage()
+        if(initimage is not None and initimage.image is not None):
+            diffusers_params['image'] = initimage.image.convert("RGB")
+            diffusers_params['strength'] = params.strength
 
-    def inference(self, params:GenerationParameters):
+    def addTxt2ImgParams(self, params:GenerationParameters, diffusers_params):
+        diffusers_params['width'] = params.width
+        diffusers_params['height'] = params.height
+        diffusers_params['num_inference_steps'] = params.steps
+
+    def addInpaintParams(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
         maskimageparams = params.getMaskImage()
-        if(initimageparams is None or maskimageparams is None):
+        if(initimageparams is None or maskimageparams is None or initimageparams.image is None or maskimageparams.image is None):
             raise ValueError("Must provide both initimage and maskimage")
-        initimage = initimageparams.image.convert("RGB")
-        maskimage = maskimageparams.image.convert("RGB")
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, mask_image=maskimage, 
-                                           guidance_scale=params.cfgscale, num_inference_steps=params.steps, strength=params.strength, scheduler=params.scheduler, 
-                                           width=initimage.width, height=initimage.height)
+        diffusers_params['image'] = initimageparams.image.convert("RGB")
+        diffusers_params['mask_image'] = maskimageparams.image.convert("RGB")
+        # TODO need to append inpaint conditioning to other conditioning
+        # diffusers_params['control_image'] = make_inpaint_condition(initimage=initimage, maskimage=maskimage)
+        diffusers_params['num_inference_steps'] = params.steps
+        diffusers_params['strength'] = params.strength
+        diffusers_params['width'] = initimageparams.image.width
+        diffusers_params['height'] = initimageparams.image.height
+    
+    def inference(self, params:GenerationParameters):
+        diffusers_params = {}
+        self.addCommonParams(params, diffusers_params)
+        if(not self.is_img2img):
+            self.addTxt2ImgParams(params, diffusers_params)
+        if(self.is_img2img):
+            self.addImg2ImgParams(params, diffusers_params)
+        if(self.is_inpaint):
+            self.addInpaintParams(params, diffusers_params)
+        return super().diffusers_inference(**diffusers_params)
+
 
 
 class KandinskyInterpolatePipelineWrapper(KandinskyPipelineWrapper):
