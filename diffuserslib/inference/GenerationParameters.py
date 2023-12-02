@@ -94,7 +94,7 @@ class GenerationParameters:
 
     def getImage(self, type:str) -> ControlImageParameters|None:
         for controlimage in self.controlimages:
-            if(controlimage.type == type):
+            if(controlimage.type == type or (controlimage.modelConfig is not None and controlimage.modelConfig.modeltype == type)):
                 return controlimage
         return None
     
