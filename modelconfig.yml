@@ -1,5 +1,11 @@
 
 generate:
+  - base: svd_1_0
+    pipelines:
+      generate: StableDiffusionVideoGeneratePipeline
+    models:
+      - id: stabilityai/stable-video-diffusion-img2vid
+      - id: stabilityai/stable-video-diffusion-img2vid-xt
   - base: sdxl_1_0
     pipelines:
       generate: StableDiffusionXLGeneratePipeline
@@ -217,10 +223,3 @@ animatediff:
       - id: guoyww/animatediff-motion-lora-tilt-down
       - id: guoyww/animatediff-motion-lora-rolling-clockwise
       - id: guoyww/animatediff-motion-lora-rolling-anticlockwise
-
-
-video:
-  - base: sdv_1_0
-    models:
-      - id: stabilityai/stable-video-diffusion-img2vid
-      - id: stabilityai/stable-video-diffusion-img2vid-xt

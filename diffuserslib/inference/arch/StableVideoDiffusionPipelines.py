@@ -8,7 +8,7 @@ from compel import Compel, ReturnedEmbeddingsType
 import torch
 
 
-class StableDiffusionVideoPipelineWrapper(StableDiffusionPipelineWrapper):
+class StableVideoDiffusionPipelineWrapper(StableDiffusionPipelineWrapper):
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         print(f"creating pipeline {cls.__name__}")
@@ -23,7 +23,7 @@ class StableDiffusionVideoPipelineWrapper(StableDiffusionPipelineWrapper):
         return output, seed
 
 
-class StableDiffusionVideoGeneratePipelineWrapper(StableDiffusionVideoPipelineWrapper):
+class StableVideoDiffusionGeneratePipelineWrapper(StableVideoDiffusionPipelineWrapper):
 
     def __init__(self, params:GenerationParameters, device):
         super().__init__(params=params, device=device, cls=StableVideoDiffusionPipeline)
