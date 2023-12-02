@@ -29,6 +29,7 @@ class SplitModelName:
 
 class DiffusersPipelineWrapper:
     def __init__(self, params:GenerationParameters, inferencedevice:str):
+        print(f'Creating pipeline {cls.__name__}')
         self.params = params
         self.inferencedevice = inferencedevice
         self.features = self.getPipelineFeatures(params)

@@ -134,6 +134,8 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
             self.addImg2ImgParams(params, diffusers_params)
         if(self.features.controlnet or self.features.t2iadapter):
             self.addConditioningImageParams(params, diffusers_params)
+        if(self.features.ipadapter):
+            self.addIpAdapterParams(params, diffusers_params)
         if(self.features.inpaint):
             self.addInpaintParams(params, diffusers_params)
         return super().diffusers_inference(**diffusers_params)

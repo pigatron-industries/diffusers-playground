@@ -35,7 +35,6 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdv1-5"
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
-        print(f'Creating pipline {cls.__name__}')
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
@@ -157,6 +156,8 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
             self.addImg2ImgParams(params, diffusers_params)
         if(self.features.controlnet or self.features.t2iadapter):
             self.addConditioningImageParams(params, diffusers_params)
+        if(self.features.ipadapter):
+            self.addIpAdapterParams(params, diffusers_params)
         if(self.features.inpaint):
             self.addInpaintParams(params, diffusers_params)
         return super().diffusers_inference(**diffusers_params)
