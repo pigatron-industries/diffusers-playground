@@ -58,7 +58,7 @@ class DiffusersPipelineWrapper:
                 return False
             
         for i in range(len(self.params.controlimages)):
-            if(self.params.controlimages[i].type != params.controlimages[i].type and self.params.controlimages[i].model != params.controlimages[i].model):
+            if(self.params.controlimages[i].type != params.controlimages[i].type or self.params.controlimages[i].model != params.controlimages[i].model):
                 return False
             
         return True
