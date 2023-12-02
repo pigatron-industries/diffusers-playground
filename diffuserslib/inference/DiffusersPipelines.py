@@ -199,7 +199,6 @@ class DiffusersPipelines:
         if(self.pipeline is not None and self.pipeline.paramsMatch(params)):
             return self.pipeline
 
-        print(f"Creating {params.getGenerationType()} pipeline from model {params.models[0].name}")
         if (self.pipeline is not None):
             del self.pipeline
 
