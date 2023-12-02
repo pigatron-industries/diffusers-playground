@@ -2,7 +2,7 @@
 generate:
   - base: svd_1_0
     pipelines:
-      generate: StableDiffusionVideoGeneratePipeline
+      generate: StableVideoDiffusionGeneratePipeline
     models:
       - id: stabilityai/stable-video-diffusion-img2vid
       - id: stabilityai/stable-video-diffusion-img2vid-xt
