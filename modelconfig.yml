@@ -1,5 +1,5 @@
 
-image:
+generate:
   - base: sdxl_1_0
     pipelines:
       generate: StableDiffusionXLGeneratePipeline
@@ -138,10 +138,9 @@ upscale:
     models:
       - id: stabilityai/stable-diffusion-x4-upscaler # official
 
+
 controlnet:
   - base: sd_1_5
-    pipelines:
-      controlnet: StableDiffusionControlNetPipeline
     models:
       # Control Net Models
       - id: lllyasviel/control_v11p_sd15_canny
@@ -163,8 +162,6 @@ controlnet:
         colourspace: L
      
   - base: sd_2_1
-    pipelines:
-      controlnet: StableDiffusionControlNetPipeline
     models:
       - id: thibaud/controlnet-sd21-canny-diffusers
       - id: thibaud/controlnet-sd21-depth-diffusers
@@ -173,8 +170,6 @@ controlnet:
       - id: thibaud/controlnet-sd21-scribble-diffusers
 
   - base: sdxl_1_0
-    pipelines:
-      controlnet: StableDiffusionXLControlNetPipeline
     models:
     # Control Net Models
       - id: diffusers/controlnet-canny-sdxl-1.0-small
@@ -184,11 +179,20 @@ controlnet:
       - id: TencentARC/t2i-adapter-canny-sdxl-1.0
         colourspace: L
 
+t2iadapter:
+  - base: sd_1_5
+    models:
+      - id: TencentARC/t2iadapter_canny_sd15v2
+        colourspace: L
+
+  - base: sdxl_1_0
+    models:
+      - id: TencentARC/t2i-adapter-canny-sdxl-1.0
+        colourspace: L
+
 
 ipadapter:
   - base: sd_1_5
-    pipelines:
-      ipdapter: 
     models:
       - id: h94/IP-Adapter/models/ip-adapter_sd15.bin
       - id: h94/IP-Adapter/models/ip-adapter_sd15_light.bin
@@ -196,8 +200,6 @@ ipadapter:
       - id: h94/IP-Adapter/models/ip-adapter-plus-face_sd15.bin
 
   - base: sdxl_1_0
-    pipelines:
-      ipdapter: 
     models:
       - id: h94/IP-Adapter/models/ip-adapter_sdxl.bin
       - id: h94/IP-Adapter/models/ip-adapter_sdxl_vit-h.bin

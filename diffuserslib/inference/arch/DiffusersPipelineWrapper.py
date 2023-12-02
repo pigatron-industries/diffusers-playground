@@ -1,5 +1,5 @@
 from ..GenerationParameters import GenerationParameters, ControlImageType
-from ...models.DiffusersModelPresets import DiffusersModel
+from ...models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 from ...StringUtils import mergeDicts
 from typing import Tuple, List
 from PIL import Image
@@ -127,15 +127,17 @@ class DiffusersPipelineWrapper:
         for conditioningimage in params.controlimages:
             if(conditioningimage.type == ControlImageType.IMAGETYPE_INITIMAGE):
                 features.img2img = True
-            if(conditioningimage.type == ControlImageType.IMAGETYPE_MASKIMAGE):
+            elif(conditioningimage.type == ControlImageType.IMAGETYPE_MASKIMAGE):
                 features.inpaint = True
-            if(conditioningimage.type == ControlImageType.IMAGETYPE_IPADAPTER):
-                features.ipadapter = True
-            # TODO relying on the word t2iadapter in model name is not ideal
-            if(conditioningimage.modelConfig is not None and 'control' in conditioningimage.modelConfig.modelid):
-                features.controlnet = True
-            elif(conditioningimage.modelConfig is not None and 'adapter' in conditioningimage.modelConfig.modelid):
-                features.t2iadapter = True
+            elif(conditioningimage.modelConfig is not None):
+                if(conditioningimage.modelConfig.modeltype == DiffusersModelType.ipadapter):
+                    features.ipadapter = True
+                elif(conditioningimage.modelConfig.modeltype == DiffusersModelType.controlnet):
+                    features.controlnet = True
+                elif(conditioningimage.modelConfig.modeltype == DiffusersModelType.t2iadapter):
+                    features.t2iadapter = True
+            else:
+                raise ValueError(f"Unknown control image type {conditioningimage.type}")
         return features
 
     def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass):

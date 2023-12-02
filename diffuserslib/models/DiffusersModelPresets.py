@@ -11,6 +11,14 @@ class DiffusersBaseModelType:
     sd_2_0 = 'sd_2_0'
     sd_2_1 = 'sd_2_1'
     sdxl_1_0 = 'sdxl_1_0'
+
+class DiffusersModelType:
+    generate = 'generate'
+    inpaint = 'inpaint'
+    controlimage = 'controlimage'
+    controlnet = 'controlnet'
+    t2iadapter = 't2iadapter'
+    ipadapter = 'ipadapter'
  
 
 class DiffusersBaseModel:
@@ -21,6 +29,7 @@ class DiffusersBaseModel:
 class DiffusersModel:
     modelid: Union[str, List[str]]
     base: str
+    modeltype: str
     pipelinetypes: Dict[str, str]
     revision: str|None = None
     stylephrase: str|None = None
@@ -62,15 +71,16 @@ class DiffusersModelList:
         for key in filedata:
             modeldata = filedata[key]
             for basedata in modeldata:
-                self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'])
+                self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'] if 'pipelines' in basedata else {})
                 for modeldata in basedata['models']:
                     # print(model)
                     if (modeldata.get('autocast') != 'false'):
                         autocast = True
                     else:
                         autocast = False
-                    self.addModel(modelid=modeldata['id'], base=basedata['base'], revision=modeldata.get('revision'), 
-                                    stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast, pipelinetypes = basedata['pipelines'].copy(), data=modeldata)
+                    self.addModel(modelid=modeldata['id'], base=basedata['base'], modeltype = key, revision=modeldata.get('revision'), 
+                                  stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast, 
+                                  pipelinetypes = basedata['pipelines'].copy() if 'pipelines' in basedata else {}, data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
@@ -78,11 +88,11 @@ class DiffusersModelList:
         for pipelinetype in pipelinetypes:
             self.basemodels[base].pipelinetypes[pipelinetype] = pipelinetypes[pipelinetype]
 
-    def addModel(self, modelid: str, base: str, revision: str|None=None, stylephrase:str|None=None, vae=None, autocast=True, location='hf', modelpath=None, 
+    def addModel(self, modelid: str, base: str, modeltype: str, revision: str|None=None, stylephrase:str|None=None, vae=None, autocast=True, location='hf', modelpath=None, 
                  pipelinetypes:Dict[str, str]|None=None, data=None):
         if pipelinetypes is None:
             pipelinetypes = self.basemodels[base].pipelinetypes
-        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, pipelinetypes=pipelinetypes, revision=revision, 
+        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, modeltype=modeltype, pipelinetypes=pipelinetypes, revision=revision, 
                                               stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, data=data)
 
     def addModels(self, models):
@@ -97,16 +107,24 @@ class DiffusersModelList:
         else:
             return DiffusersModel(modelid, None, None, None, None)
         
-    def getModelsByType(self, pipelinetype) -> Dict[str, DiffusersModel]:
+    def getModelsByType(self, modeltype) -> Dict[str, DiffusersModel]:
+        if modeltype == 'controlimage':
+            modeltypes = ['controlnet', 't2iadapter', 'ipadapter']
+        else:
+            modeltypes = [modeltype]
         matchingmodels = {}
         for modelid, model in self.models.items():
-            if model.pipelinetypes is not None and pipelinetype in model.pipelinetypes:
+            if (model.modeltype in modeltypes):
                 matchingmodels[modelid] = model
         return matchingmodels
 
-    def getModelsByTypeAndBase(self, pipelinetype, base) -> Dict[str, DiffusersModel]:
+    def getModelsByTypeAndBase(self, modeltype, base) -> Dict[str, DiffusersModel]:
+        if modeltype == 'controlimage':
+            modeltypes = ['controlnet', 't2iadapter', 'ipadapter']
+        else:
+            modeltypes = [modeltype]
         matchingmodels = {}
         for modelid, model in self.models.items():
-            if model.pipelinetypes is not None and pipelinetype in model.pipelinetypes and model.base == base:
+            if (model.modeltype in modeltypes and model.base == base):
                 matchingmodels[modelid] = model
         return matchingmodels

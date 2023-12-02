@@ -420,14 +420,16 @@ class BatchNotebookInterface:
         return batch
     
 
-    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, models, strength, initimage=None, controlimage=None, controlmodel=None, 
+    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, models, strength, initimage=None, 
+                 controlimage:List[Image.Image]|None = None, controlmodel:List[str]|None = None, 
                  loranames=None, loraweights=None, model_weight=1.0, **kwargs):
         controlimageparams = []
         if(initimage is not None):
             controlimageparams.append(ControlImageParameters(image=initimage, model=ControlImageType.IMAGETYPE_INITIMAGE))
         if(controlimage is not None and controlmodel is not None):
             for i in range(0, len(controlimage)):
-                controlimageparams.append(ControlImageParameters(image=controlimage[i], type=ControlImageType.IMAGETYPE_CONTROLIMAGE, model=controlmodel[i]))
+                modelid = controlmodel[i].split(":")[1]
+                controlimageparams.append(ControlImageParameters(image=controlimage[i], type=ControlImageType.IMAGETYPE_CONTROLIMAGE, model=modelid))
 
         loraparams = []
         if(loranames is not None and loraweights is not None):

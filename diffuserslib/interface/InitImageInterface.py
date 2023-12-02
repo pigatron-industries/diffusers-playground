@@ -39,12 +39,11 @@ class InitImageInterface:
                 widgets.HTML("<span>&nbsp;</span>"))
         
     def updateWidgets(self):
-        models = self.interface.pipelines.presets.getModelsByTypeAndBase("controlnet", self.interface.basemodel_dropdown.value)
-        models.extend(self.interface.pipelines.presets.getModelsByTypeAndBase("ipadapter", self.interface.basemodel_dropdown.value))
-        controlnet_models = list(models.keys())
+        controlmodels = self.interface.pipelines.presets.getModelsByTypeAndBase("controlimage", self.interface.basemodel_dropdown.value)
+        modelnames = [f'{model.modeltype}:{model.modelid}' for modelid, model in controlmodels.items()]
         if (self.firstImage):
-            controlnet_models = [INIT_IMAGE] + controlnet_models
-        self.model_dropdown.options = controlnet_models
+            modelnames = [INIT_IMAGE] + modelnames
+        self.model_dropdown.options = modelnames
 
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
             filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
