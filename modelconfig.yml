@@ -217,3 +217,10 @@ animatediff:
       - id: guoyww/animatediff-motion-lora-tilt-down
       - id: guoyww/animatediff-motion-lora-rolling-clockwise
       - id: guoyww/animatediff-motion-lora-rolling-anticlockwise
+
+
+video:
+  - base: sdv_1_0
+    models:
+      - id: stabilityai/stable-video-diffusion-img2vid
+      - id: stabilityai/stable-video-diffusion-img2vid-xt

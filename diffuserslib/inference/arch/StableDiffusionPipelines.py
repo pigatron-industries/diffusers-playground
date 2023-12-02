@@ -54,7 +54,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             
         self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
-        # pipeline.enable_xformers_memory_efficient_attention()
+        # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
 
     def createPipelineArgs(self, preset:DiffusersModel, **kwargs):
         args = {}
@@ -196,8 +196,8 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
-        adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2")
-        super().__init__(AnimateDiffPipeline, params, device, motion_adapter = adapter)
+        adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=torch.float16)
+        super().__init__(AnimateDiffPipeline, params, device, motion_adapter = adapter, torch_dtype=torch.float16)
 
     def inference(self, params:GenerationParameters):
         diffusers_params = {}
