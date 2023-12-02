@@ -57,16 +57,16 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
 
     def createPipelineArgs(self, preset:DiffusersModel, **kwargs):
-        args = {}
         if (not self.safety_checker):
-            args['safety_checker'] = None
+            kwargs['safety_checker'] = None
         if(preset.revision is not None):
-            args['revision'] = preset.revision
+            kwargs['revision'] = preset.revision
             if(preset.revision == 'fp16'):
-                args['torch_dtype'] = torch.float16
+                kwargs['torch_dtype'] = torch.float16
         if(preset.vae is not None):
-            args['vae'] = AutoencoderKL.from_pretrained(preset.vae)
-        return mergeDicts(args, kwargs)
+            kwargs['vae'] = AutoencoderKL.from_pretrained(preset.vae, torch_dtype=kwargs['torch_dtype'] if 'torch_dtype' in kwargs else None, 
+                                                          revision=kwargs['revision'] if 'revision' in kwargs else None)
+        return kwargs
     
     def loadScheduler(self, schedulerClass):
         if (isinstance(schedulerClass, str)):
