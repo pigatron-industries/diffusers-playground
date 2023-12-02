@@ -70,7 +70,7 @@ class DiffusersPipelines:
         pipelinetypes = {}
         for type in types:
             pipelinetypes[type] = self.presets.getBaseModel(base).pipelinetypes[type]
-        self.presets.addModel(modelid, base, revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, pipelinetypes=pipelinetypes)
+        self.presets.addModel(modelid, base, modeltype = types[0], revision=revision, stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, pipelinetypes=pipelinetypes)
 
 
     def getModifierDict(self, base):
