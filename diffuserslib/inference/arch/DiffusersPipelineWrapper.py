@@ -42,7 +42,7 @@ class DiffusersPipelineWrapper:
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
     
     def paramsMatch(self, params:GenerationParameters) -> bool:
-        match = (self.params.getGenerationType() == self.params.getGenerationType() and 
+        match = (self.params.generationtype == self.params.generationtype and 
                  len(self.params.models) == len(params.models) and
                  len(self.params.loras) == len(params.loras) and
                  len(self.params.controlimages) == len(params.controlimages))

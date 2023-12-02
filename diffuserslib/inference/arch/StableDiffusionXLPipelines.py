@@ -26,6 +26,7 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
+        print(f"creating pipeline {cls.__name__}")
         super().__init__(cls=cls, params=params, device=device, **kwargs)
         self.pipeline.watermark = NoWatermark()
         if(params.scheduler == "LCMScheduler"):
@@ -76,12 +77,12 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
         negative_conditioning2, negative_pooled = compel2(negative_prompt2)
         negative_conditioning = torch.cat((negative_conditioning1, negative_conditioning2), dim=-1)
 
-        image = self.pipeline(prompt_embeds=conditioning,
+        output = self.pipeline(prompt_embeds=conditioning,
                               pooled_prompt_embeds=pooled,
                               negative_prompt_embeds=negative_conditioning,
                               negative_pooled_prompt_embeds=negative_pooled,
-                              generator=generator, **kwargs).images[0]
-        return image, seed
+                              generator=generator, **kwargs)
+        return output, seed
 
     def add_embeddings(self, token, embeddings):
         self.add_embedding_to_text_encoder(token, embeddings[0], self.pipeline.tokenizer, self.pipeline.text_encoder)
@@ -138,4 +139,5 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
             self.addIpAdapterParams(params, diffusers_params)
         if(self.features.inpaint):
             self.addInpaintParams(params, diffusers_params)
-        return super().diffusers_inference(**diffusers_params)
+        output, seed = super().diffusers_inference(**diffusers_params)
+        return output.images[0], seed

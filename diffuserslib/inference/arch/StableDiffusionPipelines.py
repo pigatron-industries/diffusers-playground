@@ -10,9 +10,9 @@ from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionControlNetPipeline,
                         StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
-                        StableDiffusionAdapterPipeline, 
+                        StableDiffusionAdapterPipeline, AnimateDiffPipeline,
                         # Conditioning models
-                        T2IAdapter, ControlNetModel,
+                        T2IAdapter, ControlNetModel, MotionAdapter,
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
@@ -35,6 +35,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdv1-5"
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
+        print(f"creating pipeline {cls.__name__}")
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
@@ -86,10 +87,10 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
         if(self.params.modelConfig.autocast):
             with torch.autocast(self.inferencedevice):
-                image = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs).images[0]
+                output = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs)
         else:
-            image = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs).images[0]
-        return image, seed
+            output = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs)
+        return output, seed
     
     def add_embeddings(self, token, embeddings):
         self.add_embedding_to_text_encoder(token, embeddings[0], self.pipeline.tokenizer, self.pipeline.text_encoder)
@@ -160,17 +161,8 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
             self.addIpAdapterParams(params, diffusers_params)
         if(self.features.inpaint):
             self.addInpaintParams(params, diffusers_params)
-        return super().diffusers_inference(**diffusers_params)
-
-
-class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
-    def __init__(self, params:GenerationParameters, device):
-        super().__init__(DiffusionPipeline, params, device)
-
-    def inference(self, params:GenerationParameters):
-        initimage = params.controlimages[0].image.convert("RGB")
-        return super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
-                                 num_inference_steps=params.steps, scheduler=params.scheduler)
+        output, seed = super().diffusers_inference(**diffusers_params)
+        return output.images[0], seed
 
 
 def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:
@@ -186,3 +178,37 @@ def pil_to_pt(image:Image.Image) -> torch.Tensor:
     npimage = np.array(image.convert("RGB")).astype(np.float32) / 255.0
     npimage = np.expand_dims(npimage, 0).transpose(0, 3, 1, 2)
     return torch.from_numpy(npimage)
+
+
+class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
+    def __init__(self, params:GenerationParameters, device):
+        super().__init__(DiffusionPipeline, params, device)
+
+    def inference(self, params:GenerationParameters):
+        initimageparams = params.getInitImage()
+        if(initimageparams is None or initimageparams.image is None):
+            raise ValueError("Must provide initimage")
+        initimage = initimageparams.image.convert("RGB")
+        output, seed = super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
+                                 num_inference_steps=params.steps, scheduler=params.scheduler)
+        return output.images[0], seed
+    
+
+class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
+    def __init__(self, params:GenerationParameters, device):
+        adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2")
+        super().__init__(AnimateDiffPipeline, params, device, motion_adapter = adapter)
+
+    def inference(self, params:GenerationParameters):
+        diffusers_params = {}
+        diffusers_params['prompt'] = params.prompt
+        diffusers_params['negative_prompt'] = params.negprompt
+        diffusers_params['seed'] = params.seed
+        diffusers_params['guidance_scale'] = params.cfgscale
+        diffusers_params['num_inference_steps'] = params.steps
+        diffusers_params['scheduler'] = params.scheduler
+        diffusers_params['width'] = params.width
+        diffusers_params['height'] = params.height
+        diffusers_params['num_frames'] = params.frames
+        output, seed = super().diffusers_inference(**diffusers_params)
+        return output.frames[0], seed

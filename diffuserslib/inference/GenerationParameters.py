@@ -50,7 +50,7 @@ class ControlImageParameters:
 
 @dataclass(unsafe_hash=True)
 class GenerationParameters:
-    generationtype:str|None = None
+    generationtype:str = "generate"
     batch:int = 1
     prescale:float = 1.0
     safetychecker:bool = True
@@ -61,6 +61,7 @@ class GenerationParameters:
     strength:float = 1.0
     width:int = 512
     height:int = 512
+    frames:int = 16
     seed:int|None = None
     scheduler:str = "DPMSolverMultistepScheduler"
     models:List[ModelParameters] = field(default_factory=list)
@@ -116,27 +117,6 @@ class GenerationParameters:
     
     def getControlImages(self) -> List[ControlImageParameters]:
         return self.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE)
-
-    def getGenerationType(self) -> str:
-        # if(self.generationtype is not None):
-        #     return self.generationtype
-        # else:
-        generationtype = ""
-        if(self.getMaskImage() is not None):
-            generationtype += GENERATIONTYPE_INPAINT
-        elif(self.getInitImage() is not None):
-            generationtype += GENERATIONTYPE_IMG2IMG
-        else:
-            generationtype += GENERATIONTYPE_TXT2IMG
-        if(len(self.getControlImages()) > 0):
-            generationtype += GENERATIONTYPE_CONTROLNET_SUFFIX
-        return generationtype
-    
-    def getPipelineType(self) -> str:
-        if(self.getMaskImage() is not None):
-            return "inpaint"
-        else:
-            return "generate"
     
     def setImage(self, image:Image.Image, type:str):
         for controlimage in self.controlimages:

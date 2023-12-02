@@ -13,6 +13,7 @@ from .BaseModelData import BaseModelData
 from ..models.DiffusersModelPresets import DiffusersModelList
 from ..ModelUtils import getModelsDir, downloadModel, convertToDiffusers
 from ..FileUtils import getPathsFiles
+from numpy import ndarray
 
 DEFAULT_AUTOENCODER_MODEL = 'stabilityai/sd-vae-ft-mse'
 DEFAULT_TEXTTOIMAGE_MODEL = 'runwayml/stable-diffusion-v1-5'
@@ -202,8 +203,7 @@ class DiffusersPipelines:
         if (self.pipeline is not None):
             del self.pipeline
 
-        # TODO load conditioning config/preset
-        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.getPipelineType()]+"Wrapper")
+        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.generationtype]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
         self.pipeline = pipelineWrapper
         
@@ -223,7 +223,7 @@ class DiffusersPipelines:
 
     #=============== INFERENCE ==============
 
-    def generate(self, params:GenerationParameters) -> Tuple[Image.Image, int]:
+    def generate(self, params:GenerationParameters) -> Tuple[Image.Image|ndarray, int]:
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
         params.prompt = self.processPrompt(params.original_prompt, pipelineWrapper)

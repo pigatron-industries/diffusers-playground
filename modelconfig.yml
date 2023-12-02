@@ -36,6 +36,7 @@ generate:
   - base: sd_1_5
     pipelines:
       generate: StableDiffusionGeneratePipeline
+      animatediff: StableDiffusionAnimateDiffPipeline
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
         vae: stabilityai/sd-vae-ft-mse
@@ -160,7 +161,6 @@ controlnet:
       # T2I Adapter Models
       - id: TencentARC/t2iadapter_canny_sd15v2
         colourspace: L
-     
   - base: sd_2_1
     models:
       - id: thibaud/controlnet-sd21-canny-diffusers
@@ -168,7 +168,6 @@ controlnet:
       - id: thibaud/controlnet-sd21-hed-diffusers
       - id: thibaud/controlnet-sd21-openpose-diffusers
       - id: thibaud/controlnet-sd21-scribble-diffusers
-
   - base: sdxl_1_0
     models:
     # Control Net Models
@@ -184,7 +183,6 @@ t2iadapter:
     models:
       - id: TencentARC/t2iadapter_canny_sd15v2
         colourspace: L
-
   - base: sdxl_1_0
     models:
       - id: TencentARC/t2i-adapter-canny-sdxl-1.0
@@ -198,10 +196,24 @@ ipadapter:
       - id: h94/IP-Adapter/models/ip-adapter_sd15_light.safetensors
       - id: h94/IP-Adapter/models/ip-adapter-plus_sd15.safetensors
       - id: h94/IP-Adapter/models/ip-adapter-plus-face_sd15.safetensors
-
   - base: sdxl_1_0
     models:
       - id: h94/IP-Adapter/sdxl_models/ip-adapter_sdxl.safetensors
       - id: h94/IP-Adapter/sdxl_models/ip-adapter_sdxl_vit-h.safetensors
       - id: h94/IP-Adapter/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors
       - id: h94/IP-Adapter/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors
+
+
+animatediff:
+  - base: sd_1_5
+    models:
+      - id: guoyww/animatediff-motion-adapter-v1-5-2
+    loras:
+      - id: guoyww/animatediff-motion-lora-zoom-in
+      - id: guoyww/animatediff-motion-lora-zoom-out
+      - id: guoyww/animatediff-motion-lora-pan-left
+      - id: guoyww/animatediff-motion-lora-pan-right
+      - id: guoyww/animatediff-motion-lora-tilt-up
+      - id: guoyww/animatediff-motion-lora-tilt-down
+      - id: guoyww/animatediff-motion-lora-rolling-clockwise
+      - id: guoyww/animatediff-motion-lora-rolling-anticlockwise
