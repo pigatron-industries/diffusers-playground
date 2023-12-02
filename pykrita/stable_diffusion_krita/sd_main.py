@@ -818,7 +818,6 @@ def runSD(params:GenerationParameters, asynchronous=True):
         action = "generate"
     elif(params.generationtype == "generateTiled"):
         action = "generateTiled"
-        params.generationtype = "img2img"
     else:
         action = params.generationtype
 

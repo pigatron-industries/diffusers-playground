@@ -23,6 +23,7 @@ def tiledImageToImage(pipelines:DiffusersPipelines, params:GenerationParameters,
     
     def imageToImageFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
         tileparams = copy.deepcopy(params)
+        tileparams.generationtype = "generate"
         tileparams.setInitImage(initimagetile)
         for i in range(len(controlimagetiles)):
             tileparams.setControlImage(i, controlimagetiles[i])
@@ -46,9 +47,9 @@ def tiledInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, tile
     
     def inpaintFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
         tileparams = copy.deepcopy(params)
+        tileparams.generationtype = "generate"
         tileparams.setInitImage(initimagetile)
         tileparams.setMaskImage(masktile)
-        tileparams.generationtype = "inpaint"
         for i in range(len(controlimagetiles)):
             tileparams.setControlImage(i, controlimagetiles[i])
         image, _ = pipelines.generate(tileparams)
