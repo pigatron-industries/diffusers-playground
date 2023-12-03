@@ -134,7 +134,7 @@ inpaint:
         vae: stabilityai/sd-vae-ft-mse
   - base: sdxl_1_0
     pipelines:
-      inpaint: StableDiffusionXLInpaintPipeline
+      inpaint: StableDiffusionXLGeneratePipeline
     models:
       - id: diffusers/stable-diffusion-xl-1.0-inpainting-0.1
 

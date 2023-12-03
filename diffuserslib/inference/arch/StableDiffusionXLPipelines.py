@@ -26,7 +26,6 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
-        print(f"creating pipeline {cls.__name__}")
         super().__init__(cls=cls, params=params, device=device, **kwargs)
         self.pipeline.watermark = NoWatermark()
         if(params.scheduler == "LCMScheduler"):
