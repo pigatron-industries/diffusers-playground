@@ -515,7 +515,10 @@ class SDDialog(QDialog):
     # put data from dialog in configuration and save it
     def saveParams(self):
         genParams = GenerationParameters()
-        genParams.generationtype = self.action
+        if(self.action in ["img2img", "txt2img"]):
+            genParams.generationtype = "generate"
+        else:
+            genParams.generationtype = self.action
         actionfields = dialogfields[self.action]
         if('prompt' in actionfields):
             self.config.params.prompt = self.prompt.toPlainText()
@@ -687,7 +690,7 @@ class ImageResutDialog(QDialog):
         top_layout.addWidget(QLabel("Update one image with new Steps value"))
         self.steps_update, _ = createSlider(self, top_layout, self.config.params.steps, 1, 250, 5, 1)
         
-        if (params.generationtype in ("img2img", "inpaint", "generateTiled")):
+        if (params.generationtype in ("generate", "inpaint", "generateTiled")):
             top_layout.addWidget(QLabel("Update with new Strengths value"))
             self.strength_update, _ = createSlider(self, top_layout,self.config.params.strength*100, 0, 100, 1, 100)
 
@@ -814,13 +817,7 @@ def getLORAs(model) -> List[str]:
 
 
 def runSD(params:GenerationParameters, asynchronous=True):
-    if(params.generationtype == "img2img" or params.generationtype == "txt2img"):
-        action = "generate"
-    elif(params.generationtype == "generateTiled"):
-        action = "generateTiled"
-    else:
-        action = params.generationtype
-
+    action = params.generationtype
     if (asynchronous):
         res=getServerDataAsync(action, params)
     else:
