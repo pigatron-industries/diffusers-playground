@@ -36,18 +36,11 @@ def getDocument() -> "Document|None":
     return doc
 
 
-def getLayer() -> "Node|None":
-    doc = getDocument()
-    if (doc==None):  
-        return
-    node = doc.activeNode()
-    print(node.type())
-    if(node.type() == "paintlayer"):
-        return [node]
-    elif(node.type() == "grouplayer"):
-        return node.childNodes()
-    errorMessage("Select a paint layer or group layer",  "Selected layer must be a paint layer or group layer.")
-    return
+def getLayers() -> "Node|None":
+    w = Krita.instance().activeWindow()
+    view = w.activeView()
+    selected_layers = view.selectedNodes()
+    return selected_layers
 
 
 def getSelection():
@@ -65,7 +58,7 @@ def getLayerSelections() -> List[QImage]:
     doc = getDocument()
     if (doc == None):
         return []
-    layers = getLayer()
+    layers = getLayers()
     if (layers==None or len(layers)==0):
         return []
     selection = doc.selection()
