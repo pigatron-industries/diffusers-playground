@@ -571,11 +571,12 @@ class SDDialog(QDialog):
         #     self.batch.setValue(params.batch)
         if('image' in self.actionfields):
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
-                if (params.controlimages[i].type == IMAGETYPE_INITIMAGE):
-                    control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
-                else:
-                    control_model_dropdown.setCurrentText(params.controlimages[i].model)
-                self.control_scale_sliders[i].setValue(params.controlimages[i].condscale*100)
+                if (i < len(params.controlimages)):
+                    if (params.controlimages[i].type == IMAGETYPE_INITIMAGE):
+                        control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
+                    else:
+                        control_model_dropdown.setCurrentText(params.controlimages[i].model)
+                    self.control_scale_sliders[i].setValue(params.controlimages[i].condscale*100)
 
 
     # put data from dialog in configuration and save it
