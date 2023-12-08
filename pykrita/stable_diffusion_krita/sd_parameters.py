@@ -1,6 +1,7 @@
 from typing import List
 from dataclasses import dataclass, fields, field, asdict
 import json
+import inspect
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
@@ -70,17 +71,28 @@ class GenerationParameters:
     @classmethod
     def fromJson(cls, jsonbytes:bytes):
         dict = json.loads(jsonbytes)
-        return cls.fromDict(dict)
-    
-    @classmethod
-    def fromDict(cls, dict:dict):
         if("models" in dict):
             dict["models"] = [ModelParameters(**model) for model in dict["models"]]
         if("controlimages" in dict):
             dict["controlimages"] = [ControlImageParameters(**controlimage) for controlimage in dict["controlimages"]]
         if("loras" in dict):
             dict["loras"] = [LoraParameters(**lora) for lora in dict["loras"]]
-        return cls(**dict)
+        return cls.from_dict(dict)
+    
+    @classmethod
+    def from_dict(cls, dict:dict):
+        """ Create a GenerationParameters object from a dictionary, ignoring any keys that are not parameters of the class """
+        if("models" in dict):
+            dict["models"] = [ModelParameters(**model) for model in dict["models"]]
+        if("controlimages" in dict):
+            dict["controlimages"] = [ControlImageParameters(**controlimage) for controlimage in dict["controlimages"]]
+        if("loras" in dict):
+            dict["loras"] = [LoraParameters(**lora) for lora in dict["loras"]]
+        params = cls(**{
+            k: v for k, v in dict.items() 
+            if k in inspect.signature(cls).parameters
+        })
+        return params
 
     def getImage(self, type:str) -> "ControlImageParameters|None":
         for controlimage in self.controlimages:
@@ -103,21 +115,6 @@ class GenerationParameters:
     
     def getControlImages(self) -> List[ControlImageParameters]:
         return self.getImages(IMAGETYPE_CONTROLIMAGE)
-
-    def getGenerationType(self) -> str:
-        if(self.generationtype is not None):
-            return self.generationtype
-        else:
-            generationtype = ""
-            if(self.getMaskImage() is not None):
-                generationtype += GENERATIONTYPE_INPAINT
-            elif(self.getInitImage() is not None):
-                generationtype += GENERATIONTYPE_IMG2IMG
-            else:
-                generationtype += GENERATIONTYPE_TXT2IMG
-            if(len(self.getControlImages()) > 0):
-                generationtype += GENERATIONTYPE_CONTROLNET_SUFFIX
-            return generationtype
         
     def setImage(self, image64:str, type:str):
         for controlimage in self.controlimages:

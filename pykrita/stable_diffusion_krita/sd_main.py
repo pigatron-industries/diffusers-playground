@@ -213,12 +213,11 @@ class ModifierDialog(QDialog):
 
 
 dialogfields = {
-    'txt2img':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'seed', 'batch', 'scheduler', 'lora'],
-    'img2img':         ['prompt', 'negprompt', 'model', 'strength', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
+    'txt2img':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'seed', 'batch', 'scheduler', 'lora'],
+    'img2img':         ['prompt', 'negprompt', 'base', 'model', 'strength', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
     'upscale':         ['prompt', 'model', 'upscale_amount', 'scale', 'scheduler', 'image'],
-    'inpaint':         ['prompt', 'negprompt', 'model', 'steps', 'scale', 'strength', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
-    'generateTiled':   ['prompt', 'negprompt', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image'],
-    'imagevariation':  ['steps', 'seed', 'scale', 'batch', 'image', 'scheduler'],
+    'inpaint':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'strength', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
+    'generateTiled':   ['prompt', 'negprompt', 'base', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler'],
     'preprocess':      ['model', 'image']
 }
@@ -234,10 +233,13 @@ class SDDialog(QDialog):
         self.images = images
         self.setWindowTitle("Stable Diffusion " + action)
 
-        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+
+        self.historyPrevButton = self.buttonBox.addButton("< History", QDialogButtonBox.ActionRole)
+        self.historyPrevButton.clicked.connect(self.historyPrev)
+
         self.layout = QHBoxLayout()
         formLayout= QVBoxLayout()
         self.layout.addLayout(formLayout)
@@ -247,15 +249,15 @@ class SDDialog(QDialog):
         if('prompt' in self.actionfields):
             formLayout.addWidget(QLabel("Prompt"))
             self.prompt = QPlainTextEdit()
-            self.prompt.setPlainText(self.config.params.prompt)
+            # self.prompt.setPlainText(self.config.params.prompt)
             formLayout.addWidget(self.prompt)
             self.modifiers= ModifierDialog.modifierInput(self, formLayout)
-            self.modifiers.setPlainText(self.config.params.modifiers)
+            # self.modifiers.setPlainText(self.config.params.modifiers)
 
         if('negprompt' in self.actionfields):
             formLayout.addWidget(QLabel("Negative"))
             self.negprompt = QLineEdit()
-            self.negprompt.setText(self.config.params.negprompt)
+            # self.negprompt.setText(self.config.params.negprompt)
             formLayout.addWidget(self.negprompt) 
 
         if('tile_method' in self.actionfields):
@@ -263,35 +265,26 @@ class SDDialog(QDialog):
             formLayout.addWidget(tilemethod_label)
             self.tile_method = QComboBox()
             self.tile_method.addItems(['singlepass', 'multipass', 'inpaint'])
-            tilemethod = self.config.params.tilemethod
-            self.tile_method.setCurrentText(tilemethod)
+            # tilemethod = self.config.params.tilemethod
+            # self.tile_method.setCurrentText(tilemethod)
             self.tile_method.currentIndexChanged.connect(self.tileMethodChanged)
             formLayout.addWidget(self.tile_method)
 
-        if('model' in self.actionfields):
-            if(action == "upscale"):
-                pass
-            elif(action == "preprocess"):
-                pass
-            else:
-                formLayout.addWidget(QLabel("Base"))
-                self.base = QComboBox()
-                self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1'])
-                self.base.setCurrentText(self.config.params.modelBase)
-                self.base.currentIndexChanged.connect(self.baseChanged)
-                formLayout.addWidget(self.base)
+        if('base' in self.actionfields):
+            formLayout.addWidget(QLabel("Base"))
+            self.base = QComboBox()
+            self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1'])
+            self.base.setCurrentText('sd_1_5')
+            self.base.currentIndexChanged.connect(self.baseChanged)
+            formLayout.addWidget(self.base)
 
+        if('model' in self.actionfields):
+            # modeltype = self.getModelType()
             formLayout.addWidget(QLabel("Model"))
             self.model = QComboBox()
-            modeltype = self.getModelType()
-            models = getModels(modeltype, self.config.params.modelBase)
-            self.model.addItems([""] + models)
-            if(action == "upscale"):
-                self.model.setCurrentText(self.config.params.modelUpscale)
-            elif(action == "preprocess"):
-                self.model.setCurrentText(self.config.params.modelPreprocess)
-            else:
-                self.model.setCurrentText(self.config.params.modelGeneration)
+            # models = getModels(modeltype, self.base.currentText())
+            self.model.addItems([""])
+            # self.model.setCurrentText(self.config.params.models[0].name)
             self.model.currentIndexChanged.connect(self.modelChanged)
             formLayout.addWidget(self.model)
 
@@ -304,67 +297,67 @@ class SDDialog(QDialog):
             self.loraweight_label = QLabel("LORA Weight:")
             formLayout.addWidget(self.loraweight_label)
             self.loraweight, _  = createSlider(self, formLayout, 100, -200, 200, 1, 100)
-            if(self.config.params.loras and len(self.config.params.loras) > 0):
-                self.lora.setCurrentText(self.config.params.loras[0].name)
-                self.loraweight.setValue(self.config.params.loras[0].weight*100)
+            # if(self.config.params.loras and len(self.config.params.loras) > 0):
+            #     self.lora.setCurrentText(self.config.params.loras[0].name)
+            #     self.loraweight.setValue(self.config.params.loras[0].weight*100)
 
         if('upscale_amount' in self.actionfields):
             upscale_label = QLabel("Upscale amount")
             formLayout.addWidget(upscale_label)
-            self.upscale_amount, _  = createSlider(self, formLayout, self.config.params.upscaleamount, 1,4,1,1)
+            self.upscale_amount, _  = createSlider(self, formLayout, 4, 1,4,1,1)
 
         if('tile_method' in self.actionfields):
             tilewidth_label = QLabel("Tile width")
             formLayout.addWidget(tilewidth_label)
-            self.tile_width, _  = createSlider(self, formLayout, self.config.params.tilewidth, 256, 1024, 64, 1)
+            self.tile_width, _  = createSlider(self, formLayout, 768, 256, 1024, 64, 1)
             tileheight_label = QLabel("Tile height")
             formLayout.addWidget(tileheight_label)
-            self.tile_height, _  = createSlider(self, formLayout, self.config.params.tileheight, 256, 1024, 64, 1)
+            self.tile_height, _  = createSlider(self, formLayout, 768, 256, 1024, 64, 1)
             tileoverlap_label = QLabel("Tile overlap")
             formLayout.addWidget(tileoverlap_label)
-            self.tile_overlap, _  = createSlider(self, formLayout, self.config.params.tileoverlap, 0, 384, 2, 1)
+            self.tile_overlap, _  = createSlider(self, formLayout, 768, 0, 384, 2, 1)
 
             tilealignmentx_label = QLabel("Tile alignment x")
             formLayout.addWidget(tilealignmentx_label)
             self.tile_alignmentx = QComboBox()
             self.tile_alignmentx.addItems(['tile_centre', 'tile_edge'])
-            self.tile_alignmentx.setCurrentText(self.config.params.tilealignmentx)
+            # self.tile_alignmentx.setCurrentText(self.config.params.tilealignmentx)
             formLayout.addWidget(self.tile_alignmentx)
 
             tilealignmenty_label = QLabel("Tile alignment y")
             formLayout.addWidget(tilealignmenty_label)
             self.tile_alignmenty = QComboBox()
             self.tile_alignmenty.addItems(['tile_centre', 'tile_edge'])
-            self.tile_alignmenty.setCurrentText(self.config.params.tilealignmenty)
+            # self.tile_alignmenty.setCurrentText(self.config.params.tilealignmenty)
             formLayout.addWidget(self.tile_alignmenty)
 
         if('strength' in self.actionfields):
             self.strength_label = QLabel("Strength")
             formLayout.addWidget(self.strength_label)
-            self.strength, self.strength_value = createSlider(self, formLayout, self.config.params.strength*100, 0, 100, 1, 100)
+            self.strength, self.strength_value = createSlider(self, formLayout, 100, 0, 100, 1, 100)
 
         if('steps' in self.actionfields):
             self.steps_label=QLabel("Steps")
             formLayout.addWidget(self.steps_label)        
-            self.steps, self.steps_value = createSlider(self, formLayout, self.config.params.steps, 1, 250, 5, 1)
+            self.steps, self.steps_value = createSlider(self, formLayout, 40, 1, 250, 5, 1)
 
         if('scale' in self.actionfields):
             scale_label=QLabel("Guidance Scale")
             scale_label.setToolTip("how strongly the image should follow the prompt")
             formLayout.addWidget(scale_label)        
-            self.scale, _ = createSlider(self, formLayout, self.config.params.cfgscale*10, 10, 300, 5, 10)
+            self.scale, _ = createSlider(self, formLayout, 70, 10, 300, 5, 10)
      
         if('seed' in self.actionfields):
             seed_label=QLabel("Seed (empty=random)")
             seed_label.setToolTip("same seed and same prompt = same image")
             formLayout.addWidget(seed_label)      
             self.seed = QLineEdit()
-            self.seed.setText(self.config.params.seed)
+            # self.seed.setText(self.config.params.seed)
             formLayout.addWidget(self.seed)
 
         if('batch' in self.actionfields):
             formLayout.addWidget(QLabel("Number images"))        
-            self.batch, _ = createSlider(self, formLayout, self.config.params.batch, 1, 4, 1, 1)
+            self.batch, _ = createSlider(self, formLayout, 4, 1, 4, 1, 1)
    
         if('scheduler' in self.actionfields):
             scheduler_label=QLabel("Scheduler")
@@ -382,7 +375,7 @@ class SDDialog(QDialog):
                 'LMSDiscreteScheduler', 
                 'UniPCMultistepScheduler'
             ])
-            self.scheduler.setCurrentText(self.config.params.scheduler)
+            # self.scheduler.setCurrentText(self.config.params.scheduler)
             formLayout.addWidget(self.scheduler)
 
         if('prescale' in self.actionfields):
@@ -390,15 +383,14 @@ class SDDialog(QDialog):
             formLayout.addWidget(prescale_label)  
             self.prescale = QComboBox()
             self.prescale.addItems(['0.5', '1.0', '2.0'])
-            self.prescale.setCurrentText(str(self.config.params.prescale))
+            self.prescale.setCurrentText('1.0')
             formLayout.addWidget(self.prescale)
 
         formLayout.addWidget(QLabel(""))        
         formLayout.addWidget(self.buttonBox)
 
         if('image' in self.actionfields):
-            control_models = getModels("control", self.config.params.modelBase)
-            self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
+            self.controlmodels = [IMAGETYPE_INITIMAGE]
             self.control_model_dropdowns = []
             self.control_scale_sliders = []
             tabs = QTabWidget()
@@ -408,9 +400,13 @@ class SDDialog(QDialog):
             self.controlModelChanged(0)
 
         self.setLayout(self.layout)
+        self.paramHistoryIndex = -1
+        if(not self.historyPrev()):
+            self.baseChanged(0)
 
 
     def getModelType(self):
+        print("getModelType", self.action)
         if(self.action in ("txt2img","img2img")):
             return "generate"
         elif(self.action == "inpaint"):
@@ -426,6 +422,42 @@ class SDDialog(QDialog):
             return "preprocess"
 
 
+    def getGenerationType(self):
+        if(self.action == "txt2img" or self.action == "img2img"):
+            return "generate"
+        else:
+            return self.action
+
+
+    def addImageTab(self, tabs, image, i):
+        tabWidget = QWidget()
+        tabLayout = QVBoxLayout()      
+
+        control_model_dropdown = QComboBox()
+        control_model_dropdown.addItems(self.controlmodels)
+        control_model_dropdown.currentIndexChanged.connect(self.controlModelChanged)
+        # controlimageparams = self.config.params.controlimages
+        # if i < len(controlimageparams):
+        #     if controlimageparams[i].type == IMAGETYPE_INITIMAGE:
+        #         control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
+        #     control_model_dropdown.setCurrentText(controlimageparams[i].model)
+        self.control_model_dropdowns.append(control_model_dropdown)
+        tabLayout.addWidget(control_model_dropdown)
+
+        # condscale = 0.8
+        # if i < len(controlimageparams):
+        #     condscale = controlimageparams[i].condscale
+        control_scale_slider, _ = createSlider(self, tabLayout, 80, 0, 100, 1, 100)
+        self.control_scale_sliders.append(control_scale_slider)
+
+        imgLabel = QLabel()
+        imgLabel.setPixmap(self.maxSizePixmap(image, (896, 896)))
+        
+        tabLayout.addWidget(imgLabel)
+        tabWidget.setLayout(tabLayout)
+        tabs.addTab(tabWidget, f"Image {i}")
+
+
     def tileMethodChanged(self, index):
         modeltype = self.getModelType()
         models = getModels(modeltype, self.base.currentText())
@@ -436,16 +468,16 @@ class SDDialog(QDialog):
 
     def baseChanged(self, index):
         print("base changed ")
-        modeltype = self.action
-        if(self.action in ("txt2img","img2img","inpaint","generateTiled")):
-            modeltype = "generate"
-        models = getModels(modeltype, self.base.currentText())
-        control_models = getModels("control", self.base.currentText())
+        modeltype = self.getModelType()
+        base = None
+        if('base' in self.actionfields):
+            base = self.base.currentText()
+        models = getModels(modeltype, base)
+        control_models = getModels("control", base)
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
         self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
-        print(self.controlmodels)
         for control_model_dropdown in self.control_model_dropdowns:
             control_model_dropdown.clear()
             control_model_dropdown.addItems(self.controlmodels)
@@ -456,35 +488,6 @@ class SDDialog(QDialog):
             loras = getLORAs(self.model.currentText())
             self.lora.clear()
             self.lora.addItems([""] + loras)
-
-
-    def addImageTab(self, tabs, image, i):
-        tabWidget = QWidget()
-        tabLayout = QVBoxLayout()      
-
-        control_model_dropdown = QComboBox()
-        control_model_dropdown.addItems(self.controlmodels)
-        control_model_dropdown.currentIndexChanged.connect(self.controlModelChanged)
-        controlimageparams = self.config.params.controlimages
-        if i < len(controlimageparams):
-            if controlimageparams[i].type == IMAGETYPE_INITIMAGE:
-                control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
-            control_model_dropdown.setCurrentText(controlimageparams[i].model)
-        self.control_model_dropdowns.append(control_model_dropdown)
-        tabLayout.addWidget(control_model_dropdown)
-
-        condscale = 0.8
-        if i < len(controlimageparams):
-            condscale = controlimageparams[i].condscale
-        control_scale_slider, _ = createSlider(self, tabLayout, condscale*100, 0, 100, 1, 100)
-        self.control_scale_sliders.append(control_scale_slider)
-
-        imgLabel = QLabel()
-        imgLabel.setPixmap(self.maxSizePixmap(image, (896, 896)))
-        
-        tabLayout.addWidget(imgLabel)
-        tabWidget.setLayout(tabLayout)
-        tabs.addTab(tabWidget, f"Image {i}")
 
     
     def controlModelChanged(self, index):
@@ -512,87 +515,143 @@ class SDDialog(QDialog):
             return QPixmap.fromImage(image)
 
 
+    def historyPrev(self):
+        print("historyPrev")
+        paramHistoryIndex = self.paramHistoryIndex
+        while(paramHistoryIndex < len(self.config.param_history)-1):
+            paramHistoryIndex += 1
+            params = self.config.param_history[paramHistoryIndex]
+            if(self.getGenerationType() == params.generationtype):
+                self.paramHistoryIndex = paramHistoryIndex
+                self.loadParams(params)
+                return True
+        return False
+    
+
+    def loadParams(self, params:ConfigDialogParameters):
+        if('prompt' in self.actionfields):
+            self.prompt.setPlainText(params.prompt)
+            self.modifiers.setPlainText(params.modifiers)
+        if('negprompt' in self.actionfields):
+            self.negprompt.setText(params.negprompt)
+        if('tile_method' in self.actionfields):
+            self.tile_method.setCurrentText(params.tilemethod)
+            self.tile_width.setValue(params.tilewidth)
+            self.tile_height.setValue(params.tileheight)
+            self.tile_overlap.setValue(params.tileoverlap)
+            self.tile_alignmentx.setCurrentText(params.tilealignmentx)
+            self.tile_alignmenty.setCurrentText(params.tilealignmenty)
+        if('base' in self.actionfields):
+            self.base.setCurrentText(params.modelBase)
+        if('model' in self.actionfields):
+            self.baseChanged(0)
+            self.model.setCurrentText(params.models[0].name)
+        if('lora' in self.actionfields):
+            if(params.loras and len(params.loras) > 0):
+                self.lora.setCurrentText(params.loras[0].name)
+                self.loraweight.setValue(params.loras[0].weight*100)
+            else:
+                self.lora.setCurrentText("")
+                self.loraweight.setValue(100)
+        if('upscale_amount' in self.actionfields):
+            self.upscale_amount.setValue(params.upscaleamount)
+        if('strength' in self.actionfields):
+            self.strength.setValue(params.strength*100)
+        if('steps' in self.actionfields):
+            self.steps.setValue(params.steps)
+        if('scale' in self.actionfields):
+            self.scale.setValue(params.cfgscale*10)
+        if('seed' in self.actionfields):
+            self.seed.setText(str(params.seed))
+        if('scheduler' in self.actionfields):
+            self.scheduler.setCurrentText(params.scheduler)
+        if('prescale' in self.actionfields):
+            self.prescale.setCurrentText(str(params.prescale))
+        # if('batch' in self.actionfields):
+        #     self.batch.setValue(params.batch)
+        if('image' in self.actionfields):
+            for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
+                if (i < len(params.controlimages)):
+                    if (params.controlimages[i].type == IMAGETYPE_INITIMAGE):
+                        control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
+                    else:
+                        control_model_dropdown.setCurrentText(params.controlimages[i].model)
+                    self.control_scale_sliders[i].setValue(params.controlimages[i].condscale*100)
+
+
     # put data from dialog in configuration and save it
     def saveParams(self):
         genParams = GenerationParameters()
-        if(self.action in ["img2img", "txt2img"]):
-            genParams.generationtype = "generate"
-        else:
-            genParams.generationtype = self.action
-        actionfields = dialogfields[self.action]
-        if('prompt' in actionfields):
-            self.config.params.prompt = self.prompt.toPlainText()
-            self.config.params.modifiers = self.modifiers.toPlainText()
+        genParams.generationtype = self.getGenerationType()
+        dialogParams = ConfigDialogParameters()
+        dialogParams.generationtype = self.getGenerationType()
+        if('prompt' in self.actionfields):
+            dialogParams.prompt = self.prompt.toPlainText()
+            dialogParams.modifiers = self.modifiers.toPlainText()
             genParams.prompt = getFullPrompt(self)
-        if('negprompt' in actionfields):
-            self.config.params.negprompt = self.negprompt.text()
+        if('negprompt' in self.actionfields):
+            dialogParams.negprompt = self.negprompt.text()
             genParams.negprompt = self.negprompt.text()
-        if('seed' in actionfields):
-            if(self.seed.text() != ""):
-                self.config.params.seed = int(self.seed.text())
+        if('seed' in self.actionfields):
+            print(self.seed.text())
+            if(self.seed.text().isnumeric()):
+                dialogParams.seed = int(self.seed.text())
                 genParams.seed = int(self.seed.text())
             else:
-                self.config.params.seed = None
+                dialogParams.seed = None
                 genParams.seed = None
-        if('scale' in actionfields):
-            self.config.params.cfgscale = self.scale.value()/10
+        if('scale' in self.actionfields):
+            dialogParams.cfgscale = self.scale.value()/10
             genParams.cfgscale = self.scale.value()/10
-        if('scheduler' in actionfields):
-            self.config.params.scheduler = self.scheduler.currentText()
+        if('scheduler' in self.actionfields):
+            dialogParams.scheduler = self.scheduler.currentText()
             genParams.scheduler = self.scheduler.currentText()
-        if('model' in actionfields):
-            if(self.action == "upscale"):
-                self.config.params.modelUpscale = self.model.currentText()
-                genParams.upscalemethod = self.model.currentText().split("/")[0]
-                genParams.models = [ModelParameters(name=self.model.currentText().split("/")[1])]
-            elif(self.action == "preprocess"):
-                self.config.params.modelPreprocess = self.model.currentText()
-                genParams.models = [ModelParameters(name=self.model.currentText())]
-            else:
-                self.config.params.modelBase = self.base.currentText()
-                self.config.params.modelGeneration = self.model.currentText()
-                genParams.models = [ModelParameters(name=self.model.currentText())]
-        if('lora' in actionfields):
-            self.config.params.loras = [LoraParameters(name=self.lora.currentText(), weight=self.loraweight.value()/100)]
+        if('base' in self.actionfields):
+            dialogParams.modelBase = self.base.currentText()
+        if('model' in self.actionfields):
+            dialogParams.models = [ModelParameters(name=self.model.currentText())]
+            genParams.models = [ModelParameters(name=self.model.currentText())]
+        if('lora' in self.actionfields):
+            dialogParams.loras = [LoraParameters(name=self.lora.currentText(), weight=self.loraweight.value()/100)]
             genParams.loras = [LoraParameters(name=self.lora.currentText(), weight=self.loraweight.value()/100)]
-        if('batch' in actionfields):
-            self.config.params.batch = int(self.batch.value())
+        if('batch' in self.actionfields):
+            dialogParams.batch = int(self.batch.value())
             genParams.batch = int(self.batch.value())
-        if('strength' in actionfields):
-            self.config.params.strength = self.strength.value()/100
+        if('strength' in self.actionfields):
+            dialogParams.strength = self.strength.value()/100
             genParams.strength = self.strength.value()/100
-        if('steps' in actionfields):
-            self.config.params.steps = int(self.steps.value())
+        if('steps' in self.actionfields):
+            dialogParams.steps = int(self.steps.value())
             genParams.steps = int(self.steps.value())
-        if('tile_method' in actionfields):
-            self.config.params.tilemethod = self.tile_method.currentText()
+        if('tile_method' in self.actionfields):
+            dialogParams.tilemethod = self.tile_method.currentText()
             genParams.tilemethod = self.tile_method.currentText()
-            self.config.params.tilewidth = self.tile_width.value()
+            dialogParams.tilewidth = self.tile_width.value()
             genParams.tilewidth = self.tile_width.value()
-            self.config.params.tileheight = self.tile_height.value()
+            dialogParams.tileheight = self.tile_height.value()
             genParams.tileheight = self.tile_height.value()
-            self.config.params.tileoverlap = self.tile_overlap.value()
+            dialogParams.tileoverlap = self.tile_overlap.value()
             genParams.tileoverlap = self.tile_overlap.value()
-            self.config.params.tilealignmentx = self.tile_alignmentx.currentText()
+            dialogParams.tilealignmentx = self.tile_alignmentx.currentText()
             genParams.tilealignmentx = self.tile_alignmentx.currentText()
-            self.config.params.tilealignmenty = self.tile_alignmenty.currentText()
+            dialogParams.tilealignmenty = self.tile_alignmenty.currentText()
             genParams.tilealignmenty = self.tile_alignmenty.currentText()
-        if('upscale_amount' in actionfields):
-            self.config.params.upscaleamount = int(self.upscale_amount.value())
+        if('upscale_amount' in self.actionfields):
+            dialogParams.upscaleamount = int(self.upscale_amount.value())
             genParams.upscaleamount = int(self.upscale_amount.value())
-        if('prescale' in actionfields):
-            self.config.params.prescale = self.prescale.currentText()
+        if('prescale' in self.actionfields):
+            dialogParams.prescale = self.prescale.currentText()
             genParams.prescale = float(self.prescale.currentText())
-        if('image' in actionfields):
+        if('image' in self.actionfields):
             images64 = base64EncodeImages(self.images)
-            self.config.params.controlimages = []
+            dialogParams.controlimages = []
             genParams.controlimages = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
                 if (control_model_dropdown.currentText() == IMAGETYPE_INITIMAGE):
-                    self.config.params.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE))
+                    dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE))
                     genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, image64 = images64[i]))
                 else:
-                    self.config.params.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
+                    dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
                                                                                    model = control_model_dropdown.currentText(), 
                                                                                    condscale = self.control_scale_sliders[i].value()/100))
                     genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
@@ -602,7 +661,7 @@ class SDDialog(QDialog):
         else:
             genParams.width = self.images[0].width()
             genParams.height = self.images[0].height()
-        self.config.save()
+        self.config.saveParams(dialogParams)
         return genParams
 
 
@@ -767,14 +826,15 @@ def base64ToQImage(data):
 
 
 def getModels(modeltype, modelbase) -> List[str]:
+    print("getModels", modeltype, modelbase)
     config = SDConfig()
     # TODO build into models endpoint
     if(modeltype == "upscale"):
-        return ["esrgan/4x_remacri", 
-                "esrgan/4x_lollipop", 
-                "esrgan/4x_ultrasharp", 
-                "esrgan/1x_ReFocus-V3",
-                "esrgan/1x_ITF-SkinDiffDetail-Lite-v1",]
+        return ["4x_remacri", 
+                "4x_lollipop", 
+                "4x_ultrasharp", 
+                "1x_ReFocus-V3",
+                "1x_ITF-SkinDiffDetail-Lite-v1",]
     if(modeltype == "preprocess"):
         return ['DepthEstimation',
                 'NormalEstimation',
@@ -848,9 +908,9 @@ def getFullPrompt(dlg):
 
    # modifiers=dlg.modifiers.toPlainText().replace("\n", ", ")
     prompt=dlg.prompt.toPlainText()
-    if (not prompt):      
-        errorMessage("Empty prompt","Type some text in prompt input box about what you want to see.")
-        return ""
+    # if (not prompt):      
+    #     errorMessage("Empty prompt","Type some text in prompt input box about what you want to see.")
+    #     return ""
     prompt+=modifiers
     return prompt
 
