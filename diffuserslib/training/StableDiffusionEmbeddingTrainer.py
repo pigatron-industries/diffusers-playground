@@ -60,14 +60,13 @@ class StableDiffusionEmbeddingTrainer():
 
 
     def train(self):
-        self.save_params()
-
         if self.params.seed is not None:
             set_seed(self.params.seed)
 
         self.load_models()
         self.load_validation_pipeline()
         self.init_tokenizer()
+        self.save_params()
 
         # Freeze vae and unet
         self.vae.requires_grad_(False)

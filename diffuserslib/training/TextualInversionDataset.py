@@ -138,7 +138,7 @@ class TextualInversionDataset(Dataset):
         }[interpolation]
 
         if(learnable_property == "style"):
-            self.tempaltes = imagenet_style_templates_small
+            self.templates = imagenet_style_templates_small
         elif(learnable_property == "object"):
             self.templates = imagenet_object_templates_small
         elif(learnable_property ==  "subject_style"):
