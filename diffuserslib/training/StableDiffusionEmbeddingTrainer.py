@@ -1,6 +1,7 @@
 import logging
 import math
 import os
+import gc
 from typing import List
 
 from .TrainingParameters import TrainingParameters
@@ -354,6 +355,10 @@ class StableDiffusionEmbeddingTrainer():
             image.save(f"{self.params.outputDir}/{filename}.png")
 
         # del pipeline
+        gc.collect()
+        torch.mps.empty_cache()
+        torch.cuda.empty_cache()
+
         return images
 
 
