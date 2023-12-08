@@ -333,6 +333,11 @@ class StableDiffusionEmbeddingTrainer():
             f"Running validation for step {self.global_step}... \n Generating {self.params.numValidationImages} images with prompt:"
             f" {self.params.validationPrompt}."
         )
+
+        gc.collect()
+        torch.mps.empty_cache()
+        torch.cuda.empty_cache()
+
         self.update_validation_pipeline()
 
         prompt = self.params.validationPrompt.replace('*', self.placeholder_token_string)
@@ -354,7 +359,6 @@ class StableDiffusionEmbeddingTrainer():
             filename = f"{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}-{self.global_step}>-{i}"
             image.save(f"{self.params.outputDir}/{filename}.png")
 
-        # del pipeline
         gc.collect()
         torch.mps.empty_cache()
         torch.cuda.empty_cache()
