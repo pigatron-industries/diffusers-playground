@@ -545,22 +545,22 @@ class SDDialog(QDialog):
             self.base.setCurrentText(params.modelBase)
         if('model' in self.actionfields):
             self.baseChanged(0)
-            self.model.setCurrentText(params.models[0].name)
+            self.model.setCurrentText(int(params.models[0].name))
         if('lora' in self.actionfields):
             if(params.loras and len(params.loras) > 0):
                 self.lora.setCurrentText(params.loras[0].name)
-                self.loraweight.setValue(params.loras[0].weight*100)
+                self.loraweight.setValue(int(params.loras[0].weight*100))
             else:
                 self.lora.setCurrentText("")
                 self.loraweight.setValue(100)
         if('upscale_amount' in self.actionfields):
             self.upscale_amount.setValue(params.upscaleamount)
         if('strength' in self.actionfields):
-            self.strength.setValue(params.strength*100)
+            self.strength.setValue(int(params.strength*100))
         if('steps' in self.actionfields):
             self.steps.setValue(params.steps)
         if('scale' in self.actionfields):
-            self.scale.setValue(params.cfgscale*10)
+            self.scale.setValue(int(params.cfgscale*10))
         if('seed' in self.actionfields):
             self.seed.setText(str(params.seed))
         if('scheduler' in self.actionfields):
@@ -576,7 +576,7 @@ class SDDialog(QDialog):
                         control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
                     else:
                         control_model_dropdown.setCurrentText(params.controlimages[i].model)
-                    self.control_scale_sliders[i].setValue(params.controlimages[i].condscale*100)
+                    self.control_scale_sliders[i].setValue(int(params.controlimages[i].condscale*100))
 
 
     # put data from dialog in configuration and save it
