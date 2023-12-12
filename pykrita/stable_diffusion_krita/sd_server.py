@@ -53,7 +53,7 @@ def getServerDataAsync(action, params):
             if(done == 0):
                 done = 1
             else:
-                done = done*100 / total
+                done = int(done*100 / total)
             progress.setValue(done)
             progress.setLabelText(data.get("description", ""))
             progress.show()
