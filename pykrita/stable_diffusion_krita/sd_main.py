@@ -545,7 +545,7 @@ class SDDialog(QDialog):
             self.base.setCurrentText(params.modelBase)
         if('model' in self.actionfields):
             self.baseChanged(0)
-            self.model.setCurrentText(int(params.models[0].name))
+            self.model.setCurrentText(params.models[0].name)
         if('lora' in self.actionfields):
             if(params.loras and len(params.loras) > 0):
                 self.lora.setCurrentText(params.loras[0].name)
