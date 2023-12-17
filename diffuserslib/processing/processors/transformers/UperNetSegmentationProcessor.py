@@ -1,104 +1,8 @@
-from .ImageProcessor import ImageProcessor
-from ...batch import evaluateArguments
-from transformers import pipeline, AutoImageProcessor, UperNetForSemanticSegmentation
+from ..ImageProcessor import ImageProcessor
+from transformers import AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image
-from controlnet_aux import HEDdetector, MLSDdetector, PidiNetDetector, OpenposeDetector, ContentShuffleDetector
 import numpy as np
-import cv2
 import torch
-
-
-class DepthEstimationProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.depth_estimator = pipeline('depth-estimation', model='Intel/dpt-large')
-
-    def __call__(self, context):
-        image = self.depth_estimator(context.image)['depth']
-        image = np.array(image)
-        image = image[:, :, None]
-        image = np.concatenate([image, image, image], axis=2)
-        context.image = Image.fromarray(image)
-        return context
-    
-
-class NormalEstimationProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.depth_estimator = pipeline('depth-estimation', model='Intel/dpt-hybrid-midas')
-
-    def __call__(self, context):
-        image = self.depth_estimator(context.getViewportImage())['predicted_depth'][0]
-        image = image.numpy()
-        image_depth = image.copy()
-        image_depth -= np.min(image_depth)
-        image_depth /= np.max(image_depth)
-        bg_threhold = 0.4
-        x = cv2.Sobel(image, cv2.CV_32F, 1, 0, ksize=3)
-        x[image_depth < bg_threhold] = 0
-        y = cv2.Sobel(image, cv2.CV_32F, 0, 1, ksize=3)
-        y[image_depth < bg_threhold] = 0
-        z = np.ones_like(x) * np.pi * 2.0
-        image = np.stack([x, y, z], axis=2)
-        image /= np.sum(image ** 2.0, axis=2, keepdims=True) ** 0.5
-        image = (image * 127.5 + 127.5).clip(0, 255).astype(np.uint8)
-        context.setViewportImage(Image.fromarray(image))
-        return context
-
-
-class HEDEdgeDetectionProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.hed = HEDdetector.from_pretrained('lllyasviel/ControlNet')
-
-    def __call__(self, context):
-        image = self.hed(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
-
-
-class PIDIEdgeDetectionProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.pidi = PidiNetDetector.from_pretrained("lllyasviel/Annotators")
-
-    def __call__(self, context):
-        image = self.pidi(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
-
-
-class MLSDStraightLineDetectionProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.mlsd = MLSDdetector.from_pretrained('lllyasviel/ControlNet')
-
-    def __call__(self, context):
-        image = self.mlsd(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
-    
-
-class PoseDetectionProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.pose = OpenposeDetector.from_pretrained('lllyasviel/ControlNet')
-
-    def __call__(self, context):
-        image = self.pose(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
-    
-
-class ContentShuffleProcessor(ImageProcessor):
-    def __init__(self):
-        self.args = {}
-        self.content_shuffle = ContentShuffleDetector()
-
-    def __call__(self, context):
-        image = self.content_shuffle(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
 
 
 class SegmentationProcessor(ImageProcessor):
@@ -161,3 +65,4 @@ def ade_palette():
             [71, 0, 255], [122, 0, 255], [0, 255, 184], [0, 92, 255],
             [184, 255, 0], [0, 133, 255], [255, 214, 0], [25, 194, 194],
             [102, 255, 0], [92, 0, 255]]
+

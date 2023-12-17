@@ -5,10 +5,10 @@ from typing import List
 from .inference.DiffusersPipelines import *
 from .inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledImageToImage, tiledInpaint, compositedInpaint
 from .inference.GenerationParameters import GenerationParameters, TiledGenerationParameters, UpscaleGenerationParameters
-from .ImageUtils import base64EncodeImage, base64DecodeImage, base64DecodeImages, alphaToMask, applyColourCorrection
+from .ImageUtils import base64EncodeImage, alphaToMask, applyColourCorrection
 from .imagetools.ImageTools import ImageTools
-from .processing.processors.TransformerProcessors import *
-from .processing.processors.FilterProcessors import *
+from .processing.processors.transformers import *
+from .processing.processors.filters import *
 from .processing.ProcessingPipelineFactory import ProcessingPipelineBuilder
 import json
 

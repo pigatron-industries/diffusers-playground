@@ -4,8 +4,8 @@ from ..inference import DiffusersPipelines
 from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, LoraParameters, ControlImageType
 from ..processing import *
 from ..processing.ProcessingPipeline import ImageProcessorPipeline
-from ..processing.processors.FilterProcessors import *
-from ..processing.processors.TransformerProcessors import *
+from ..processing.processors.filters import *
+from ..processing.processors.transformers import *
 from .InitImageInterface import *
 from .LoraInterface import *
 from .WidgetHelpers import *

@@ -1,8 +1,5 @@
 from .ProcessingPipeline import ImageProcessorPipeline
-from .processors.ImageProcessors import InitImageProcessor, FillBackgroundProcessor, ResizeProcessor, CropProcessor
-from .processors.TransformProcessors import SimpleTransformProcessor, SymmetrizeProcessor, SpiralizeProcessor
-from .processors.generative.GeometryProcessors import DrawRegularShapeProcessor, DrawCheckerboardProcessor
-from .processors.generative.DrawGeometricSpiralProcessor import DrawGeometricSpiralProcessor
+from .processors import *
 from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument, RandomNumberTuple
 
 import math
