@@ -130,7 +130,7 @@ inpaint:
         vae: stabilityai/sd-vae-ft-mse
       - id: parlance/dreamlike-diffusion-1.0-inpainting
         vae: stabilityai/sd-vae-ft-mse
-      - id: lioo/Realistic_Vision_V2.0-inpainting
+      - id: andregn/Realistic_Vision_V4.0-inpainting
         vae: stabilityai/sd-vae-ft-mse
   - base: sdxl_1_0
     pipelines:
