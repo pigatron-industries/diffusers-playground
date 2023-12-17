@@ -3,7 +3,7 @@ from ..batch.argument import RandomNumberArgument, RandomImageArgument, RandomPr
 from ..inference import DiffusersPipelines
 from ..inference.GenerationParameters import GenerationParameters, ControlImageParameters, ModelParameters, LoraParameters, ControlImageType
 from ..processing import *
-from ..processing.ProcessingPipeline import ImageProcessorPipeline
+from ..processing.ImageProcessorPipeline import ImageProcessorPipeline
 from ..processing.processors.filters import *
 from ..processing.processors.transformers import *
 from .InitImageInterface import *

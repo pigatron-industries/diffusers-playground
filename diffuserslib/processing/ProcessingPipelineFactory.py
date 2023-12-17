@@ -1,4 +1,4 @@
-from .ProcessingPipeline import ImageProcessorPipeline
+from .ImageProcessorPipeline import ImageProcessorPipeline
 from .processors import *
 from ..batch import RandomNumberArgument, RandomChoiceArgument, RandomPositionArgument, RandomNumberTuple
 

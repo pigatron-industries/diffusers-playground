@@ -7,7 +7,7 @@ import glob
 import os
 from .WidgetHelpers import *
 from ..batch.argument import RandomImageArgument
-from ..processing.ProcessingPipeline import ImageProcessorPipeline
+from ..processing.ImageProcessorPipeline import ImageProcessorPipeline
 
 
 INIT_IMAGE = "Init Image"
