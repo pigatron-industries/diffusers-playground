@@ -47,7 +47,8 @@ class DrawVoronoiDiagramProcessor(ImageProcessor):
 
         points = points * context.size
         lines = self.getLines(points, boundedLines=drawBoundedLines, unboundedLines=drawUnboundedLines)
-        draw = ImageDraw.Draw(context.image)
+        image = context.getFullImage()
+        draw = ImageDraw.Draw(image)
 
         for line in lines:
             if (np.random.random() < lineProbablity):
@@ -57,6 +58,7 @@ class DrawVoronoiDiagramProcessor(ImageProcessor):
             for point in points:
                 draw.ellipse((point[0]-radius, point[1]-radius, point[0]+radius, point[1]+radius), fill="white")
             
+        context.setFullImage(image)
         return context
     
 

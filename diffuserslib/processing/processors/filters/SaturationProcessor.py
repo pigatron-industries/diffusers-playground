@@ -12,6 +12,7 @@ class SaturationProcessor(ImageProcessor):
 
     def __call__(self, context):
         args = evaluateArguments(self.args, context=context)
-        converter = ImageEnhance.Color(context.image)
-        context.image = converter.enhance(args["saturation"]+1)
+        converter = ImageEnhance.Color(context.getFullImage())
+        image = converter.enhance(args["saturation"]+1)
+        context.setFullImage(image)
         return context

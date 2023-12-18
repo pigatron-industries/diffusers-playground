@@ -12,5 +12,7 @@ class GaussianBlurProcessor(ImageProcessor):
 
     def __call__(self, context):
         args = evaluateArguments(self.args, context=context)
-        context.image = context.image.filter(ImageFilter.GaussianBlur(args["radius"]))
+        image = context.getFullImage()
+        image = image.filter(ImageFilter.GaussianBlur(args["radius"]))
+        context.setFullImage(image)
         return context

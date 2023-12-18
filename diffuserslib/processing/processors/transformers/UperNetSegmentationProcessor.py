@@ -12,16 +12,17 @@ class SegmentationProcessor(ImageProcessor):
         self.image_segmentor = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-convnext-small")
 
     def __call__(self, context):
-        pixel_values = self.image_processor(context.image.convert("RGB"), return_tensors="pt").pixel_values
+        image = context.getFullImage()
+        pixel_values = self.image_processor(image.convert("RGB"), return_tensors="pt").pixel_values
         with torch.no_grad():
             outputs = self.image_segmentor(pixel_values)
-        seg = self.image_processor.post_process_semantic_segmentation(outputs, target_sizes=[context.image.size[::-1]])[0]
+        seg = self.image_processor.post_process_semantic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
         color_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
         palette = np.array(ade_palette())
         for label, color in enumerate(palette):
             color_seg[seg == label, :] = color
         color_seg = color_seg.astype(np.uint8)
-        context.image = Image.fromarray(color_seg)
+        context.setFullImage(Image.fromarray(color_seg))
         return context
 
 

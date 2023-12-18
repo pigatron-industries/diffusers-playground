@@ -17,9 +17,9 @@ class CannyEdgeProcessor(ImageProcessor):
 
     def __call__(self, context):
         args = evaluateArguments(self.args, context=context)
-        image = pilToCv2(context.image)
+        image = pilToCv2(context.getFullImage())
         image = cv2.Canny(image, args["low_threshold"], args["high_threshold"])
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
-        context.image = Image.fromarray(image)
+        context.setFullImage(Image.fromarray(image))
         return context

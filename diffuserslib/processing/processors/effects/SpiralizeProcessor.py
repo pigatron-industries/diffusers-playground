@@ -17,13 +17,15 @@ class SpiralizeProcessor(ImageProcessor):
         angle = args["rotation"] / args["steps"]
         zoom = ((args["zoom"]-1) / args["steps"]) + 1
         modimages = []
-        modimage = context.image
+        modimage = context.getFullImage()
         for i in range(args["steps"]):
             modimage = modimage.rotate(angle)
             modimage = self.zoomOut(modimage, zoom)
             modimages.append(modimage)
+        image = context.getFullImage()
         for modimage in modimages:
-            context.image.alpha_composite(modimage, (0, 0))
+            image.alpha_composite(modimage, (0, 0))
+        context.setFullImage(image)
         return context
 
     def zoomOut(self, image, ratio):

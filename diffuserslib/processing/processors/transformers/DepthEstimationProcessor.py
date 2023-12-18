@@ -10,10 +10,10 @@ class DepthEstimationProcessor(ImageProcessor):
         self.depth_estimator = pipeline('depth-estimation', model='Intel/dpt-large')
 
     def __call__(self, context):
-        image = self.depth_estimator(context.image)['depth']
+        image = self.depth_estimator(context.getFullImage())['depth']
         image = np.array(image)
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
-        context.image = Image.fromarray(image)
+        context.setFullImage(Image.fromarray(image))
         return context
     

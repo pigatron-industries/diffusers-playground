@@ -13,3 +13,4 @@ from .processing import *
 from .imagetools import *
 from .interface import *
 from .training import *
+from .video import *

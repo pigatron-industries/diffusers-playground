@@ -16,18 +16,19 @@ class SimpleTransformProcessor(ImageProcessor):
 
     def __call__(self, context):
         args = evaluateArguments(self.args, context=context)
+        image = context.getFullImage()
         if(args["type"] == "flipvertical"):
-            modimage = ImageOps.flip(context.image)
+            modimage = ImageOps.flip(image)
         elif(args["type"] == "fliphorizontal"):
-            modimage = ImageOps.mirror(context.image)
+            modimage = ImageOps.mirror(image)
         elif(args["type"] == "rotate180"):
-            modimage = context.image.transpose(Image.ROTATE_180)
+            modimage = image.transpose(Image.ROTATE_180)
         elif(args["type"] == "rotate90"):
-            modimage = context.image.transpose(Image.ROTATE_90)
+            modimage = image.transpose(Image.ROTATE_90)
         elif(args["type"] == "rotate270"):
-            modimage = context.image.transpose(Image.ROTATE_270)
+            modimage = image.transpose(Image.ROTATE_270)
         else:
             return context
-        context.image = modimage
+        context.setFullImage(modimage)
         context.calcSize()
         return context

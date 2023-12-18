@@ -44,7 +44,8 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
         direction = args["direction"]
         directionIndex = directions.index(direction)
 
-        draw = ImageDraw.Draw(context.image)
+        image = context.getFullImage()
+        draw = ImageDraw.Draw(image)
 
         for i in range(args["iterations"]):
             rect_one, rect_two = self.splitRectangle(rect, ratio, direction)
@@ -53,6 +54,7 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
             directionIndex = (directionIndex + 1) % 4
             direction = directions[directionIndex]
             
+        context.setFullImage(image)
         return context
     
 

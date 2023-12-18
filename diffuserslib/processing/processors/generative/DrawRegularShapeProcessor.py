@@ -17,7 +17,9 @@ class DrawRegularShapeProcessor(ImageProcessor):
 
     def __call__(self, context):
         args = evaluateArguments(self.args, context=context)
-        draw = ImageDraw.Draw(context.image)
+        image = context.getFullImage()
+        draw = ImageDraw.Draw(image)
         pos = (args["position"][0] + context.offset[0], args["position"][1] + context.offset[1])
         draw.regular_polygon(bounding_circle=(pos, args["size"]), n_sides=args["sides"], rotation=args["rotation"], fill=args["fill"], outline=args["outline"])
+        context.setFullImage(image)
         return context
