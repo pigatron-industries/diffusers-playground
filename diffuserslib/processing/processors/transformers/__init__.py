@@ -6,3 +6,4 @@ from .NormalEstimationProcessor import *
 from .PIDIEdgeDetectionProcessor import *
 from .PoseDetectionProcessor import *
 from .UperNetSegmentationProcessor import *
+from .FaceDetectionProcessor import *
