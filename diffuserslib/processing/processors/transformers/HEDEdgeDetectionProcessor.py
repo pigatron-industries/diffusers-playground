@@ -1,13 +1,14 @@
-from ..ImageProcessor import ImageProcessor
+from ..ImageProcessor import ImageProcessor, ImageContext
 from controlnet_aux import HEDdetector
+from typing import Dict, Any, List
 
 
 class HEDEdgeDetectionProcessor(ImageProcessor):
     def __init__(self):
-        self.args = {}
         self.hed = HEDdetector.from_pretrained('lllyasviel/ControlNet')
+        super().__init__({})
 
-    def __call__(self, context):
-        image = self.hed(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = self.hed(inputImages[0].getViewportImage())
+        outputImage.setViewportImage(image)
+        return outputImage

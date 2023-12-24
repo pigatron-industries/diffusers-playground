@@ -1,6 +1,5 @@
 from ..ImageProcessor import ImageProcessor, ImageContext
-from ....batch import evaluateArguments
-
+from typing import Dict, Any, List
 from PIL import ImageDraw
 import math
 import numpy as np
@@ -16,7 +15,7 @@ y2 = 3
 class DrawGeometricSpiralProcessor(ImageProcessor):
     def __init__(self, rect = (0, 0, 1, 1), outline="white", fill="black", ratio = GOLDEN_RATIO, iterations=7, direction="right", turn="clockwise", 
                  draw = (True, True)):
-        self.args = {
+        args = {
             "rect": rect,
             "fill": fill,
             "outline": outline,
@@ -26,15 +25,15 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
             "turn": turn,
             "draw": draw
         }
+        super().__init__(args)
 
-    def __call__(self, context:ImageContext):
-        args = evaluateArguments(self.args, context=context)
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
         ratio = args["ratio"]
         inrect = args["rect"]
-        startx = inrect[0] * context.size[0] + context.offset[0]
-        starty = inrect[1] * context.size[1] + context.offset[1]
-        endx = inrect[2] * context.size[0] + context.offset[0]
-        endy = inrect[3] * context.size[1] + context.offset[1]
+        startx = inrect[0] * inputImages[0].size[0] + inputImages[0].offset[0]
+        starty = inrect[1] * inputImages[0].size[1] + inputImages[0].offset[1]
+        endx = inrect[2] * inputImages[0].size[0] + inputImages[0].offset[0]
+        endy = inrect[3] * inputImages[0].size[1] + inputImages[0].offset[1]
         rect = [startx, starty, endx, endy]
 
         if(args["turn"] == "clockwise"):
@@ -44,7 +43,7 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
         direction = args["direction"]
         directionIndex = directions.index(direction)
 
-        image = context.getFullImage()
+        image = inputImages[0].getFullImage()
         draw = ImageDraw.Draw(image)
 
         for i in range(args["iterations"]):
@@ -54,8 +53,8 @@ class DrawGeometricSpiralProcessor(ImageProcessor):
             directionIndex = (directionIndex + 1) % 4
             direction = directions[directionIndex]
             
-        context.setFullImage(image)
-        return context
+        outputImage.setFullImage(image)
+        return outputImage
     
 
     def drawSegment(self, draw, rect, direction, turn, fill, outline, drawRectangle, drawSpiral):

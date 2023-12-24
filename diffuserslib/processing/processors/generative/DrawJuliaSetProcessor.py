@@ -1,10 +1,11 @@
 from ..ImageProcessor import ImageProcessor, ImageContext
 from ....batch import evaluateArguments
 
+from typing import Dict, Any, List
 
 class DrawJuliaSetProcessor(ImageProcessor):
     def __init__(self, c_real, c_imaginary, xmin=-2.0, xmax=2.0, ymin=-2.0, ymax=2.0, max_iter=255):
-        self.args = {
+        args = {
             "c_real": c_real,
             "c_imaginary": c_imaginary,
             "xmin": xmin,
@@ -13,23 +14,25 @@ class DrawJuliaSetProcessor(ImageProcessor):
             "ymax": ymax,
             "max_iter": max_iter
         }
+        super().__init__(args)
 
-    def __call__(self, context):
-        args = evaluateArguments(self.args, context=context)
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = inputImages[0].getFullImage()
 
-        xstep = (args["xmax"] - args["xmin"]) / (context.image.width - 1)
-        ystep = (args["ymax"] - args["ymin"]) / (context.image.height - 1)
+        xstep = (args["xmax"] - args["xmin"]) / (image.width - 1)
+        ystep = (args["ymax"] - args["ymin"]) / (image.height - 1)
 
-        for y in range(context.image.width):
-            for x in range(context.image.height):
+        for y in range(image.width):
+            for x in range(image.height):
                 z = complex(args["xmin"] + x * xstep, args["ymin"] + y * ystep)
                 for i in range(args["max_iter"]):
                     z = z*z + complex(args["c_real"], args["c_imaginary"])
                     if abs(z) > 2.0:
                         break
                 if i == args["max_iter"]-1:
-                    context.image.putpixel((x, y), (255, 255, 255))
+                    image.putpixel((x, y), (255, 255, 255))
                 else:
-                    context.image.putpixel((x, y), (0, 0, 0))
+                    image.putpixel((x, y), (0, 0, 0))
 
-        return context
+        outputImage.setFullImage(image)
+        return outputImage

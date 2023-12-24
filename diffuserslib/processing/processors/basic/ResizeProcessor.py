@@ -1,7 +1,6 @@
 from PIL import Image
-from ..ImageProcessor import ImageProcessor
-from ....batch import evaluateArguments
-from typing import Union, Callable
+from ..ImageProcessor import ImageProcessor, ImageContext
+from typing import Union, Callable, Dict, Any, List
     
 
 class ResizeProcessor(ImageProcessor):
@@ -11,17 +10,17 @@ class ResizeProcessor(ImageProcessor):
                  halign:Union[str,Callable] = "centre", 
                  valign:Union[str,Callable] = "centre", 
                  fill:Union[str,Callable] = "black"):
-        self.args = {
+        args = {
             "type": type,
             "size": size,
             "halign": halign,
             "valign": valign,
             "fill": fill
         }
+        super().__init__(args)
 
-    def __call__(self, context):
-        args = evaluateArguments(self.args, context=context)
-        image = context.getViewportImage()
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = inputImages[0].getViewportImage()
         width = args["size"][0]
         height = args["size"][1]
         newimage = image
@@ -49,5 +48,5 @@ class ResizeProcessor(ImageProcessor):
                 y = int((newimage.height - image.height)/2)
             newimage.paste(image, (x, y))
 
-        context.setViewportImage(newimage)
-        return context
+        outputImage.setViewportImage(newimage)
+        return outputImage

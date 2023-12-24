@@ -1,8 +1,6 @@
 from ..ImageProcessor import ImageProcessor, ImageContext
-from ....batch import evaluateArguments
-
 from PIL import ImageDraw
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Dict, Any
 from scipy.spatial import Voronoi
 import math
 import numpy as np
@@ -24,19 +22,16 @@ class DrawVoronoiDiagramProcessor(ImageProcessor):
                  draw: Tuple[bool, bool, bool] | Callable[[], Tuple[bool, bool, bool]] = (True, True, True),  # (bounded lines, unbounded lines, points)
                  lineProbablity: float | Callable[[], float] = 1,
                  radius: float = 2):
-        self.args = {
+        args = {
             "points": points,
             "outline": outline,
             "draw": draw,
             "radius": radius,
             "lineProbablity": lineProbablity
         }
+        super().__init__(args)
 
-    def __call__(self, context:ImageContext):
-        if (context.image is None):
-            raise ValueError("ImageContext must have an image to draw on")
-        
-        args = self.evaluateArguments(context=context)
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:        
         points = np.array(args["points"])
         outline = args["outline"]
         drawBoundedLines = args["draw"][0]
@@ -45,9 +40,9 @@ class DrawVoronoiDiagramProcessor(ImageProcessor):
         radius = args["radius"]
         lineProbablity = args["lineProbablity"]
 
-        points = points * context.size
+        points = points * inputImages[0].size
         lines = self.getLines(points, boundedLines=drawBoundedLines, unboundedLines=drawUnboundedLines)
-        image = context.getFullImage()
+        image = inputImages[0].getFullImage()
         draw = ImageDraw.Draw(image)
 
         for line in lines:
@@ -58,8 +53,8 @@ class DrawVoronoiDiagramProcessor(ImageProcessor):
             for point in points:
                 draw.ellipse((point[0]-radius, point[1]-radius, point[0]+radius, point[1]+radius), fill="white")
             
-        context.setFullImage(image)
-        return context
+        outputImage.setFullImage(image)
+        return outputImage
     
 
     def getLines(self, points, boundedLines:bool = True, unboundedLines:bool = True) -> List[Tuple[float, float, float, float]]:

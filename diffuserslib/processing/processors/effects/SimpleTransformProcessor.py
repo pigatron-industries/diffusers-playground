@@ -1,7 +1,6 @@
-from ..ImageProcessor import ImageProcessor
-from ....batch import evaluateArguments
-
+from ..ImageProcessor import ImageProcessor, ImageContext
 from PIL import Image, ImageOps
+from typing import Dict, Any, List
 
 
 class SimpleTransformProcessor(ImageProcessor):
@@ -10,13 +9,13 @@ class SimpleTransformProcessor(ImageProcessor):
         rotate90 and rotate270 also swap viewport dimensions
     """
     def __init__(self, type="fliphorizontal"):
-        self.args = {
+        args = {
             "type": type
         }
+        super().__init__(args)
 
-    def __call__(self, context):
-        args = evaluateArguments(self.args, context=context)
-        image = context.getFullImage()
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = inputImages[0].getFullImage()
         if(args["type"] == "flipvertical"):
             modimage = ImageOps.flip(image)
         elif(args["type"] == "fliphorizontal"):
@@ -28,7 +27,7 @@ class SimpleTransformProcessor(ImageProcessor):
         elif(args["type"] == "rotate270"):
             modimage = image.transpose(Image.ROTATE_270)
         else:
-            return context
-        context.setFullImage(modimage)
-        context.calcSize()
-        return context
+            modimage = image
+        outputImage.setFullImage(modimage)
+        outputImage.calcSize()
+        return outputImage

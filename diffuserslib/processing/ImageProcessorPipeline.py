@@ -1,7 +1,7 @@
 from PIL import Image
 from ..batch import evaluateArguments, PlaceholderArgument
-from typing import Optional, Tuple, Callable, Self
-from .processors.ImageProcessor import ImageContext
+from typing import Optional, Tuple, Callable, Self, List
+from .processors import ImageContext, ImageProcessor
 
 
 class ImageProcessorPipeline():
@@ -10,7 +10,7 @@ class ImageProcessorPipeline():
             "size": size
         }
         self.oversize = oversize
-        self.tasks = []
+        self.tasks:List[ImageProcessor] = []
         self.context = None
 
     def hasPlaceholder(self, name:str) -> bool:
@@ -48,17 +48,33 @@ class ImageProcessorPipeline():
                     arg.setValue(value)
 
     def addTask(self, task) -> Self:
+        for i, inputIndex in enumerate(task.getInputIndexes()):
+            if (inputIndex < 0):
+                task.getInputIndexes()[i] = len(self.tasks) + inputIndex
         self.tasks.append(task)
         return self
 
+
     def __call__(self):
         initargs = evaluateArguments(self.initargs)
-        self.context = ImageContext(size=initargs["size"], oversize=self.oversize)
+        self.initcontext = ImageContext(size=initargs["size"], oversize=self.oversize)
         for task in self.tasks:
-            task(self.context)
-        return self.context.getViewportImage()
-    
-    def getLastOutput(self) -> Optional[Image.Image]:
-        if (self.context is not None):
-            return self.context.getViewportImage()
+            inputImages = self.getInputImages(task)
+            task(inputImages)
+        return self.getLastOutput()
+
+
+    def getInputImages(self, task:ImageProcessor) -> List[ImageContext]:
+        inputImages = []
+        for inputIndex in task.getInputIndexes():
+            if(inputIndex >= 0):
+                outputImage = self.tasks[inputIndex].getOutputImage()
+                inputImages.append(outputImage)
+            else:
+                inputImages.append(self.initcontext)
+        return inputImages
+
+
+    def getLastOutput(self) -> Optional[ImageContext]:
+        return self.tasks[-1].getOutputImage()
 

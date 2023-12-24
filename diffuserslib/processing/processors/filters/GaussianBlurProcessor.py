@@ -1,18 +1,17 @@
-from ..ImageProcessor import ImageProcessor
-from ....batch import evaluateArguments
-
+from ..ImageProcessor import ImageProcessor, ImageContext
 from PIL import ImageFilter
+from typing import Dict, Any, List
     
 
 class GaussianBlurProcessor(ImageProcessor):
     def __init__(self, radius = 2):
-        self.args = {
+        args = {
             "radius": radius
         }
+        super().__init__(args)
 
-    def __call__(self, context):
-        args = evaluateArguments(self.args, context=context)
-        image = context.getFullImage()
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = inputImages[0].getFullImage()
         image = image.filter(ImageFilter.GaussianBlur(args["radius"]))
-        context.setFullImage(image)
-        return context
+        outputImage.setFullImage(image)
+        return outputImage

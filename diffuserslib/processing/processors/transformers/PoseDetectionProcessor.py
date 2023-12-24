@@ -1,13 +1,14 @@
-from ..ImageProcessor import ImageProcessor
+from ..ImageProcessor import ImageProcessor, ImageContext
 from controlnet_aux import OpenposeDetector
+from typing import Dict, Any, List
 
 
 class PoseDetectionProcessor(ImageProcessor):
     def __init__(self):
-        self.args = {}
         self.pose = OpenposeDetector.from_pretrained('lllyasviel/Annotators')
+        super().__init__({})
 
-    def __call__(self, context):
-        image = self.pose(context.getViewportImage())
-        context.setViewportImage(image)
-        return context
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = self.pose(inputImages[0].getViewportImage())
+        outputImage.setViewportImage(image)
+        return outputImage

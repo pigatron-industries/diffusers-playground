@@ -1,18 +1,18 @@
-from ..ImageProcessor import ImageProcessor
+from ..ImageProcessor import ImageProcessor, ImageContext
 from ....batch import evaluateArguments
-
+from typing import Dict, Any, List
 from PIL import ImageEnhance
 
 
 class SaturationProcessor(ImageProcessor):
     def __init__(self, saturation = 0):
-        self.args = {
+        args = {
             "saturation": saturation
         }
+        super().__init__(args)
 
-    def __call__(self, context):
-        args = evaluateArguments(self.args, context=context)
-        converter = ImageEnhance.Color(context.getFullImage())
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        converter = ImageEnhance.Color(inputImages[0].getFullImage())
         image = converter.enhance(args["saturation"]+1)
-        context.setFullImage(image)
-        return context
+        outputImage.setFullImage(image)
+        return outputImage

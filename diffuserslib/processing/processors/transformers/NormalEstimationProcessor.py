@@ -1,17 +1,18 @@
-from ..ImageProcessor import ImageProcessor
+from ..ImageProcessor import ImageProcessor, ImageContext
 from transformers import pipeline
 from PIL import Image
 import numpy as np
 import cv2
+from typing import Dict, Any, List
 
 
 class NormalEstimationProcessor(ImageProcessor):
     def __init__(self):
-        self.args = {}
         self.depth_estimator = pipeline('depth-estimation', model='Intel/dpt-hybrid-midas')
+        super().__init__({})
 
-    def __call__(self, context):
-        image = self.depth_estimator(context.getViewportImage())['predicted_depth'][0]
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = self.depth_estimator(inputImages[0].getViewportImage())['predicted_depth'][0]
         image = image.numpy()
         image_depth = image.copy()
         image_depth -= np.min(image_depth)
@@ -25,5 +26,5 @@ class NormalEstimationProcessor(ImageProcessor):
         image = np.stack([x, y, z], axis=2)
         image /= np.sum(image ** 2.0, axis=2, keepdims=True) ** 0.5
         image = (image * 127.5 + 127.5).clip(0, 255).astype(np.uint8)
-        context.setViewportImage(Image.fromarray(image))
-        return context
+        outputImage.setViewportImage(Image.fromarray(image))
+        return outputImage

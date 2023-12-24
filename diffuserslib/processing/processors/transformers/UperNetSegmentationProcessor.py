@@ -1,18 +1,19 @@
-from ..ImageProcessor import ImageProcessor
+from ..ImageProcessor import ImageProcessor, ImageContext
 from transformers import AutoImageProcessor, UperNetForSemanticSegmentation
 from PIL import Image
 import numpy as np
 import torch
+from typing import Dict, Any, List
 
 
 class SegmentationProcessor(ImageProcessor):
     def __init__(self):
-        self.args = {}
         self.image_processor = AutoImageProcessor.from_pretrained("openmmlab/upernet-convnext-small")
         self.image_segmentor = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-convnext-small")
+        super().__init__({})
 
-    def __call__(self, context):
-        image = context.getFullImage()
+    def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
+        image = inputImages[0].getFullImage()
         pixel_values = self.image_processor(image.convert("RGB"), return_tensors="pt").pixel_values
         with torch.no_grad():
             outputs = self.image_segmentor(pixel_values)
@@ -22,8 +23,8 @@ class SegmentationProcessor(ImageProcessor):
         for label, color in enumerate(palette):
             color_seg[seg == label, :] = color
         color_seg = color_seg.astype(np.uint8)
-        context.setFullImage(Image.fromarray(color_seg))
-        return context
+        outputImage.setFullImage(Image.fromarray(color_seg))
+        return outputImage
 
 
 def ade_palette():
