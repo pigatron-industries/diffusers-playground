@@ -7,4 +7,5 @@ from .basic import *
 from .movement import *
 
 from .ImageProcessor import *
+from .FrameProcessor import *
 from .ImageContext import *

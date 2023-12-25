@@ -17,6 +17,7 @@ class SequenceRenderer():
 
 
     def __call__(self):
+        self.frameProcessor.initFrames(self.frames)
         self.feedforward(self.initImage)
         for frame in range(self.frames+1):
             output = self.frameProcessor()

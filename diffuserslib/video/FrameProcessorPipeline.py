@@ -1,4 +1,5 @@
 from ..processing import ImageProcessorPipeline, ImageContext
+from ..processing.processors import FrameProcessor
 
 from typing import Tuple, Callable
 
@@ -10,6 +11,12 @@ class FrameProcessorPipeline(ImageProcessorPipeline):
                  feedForwardIndex:int = 0):
         super().__init__(size=size, oversize=oversize)
         self.feedForwardIndex = feedForwardIndex
+
+
+    def initFrames(self, frames):
+        for task in self.tasks:
+            if(isinstance(task, FrameProcessor)):
+                task.initFrames(frames)
 
 
     def  __call__(self) -> ImageContext:
