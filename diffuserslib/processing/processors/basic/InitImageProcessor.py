@@ -15,6 +15,10 @@ class InitImageProcessor(ImageProcessor):
         self.args["image"] = image
 
     def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
-        outputImage.setViewportImage(args["image"])
+        image = args["image"]
+        if(isinstance(image, ImageContext)):
+            outputImage.setFullImage(image.getFullImage())
+        else:
+            outputImage.setViewportImage(image)
         return outputImage
     

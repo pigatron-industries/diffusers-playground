@@ -1,7 +1,7 @@
 import itertools
 import time
 from PIL import Image
-from typing import List, Dict, Callable, Tuple
+from typing import List, Dict, Callable, Tuple, Any
 import inspect
 import traceback
 # import pyexiv2
@@ -32,7 +32,7 @@ def callFunc(func, **kwargs):
     return func(**args)
 
 
-def evaluateArguments(args, **kwargs):
+def evaluateArguments(args:Dict[str, Any], **kwargs):
     outargs = {}
     for argkey in args.keys():
         argvalue = args[argkey]
@@ -43,6 +43,14 @@ def evaluateArguments(args, **kwargs):
         else:
             outargs[argkey] = argvalue
     return outargs
+
+def evaluateArgument(argvalue:Any, **kwargs):
+    if(callable(argvalue)):
+        return callFunc(argvalue, **kwargs)
+    elif(isinstance(argvalue, list) and all(callable(item) for item in argvalue)):
+        return [callFunc(item, **kwargs) for item in argvalue]
+    else:
+        return argvalue
 
 
 class BatchRunner:

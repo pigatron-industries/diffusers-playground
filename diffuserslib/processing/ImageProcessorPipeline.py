@@ -56,12 +56,16 @@ class ImageProcessorPipeline():
 
 
     def __call__(self):
-        initargs = evaluateArguments(self.initargs)
-        self.initcontext = ImageContext(size=initargs["size"], oversize=self.oversize)
+        self.initcontext = self.getInitImage()
         for task in self.tasks:
             inputImages = self.getInputImages(task)
             task(inputImages)
         return self.getLastOutput()
+
+
+    def getInitImage(self) -> ImageContext:
+        args = evaluateArguments(self.initargs)
+        return ImageContext(size=args["size"], oversize=self.oversize)
 
 
     def getInputImages(self, task:ImageProcessor) -> List[ImageContext]:
@@ -75,6 +79,6 @@ class ImageProcessorPipeline():
         return inputImages
 
 
-    def getLastOutput(self) -> Optional[ImageContext]:
+    def getLastOutput(self) -> ImageContext:
         return self.tasks[-1].getOutputImage()
 
