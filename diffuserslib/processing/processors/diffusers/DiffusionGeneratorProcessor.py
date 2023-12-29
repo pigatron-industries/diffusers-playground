@@ -1,5 +1,5 @@
 from ..ImageProcessor import ImageProcessor, ImageContext
-from ....inference import DiffusersPipelines, GenerationParameters, ModelParameters
+from ....inference import DiffusersPipelines, GenerationParameters, ModelParameters, ControlImageParameters
 from typing import Callable, Dict, Any, List
 
 
@@ -7,7 +7,9 @@ class DiffusionGeneratorProcessor(ImageProcessor):
     def __init__(self, 
                  pipelines:DiffusersPipelines|Callable[[], DiffusersPipelines], 
                  prompt:str|Callable[[], str]="black and white gradient", 
-                 model:str|Callable[[], str]="runwayml/stable-diffusion-v1-5"):
+                 model:str|Callable[[], str]="runwayml/stable-diffusion-v1-5",
+                 controlimages:List[ControlImageParameters] = []
+                 ):
         args = {
             "pipelines": pipelines,
             "prompt": prompt,
@@ -27,7 +29,8 @@ class DiffusionGeneratorProcessor(ImageProcessor):
             width = initImage.size[0],
             height = initImage.size[1],
             scheduler = "DPMSolverMultistepScheduler",
-            models = [ ModelParameters(name = args["model"]) ]
+            models = [ ModelParameters(name = args["model"]) ],
+            controlimages = []
         )
 
         image, _ = pipelines.generate(params)
