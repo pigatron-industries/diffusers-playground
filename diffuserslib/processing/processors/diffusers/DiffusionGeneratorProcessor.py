@@ -11,15 +11,26 @@ class DiffusionGeneratorProcessor(ImageProcessor):
                  controlimages:List[ControlImageParameters] = []
                  ):
         args = {
-            "pipelines": pipelines,
             "prompt": prompt,
             "model": model
         }
+        self.pipelines = pipelines
+        self.controlimages = controlimages
         super().__init__(args)
 
     def process(self, args:Dict[str, Any], inputImages:List[ImageContext], outputImage:ImageContext) -> ImageContext:
         pipelines = args["pipelines"]
         initImage = inputImages[0].getViewportImage()
+
+        controlimageparams = []
+        for i, controlimage in enumerate(self.controlimages):
+            controlimageparams.append(
+                ControlImageParameters(
+                    image = inputImages[i].getViewportImage(),
+                    type = controlimage.type,
+                    model = controlimage.model,
+                )
+            )
 
         params = GenerationParameters(
             safetychecker = False,
