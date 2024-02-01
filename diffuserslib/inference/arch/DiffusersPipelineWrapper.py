@@ -1,12 +1,16 @@
 from ..GenerationParameters import GenerationParameters, ControlImageType
 from ...models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 from ...StringUtils import mergeDicts
+from ...ImageUtils import pilToCv2
 from typing import Tuple, List
 from PIL import Image
 from dataclasses import dataclass
 import sys
 import random
 import torch
+
+import cv2
+from insightface.app import FaceAnalysis
 
 
 MAX_SEED = 4294967295
@@ -99,11 +103,25 @@ class DiffusersPipelineWrapper:
         diffusers_params['width'] = initimageparams.image.width
         diffusers_params['height'] = initimageparams.image.height
 
+
     def addIpAdapterParams(self, params:GenerationParameters, diffusers_params):
         ipadapterparams = params.getIpAdapterImage()
-        if(ipadapterparams is None or ipadapterparams.image is None):
+        if(ipadapterparams is None or ipadapterparams.image is None or ipadapterparams.modelConfig is None):
             raise ValueError("Must provide ipadapter image")
-        diffusers_params['ip_adapter_image'] = ipadapterparams.image.convert("RGB")
+        if(ipadapterparams.modelConfig.preprocess == "faceid"):
+            diffusers_params['image_embeds'] = self.preprocessFaceEmbeds(ipadapterparams.image)
+        else:
+            diffusers_params['ip_adapter_image'] = ipadapterparams.image.convert("RGB")
+
+
+    def preprocessFaceEmbeds(self, face_image):
+        faceanalysis = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+        faceanalysis.prepare(ctx_id=0, det_size=(640, 640))
+        image = pilToCv2(face_image)
+        faces = faceanalysis.get(image)
+        image_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
+        return image_embeds
+
 
     def addConditioningImageParams(self, params:GenerationParameters, diffusers_params):
         condscales = self.getConditioningScales(params)

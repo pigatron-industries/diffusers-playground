@@ -83,6 +83,7 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
                               generator=generator, **kwargs)
         return output, seed
 
+
     def add_embeddings(self, token, embeddings):
         self.add_embedding_to_text_encoder(token, embeddings[0], self.pipeline.tokenizer, self.pipeline.text_encoder)
         self.add_embedding_to_text_encoder(token, embeddings[1], self.pipeline.tokenizer_2, self.pipeline.text_encoder_2)
@@ -102,6 +103,7 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
         (True,      True,       False,      True):     StableDiffusionXLControlNetInpaintPipeline,
     }
 
+
     def __init__(self, params:GenerationParameters, device):
         cls = self.getPipelineClass(params)
         if(not self.features.controlnet and not self.features.t2iadapter):
@@ -115,15 +117,13 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
                 conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
                 super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
         if(self.features.ipadapter):
-            ipadapterparams = params.getIpAdapterImage()
-            if(ipadapterparams is None or ipadapterparams.model is None):
-                raise ValueError("Must provide ipadapter model")
-            ipadaptermodelname = self.splitModelName(ipadapterparams.model)
-            self.pipeline.load_ip_adapter(ipadaptermodelname.repository, subfolder=ipadaptermodelname.subfolder, weight_name=ipadaptermodelname.filename)
+            self.initIpAdapter(params)
+
 
     def getPipelineClass(self, params:GenerationParameters):
         self.features = self.getPipelineFeatures(params)
         return self.PIPELINE_MAP[(self.features.img2img, self.features.controlnet, self.features.t2iadapter, self.features.inpaint)]  
+
 
     def inference(self, params:GenerationParameters):
         diffusers_params = {}

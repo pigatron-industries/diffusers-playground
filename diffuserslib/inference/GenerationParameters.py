@@ -10,6 +10,7 @@ class ControlImageType:
     IMAGETYPE_INITIMAGE = "initimage"
     IMAGETYPE_MASKIMAGE = "maskimage"
     IMAGETYPE_IPADAPTER = "ipadapter"
+    IMAGETYPE_IPADAPTER_FACEID = "ipadapter_faceid"
     IMAGETYPE_CONTROLIMAGE = "controlimage"
 
 
@@ -114,6 +115,9 @@ class GenerationParameters:
     
     def getIpAdapterImage(self) -> ControlImageParameters|None:
         return self.getImage(ControlImageType.IMAGETYPE_IPADAPTER)
+    
+    def getIpAdapterFaceIdImage(self) -> ControlImageParameters|None:
+        return self.getImage(ControlImageType.IMAGETYPE_IPADAPTER_FACEID)
     
     def getControlImages(self) -> List[ControlImageParameters]:
         return self.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE)

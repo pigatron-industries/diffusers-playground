@@ -202,12 +202,24 @@ ipadapter:
       - id: h94/IP-Adapter/models/ip-adapter_sd15_light.safetensors
       - id: h94/IP-Adapter/models/ip-adapter-plus_sd15.safetensors
       - id: h94/IP-Adapter/models/ip-adapter-plus-face_sd15.safetensors
+      - id: h94/IP-Adapter-FaceID/ip-adapter-faceid_sd15.bin
+        preprocess: faceid
+      - id: h94/IP-Adapter-FaceID/ip-adapter-faceid-portrait_sd15.bin
+        preprocess: faceid
+      - id: h94/IP-Adapter-FaceID/ip-adapter-faceid-plus_sd15.bin
+        preprocess: faceid
+      - id: h94/IP-Adapter-FaceID/ip-adapter-faceid-plusv2_sd15.bin
+        preprocess: faceid
   - base: sdxl_1_0
     models:
       - id: h94/IP-Adapter/sdxl_models/ip-adapter_sdxl.safetensors
       - id: h94/IP-Adapter/sdxl_models/ip-adapter_sdxl_vit-h.safetensors
       - id: h94/IP-Adapter/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors
       - id: h94/IP-Adapter/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors
+      - id: h94/IP-Adapter-FaceID/ip-adapter-faceid_sdxl.bin
+        preprocess: faceid
+      - id: h94/IP-Adapter-FaceID/ip-adapter-faceid-plusv2_sdxl.bin
+        preprocess: faceid
 
 
 animatediff:

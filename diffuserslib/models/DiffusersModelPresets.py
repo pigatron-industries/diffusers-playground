@@ -35,6 +35,7 @@ class DiffusersModel:
     stylephrase: str|None = None
     vae: str|None = None
     autocast: bool = True
+    preprocess: str|None = None
     location: str = 'hf'
     modelpath: str|None = None
     data:Dict|None = None
@@ -79,8 +80,8 @@ class DiffusersModelList:
                     else:
                         autocast = False
                     self.addModel(modelid=modeldata['id'], base=basedata['base'], modeltype = key, revision=modeldata.get('revision'), 
-                                  stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), autocast=autocast, 
-                                  pipelinetypes = basedata['pipelines'].copy() if 'pipelines' in basedata else {}, data=modeldata)
+                                  stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), preprocess=modeldata.get('preprocess'),
+                                  autocast=autocast, pipelinetypes = basedata['pipelines'].copy() if 'pipelines' in basedata else {}, data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
@@ -88,12 +89,12 @@ class DiffusersModelList:
         for pipelinetype in pipelinetypes:
             self.basemodels[base].pipelinetypes[pipelinetype] = pipelinetypes[pipelinetype]
 
-    def addModel(self, modelid: str, base: str, modeltype: str, revision: str|None=None, stylephrase:str|None=None, vae=None, autocast=True, location='hf', modelpath=None, 
-                 pipelinetypes:Dict[str, str]|None=None, data=None):
+    def addModel(self, modelid: str, base: str, modeltype: str, revision: str|None=None, stylephrase:str|None=None, vae=None, 
+                 preprocess:str|None=None, autocast=True, location='hf', modelpath=None, pipelinetypes:Dict[str, str]|None=None, data=None):
         if pipelinetypes is None:
             pipelinetypes = self.basemodels[base].pipelinetypes
         self.models[modelid] = DiffusersModel(modelid=modelid, base=base, modeltype=modeltype, pipelinetypes=pipelinetypes, revision=revision, 
-                                              stylephrase=stylephrase, vae=vae, autocast=autocast, location=location, modelpath=modelpath, data=data)
+                                              stylephrase=stylephrase, vae=vae, autocast=autocast, preprocess=preprocess, location=location, modelpath=modelpath, data=data)
 
     def addModels(self, models):
         self.models.update(models.models)
