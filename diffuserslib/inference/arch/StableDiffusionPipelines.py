@@ -87,7 +87,8 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             raise ValueError("Must provide ipadapter model")
         ipadaptermodelname = self.splitModelName(ipadapterparams.model)
         if(self.features.ipadapter_faceid):
-            # experminetal faceid adapter community pipeline
+            # experimental faceid adapter community pipeline
+            self.pipeline.disable_attention_slicing()
             self.pipeline.load_ip_adapter_face_id(ipadaptermodelname.repository, subfolder=ipadaptermodelname.subfolder, weight_name=ipadaptermodelname.filename)
         else:
             self.pipeline.load_ip_adapter(ipadaptermodelname.repository, subfolder=ipadaptermodelname.subfolder, weight_name=ipadaptermodelname.filename)

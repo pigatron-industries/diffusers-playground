@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import sys
 import random
 import torch
+import numpy as np
 
 import cv2
 from insightface.app import FaceAnalysis
@@ -110,7 +111,7 @@ class DiffusersPipelineWrapper:
         if(ipadapterparams is None or ipadapterparams.image is None or ipadapterparams.modelConfig is None):
             raise ValueError("Must provide ipadapter image")
         if(ipadapterparams.modelConfig.preprocess == "faceid"):
-            diffusers_params['image_embeds'] = self.preprocessFaceEmbeds(ipadapterparams.image)
+            diffusers_params['image_embeds'] = self.preprocessFaceEmbeds(ipadapterparams.image.convert("RGB"))
         else:
             diffusers_params['ip_adapter_image'] = ipadapterparams.image.convert("RGB")
 
@@ -118,7 +119,7 @@ class DiffusersPipelineWrapper:
     def preprocessFaceEmbeds(self, face_image):
         faceanalysis = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
         faceanalysis.prepare(ctx_id=0, det_size=(640, 640))
-        image = pilToCv2(face_image)
+        image = np.asarray(face_image)
         faces = faceanalysis.get(image)
         image_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
         return image_embeds
