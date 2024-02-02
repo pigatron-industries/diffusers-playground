@@ -22,6 +22,7 @@ class PipelineFeatures:
     t2iadapter = False
     inpaint = False
     ipadapter = False
+    ipadapter_faceid = False
 
 
 @dataclass
@@ -150,6 +151,8 @@ class DiffusersPipelineWrapper:
             elif(conditioningimage.modelConfig is not None):
                 if(conditioningimage.modelConfig.modeltype == DiffusersModelType.ipadapter):
                     features.ipadapter = True
+                    if(conditioningimage.modelConfig.preprocess == "faceid"):
+                        features.ipadapter_faceid = True    
                 elif(conditioningimage.modelConfig.modeltype == DiffusersModelType.controlnet):
                     features.controlnet = True
                 elif(conditioningimage.modelConfig.modeltype == DiffusersModelType.t2iadapter):

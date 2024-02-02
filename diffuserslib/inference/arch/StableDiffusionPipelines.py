@@ -44,6 +44,9 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
+        if(type(cls) is str):
+            kwargs['custom_pipeline'] = cls
+            cls = DiffusionPipeline
         args = self.createPipelineArgs(preset, **kwargs)
         if (preset.modelpath.endswith('.safetensors') or preset.modelpath.endswith('.ckpt')):
             self.pipeline = cls.from_single_file(preset.modelpath, load_safety_checker=self.safety_checker, **args).to(self.device)
@@ -83,7 +86,11 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         if(ipadapterparams is None or ipadapterparams.model is None):
             raise ValueError("Must provide ipadapter model")
         ipadaptermodelname = self.splitModelName(ipadapterparams.model)
-        self.pipeline.load_ip_adapter(ipadaptermodelname.repository, subfolder=ipadaptermodelname.subfolder, weight_name=ipadaptermodelname.filename)
+        if(self.features.ipadapter_faceid):
+            # experminetal faceid adapter community pipeline
+            self.pipeline.load_ip_adapter_face_id(ipadaptermodelname.repository, subfolder=ipadaptermodelname.subfolder, weight_name=ipadaptermodelname.filename)
+        else:
+            self.pipeline.load_ip_adapter(ipadaptermodelname.repository, subfolder=ipadaptermodelname.subfolder, weight_name=ipadaptermodelname.filename)
 
     
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
@@ -156,7 +163,10 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
 
     def getPipelineClass(self, params:GenerationParameters):
         self.features = self.getPipelineFeatures(params)
-        return self.PIPELINE_MAP[(self.features.img2img, self.features.controlnet, self.features.t2iadapter, self.features.inpaint)]
+        if(self.features.ipadapter_faceid):
+            return "ip_adapter_face_id" # Experimental face id adapter community pipeline
+        else:
+            return self.PIPELINE_MAP[(self.features.img2img, self.features.controlnet, self.features.t2iadapter, self.features.inpaint)]
 
 
     def inference(self, params:GenerationParameters):
