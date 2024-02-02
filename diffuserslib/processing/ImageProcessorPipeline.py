@@ -55,12 +55,12 @@ class ImageProcessorPipeline():
         return self
 
 
-    def __call__(self):
+    def __call__(self) -> Image.Image|None:
         self.initcontext = self.getInitImage()
         for task in self.tasks:
             inputImages = self.getInputImages(task)
             task(inputImages)
-        return self.getLastOutput()
+        return self.getLastOutput().image
 
 
     def getInitImage(self) -> ImageContext:
