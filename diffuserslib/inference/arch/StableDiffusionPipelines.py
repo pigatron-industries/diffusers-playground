@@ -35,7 +35,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdv1-5"
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
-        print(f"creating pipeline {cls.__name__}")
+        print(f"creating pipeline {cls.__name__ if type(cls) is type else cls}")
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
