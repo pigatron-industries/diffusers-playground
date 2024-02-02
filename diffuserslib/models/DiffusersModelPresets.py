@@ -30,6 +30,7 @@ class DiffusersModel:
     modelid: Union[str, List[str]]
     base: str
     modeltype: str
+    modelpath: str
     pipelinetypes: Dict[str, str]
     revision: str|None = None
     stylephrase: str|None = None
@@ -37,7 +38,6 @@ class DiffusersModel:
     autocast: bool = True
     preprocess: str|None = None
     location: str = 'hf'
-    modelpath: str|None = None
     data:Dict|None = None
 
     def __post_init__(self):

@@ -18,7 +18,7 @@ from diffusers import ( # Pipelines
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler)
-from transformers import CLIPTextModel
+from transformers import CLIPVisionModelWithProjection
 import torch
 import sys
 import numpy as np
@@ -36,6 +36,8 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         print(f"creating pipeline {cls.__name__ if type(cls) is type else cls}")
+        if(params.modelConfig is None):
+            raise ValueError("Must provide modelConfig")
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
@@ -43,33 +45,33 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         super().__init__(params, inferencedevice)
 
 
-    def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
+    def createPipeline(self, modelConfig:DiffusersModel, cls, **kwargs):
         if(type(cls) is str):
             kwargs['custom_pipeline'] = cls
             cls = DiffusionPipeline
-        args = self.createPipelineArgs(preset, **kwargs)
-        if (preset.modelpath.endswith('.safetensors') or preset.modelpath.endswith('.ckpt')):
-            self.pipeline = cls.from_single_file(preset.modelpath, load_safety_checker=self.safety_checker, **args).to(self.device)
+        args = self.createPipelineArgs(modelConfig, **kwargs)
+        if (modelConfig.modelpath.endswith('.safetensors') or modelConfig.modelpath.endswith('.ckpt')):
+            self.pipeline = cls.from_single_file(modelConfig.modelpath, load_safety_checker=self.safety_checker, **args).to(self.device)
         else:
             # CLIP skip implementation, but breaks lora loading
             # text_encoder = CLIPTextModel.from_pretrained(preset.modelpath, subfolder="text_encoder", num_hidden_layers=11)
             # self.pipeline = cls.from_pretrained(preset.modelpath, text_encoder=text_encoder, **args).to(self.device)
-            self.pipeline = cls.from_pretrained(preset.modelpath, **args).to(self.device)
+            self.pipeline = cls.from_pretrained(modelConfig.modelpath, **args).to(self.device)
             
         self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
         # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
 
 
-    def createPipelineArgs(self, preset:DiffusersModel, **kwargs):
+    def createPipelineArgs(self, modelConfig:DiffusersModel, **kwargs):
         if (not self.safety_checker):
             kwargs['safety_checker'] = None
-        if(preset.revision is not None):
-            kwargs['revision'] = preset.revision
-            if(preset.revision == 'fp16'):
+        if(modelConfig.revision is not None):
+            kwargs['revision'] = modelConfig.revision
+            if(modelConfig.revision == 'fp16'):
                 kwargs['torch_dtype'] = torch.float16
-        if(preset.vae is not None):
-            kwargs['vae'] = AutoencoderKL.from_pretrained(preset.vae, torch_dtype=kwargs['torch_dtype'] if 'torch_dtype' in kwargs else None, 
+        if(modelConfig.vae is not None):
+            kwargs['vae'] = AutoencoderKL.from_pretrained(modelConfig.vae, torch_dtype=kwargs['torch_dtype'] if 'torch_dtype' in kwargs else None, 
                                                           revision=kwargs['revision'] if 'revision' in kwargs else None)
         return kwargs
     
@@ -148,16 +150,19 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
 
     def __init__(self, params:GenerationParameters, device):
         cls = self.getPipelineClass(params)
-        if(not self.features.controlnet and not self.features.t2iadapter):
-            super().__init__(params=params, device=device, cls=cls)
-        else:
+        args = {}
+        if(self.features.t2iadapter):
             controlmodelids = self.getConditioningModels(params)
-            if(self.features.t2iadapter):
-                conditioningmodels = self.createConditioningModels(controlmodelids, T2IAdapter)
-                super().__init__(params=params, device=device, cls=cls, adapter=conditioningmodels)
-            elif(self.features.controlnet):
-                conditioningmodels = self.createConditioningModels(controlmodelids, ControlNetModel)
-                super().__init__(params=params, device=device, cls=cls, controlnet=conditioningmodels)
+            args["adapter"] = self.createConditioningModels(controlmodelids, T2IAdapter)
+        if(self.features.controlnet):
+            controlmodelids = self.getConditioningModels(params)
+            args["controlnet"] = self.createConditioningModels(controlmodelids, ControlNetModel)
+        if(self.features.ipadapter):
+            # TODO add to model config
+            args["image_encoder"] = CLIPVisionModelWithProjection.from_pretrained("h94/IP-Adapter", subfolder="models/image_encoder")
+
+        super().__init__(params=params, device=device, cls=cls, **args)
+
         if(self.features.ipadapter):
             self.initIpAdapter(params)
 
