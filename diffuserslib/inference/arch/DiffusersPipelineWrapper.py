@@ -112,8 +112,7 @@ class DiffusersPipelineWrapper:
     def addPipelineParamsIpAdapter(self, params:GenerationParameters, pipeline_params):
         pipeline_params['image_encoder'] = CLIPVisionModelWithProjection.from_pretrained(
                                                 "h94/IP-Adapter", 
-                                                subfolder="models/image_encoder",
-                                                torch_dtype=torch.float16,
+                                                subfolder="models/image_encoder"
                                             )
         return pipeline_params
     
