@@ -55,6 +55,7 @@ class InitImageInterface:
         
     def hide(self):
         self.model_dropdown.layout.display = 'none'
+        self.scale_slider.layout.display = 'none'
         self.generation_dropdown.layout.display = 'none'
         self.input_source_dropdown.layout.display = 'none'
         self.input_select_dropdown.layout.display = 'none'
@@ -62,6 +63,7 @@ class InitImageInterface:
 
     def show(self):
         self.model_dropdown.layout.display = 'block'
+        self.scale_slider.layout.display = 'block'
         self.generation_dropdown.layout.display = 'block'
         self.input_source_dropdown.layout.display = 'block'
         self.input_select_dropdown.layout.display = 'block'
