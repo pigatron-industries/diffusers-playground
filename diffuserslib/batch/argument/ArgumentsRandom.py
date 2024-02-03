@@ -64,7 +64,7 @@ class RandomImageArgument(Argument):
     @classmethod
     def fromDirectory(cls, directory, recursive=False):
         if os.path.isdir(directory):
-            filelist = getFileList(directory, patterns = ["*.jpg", "*.jpeg", "*.png"], recursive = recursive)
+            filelist = getFileList(directory, patterns = ("*.jpg", "*.jpeg", "*.png"), recursive = recursive)
             print(f'Found {len(filelist)} images in {directory}')
         else:
             filelist = directory
