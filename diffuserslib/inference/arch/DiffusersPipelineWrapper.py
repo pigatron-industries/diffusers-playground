@@ -151,10 +151,13 @@ class DiffusersPipelineWrapper:
     def addInferenceParamsIpAdapter(self, params:GenerationParameters, diffusers_params):
         ipadapterparams = params.getConditioningParamsByModelType(DiffusersModelType.ipadapter)
         images = []
+        scales = []
         for ipadapterparam in ipadapterparams:
             if(ipadapterparam.image is not None):
                 images.append(ipadapterparam.image.convert("RGB"))
+                scales.append(ipadapterparam.condscale)
         diffusers_params['ip_adapter_image'] = images
+        self.pipeline.set_ip_adapter_scale(scales)
         # if(ipadapterparams.modelConfig.preprocess == "faceid"):
         #     diffusers_params['image_embeds'] = self.preprocessFaceEmbeds(ipadapterparams.image.convert("RGB"))
         # else:
