@@ -20,6 +20,8 @@ from collections import OrderedDict
 from typing import List, Dict, Callable
 from functools import partial
 from IPython.display import display, clear_output
+from contextlib import suppress 
+import fuckit
 from PIL import Image
 
 
@@ -131,7 +133,6 @@ class BatchNotebookInterface:
         self.height_slider = intSlider(self, label='Height:', value=768, min=256, max=1536, step=64)
         self.scale_slider = floatSlider(self, label='Guidance:', value=9, min=1, max=20, step=0.1)
         self.steps_slider = intSlider(self, label='Steps:', value=40, min=5, max=100, step=5)
-        self.strength_slider = floatSlider(self, label='Strength:', value=0.5, min=0, max=1, step=0.01)
         self.scheduler_dropdown = dropdown(self, label="Sampler:", options=['DDIMScheduler', 'DPMSolverMultistepScheduler', 
                                                                            'EulerAncestralDiscreteScheduler', 'EulerDiscreteScheduler', 'LCMScheduler',
                                                                            'LMSDiscreteScheduler', 'UniPCMultistepScheduler'], value="EulerDiscreteScheduler")
@@ -170,7 +171,6 @@ class BatchNotebookInterface:
                 self.height_slider, 
                 self.scale_slider,
                 self.steps_slider,
-                self.strength_slider,
                 self.scheduler_dropdown,
                 self.seed_text,
                 self.batchsize_slider,
@@ -261,6 +261,7 @@ class BatchNotebookInterface:
 
             if(initimage_w.model_dropdown.value == INIT_IMAGE):
                 params['initimage'] = pipeline
+                params['strength'] = initimage_w.scale_slider.value
             else:
                 if('controlimage' not in params):
                     params['controlimage'] = []
@@ -285,7 +286,6 @@ class BatchNotebookInterface:
             params['loranames'].append(lora_w.lora_dropdown.value)
             params['loraweights'].append(lora_w.loraweight_text.value)
 
-        params['strength'] = self.strength_slider.value
         params['steps'] = self.steps_slider.value
 
         if(self.seed_text.value > 0):
@@ -296,41 +296,38 @@ class BatchNotebookInterface:
         return params
     
 
+    @fuckit
     def setParams(self, params):
-        try:
-            self.basemodel_dropdown.value = params.get('basemodel', 'sd_1_5')
+        self.basemodel_dropdown.value = params.get('basemodel', 'sd_1_5')
 
-            self.initimages_num.value = params.get('initimages_num', 0)
-            for i, initimage_w in enumerate(self.initimage_widgets):
-                initimage_w.model_dropdown.value = params.get(f'initimage{i}_model', None)
-                initimage_w.generation_dropdown.value = params.get(f'initimage{i}_generation', None)
-                initimage_w.input_source_dropdown.value = params.get(f'initimage{i}_input_source', None)
-                initimage_w.input_select_dropdown.value = params.get(f'initimage{i}_input_select', None)
-                initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
+        self.initimages_num.value = params.get('initimages_num', 0)
+        for i, initimage_w in enumerate(self.initimage_widgets):
+            initimage_w.model_dropdown.value = params.get(f'initimage{i}_model', None)
+            initimage_w.scale_slider.value = params.get(f'initimage{i}_weight', 1)
+            initimage_w.generation_dropdown.value = params.get(f'initimage{i}_generation', None)
+            initimage_w.input_source_dropdown.value = params.get(f'initimage{i}_input_source', None)
+            initimage_w.input_select_dropdown.value = params.get(f'initimage{i}_input_select', None)
+            initimage_w.preprocessor_dropdown.value = params.get(f'initimage{i}_preprocessor', None)
 
-            model = params.get('models', None)
-            self.model_dropdown.value = model[0]
-            if (len(model) > 1):
-                self.mergemodel_dropdown.value = model[1]
-            self.mergeweight_slider.value = params.get('model_weight', 1)
+        model = params.get('models', None)
+        self.model_dropdown.value = model[0]
+        if (len(model) > 1):
+            self.mergemodel_dropdown.value = model[1]
+        self.mergeweight_slider.value = params.get('model_weight', 1)
 
-            self.lora_num.value = params.get('lora_num', 0)
-            for i, lora_w in enumerate(self.lora_widgets):
-                lora_w.lora_dropdown.value = params.get(f'lora{i}_lora', None)
-                lora_w.loraweight_text.value = params.get(f'lora{i}_loraweight', 1)
+        self.lora_num.value = params.get('lora_num', 0)
+        for i, lora_w in enumerate(self.lora_widgets):
+            lora_w.lora_dropdown.value = params.get(f'lora{i}_lora', None)
+            lora_w.loraweight_text.value = params.get(f'lora{i}_loraweight', 1)
 
-            self.prompt_text.value = params.get('init_prompt', '')
-            self.negprompt_text.value = params.get('negprompt', '')
-            self.width_slider.value = params.get('width', 512)
-            self.height_slider.value = params.get('height', 512)
-            self.scale_slider.value = params.get('scale', 9.0)
-            self.steps_slider.value = params.get('steps', 40)
-            self.strength_slider.value = params.get('strength', 0.5)
-            self.scheduler_dropdown.value = params.get('scheduler', 'EulerDiscreteScheduler')
-            self.batchsize_slider.value = params.get('batch', 10)
-        except Exception as e:
-            print(e)
-            print("Error loading params")
+        self.prompt_text.value = params.get('init_prompt', '')
+        self.negprompt_text.value = params.get('negprompt', '')
+        self.width_slider.value = params.get('width', 512)
+        self.height_slider.value = params.get('height', 512)
+        self.scale_slider.value = params.get('scale', 9.0)
+        self.steps_slider.value = params.get('steps', 40)
+        self.scheduler_dropdown.value = params.get('scheduler', 'EulerDiscreteScheduler')
+        self.batchsize_slider.value = params.get('batch', 10)
         self.updateWidgets()
 
 

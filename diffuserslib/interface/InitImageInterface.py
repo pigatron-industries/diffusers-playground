@@ -17,6 +17,7 @@ RANDOM_IMAGE = "Random"
 
 class InitImageInterface:
     def __init__(self, interface, firstImage = False):
+        self.visible = False
         self.interface = interface
         self.firstImage = firstImage
         generation_pipeline_options = list(interface.generation_pipelines.keys())
@@ -52,8 +53,10 @@ class InitImageInterface:
             self.input_select_dropdown.options = [RANDOM_IMAGE] + [os.path.basename(x) for x in filepaths]
         else:
             self.input_select_dropdown.options = []
+
         
     def hide(self):
+        self.visible = True
         self.model_dropdown.layout.display = 'none'
         self.scale_slider.layout.display = 'none'
         self.generation_dropdown.layout.display = 'none'
@@ -62,12 +65,19 @@ class InitImageInterface:
         self.preprocessor_dropdown.layout.display = 'none'
 
     def show(self):
+        self.visible = False
         self.model_dropdown.layout.display = 'flex'
         self.scale_slider.layout.display = 'flex'
         self.generation_dropdown.layout.display = 'flex'
-        self.input_source_dropdown.layout.display = 'flex'
-        self.input_select_dropdown.layout.display = 'flex'
         self.preprocessor_dropdown.layout.display = 'flex'
+        if (self.generation_dropdown.value is not None):
+            pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
+            if(pipeline.hasPlaceholder("image")):
+                self.input_source_dropdown.layout.display = 'flex'
+                self.input_select_dropdown.layout.display = 'flex'
+            else:
+                self.input_source_dropdown.layout.display = 'none'
+                self.input_select_dropdown.layout.display = 'none'
 
 
     def getInitImage(self):
