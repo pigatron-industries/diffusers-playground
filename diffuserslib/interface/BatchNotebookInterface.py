@@ -158,6 +158,7 @@ class BatchNotebookInterface:
                 self.model_dropdown, 
                 self.mergemodel_dropdown,
                 self.mergeweight_slider,
+                widgets.HTML("<span>&nbsp;</span>"),
                 self.lora_num)
         for lora_w in self.lora_widgets:
             lora_w.display()

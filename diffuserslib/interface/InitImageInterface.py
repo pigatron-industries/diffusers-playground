@@ -62,12 +62,12 @@ class InitImageInterface:
         self.preprocessor_dropdown.layout.display = 'none'
 
     def show(self):
-        self.model_dropdown.layout.display = 'block'
-        self.scale_slider.layout.display = 'block'
-        self.generation_dropdown.layout.display = 'block'
-        self.input_source_dropdown.layout.display = 'block'
-        self.input_select_dropdown.layout.display = 'block'
-        self.preprocessor_dropdown.layout.display = 'block'
+        self.model_dropdown.layout.display = 'flex'
+        self.scale_slider.layout.display = 'flex'
+        self.generation_dropdown.layout.display = 'flex'
+        self.input_source_dropdown.layout.display = 'flex'
+        self.input_select_dropdown.layout.display = 'flex'
+        self.preprocessor_dropdown.layout.display = 'flex'
 
 
     def getInitImage(self):
