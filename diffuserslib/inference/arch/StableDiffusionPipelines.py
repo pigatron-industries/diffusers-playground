@@ -97,7 +97,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         negative_conditioning = compel(negative_prompt)
         # [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
 
-        if(self.params.modelConfig.autocast):
+        if(self.initparams.modelConfig.autocast):
             with torch.autocast(self.inferencedevice):
                 output = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs)
         else:
