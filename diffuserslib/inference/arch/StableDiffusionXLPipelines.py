@@ -26,8 +26,8 @@ class NoWatermark:
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
 
-    def __init__(self, cls, params:GenerationParameters, device, **kwargs):
-        super().__init__(cls=cls, params=params, device=device, **kwargs)
+    def __init__(self, cls, params:GenerationParameters, device):
+        super().__init__(cls=cls, params=params, device=device)
         self.pipeline.watermark = NoWatermark()
         if(params.scheduler == "LCMScheduler"):
             self.pipeline.load_lora_weights(self.LCM_LORA_MODEL)
@@ -40,7 +40,7 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
             self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
 
-        if(self.params.scheduler == "LCMScheduler"):
+        if(self.initparams.scheduler == "LCMScheduler"):
             kwargs['guidance_scale'] = 0
 
         if "|" in prompt:
@@ -106,19 +106,10 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
 
 
     def __init__(self, params:GenerationParameters, device):
+        self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
-        args = {}
-        if(self.features.t2iadapter):
-            controlmodelids = self.getConditioningModels(params)
-            args["adapter"] = self.createConditioningModels(controlmodelids, T2IAdapter)
-        if(self.features.controlnet):
-            controlmodelids = self.getConditioningModels(params)
-            args["controlnet"] = self.createConditioningModels(controlmodelids, ControlNetModel)
-        if(self.features.ipadapter):
-            # TODO add to model config
-            args["image_encoder"] = CLIPVisionModelWithProjection.from_pretrained("h94/IP-Adapter", subfolder="models/image_encoder")
 
-        super().__init__(params=params, device=device, cls=cls, **args)
+        super().__init__(params=params, device=device, cls=cls)
 
         if(self.features.ipadapter):
             self.initIpAdapter(params)
@@ -129,18 +120,32 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
         return self.PIPELINE_MAP[(self.features.img2img, self.features.controlnet, self.features.t2iadapter, self.features.inpaint)]  
 
 
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        self.addPipelineParamsCommon(params, pipeline_params)
+        if(self.features.controlnet):
+            self.addPipelineParamsControlNet(params, pipeline_params)
+        if(self.features.t2iadapter):
+            self.addPipelineParamsT2IAdapter(params, pipeline_params)
+        if(self.features.ipadapter):
+            self.addPipelineParamsIpAdapter(params, pipeline_params)
+        return pipeline_params
+
+
     def inference(self, params:GenerationParameters):
         diffusers_params = {}
-        self.addCommonParams(params, diffusers_params)
+        self.addInferenceParamsCommon(params, diffusers_params)
         if(not self.features.img2img):
-            self.addTxt2ImgParams(params, diffusers_params)
+            self.addInferenceParamsTxt2Img(params, diffusers_params)
         if(self.features.img2img):
-            self.addImg2ImgParams(params, diffusers_params)
-        if(self.features.controlnet or self.features.t2iadapter):
-            self.addConditioningImageParams(params, diffusers_params)
+            self.addInferenceParamsImg2Img(params, diffusers_params)
+        if(self.features.controlnet):
+            self.addInferenceParamsControlNet(params, diffusers_params)
+        if(self.features.t2iadapter):
+            self.addInferenceParamsT2IAdapter(params, diffusers_params)
         if(self.features.ipadapter):
-            self.addIpAdapterParams(params, diffusers_params)
+            self.addInferenceParamsIpAdapter(params, diffusers_params)
         if(self.features.inpaint):
-            self.addInpaintParams(params, diffusers_params)
+            self.addInferenceParamsInpaint(params, diffusers_params)
         output, seed = super().diffusers_inference(**diffusers_params)
         return output.images[0], seed

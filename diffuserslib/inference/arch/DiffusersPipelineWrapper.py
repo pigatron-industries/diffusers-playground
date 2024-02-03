@@ -5,6 +5,8 @@ from ...ImageUtils import pilToCv2
 from typing import Tuple, List
 from PIL import Image
 from dataclasses import dataclass
+from diffusers import T2IAdapter, ControlNetModel, AutoencoderKL
+from transformers import CLIPVisionModelWithProjection
 import sys
 import random
 import torch
@@ -35,9 +37,8 @@ class SplitModelName:
 
 class DiffusersPipelineWrapper:
     def __init__(self, params:GenerationParameters, inferencedevice:str):
-        self.params = params
+        self.initparams = params
         self.inferencedevice = inferencedevice
-        self.features = self.getPipelineFeatures(params)
 
     def inference(self, params:GenerationParameters) -> Tuple[Image.Image, int]: # type: ignore
         pass
@@ -48,23 +49,23 @@ class DiffusersPipelineWrapper:
         return torch.Generator(device = self.inferencedevice).manual_seed(seed), seed
     
     def paramsMatch(self, params:GenerationParameters) -> bool:
-        match = (self.params.generationtype == self.params.generationtype and 
-                 len(self.params.models) == len(params.models) and
-                 len(self.params.loras) == len(params.loras) and
-                 len(self.params.controlimages) == len(params.controlimages))
+        match = (self.initparams.generationtype == self.initparams.generationtype and 
+                 len(self.initparams.models) == len(params.models) and
+                 len(self.initparams.loras) == len(params.loras) and
+                 len(self.initparams.controlimages) == len(params.controlimages))
         if(not match):
            return False
 
-        for i in range(len(self.params.models)):
-            if(self.params.models[i].name != params.models[i].name or self.params.models[i].weight != params.models[i].weight):
+        for i in range(len(self.initparams.models)):
+            if(self.initparams.models[i].name != params.models[i].name or self.initparams.models[i].weight != params.models[i].weight):
                 return False
 
-        for i in range(len(self.params.loras)):
-            if(self.params.loras[i].name != params.loras[i].name or self.params.loras[i].weight != params.loras[i].weight):
+        for i in range(len(self.initparams.loras)):
+            if(self.initparams.loras[i].name != params.loras[i].name or self.initparams.loras[i].weight != params.loras[i].weight):
                 return False
             
-        for i in range(len(self.params.controlimages)):
-            if(self.params.controlimages[i].type != params.controlimages[i].type or self.params.controlimages[i].model != params.controlimages[i].model):
+        for i in range(len(self.initparams.controlimages)):
+            if(self.initparams.controlimages[i].type != params.controlimages[i].type or self.initparams.controlimages[i].model != params.controlimages[i].model):
                 return False
             
         return True
@@ -73,27 +74,69 @@ class DiffusersPipelineWrapper:
         raise ValueError(f"add_embeddings not implemented for pipeline")
     
 
-    # Functions for adding inference parameters
 
-    def addCommonParams(self, params:GenerationParameters, diffusers_params):
+    ### Functions for adding pipeline and inference parameters - TODO: move to common diffusers functions mixin
+
+    def addPipelineParamsCommon(self, params:GenerationParameters, pipeline_params):
+        if (params.modelConfig is None):
+            raise ValueError("Must provide modelConfig")
+        modelConfig = params.modelConfig
+        if (not params.safetychecker):
+            pipeline_params['safety_checker'] = None
+        if(modelConfig.revision is not None):
+            pipeline_params['revision'] = modelConfig.revision
+            if(modelConfig.revision == 'fp16'):
+                pipeline_params['torch_dtype'] = torch.float16
+        if(modelConfig.vae is not None):
+            pipeline_params['vae'] = AutoencoderKL.from_pretrained(modelConfig.vae, 
+                                                        torch_dtype=pipeline_params['torch_dtype'] if 'torch_dtype' in pipeline_params else None, 
+                                                        revision=pipeline_params['revision'] if 'revision' in pipeline_params else None)
+        return pipeline_params
+    
+    def addPipelineParamsControlNet(self, params:GenerationParameters, pipeline_params):
+        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
+        controlnet = []
+        for controlnetparam in controlnetparams:
+            controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model))
+        pipeline_params['controlnet'] = controlnet
+        return pipeline_params
+    
+    def addPipelineParamsT2IAdapter(self, params:GenerationParameters, pipeline_params):
+        t2iadapterparams = params.getConditioningParamsByModelType(DiffusersModelType.t2iadapter)
+        t2iadapter = []
+        for t2iadapterparam in t2iadapterparams:
+            t2iadapter.append(T2IAdapter.from_pretrained(t2iadapterparam.model))
+        pipeline_params['adapter'] = t2iadapter
+        return pipeline_params
+    
+    def addPipelineParamsIpAdapter(self, params:GenerationParameters, pipeline_params):
+        pipeline_params['image_encoder'] = CLIPVisionModelWithProjection.from_pretrained(
+                                                "h94/IP-Adapter", 
+                                                subfolder="models/image_encoder",
+                                                torch_dtype=torch.float16,
+                                            )
+        return pipeline_params
+    
+
+    def addInferenceParamsCommon(self, params:GenerationParameters, diffusers_params):
         diffusers_params['prompt'] = params.prompt
         diffusers_params['negative_prompt'] = params.negprompt
         diffusers_params['seed'] = params.seed
         diffusers_params['guidance_scale'] = params.cfgscale
         diffusers_params['scheduler'] = params.scheduler
 
-    def addTxt2ImgParams(self, params:GenerationParameters, diffusers_params):
+    def addInferenceParamsTxt2Img(self, params:GenerationParameters, diffusers_params):
         diffusers_params['width'] = params.width
         diffusers_params['height'] = params.height
         diffusers_params['num_inference_steps'] = params.steps
 
-    def addImg2ImgParams(self, params:GenerationParameters, diffusers_params):
+    def addInferenceParamsImg2Img(self, params:GenerationParameters, diffusers_params):
         initimage = params.getInitImage()
         if(initimage is not None and initimage.image is not None):
             diffusers_params['image'] = initimage.image.convert("RGB")
             diffusers_params['strength'] = params.strength
 
-    def addInpaintParams(self, params:GenerationParameters, diffusers_params):
+    def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
         maskimageparams = params.getMaskImage()
         if(initimageparams is None or maskimageparams is None or initimageparams.image is None or maskimageparams.image is None):
@@ -106,14 +149,16 @@ class DiffusersPipelineWrapper:
         diffusers_params['height'] = initimageparams.image.height
 
 
-    def addIpAdapterParams(self, params:GenerationParameters, diffusers_params):
-        ipadapterparams = params.getIpAdapterImage()
-        if(ipadapterparams is None or ipadapterparams.image is None or ipadapterparams.modelConfig is None):
-            raise ValueError("Must provide ipadapter image")
-        if(ipadapterparams.modelConfig.preprocess == "faceid"):
-            diffusers_params['image_embeds'] = self.preprocessFaceEmbeds(ipadapterparams.image.convert("RGB"))
-        else:
-            diffusers_params['ip_adapter_image'] = ipadapterparams.image.convert("RGB")
+    def addInferenceParamsIpAdapter(self, params:GenerationParameters, diffusers_params):
+        ipadapterparams = params.getConditioningParamsByModelType(DiffusersModelType.ipadapter)
+        images = []
+        for ipadapterparam in ipadapterparams:
+            if(ipadapterparam.image is not None):
+                images.append(ipadapterparam.image.convert("RGB"))
+        diffusers_params['ip_adapter_image'] = images
+        # if(ipadapterparams.modelConfig.preprocess == "faceid"):
+        #     diffusers_params['image_embeds'] = self.preprocessFaceEmbeds(ipadapterparams.image.convert("RGB"))
+        # else:
 
 
     def preprocessFaceEmbeds(self, face_image):
@@ -125,19 +170,28 @@ class DiffusersPipelineWrapper:
         return image_embeds
 
 
-    def addConditioningImageParams(self, params:GenerationParameters, diffusers_params):
-        condscales = self.getConditioningScales(params)
-        conditioningimages = self.getConditioningImages(params)
-        diffusers_params['width'] = conditioningimages[0].width
-        diffusers_params['height'] = conditioningimages[0].height
-        if(self.features.img2img):
-            diffusers_params['control_image'] = conditioningimages
-        else:
-            diffusers_params['image'] = conditioningimages
-        if(self.features.controlnet):
-            diffusers_params['controlnet_conditioning_scale'] = condscales
-        else:
-            diffusers_params['adapter_conditioning_scale'] = condscales
+    def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
+        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
+        images = []
+        scales = []
+        for controlnetparam in controlnetparams:
+            if(controlnetparam.image is not None):
+                images.append(controlnetparam.image.convert("RGB"))
+                scales.append(controlnetparam.condscale)
+        diffusers_params['control_image' if self.features.img2img else 'image'] = images
+        diffusers_params['controlnet_conditioning_scale'] = scales
+
+
+    def addInferenceParamsT2IAdapter(self, params:GenerationParameters, diffusers_params):
+        t2iadapterparams = params.getConditioningParamsByModelType(DiffusersModelType.t2iadapter)
+        images = []
+        scales = []
+        for t2iadapterparam in t2iadapterparams:
+            if(t2iadapterparam.image is not None):
+                images.append(t2iadapterparam.image.convert("RGB"))
+                scales.append(t2iadapterparam.condscale)
+        diffusers_params['image'] = images
+        diffusers_params['adapter_conditioning_scale'] = scales
 
 
     # Useful functions to get conditioning models and images
@@ -162,6 +216,7 @@ class DiffusersPipelineWrapper:
                 raise ValueError(f"Unknown control image type {conditioningimage.type}")
         return features
 
+
     def createConditioningModels(self, conditioningmodelids:List[str], conditioningClass):
         conditioningmodels = []
         for conditioningmodelid in conditioningmodelids:
@@ -169,29 +224,7 @@ class DiffusersPipelineWrapper:
         if(len(conditioningmodels) == 1):
             conditioningmodels = conditioningmodels[0]
         return conditioningmodels
-    
-    def getConditioningModels(self, params:GenerationParameters):
-        conditioningmodelids = []
-        for controlimageparams in params.getControlImages():
-            conditioningmodelids.append(controlimageparams.model)
-        return conditioningmodelids
-    
-    def getConditioningScales(self, params:GenerationParameters):
-        condscales = []
-        for controlimage in params.getControlImages():
-            condscales.append(controlimage.condscale)
-        if len(condscales) == 1:
-            return condscales[0]
-        return condscales
-    
-    def getConditioningImages(self, params:GenerationParameters):
-        conditioningimages = []
-        for conditioningimage in params.getControlImages():
-            colourspace = "RGB"
-            if ("colourspace" in conditioningimage.modelConfig.data):
-                colourspace = conditioningimage.modelConfig.data["colourspace"]
-            conditioningimages.append(conditioningimage.image.convert(colourspace))
-        return conditioningimages
+
     
     def splitModelName(self, modelname:str) -> SplitModelName:
         splitname = modelname.split('/')

@@ -2,7 +2,7 @@ from typing import List
 from PIL import Image
 from dataclasses import dataclass, field
 from ..ImageUtils import base64DecodeImage
-from ..models.DiffusersModelPresets import DiffusersModel, DiffusersConditioningModel
+from ..models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 import json, inspect
 
 
@@ -18,7 +18,6 @@ GENERATIONTYPE_TXT2IMG = "txt2img"
 GENERATIONTYPE_IMG2IMG = "img2img"
 GENERATIONTYPE_INPAINT = "inpaint"
 GENERATIONTYPE_UPSCALE = "upscale"
-GENERATIONTYPE_CONTROLNET_SUFFIX = "_controlnet"
 
 
 @dataclass(unsafe_hash=True)
@@ -113,14 +112,12 @@ class GenerationParameters:
     def getInitImage(self) -> ControlImageParameters|None:
         return self.getImage(ControlImageType.IMAGETYPE_INITIMAGE)
     
-    def getIpAdapterImage(self) -> ControlImageParameters|None:
-        return self.getImage(ControlImageType.IMAGETYPE_IPADAPTER)
-    
-    def getIpAdapterFaceIdImage(self) -> ControlImageParameters|None:
-        return self.getImage(ControlImageType.IMAGETYPE_IPADAPTER_FACEID)
-    
-    def getControlImages(self) -> List[ControlImageParameters]:
-        return self.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE)
+    def getConditioningParamsByModelType(self, modeltype:str) -> List[ControlImageParameters]:
+        conditioningparams = []
+        for conditioningparam in self.controlimages:
+            if(conditioningparam.modelConfig is not None and conditioningparam.modelConfig.modeltype == modeltype):
+                conditioningparams.append(conditioningparam)
+        return conditioningparams
     
     def setImage(self, image:Image.Image, type:str):
         for controlimage in self.controlimages:
