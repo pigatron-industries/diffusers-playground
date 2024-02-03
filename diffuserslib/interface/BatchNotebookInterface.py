@@ -266,11 +266,11 @@ class BatchNotebookInterface:
                     params['controlimage'] = []
                 if('controlmodel' not in params):
                     params['controlmodel'] = []
+                if('controlweight' not in params):
+                    params['controlweight'] = []
                 params['controlimage'].append(pipeline)
                 params['controlmodel'].append(initimage_w.model_dropdown.value)
                 params['controlweight'].append(initimage_w.scale_slider.value)
-                if('controlweight' not in params):
-                    params['controlweight'] = []
 
         params['lora_num'] = self.lora_num.value
         for i, lora_w in enumerate(self.lora_widgets):
