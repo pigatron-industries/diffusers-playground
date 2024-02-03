@@ -1,6 +1,7 @@
 import glob
 import os
 from typing import List
+from functools import lru_cache
 
 def getPathsFiles(pattern):
     pathsfiles = []
@@ -16,6 +17,7 @@ def getLeafFolders(root_folder):
             leaf_folders.append(foldername)
     return leaf_folders
 
+@lru_cache(maxsize=1)
 def getFileList(rootDir, patterns:List[str], recursive=False):
     dirpatterns = [f"{rootDir}/{pattern}" for pattern in patterns]
     if recursive:
