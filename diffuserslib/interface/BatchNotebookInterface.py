@@ -250,6 +250,7 @@ class BatchNotebookInterface:
             if(i >= params['initimages_num']):
                 break
             params[f'initimage{i}_model'] = initimage_w.model_dropdown.value
+            params[f'initimage{i}_weight'] = initimage_w.scale_slider.value
             params[f'initimage{i}_generation'] = initimage_w.generation_dropdown.value
             params[f'initimage{i}_input_source'] = initimage_w.input_source_dropdown.value
             params[f'initimage{i}_input_select'] = initimage_w.input_select_dropdown.value
@@ -266,6 +267,9 @@ class BatchNotebookInterface:
                     params['controlmodel'] = []
                 params['controlimage'].append(pipeline)
                 params['controlmodel'].append(initimage_w.model_dropdown.value)
+                params['controlweight'].append(initimage_w.scale_slider.value)
+                if('controlweight' not in params):
+                    params['controlweight'] = []
 
         params['lora_num'] = self.lora_num.value
         for i, lora_w in enumerate(self.lora_widgets):
@@ -421,15 +425,15 @@ class BatchNotebookInterface:
     
 
     def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, models, strength, initimage=None, 
-                 controlimage:List[Image.Image]|None = None, controlmodel:List[str]|None = None, 
+                 controlimage:List[Image.Image]|None = None, controlmodel:List[str]|None = None, controlweight:List[int]|None = None,
                  loranames=None, loraweights=None, model_weight=1.0, **kwargs):
         controlimageparams = []
         if(initimage is not None):
             controlimageparams.append(ControlImageParameters(image=initimage, model=ControlImageType.IMAGETYPE_INITIMAGE))
-        if(controlimage is not None and controlmodel is not None):
+        if(controlimage is not None and controlmodel is not None and controlweight is not None):
             for i in range(0, len(controlimage)):
                 modelid = controlmodel[i].split(":")[1]
-                controlimageparams.append(ControlImageParameters(image=controlimage[i], type=ControlImageType.IMAGETYPE_CONTROLIMAGE, model=modelid))
+                controlimageparams.append(ControlImageParameters(image=controlimage[i], type=ControlImageType.IMAGETYPE_CONTROLIMAGE, model=modelid, condscale=controlweight[i]))
 
         loraparams = []
         if(loranames is not None and loraweights is not None):

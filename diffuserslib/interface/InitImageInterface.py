@@ -25,6 +25,7 @@ class InitImageInterface:
             inputdirs_options = [PREV_IMAGE] + inputdirs_options
         
         self.model_dropdown = dropdown(interface, label="Control Model:", options=[], value=None)
+        self.scale_slider = floatSlider(self, label='Weight:', value=0.8, min=0, max=1, step=0.01)
         self.generation_dropdown = dropdown(interface, label="Generation:", options=generation_pipeline_options, value=None)
         self.input_source_dropdown = dropdown(interface, label="Input Source:", options=inputdirs_options, value=None)
         self.input_select_dropdown = dropdown(interface, label="Input Select:", options=[], value=None)
