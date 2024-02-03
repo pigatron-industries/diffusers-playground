@@ -33,6 +33,7 @@ class InitImageInterface:
 
     def display(self):
         display(self.model_dropdown,
+                self.scale_slider,
                 self.generation_dropdown,
                 self.input_source_dropdown,
                 self.input_select_dropdown,
