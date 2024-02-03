@@ -3,6 +3,7 @@ import glob
 import os
 from PIL import Image
 from .Argument import Argument
+from ...FileUtils import getFileList
 
 
 class RandomNumberArgument(Argument):
@@ -61,9 +62,9 @@ class RandomPositionArgument(Argument):
 class RandomImageArgument(Argument):
 
     @classmethod
-    def fromDirectory(cls, directory):
+    def fromDirectory(cls, directory, recursive=False):
         if os.path.isdir(directory):
-            filelist = glob.glob(f'{directory}/*.png') + glob.glob(f'{directory}/*.jpg') + glob.glob(f'{directory}/*.jpeg')
+            filelist = getFileList(directory, patterns = ["*.jpg", "*.jpeg", "*.png"], recursive = recursive)
             print(f'Found {len(filelist)} images in {directory}')
         else:
             filelist = directory

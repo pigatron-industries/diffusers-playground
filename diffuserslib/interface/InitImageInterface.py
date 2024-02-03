@@ -8,6 +8,7 @@ import os
 from .WidgetHelpers import *
 from ..batch.argument import RandomImageArgument
 from ..processing.ImageProcessorPipeline import ImageProcessorPipeline
+from ..FileUtils import getFileList
 
 
 INIT_IMAGE = "Init Image"
@@ -49,8 +50,8 @@ class InitImageInterface:
         self.model_dropdown.options = modelnames
 
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
-            filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
-            self.input_select_dropdown.options = [RANDOM_IMAGE] + [os.path.basename(x) for x in filepaths]
+            filelist = getFileList(directory, patterns = ["*.jpg", "*.jpeg", "*.png"], recursive = recursive)
+            self.input_select_dropdown.options = [RANDOM_IMAGE] + filelist
         else:
             self.input_select_dropdown.options = []
 
