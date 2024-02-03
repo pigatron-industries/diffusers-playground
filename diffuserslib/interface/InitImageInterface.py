@@ -8,6 +8,7 @@ import os
 from .WidgetHelpers import *
 from ..batch.argument import RandomImageArgument
 from ..processing.ImageProcessorPipeline import ImageProcessorPipeline
+from ..FileUtils import getFileList
 
 
 INIT_IMAGE = "Init Image"
@@ -17,6 +18,7 @@ RANDOM_IMAGE = "Random"
 
 class InitImageInterface:
     def __init__(self, interface, firstImage = False):
+        self.visible = False
         self.interface = interface
         self.firstImage = firstImage
         generation_pipeline_options = list(interface.generation_pipelines.keys())
@@ -25,6 +27,7 @@ class InitImageInterface:
             inputdirs_options = [PREV_IMAGE] + inputdirs_options
         
         self.model_dropdown = dropdown(interface, label="Control Model:", options=[], value=None)
+        self.scale_slider = floatSlider(interface, label='Weight:', value=0.8, min=0, max=1, step=0.01)
         self.generation_dropdown = dropdown(interface, label="Generation:", options=generation_pipeline_options, value=None)
         self.input_source_dropdown = dropdown(interface, label="Input Source:", options=inputdirs_options, value=None)
         self.input_select_dropdown = dropdown(interface, label="Input Select:", options=[], value=None)
@@ -32,6 +35,7 @@ class InitImageInterface:
 
     def display(self):
         display(self.model_dropdown,
+                self.scale_slider,
                 self.generation_dropdown,
                 self.input_source_dropdown,
                 self.input_select_dropdown,
@@ -46,29 +50,40 @@ class InitImageInterface:
         self.model_dropdown.options = modelnames
 
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
-            filepaths = glob.glob(f"{self.input_source_dropdown.value}/*.png") + glob.glob(f"{self.input_source_dropdown.value}/*.jpg")
-            self.input_select_dropdown.options = [RANDOM_IMAGE] + [os.path.basename(x) for x in filepaths]
+            filelist = getFileList(self.input_source_dropdown.value, patterns = ("*.jpg", "*.jpeg", "*.png"), recursive = True)
+            self.input_select_dropdown.options = [RANDOM_IMAGE] + filelist
         else:
             self.input_select_dropdown.options = []
+
         
     def hide(self):
+        self.visible = True
         self.model_dropdown.layout.display = 'none'
+        self.scale_slider.layout.display = 'none'
         self.generation_dropdown.layout.display = 'none'
         self.input_source_dropdown.layout.display = 'none'
         self.input_select_dropdown.layout.display = 'none'
         self.preprocessor_dropdown.layout.display = 'none'
 
     def show(self):
-        self.model_dropdown.layout.display = 'block'
-        self.generation_dropdown.layout.display = 'block'
-        self.input_source_dropdown.layout.display = 'block'
-        self.input_select_dropdown.layout.display = 'block'
-        self.preprocessor_dropdown.layout.display = 'block'
+        self.visible = False
+        self.model_dropdown.layout.display = 'flex'
+        self.scale_slider.layout.display = 'flex'
+        self.generation_dropdown.layout.display = 'flex'
+        self.preprocessor_dropdown.layout.display = 'flex'
+        if (self.generation_dropdown.value is not None):
+            pipeline = self.interface.generation_pipelines[self.generation_dropdown.value]
+            if(pipeline.hasPlaceholder("image")):
+                self.input_source_dropdown.layout.display = 'flex'
+                self.input_select_dropdown.layout.display = 'flex'
+            else:
+                self.input_source_dropdown.layout.display = 'none'
+                self.input_select_dropdown.layout.display = 'none'
 
 
     def getInitImage(self):
         if(self.input_select_dropdown.value == RANDOM_IMAGE):
-            return RandomImageArgument.fromDirectory(self.input_source_dropdown.value)
+            return RandomImageArgument.fromDirectory(self.input_source_dropdown.value, recursive=True)
         else:
             return Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value)
         
