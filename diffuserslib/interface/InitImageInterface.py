@@ -50,7 +50,7 @@ class InitImageInterface:
         self.model_dropdown.options = modelnames
 
         if (self.input_source_dropdown.value is not None and self.input_source_dropdown.value != PREV_IMAGE):
-            filelist = getFileList(self.input_source_dropdown.value, patterns = ["*.jpg", "*.jpeg", "*.png"], recursive = recursive)
+            filelist = getFileList(self.input_source_dropdown.value, patterns = ["*.jpg", "*.jpeg", "*.png"], recursive = True)
             self.input_select_dropdown.options = [RANDOM_IMAGE] + filelist
         else:
             self.input_select_dropdown.options = []
