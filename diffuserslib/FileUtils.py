@@ -17,7 +17,7 @@ def getLeafFolders(root_folder):
             leaf_folders.append(foldername)
     return leaf_folders
 
-@lru_cache(maxsize=1)
+@lru_cache(maxsize=5)
 def getFileList(rootDir, patterns:Tuple[str], recursive=False):
     dirpatterns = [f"{rootDir}/{pattern}" for pattern in patterns]
     if recursive:
