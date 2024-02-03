@@ -17,12 +17,12 @@ def getLeafFolders(root_folder):
     return leaf_folders
 
 def getFileList(rootDir, patterns:List[str], recursive=False):
-    patterns = [f"{rootDir}/{pattern}" for pattern in patterns]
+    dirpatterns = [f"{rootDir}/{pattern}" for pattern in patterns]
     if recursive:
-        patterns += [f"{rootDir}/**/{pattern}" for pattern in patterns]
+        dirpatterns += [f"{rootDir}/**/{pattern}" for pattern in patterns]
     filelist = []
-    for pattern in patterns:
-        filelist += glob.glob(pattern, recursive=recursive)
+    for dirpattern in dirpatterns:
+        filelist += glob.glob(dirpattern)
     for file in filelist:
         file = os.path.relpath(file, rootDir)
     return filelist

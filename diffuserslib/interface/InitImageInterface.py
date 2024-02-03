@@ -83,7 +83,7 @@ class InitImageInterface:
 
     def getInitImage(self):
         if(self.input_select_dropdown.value == RANDOM_IMAGE):
-            return RandomImageArgument.fromDirectory(self.input_source_dropdown.value)
+            return RandomImageArgument.fromDirectory(self.input_source_dropdown.value, recursive=True)
         else:
             return Image.open(self.input_source_dropdown.value + "/" + self.input_select_dropdown.value)
         
