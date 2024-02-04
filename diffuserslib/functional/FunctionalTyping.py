@@ -5,6 +5,10 @@ StringFuncType = str | Callable[[], str]
 IntFuncType = int | Callable[[], int]
 FloatFuncType = float | Callable[[], float]
 
+StringsFuncType = List[str] | Callable[[], List[str]]
+IntsFuncType = List[int] | Callable[[], List[int]]
+FloatsFuncType = List[float] | Callable[[], List[float]]
+
 SizeType = Tuple[int, int]
 SizeFuncType = SizeType | Callable[[], SizeType]
 
