@@ -422,7 +422,7 @@ class BatchNotebookInterface:
         return batch
     
 
-    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, models, strength, initimage=None, 
+    def generate(self, prompt, negprompt, width, height, steps, scale, scheduler, seed, models, strength=None, initimage=None, 
                  controlimage:List[Image.Image]|None = None, controlmodel:List[str]|None = None, controlweight:List[int]|None = None,
                  loranames=None, loraweights=None, model_weight=1.0, **kwargs):
         controlimageparams = []

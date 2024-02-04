@@ -14,3 +14,4 @@ from .imagetools import *
 from .interface import *
 from .training import *
 from .video import *
+from .functional import *
