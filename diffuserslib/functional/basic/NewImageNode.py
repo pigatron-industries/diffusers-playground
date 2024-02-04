@@ -5,13 +5,14 @@ from PIL import ImageDraw, Image
 
 class NewImageNode(FunctionalNode):
     def __init__(self, 
+                 name:str = "new_image",
                  size: SizeFuncType = (512, 512),
                  background_colour: ColourFuncType = "black"):
         args = {
             "size": size,
             "background_colour": background_colour
         }
-        super().__init__(args)
+        super().__init__(name, args)
 
 
     def process(self, size: SizeType, background_colour: ColourType) -> Image.Image:

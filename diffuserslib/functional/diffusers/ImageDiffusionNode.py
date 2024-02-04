@@ -21,7 +21,8 @@ class ImageDiffusionNode(FunctionalNode):
                  cfgscale:FloatFuncType = 7.0,
                  seed:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
-                 conditioning_inputs:ConditioningInputFuncsType|None = None):
+                 conditioning_inputs:ConditioningInputFuncsType|None = None,
+                 name:str = "image_diffusion"):
         self.pipelines = pipelines
         args = {
             "models": models,
@@ -34,7 +35,7 @@ class ImageDiffusionNode(FunctionalNode):
             "scheduler": scheduler,
             "conditioning_inputs": conditioning_inputs
         }
-        super().__init__(args)
+        super().__init__("image_diffusion", args)
 
 
     def process(self, 

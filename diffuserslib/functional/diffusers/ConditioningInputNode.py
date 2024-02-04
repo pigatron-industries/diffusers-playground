@@ -10,13 +10,14 @@ class ConditioningInputNode(FunctionalNode):
     def __init__(self, 
                  image: ImageFuncType,
                  model: StringFuncType,
-                 scale: FloatFuncType = 1.0):
+                 scale: FloatFuncType = 1.0,
+                 name:str = "conditioning_input",):
         args = {
             "image": image,
             "model": model,
             "scale": scale
         }
-        super().__init__(args)
+        super().__init__("conditioning_input", args)
 
 
     def process(self, 

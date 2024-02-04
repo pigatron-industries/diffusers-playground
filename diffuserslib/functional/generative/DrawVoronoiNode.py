@@ -30,7 +30,8 @@ class DrawVoronoiNode(FunctionalNode):
                  point_colour: ColourFuncType = "white",
                  draw_options: DrawOptionsFuncType = (True, True, True),  # (bounded lines, unbounded lines, points)
                  lineProbablity: FloatFuncType = 1,
-                 radius: FloatFuncType = 2):
+                 radius: FloatFuncType = 2,
+                 name:str = "draw_voronoi"):
         args = {
             "image": image,
             "points": points,
@@ -40,7 +41,7 @@ class DrawVoronoiNode(FunctionalNode):
             "radius": radius,
             "lineProbablity": lineProbablity
         }
-        super().__init__(args)
+        super().__init__(name, args)
 
 
     def process(self, image: Image.Image,
