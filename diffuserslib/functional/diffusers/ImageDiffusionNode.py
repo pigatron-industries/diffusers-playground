@@ -53,7 +53,7 @@ class ImageDiffusionNode(FunctionalNode):
             seed=seed,
             scheduler=scheduler
         )
-        output = self.pipelines.generate(params)
+        output, seed = self.pipelines.generate(params)
         if(type(output) == Image.Image):
             return output
         else:
