@@ -39,6 +39,18 @@ class FunctionalNode:
     def process(self, **kwargs):
         raise Exception("Not implemented")
     
+    def getInputParams(self) -> ParameterInfos:
+        paramInfos = ParameterInfos()
+        for argname in self.args:
+            argvalue = self.args[argname]
+            if(isinstance(argvalue, FunctionalNode)):
+                paramInfos.addAll(argvalue.getInputParams())
+            elif(isinstance(argvalue, List)):
+                for i, listvalue in enumerate(argvalue):
+                    if(isinstance(listvalue, FunctionalNode)):
+                        paramInfos.addAll(listvalue.getInputParams())
+        return paramInfos
+
 
     def getStaticParams(self) -> ParameterInfos:
         paramInfos = ParameterInfos()
@@ -57,7 +69,7 @@ class FunctionalNode:
         return paramInfos
     
     
-    def setStaticParam(self, node_name:str, param_name:str, value:Any):
+    def setParam(self, node_name:str, param_name:str, value:Any):
         if(node_name == self.node_name):
             self.args[param_name] = value
         else:
@@ -66,7 +78,7 @@ class FunctionalNode:
                 if(isinstance(argvalue, List) and any(callable(item) for item in argvalue)):
                     for i, listvalue in enumerate(argvalue):
                         if(isinstance(value, FunctionalNode)):
-                            listvalue.setStaticParam(node_name, param_name, value)
+                            listvalue.setParam(node_name, param_name, value)
                 elif(isinstance(argvalue, FunctionalNode)):
-                    argvalue.setStaticParam(node_name, param_name, value)
+                    argvalue.setParam(node_name, param_name, value)
     

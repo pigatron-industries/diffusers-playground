@@ -1,2 +1,2 @@
-from .StaticValueNode import *
+from .InputValueNode import *
 from .NewImageNode import *
