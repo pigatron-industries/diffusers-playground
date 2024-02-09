@@ -11,7 +11,9 @@ from .batch import *
 from .animation import *
 from .processing import *
 from .imagetools import *
-from .interface import *
+from .interface_notebook import *
+from .interface_nicegui import *
 from .training import *
 from .video import *
-from .functional import *
+from .functional_nodes import *
+from .functional_workflows import *
