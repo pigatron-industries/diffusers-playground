@@ -12,7 +12,6 @@ def loadWorkflows():
     workflows = {}
     
     for file in files:
-        print(file)
         spec = importlib.util.spec_from_file_location("module.workflow", file)
         module = importlib.util.module_from_spec(spec)
         sys.modules["module.workflow"] = module

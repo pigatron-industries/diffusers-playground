@@ -1,4 +1,4 @@
-from ..FunctionalNode import FunctionalNode
+from ..FunctionalNode import FunctionalNode, TypeInfo
 from ..FunctionalTyping import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncType
 from ...inference.DiffusersPipelines import DiffusersPipelines
@@ -23,19 +23,17 @@ class ImageDiffusionNode(FunctionalNode):
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
+        super().__init__(name)
+        self.addParam("models", models, TypeInfo("List.Model.generate"))
+        self.addParam("prompt", prompt, TypeInfo("String"))
+        self.addParam("negprompt", negprompt, TypeInfo("String"))
+        self.addParam("steps", steps, TypeInfo("Int"))
+        self.addParam("cfgscale", cfgscale, TypeInfo("Float"))
+        self.addParam("size", size, TypeInfo("Size"))
+        self.addParam("seed", seed, TypeInfo("Int"))
+        self.addParam("scheduler", scheduler, TypeInfo("String"))
+        self.addParam("conditioning_inputs", conditioning_inputs, TypeInfo("List.ConditioningInput"))
         self.pipelines = pipelines
-        args = {
-            "models": models,
-            "prompt": prompt,
-            "negprompt": negprompt,
-            "steps": steps,
-            "cfgscale": cfgscale,
-            "size": size,
-            "seed": seed,
-            "scheduler": scheduler,
-            "conditioning_inputs": conditioning_inputs
-        }
-        super().__init__("image_diffusion", args)
 
 
     def process(self, 

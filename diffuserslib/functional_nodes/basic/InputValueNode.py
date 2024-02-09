@@ -1,17 +1,17 @@
-from ..FunctionalNode import FunctionalNode, ParameterInfos
+from ..FunctionalNode import FunctionalNode, ParameterInfos, TypeInfo
 from typing import Any
 
 class InputValueNode(FunctionalNode):
-    def __init__(self, name:str="static", type:type=Any, value:Any=None, mandatory:bool=True):
+    def __init__(self, name:str="static", type:TypeInfo=TypeInfo(), value:Any=None, mandatory:bool=True):
+        super().__init__(name)
         self.mandatory = mandatory
         self.type = type
-        args = {
-            "value": value
-        }
-        super().__init__(name, args)
+        self.addParam("value", value, type)
 
     def setValue(self, value:Any):
-        self.args["value"] = value
+        print(self.params["value"])
+        self.params["value"].value = value
+        print(self.params["value"])
 
     def process(self, value:Any) -> Any:
         if(value is None and self.mandatory):
@@ -20,7 +20,7 @@ class InputValueNode(FunctionalNode):
     
     def getInputParams(self) -> ParameterInfos:
         paramInfos = ParameterInfos()
-        paramInfos.add(self.node_name, "value", self.type, self.args["value"])
+        paramInfos.add(self.node_name, "value", self.type, self.params["value"].value)
         return paramInfos
     
     def getStaticParams(self) -> ParameterInfos:

@@ -1,4 +1,4 @@
-from ..FunctionalNode import FunctionalNode
+from ..FunctionalNode import FunctionalNode, TypeInfo
 from ..FunctionalTyping import *
 from ...inference.GenerationParameters import ControlImageParameters, ControlImageType
 from PIL import Image
@@ -11,13 +11,11 @@ class ConditioningInputNode(FunctionalNode):
                  image: ImageFuncType,
                  model: StringFuncType,
                  scale: FloatFuncType = 1.0,
-                 name:str = "conditioning_input",):
-        args = {
-            "image": image,
-            "model": model,
-            "scale": scale
-        }
-        super().__init__("conditioning_input", args)
+                 name:str = "conditioning_input"):
+        super().__init__(name)
+        self.addParam("image", image, TypeInfo("Image"))
+        self.addParam("model", model, TypeInfo("Model.conditioning"))
+        self.addParam("scale", scale, TypeInfo("float"))
 
 
     def process(self, 

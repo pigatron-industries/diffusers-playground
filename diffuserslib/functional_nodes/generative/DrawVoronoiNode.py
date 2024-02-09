@@ -1,4 +1,4 @@
-from ..FunctionalNode import FunctionalNode
+from ..FunctionalNode import FunctionalNode, TypeInfo
 from ..FunctionalTyping import *
 from PIL import ImageDraw, Image
 from typing import List, Tuple, Callable, Dict, Any
@@ -29,19 +29,17 @@ class DrawVoronoiNode(FunctionalNode):
                  outline_colour: ColourFuncType = "white", 
                  point_colour: ColourFuncType = "white",
                  draw_options: DrawOptionsFuncType = (True, True, True),  # (bounded lines, unbounded lines, points)
-                 lineProbablity: FloatFuncType = 1,
+                 line_probablity: FloatFuncType = 1,
                  radius: FloatFuncType = 2,
                  name:str = "draw_voronoi"):
-        args = {
-            "image": image,
-            "points": points,
-            "outline_colour": outline_colour,
-            "point_colour": point_colour,
-            "draw_options": draw_options,
-            "radius": radius,
-            "lineProbablity": lineProbablity
-        }
-        super().__init__(name, args)
+        super().__init__(name)
+        self.addParam("image", image, TypeInfo("Image"))
+        self.addParam("points", points, TypeInfo("List.Point2D"))
+        self.addParam("outline_colour", outline_colour, TypeInfo("Colour"))
+        self.addParam("point_colour", point_colour, TypeInfo("Colour"))
+        self.addParam("draw_options", draw_options, TypeInfo("Tuple3.Bool"))
+        self.addParam("radius", radius, TypeInfo("Float"))
+        self.addParam("line_probablity", line_probablity, TypeInfo("Float", restrict_num=(0.0, 1.0, 0.1)))
 
 
     def process(self, image: Image.Image,
@@ -49,7 +47,7 @@ class DrawVoronoiNode(FunctionalNode):
                 outline_colour: ColourType, 
                 point_colour: ColourType,
                 draw_options: DrawOptionsType,
-                lineProbablity: float = 1,
+                line_probablity: float = 1,
                 radius: float = 2) -> Image.Image:
         drawBoundedLines, drawUnboundedLines, drawPoints = draw_options
         points_array = np.array(points)
@@ -59,7 +57,7 @@ class DrawVoronoiNode(FunctionalNode):
         draw = ImageDraw.Draw(image)
 
         for line in lines:
-            if (np.random.random() < lineProbablity):
+            if (np.random.random() < line_probablity):
                 draw.line(line, fill=outline_colour, width=1)
 
         if (drawPoints):
