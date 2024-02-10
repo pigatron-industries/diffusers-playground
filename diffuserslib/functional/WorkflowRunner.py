@@ -7,7 +7,9 @@ from PIL import Image
 
 @dataclass
 class WorkflowRunData:
+    params:ParameterInfos
     output: Any|None = None
+    save_file:str|None = None
 
 
 class WorkflowRunner:
@@ -22,7 +24,7 @@ class WorkflowRunner:
 
     def run(self, workflow:FunctionalNode, batch_size:int = 1):
         for i in range(batch_size):
-            rundata = WorkflowRunData()
+            rundata = WorkflowRunData(workflow.getStaticParams())
             self.rundata.append(rundata)
             rundata.output = workflow()
         

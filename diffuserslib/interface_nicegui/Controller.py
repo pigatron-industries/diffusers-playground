@@ -9,17 +9,22 @@ import sys
 import os
 import glob
 
-
+@dataclass
+class Model:
+    workflow_name:str|None = None
+    batch_size:int = 1
 
 class Controller:
 
+    model = Model()
     workflows = []
     workflow:FunctionalNode|None = None
-    batch_size = 1
     workflowrunner = WorkflowRunner()
 
     def __init__(self):
         self.workflows = self.loadWorkflows()
+        if(self.model.workflow_name is not None):
+            self.loadWorkflow(self.model.workflow_name)
         
 
     def loadWorkflows(self):
@@ -38,18 +43,20 @@ class Controller:
     
     def loadWorkflow(self, workflow_name):
         if workflow_name in self.workflows:
+            self.model.workflow_name = workflow_name
             self.workflow = self.workflows[workflow_name].build()
         else:
+            self.model.workflow_name = None
             self.workflow = None
         
     def setParam(self, node_name, param_name, value):
         if(self.workflow is not None):
+            print(f"Setting param {node_name}.{param_name} to {value}")
             self.workflow.setParam((node_name, param_name), value)
 
     def runWorkflow(self):
-        print(self.batch_size)
         if(self.workflow is not None):
-            self.workflowrunner.run(self.workflow, self.batch_size)
+            self.workflowrunner.run(self.workflow, int(self.model.batch_size))
         else:
             print("No workflow loaded")
 
