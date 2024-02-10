@@ -15,5 +15,5 @@ from .interface_notebook import *
 from .interface_nicegui import *
 from .training import *
 from .video import *
-from .functional_nodes import *
+from .functional import *
 from .functional_workflows import *

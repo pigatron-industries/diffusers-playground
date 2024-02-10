@@ -1,6 +1,6 @@
-from ..FunctionalNode import FunctionalNode, TypeInfo
-from ..FunctionalTyping import *
-from ...inference.GenerationParameters import ControlImageParameters, ControlImageType
+from ...FunctionalNode import FunctionalNode, TypeInfo
+from ...FunctionalTyping import *
+from ....inference.GenerationParameters import ControlImageParameters, ControlImageType
 from PIL import Image
 
 ConditioningInputType = ControlImageParameters

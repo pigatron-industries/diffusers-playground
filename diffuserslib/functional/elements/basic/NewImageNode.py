@@ -1,5 +1,5 @@
-from ..FunctionalNode import FunctionalNode, TypeInfo
-from ..FunctionalTyping import *
+from ...FunctionalNode import FunctionalNode, TypeInfo
+from ...FunctionalTyping import *
 from PIL import ImageDraw, Image
 
 

@@ -1,4 +1,4 @@
-from ..FunctionalNode import FunctionalNode, ParameterInfos, TypeInfo
+from ...FunctionalNode import FunctionalNode, ParameterInfos, TypeInfo
 from typing import Any
 
 class InputValueNode(FunctionalNode):
@@ -9,9 +9,7 @@ class InputValueNode(FunctionalNode):
         self.addParam("value", value, type)
 
     def setValue(self, value:Any):
-        print(self.params["value"])
         self.params["value"].value = value
-        print(self.params["value"])
 
     def process(self, value:Any) -> Any:
         if(value is None and self.mandatory):

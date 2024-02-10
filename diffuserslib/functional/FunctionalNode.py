@@ -1,12 +1,6 @@
 from typing import Dict, Any, List, Self, Tuple
+from .FunctionalTyping import TypeInfo
 from dataclasses import dataclass, field
-from ..batch import evaluateArguments
-
-@dataclass
-class TypeInfo:
-    type: str|None = None
-    restrict_num: Tuple[float, float, float]|None = None
-    restrict_choice: List[Any]|None = None
 
 
 @dataclass
@@ -78,19 +72,21 @@ class FunctionalNode:
         return paramInfos
     
     
-    def setParam(self, node_name:str, param_name:str, value:Any):
+    def setParam(self, node_param_name:str|Tuple[str,str], value:Any):
+        node_name = node_param_name[0] if(isinstance(node_param_name, Tuple)) else self.node_name
+        param_name = node_param_name[1] if(isinstance(node_param_name, Tuple)) else node_param_name
         if(node_name == self.node_name):
-            self.args[param_name] = value
+            self.params[param_name].value = value
         else:
-            for argname in self.args:
-                argvalue = self.args[argname]
-                if(isinstance(argvalue, List) and any(callable(item) for item in argvalue)):
-                    for i, listvalue in enumerate(argvalue):
-                        if(isinstance(value, FunctionalNode)):
-                            listvalue.setParam(node_name, param_name, value)
-                elif(isinstance(argvalue, FunctionalNode)):
-                    argvalue.setParam(node_name, param_name, value)
-    
+            for paramname in self.params:
+                paramvalue = self.params[paramname].value
+                if(isinstance(paramvalue, List) and any(callable(item) for item in paramvalue)):
+                    for i, listvalue in enumerate(paramvalue):
+                        if(isinstance(listvalue, FunctionalNode)):
+                            listvalue.setParam((node_name, param_name), value)
+                elif(isinstance(paramvalue, FunctionalNode)):
+                    paramvalue.setParam((node_name, param_name), value)
+
 
     def evaluateParams(self):
         outargs = {}
@@ -109,3 +105,18 @@ class FunctionalNode:
                 outargs[paramname] = paramdef.value
         return outargs
     
+
+    def printDebug(self, level=0):
+        print((" "*level*3) + f"* Node: {self.node_name}")
+        for paramname in self.params:
+            paramdef = self.params[paramname]
+            print((" "*level*3) + f"   - {paramname}: {paramdef.value}")
+        for paramname in self.params:
+            paramdef = self.params[paramname]
+            if(isinstance(paramdef.value, List)):
+                for i, listvalue in enumerate(paramdef.value):
+                    if(isinstance(listvalue, FunctionalNode)):
+                        listvalue.printDebug(level+1)
+            if(isinstance(paramdef.value, FunctionalNode)):
+                paramdef.value.printDebug(level+1)
+        return

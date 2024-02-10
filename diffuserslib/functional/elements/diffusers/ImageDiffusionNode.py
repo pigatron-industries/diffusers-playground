@@ -1,8 +1,8 @@
-from ..FunctionalNode import FunctionalNode, TypeInfo
-from ..FunctionalTyping import *
+from ...FunctionalNode import FunctionalNode, TypeInfo
+from ...FunctionalTyping import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncType
-from ...inference.DiffusersPipelines import DiffusersPipelines
-from ...inference.GenerationParameters import GenerationParameters, ModelParameters
+from ....inference.DiffusersPipelines import DiffusersPipelines
+from ....inference.GenerationParameters import GenerationParameters, ModelParameters
 
 ModelsType = List[ModelParameters]
 ModelsFuncType = ModelsType | Callable[[], ModelsType]
