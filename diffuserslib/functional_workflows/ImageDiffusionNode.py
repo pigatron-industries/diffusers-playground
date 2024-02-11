@@ -5,14 +5,14 @@ from PIL import Image
 
 
 def build():
-    return GenRandomVoronoiNode()
+    return ImageDiffusionNode()
 
 def name():
-    return GenRandomVoronoiNode.name
+    return ImageDiffusionNode.name
 
 
-class GenRandomVoronoiNode(FunctionalNode):
-    name = "Random Voronoi"
+class ImageDiffusionNode(FunctionalNode):
+    name = "Image Diffusion"
 
     def __init__(self, 
                  size: SizeFuncType = (512, 512),
@@ -20,7 +20,7 @@ class GenRandomVoronoiNode(FunctionalNode):
                  draw_options: DrawOptionsFuncType = (True, True, True),  # (bounded lines, unbounded lines, points)
                  line_probablity: FloatFuncType = 1,
                  radius: IntFuncType = 2,
-                 name:str = "gen_voronoi"):
+                 name:str = "image_diffusion"):
         super().__init__(name)
         self.addParam("size", size, TypeInfo(ParamType.IMAGE_SIZE))
         self.addParam("num_points", num_points, TypeInfo(ParamType.INT))

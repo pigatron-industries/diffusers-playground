@@ -24,7 +24,7 @@ class ImageDiffusionNode(FunctionalNode):
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
-        self.addParam("models", models, TypeInfo("List.Model.generate"))
+        self.addParam("models", models, TypeInfo("Model.generate", multiple=True))
         self.addParam("prompt", prompt, TypeInfo("String"))
         self.addParam("negprompt", negprompt, TypeInfo("String"))
         self.addParam("steps", steps, TypeInfo("Int"))
@@ -32,7 +32,7 @@ class ImageDiffusionNode(FunctionalNode):
         self.addParam("size", size, TypeInfo("Size"))
         self.addParam("seed", seed, TypeInfo("Int"))
         self.addParam("scheduler", scheduler, TypeInfo("String"))
-        self.addParam("conditioning_inputs", conditioning_inputs, TypeInfo("List.ConditioningInput"))
+        self.addParam("conditioning_inputs", conditioning_inputs, TypeInfo("ConditioningInput", multiple=True))
         self.pipelines = pipelines
 
 

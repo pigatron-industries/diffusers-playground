@@ -3,7 +3,7 @@ from nicegui.elements.label import Label
 from nicegui.element import Element
 from .api import *
 from .Controller import Controller
-from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.FunctionalNode import FunctionalNode, ParameterDef
 from diffuserslib.functional.FunctionalTyping import ParamType
 from diffuserslib.functional.WorkflowRunner import WorkflowRunData
 from typing import List
@@ -44,28 +44,35 @@ class View:
         view = View()
         view.page()
 
+
     def __init__(self):
         self.controller = Controller()
         self.output_controls:List[OutputControls] = []
+
 
     def loadWorkflow(self, workflow_name):
         print("loading workflow")
         self.controller.loadWorkflow(workflow_name)
         self.workflow_controls.refresh()
 
+
     def setParam(self, node_name, param_name, value):
         self.controller.setParam(node_name, param_name, value)
+
 
     async def runWorkflow(self):
         self.timer.activate()
         result = await run.io_bound(self.controller.runWorkflow)
 
+
     def stopWorkflow(self):
         self.controller.workflowrunner.stop()
+
 
     def clearOutputs(self):
         self.controller.workflowrunner.clearRunData()
         self.workflow_outputs.refresh()
+
 
     def updateWorkflowProgress(self):
         if(not self.controller.workflowrunner.running):
@@ -86,31 +93,38 @@ class View:
                         output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
                         self.output_controls.append(OutputControls(output_container, output_control, output_width, label_saved, waiting_output))
 
-                
-
-
-        for i, output_controls in enumerate(self.output_controls):
-            if(self.getWorkflowRunData()[i].output is not None and output_controls.output_control is None and output_controls.output_container is not None):
-                output_controls.output_container.clear()
-                with output_controls.output_container:
-                    output_controls.output_control, output_controls.output_width, output_controls.label_saved = self.workflow_output(i)
-
 
     def getWorkflowRunData(self) -> List[WorkflowRunData]:
         return self.controller.workflowrunner.rundata
     
+
     def expandOutput(self, index):
         self.output_controls[index].toggleExpanded()
+
 
     def saveOutput(self, index):
         # TODO actually save the file
         self.getWorkflowRunData()[index].save_file = "test/file/blah/blah/path.png"
         self.output_controls[index].showLabelSaved(self.getWorkflowRunData()[index].save_file)
 
+
     def removeOutput(self, index):
         self.getWorkflowRunData().pop(index)
         # TODO only remove elements that are no longer in the list
         self.workflow_outputs.refresh()
+
+
+    def toggleParamFunctional(self, param:ParameterDef):
+        if(isinstance(param.value, FunctionalNode)):
+            param.value = param.initial_value
+        else:
+            param.value = FunctionalNode("empty")
+        self.workflow_controls.refresh()
+
+
+    def selectInputNode(self, param:ParameterDef, value):
+        self.controller.createInputNode(param, value)
+        self.workflow_controls.refresh()
 
 
     def page(self):
@@ -148,35 +162,47 @@ class View:
     @ui.refreshable
     def workflow_controls(self):
         if self.controller.workflow is not None:
-            paramInfo = self.controller.workflow.getStaticParams()
-            for node_name in paramInfo.params:
-                with ui.card_section():
-                    ui.label(node_name)
-                    for param in paramInfo.params[node_name]:
-                        with ui.row():
-                            self.workflow_parameter(node_name, param)
+            self.node_parameters(self.controller.workflow)
 
-    def workflow_parameter(self, node_name, param):
-        match param.type.type:
-            case ParamType.INT:
-                ui.number(value=param.value, label=param.name, on_change=lambda e: self.setParam(node_name, param.name, int(e.value)))
-            case ParamType.FLOAT:
-                ui.number(value=param.value, label=param.name, format='%.2f', on_change=lambda e: self.setParam(node_name, param.name, e.value))
-            case ParamType.STRING:
-                ui.input(value=param.value, label=param.name, on_change=lambda e: self.setParam(node_name, param.name, e.value))
-            case ParamType.BOOL:
-                if(param.type.size == 1 or param.type.size is None):
-                    ui.switch(value=param.value, on_change=lambda e: self.setParam(node_name, param.name, e.value))
-                else:
-                    for i in range(param.type.size):
-                        ui.switch(value=param.value[i], on_change=lambda e: self.setParam(node_name, param.name, e.value))
-            case ParamType.IMAGE_SIZE:
-                ui.number(value=param.value[0], label=f"{param.name} width", on_change=lambda e: self.setParam(node_name, param.name, (e.value, param.value[1])))
-                ui.number(value=param.value[1], label=f"{param.name} height", on_change=lambda e: self.setParam(node_name, param.name, (param.value[0], e.value)))
-            case ParamType.COLOUR:
-                ui.color_input(value=param.value, label=param.name, on_change=lambda e: self.setParam(node_name, param.name, e.value))
-            case _:
-                ui.label(param.name)
+
+    def node_parameters(self, node:FunctionalNode):
+        params = node.getParams()
+        with ui.card_section():
+            ui.label(node.node_name)
+            for param in params:
+                if(not callable(param.initial_value)):
+                    with ui.row():
+                        self.workflow_parameter(node, param)
+
+
+    def workflow_parameter(self, node:FunctionalNode, param:ParameterDef):
+        ui.button(icon='functions', color='dark', on_click=lambda e: self.toggleParamFunctional(param)).classes('align-middle').props('dense')
+        if(isinstance(param.value, FunctionalNode)):
+            input_nodes = self.controller.getValidInputNodes(param)
+            selected_node = type(param.value).__name__ if type(param.value).__name__ in input_nodes else None
+            ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
+            self.node_parameters(param.value)
+        else:
+            match param.type.type:
+                case ParamType.INT:
+                    ui.number(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, int(e.value)))
+                case ParamType.FLOAT:
+                    ui.number(value=param.value, label=param.name, format='%.2f', on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                case ParamType.STRING:
+                    ui.input(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                case ParamType.BOOL:
+                    if(param.type.size == 1 or param.type.size is None):
+                        ui.switch(value=param.value, on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                    else:
+                        for i in range(param.type.size):
+                            ui.switch(value=param.value[i], on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                case ParamType.IMAGE_SIZE:
+                    ui.number(value=param.value[0], label=f"{param.name} width", on_change=lambda e: self.setParam(node.node_name, param.name, (e.value, param.value[1])))
+                    ui.number(value=param.value[1], label=f"{param.name} height", on_change=lambda e: self.setParam(node.node_name, param.name, (param.value[0], e.value)))
+                case ParamType.COLOUR:
+                    ui.color_input(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                case _:
+                    ui.label(param.name)
 
 
     @ui.refreshable

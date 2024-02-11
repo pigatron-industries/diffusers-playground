@@ -1,7 +1,7 @@
-from diffuserslib.functional.FunctionalNode import FunctionalNode
-from diffuserslib.functional.FunctionalTyping import ParamType
+from diffuserslib.functional.FunctionalNode import FunctionalNode, ParameterDef
 from diffuserslib.functional.WorkflowRunner import *
-from PIL import Image
+from .config import *
+from typing import List
 from dataclasses import dataclass
 import importlib
 import importlib.util
@@ -15,6 +15,10 @@ class Model:
     batch_size:int = 1
     workflow_name:str|None = None
     
+    
+
+def str_to_class(str):
+    return getattr(sys.modules[__name__], str)
     
 
 class Controller:
@@ -40,11 +44,14 @@ class Controller:
             module = importlib.util.module_from_spec(spec)
             sys.modules["module.workflow"] = module
             spec.loader.exec_module(module)
-            workflows[module.name] = module
-            print(f"Loaded workflow: {module.name}")
+            workflows[module.name()] = module
+            print(f"Loaded workflow: {module.name()}")
         return workflows
     
+
     def loadWorkflow(self, workflow_name):
+        if(self.workflow is not None and self.workflow.name == workflow_name):
+            return
         if workflow_name in self.workflows:
             self.model.workflow_name = workflow_name
             self.workflow = self.workflows[workflow_name].build()
@@ -52,10 +59,26 @@ class Controller:
             self.model.workflow_name = None
             self.workflow = None
         
+
     def setParam(self, node_name, param_name, value):
         if(self.workflow is not None):
             print(f"Setting param {node_name}.{param_name} to {value}")
             self.workflow.setParam((node_name, param_name), value)
+
+
+    def getValidInputNodes(self, param:ParameterDef) -> List[str]:
+        if(param.type.type is not None):
+            class_list = input_nodes_config[param.type.type]
+            return [cls.__name__ for cls in class_list]
+        else:
+            return []
+
+
+    def createInputNode(self, param:ParameterDef, class_name):
+        if(param.type.type is not None):
+            cls = getattr(sys.modules[__name__], class_name)
+            param.value = cls()
+
 
     def runWorkflow(self):
         if(self.workflow is not None):

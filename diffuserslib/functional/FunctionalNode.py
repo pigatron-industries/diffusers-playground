@@ -7,8 +7,9 @@ from dataclasses import dataclass, field
 class ParameterDef:
     node: str
     name: str
-    value: Any
     type: TypeInfo
+    value: Any
+    initial_value: Any
 
 
 @dataclass
@@ -18,7 +19,7 @@ class ParameterInfos:
     def add(self, node:str, name:str, type:TypeInfo, value:Any):
         if(node not in self.params):
             self.params[node] = []
-        self.params[node].append(ParameterDef(node, name, value, type))
+        self.params[node].append(ParameterDef(node, name, type, value, value))
 
     def addAll(self, paramInfos:Self):
         for node in paramInfos.params:
@@ -27,6 +28,7 @@ class ParameterInfos:
 
 
 class FunctionalNode:
+    name = "FunctionalNode"
 
     def __init__(self, node_name:str):
         self.node_name = node_name
@@ -40,7 +42,10 @@ class FunctionalNode:
         raise Exception("Not implemented")
     
     def addParam(self, name:str, value:Any, type:TypeInfo):
-        self.params[name] = ParameterDef(node=self.node_name, name=name, value=value, type=type)
+        self.params[name] = ParameterDef(node=self.node_name, name=name, value=value, initial_value=value, type=type)
+
+    def getParams(self) -> List[ParameterDef]:
+        return list(self.params.values())
     
     def getInputParams(self) -> ParameterInfos:
         paramInfos = ParameterInfos()
