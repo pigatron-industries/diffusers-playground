@@ -60,6 +60,12 @@ class View:
         self.timer.activate()
         result = await run.io_bound(self.controller.runWorkflow)
 
+    def stopWorkflow(self):
+        self.controller.workflowrunner.stop()
+
+    def clearOutputs(self):
+        self.controller.workflowrunner.clearRunData()
+        self.workflow_outputs.refresh()
 
     def updateWorkflowProgress(self):
         if(not self.controller.workflowrunner.running):
@@ -118,18 +124,23 @@ class View:
                 }
             </style>
         ''')
-        context.get_client().content.classes('h-[100vh]')
+        context.get_client().content.classes('h-[100vh] p-0')
         self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
 
-        with ui.column().classes("w-full h-full no-wrap").style("height: 100%"):
-            with ui.splitter(value=30).classes("w-full h-full no-wrap").style("height: 100%") as splitter:
+        with ui.column().classes("w-full h-full no-wrap gap-0"):
+            with ui.row().classes("w-full p-2 place-content-between").style("background-color:#2b323b; border-bottom:1px solid #585b5f"):
+                ui.toggle({1: 'Batch', 2: 'Animate', 3: 'Realtime'}).bind_value(self.controller.model, 'run_type').style('margin-top:1.3em; margin-right:5em; margin-bottom:0.1em;')
+
+                with ui.row():
+                    ui.number(label="Batch Size").bind_value(self.controller.model, 'batch_size').bind_visibility_from(self.controller.model, 'run_type', value=1).style("width: 100px")
+                    ui.button('Run', on_click=lambda e: self.runWorkflow()).classes('align-middle')
+                    ui.button('Stop', on_click=lambda e: self.stopWorkflow()).classes('align-middle')
+                    ui.button('Clear', on_click=lambda e: self.clearOutputs()).classes('align-middle')
+            with ui.splitter(value=30).classes("w-full h-full no-wrap overflow-auto") as splitter:
                 with splitter.before:
-                    with ui.row():
-                        batch_size = ui.number(label="Batch Size").bind_value(self.controller.model, 'batch_size')
-                        run_button = ui.button('Run', on_click=lambda e: self.runWorkflow()).classes('align-middle')
-                    with ui.row():
-                        workflow = ui.select(list(self.controller.workflows.keys()), value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value))
-                    self.workflow_controls()
+                    with ui.column().classes("p-2"):
+                        ui.select(list(self.controller.workflows.keys()), value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value))
+                        self.workflow_controls()
                 with splitter.after:
                     self.workflow_outputs()
 
@@ -171,10 +182,10 @@ class View:
     @ui.refreshable
     def workflow_outputs(self):
         self.output_controls = []
-        self.outputs_container = ui.column().classes('w-full pl-5')
+        self.outputs_container = ui.column().classes('w-full p-2')
         with self.outputs_container:
             for i, rundata in enumerate(self.getWorkflowRunData()):
-                output_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
+                output_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
                 with output_container:
                     output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
                     self.output_controls.append(OutputControls(output_container, output_control, output_width, label_saved, waiting_output))

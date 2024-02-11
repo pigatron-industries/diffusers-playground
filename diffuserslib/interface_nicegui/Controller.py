@@ -11,8 +11,11 @@ import glob
 
 @dataclass
 class Model:
-    workflow_name:str|None = None
+    run_type:int = 1
     batch_size:int = 1
+    workflow_name:str|None = None
+    
+    
 
 class Controller:
 

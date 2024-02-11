@@ -31,5 +31,9 @@ class WorkflowRunner:
             rundata = WorkflowRunData(workflow.getStaticParams())
             self.rundata.append(rundata)
             rundata.output = workflow()
+            if(self.running == False):
+                break
         self.running = False
         
+    def stop(self):
+        self.running = False
