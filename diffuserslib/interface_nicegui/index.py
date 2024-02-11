@@ -1,4 +1,4 @@
-from nicegui import ui, context
+from nicegui import ui, context, run
 from nicegui.elements.label import Label
 from nicegui.element import Element
 from .api import *
@@ -11,14 +11,16 @@ from dataclasses import dataclass
 from PIL import Image
 
 
-default_image_class = 'w-64'
+default_output_class = 'w-64'
 
 
 @dataclass
 class OutputControls:
+    output_container:Element|None
     output_control:Element|None
     output_width:int
     label_saved:Label
+    waiting_output:bool = False
     expanded:bool = False
 
     def showLabelSaved(self, filename:str):
@@ -29,9 +31,9 @@ class OutputControls:
         self.expanded = not self.expanded
         if(self.output_control is not None):
             if(self.expanded):
-                self.output_control.classes(remove = default_image_class)
+                self.output_control.classes(remove = default_output_class)
             else:
-                self.output_control.classes(add = default_image_class)
+                self.output_control.classes(add = default_output_class)
             
 
 
@@ -54,9 +56,39 @@ class View:
     def setParam(self, node_name, param_name, value):
         self.controller.setParam(node_name, param_name, value)
 
-    def runWorkflow(self):
-        self.controller.runWorkflow()
-        self.workflow_outputs.refresh()
+    async def runWorkflow(self):
+        self.timer.activate()
+        result = await run.io_bound(self.controller.runWorkflow)
+
+
+    def updateWorkflowProgress(self):
+        if(not self.controller.workflowrunner.running):
+            self.timer.deactivate()
+        for i, rundata in enumerate(self.getWorkflowRunData()):
+            if(i < len(self.output_controls)):
+                # Update existing output controls
+                output_container = self.output_controls[i].output_container
+                if(rundata.output is not None and self.output_controls[i].waiting_output == True and output_container is not None):
+                    output_container.clear()
+                    with output_container:
+                        self.output_controls[i].output_control, self.output_controls[i].output_width, self.output_controls[i].label_saved, self.output_controls[i].waiting_output = self.workflow_output(i)
+            else:
+                # Add new output controls
+                with self.outputs_container:
+                    output_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
+                    with output_container:
+                        output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
+                        self.output_controls.append(OutputControls(output_container, output_control, output_width, label_saved, waiting_output))
+
+                
+
+
+        for i, output_controls in enumerate(self.output_controls):
+            if(self.getWorkflowRunData()[i].output is not None and output_controls.output_control is None and output_controls.output_container is not None):
+                output_controls.output_container.clear()
+                with output_controls.output_container:
+                    output_controls.output_control, output_controls.output_width, output_controls.label_saved = self.workflow_output(i)
+
 
     def getWorkflowRunData(self) -> List[WorkflowRunData]:
         return self.controller.workflowrunner.rundata
@@ -71,6 +103,7 @@ class View:
 
     def removeOutput(self, index):
         self.getWorkflowRunData().pop(index)
+        # TODO only remove elements that are no longer in the list
         self.workflow_outputs.refresh()
 
 
@@ -85,9 +118,9 @@ class View:
                 }
             </style>
         ''')
-
-
         context.get_client().content.classes('h-[100vh]')
+        self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
+
         with ui.column().classes("w-full h-full no-wrap").style("height: 100%"):
             with ui.splitter(value=30).classes("w-full h-full no-wrap").style("height: 100%") as splitter:
                 with splitter.before:
@@ -134,34 +167,43 @@ class View:
             case _:
                 ui.label(param.name)
 
+
     @ui.refreshable
     def workflow_outputs(self):
         self.output_controls = []
-        with ui.column().classes('w-full pl-5'):
+        self.outputs_container = ui.column().classes('w-full pl-5')
+        with self.outputs_container:
             for i, rundata in enumerate(self.getWorkflowRunData()):
-                self.workflow_output(i)
-                
+                output_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
+                with output_container:
+                    output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
+                    self.output_controls.append(OutputControls(output_container, output_control, output_width, label_saved, waiting_output))
+
 
     @ui.refreshable
     def workflow_output(self, index):
         rundata = self.getWorkflowRunData()[index]
-        with ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;"):
-                with ui.row().classes('w-full'):
-                    output_control = None
-                    output_width = 0
-                    if(isinstance(rundata.output, Image.Image)):
-                        output_width = rundata.output.width
-                        output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(index)).classes(default_image_class).style(f"max-width: {output_width}px;")
-                    with ui.column():
-                        for node_name in rundata.params.params:
-                            for param in rundata.params.params[node_name]:
-                                ui.label(f"{param.name}: {param.value}").style("line-height: 1;")
-                    with ui.column().classes('ml-auto'):
-                        with ui.row().classes('ml-auto'):
-                            ui.button('Save', on_click=lambda e: self.saveOutput(index))
-                            ui.button('Remove', on_click=lambda e: self.removeOutput(index))      
-                        with ui.row():
-                            label_saved = ui.label(f"Saved to {rundata.save_file}")
-                            label_saved.set_visibility(rundata.save_file is not None)
-        self.output_controls.append(OutputControls(output_control, output_width, label_saved))
+        with ui.row().classes('w-full'):
+            output_control = None
+            output_width = 0
+            waiting_output = False
+            if(rundata.output is None):
+                output_control = ui.label("Generating...").classes(default_output_class)
+                waiting_output = True
+            if(isinstance(rundata.output, Image.Image)):
+                output_width = rundata.output.width
+                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(index)).classes(default_output_class).style(f"max-width: {output_width}px;")
+            with ui.column():
+                for node_name in rundata.params.params:
+                    for param in rundata.params.params[node_name]:
+                        ui.label(f"{param.name}: {param.value}").style("line-height: 1;")
+            with ui.column().classes('ml-auto'):
+                with ui.row().classes('ml-auto'):
+                    ui.button('Save', on_click=lambda e: self.saveOutput(index))
+                    ui.button('Remove', on_click=lambda e: self.removeOutput(index))      
+                with ui.row():
+                    label_saved = ui.label(f"Saved to {rundata.save_file}")
+                    label_saved.set_visibility(rundata.save_file is not None)
+        return output_control, output_width, label_saved, waiting_output
+    
             

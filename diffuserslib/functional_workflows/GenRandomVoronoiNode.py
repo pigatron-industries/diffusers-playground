@@ -33,7 +33,6 @@ class GenRandomVoronoiNode(FunctionalNode):
                 draw_options: DrawOptionsType,
                 line_probablity: float,
                 radius: float) -> Image.Image:
-        print(line_probablity)
         self.random_points.setParam("num_points", num_points)
         self.voronoi.setParam("size", size)
         self.voronoi.setParam("draw_options", draw_options)
