@@ -10,7 +10,6 @@ ModelsFuncType = ModelsType | Callable[[], ModelsType]
 
 
 class ImageDiffusionNode(FunctionalNode):
-    name = "Image Diffusion"
 
     SCHEDULERS = [
         "DPMSolverMultistepScheduler", "EulerDiscreteScheduler", "EulerAncestralDiscreteScheduler"
