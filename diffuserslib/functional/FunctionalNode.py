@@ -1,25 +1,24 @@
 from typing import Dict, Any, List, Self, Tuple
-from .FunctionalTyping import TypeInfo
 from dataclasses import dataclass, field
 
 
 @dataclass
-class ParameterDef:
+class NodeParameter:
     node: str
     name: str
-    type: TypeInfo
+    type: type
     value: Any
     initial_value: Any
 
 
 @dataclass
 class ParameterInfos:
-    params:Dict[str,List[ParameterDef]] = field(default_factory= lambda: {})
+    params:Dict[str,List[NodeParameter]] = field(default_factory= lambda: {})
 
-    def add(self, node:str, name:str, type:TypeInfo, value:Any):
+    def add(self, node:str, name:str, type:type, value:Any):
         if(node not in self.params):
             self.params[node] = []
-        self.params[node].append(ParameterDef(node, name, type, value, value))
+        self.params[node].append(NodeParameter(node, name, type, value, value))
 
     def addAll(self, paramInfos:Self):
         for node in paramInfos.params:
@@ -32,7 +31,7 @@ class FunctionalNode:
 
     def __init__(self, node_name:str):
         self.node_name = node_name
-        self.params:Dict[str, ParameterDef] = {}
+        self.params:Dict[str, NodeParameter] = {}
 
     def __call__(self) -> Any:
         args = self.evaluateParams()
@@ -41,10 +40,10 @@ class FunctionalNode:
     def process(self, **kwargs):
         raise Exception("Not implemented")
     
-    def addParam(self, name:str, value:Any, type:TypeInfo):
-        self.params[name] = ParameterDef(node=self.node_name, name=name, value=value, initial_value=value, type=type)
+    def addParam(self, name:str, value:Any, type:type):
+        self.params[name] = NodeParameter(node=self.node_name, name=name, value=value, initial_value=value, type=type)
 
-    def getParams(self) -> List[ParameterDef]:
+    def getParams(self) -> List[NodeParameter]:
         return list(self.params.values())
     
     def getInputParams(self) -> ParameterInfos:

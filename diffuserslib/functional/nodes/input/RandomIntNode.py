@@ -5,9 +5,9 @@ import random
 
 class RandomIntNode(FunctionalNode):
     """ Select a random number between min and max """
-    def __init__(self, min_max:Tuple[int, int]=(0, 100), name:str="random_int"):
+    def __init__(self, min_max:MinMaxIntFuncType=(0, 100), name:str="random_int"):
         super().__init__(name)
-        self.addParam("min_max", min_max, TypeInfo(ParamType.INT, size=2, labels=["min", "max"]))
+        self.addParam("min_max", min_max, Tuple[int, int])
         
         
     def process(self, min_max:Tuple[int, int]) -> int:

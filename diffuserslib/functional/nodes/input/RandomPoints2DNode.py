@@ -8,7 +8,7 @@ class RandomPoints2DNode(FunctionalNode):
                  name:str = "random_points_2d",
                  num_points:IntFuncType = 20):
         super().__init__(name)
-        self.addParam("num_points", num_points, TypeInfo("Int"))
+        self.addParam("num_points", num_points, int)
 
 
     def process(self, num_points:int) -> Points2DType:

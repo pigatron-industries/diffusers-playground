@@ -1,8 +1,8 @@
-from diffuserslib.functional.FunctionalNode import FunctionalNode, TypeInfo
+from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.FunctionalTyping import *
 import random
 import re
-from typing import List, Dict, Self
+from typing import List, Dict
 
 
 class RandomPromptProcessorNode(FunctionalNode):
@@ -27,8 +27,8 @@ class RandomPromptProcessorNode(FunctionalNode):
                  shuffle:BoolFuncType=False,
                  name:str = "random_prompt_processor"):
         super().__init__(name)
-        self.addParam("prompt", prompt, TypeInfo(ParamType.STRING))
-        self.addParam("shuffle", shuffle, TypeInfo(ParamType.BOOL))
+        self.addParam("prompt", prompt, str)
+        self.addParam("shuffle", shuffle, bool)
         
 
     def process(self, prompt:str, shuffle:bool) -> str:

@@ -1,4 +1,4 @@
-from ...FunctionalNode import FunctionalNode, TypeInfo
+from ...FunctionalNode import FunctionalNode
 from ...FunctionalTyping import *
 from PIL import ImageDraw, Image
 from typing import List, Tuple, Callable, Dict, Any
@@ -29,17 +29,17 @@ class DrawVoronoiNode(FunctionalNode):
                  outline_colour: ColourFuncType = "white", 
                  point_colour: ColourFuncType = "white",
                  draw_options: DrawOptionsFuncType = (True, True, True),  # (bounded lines, unbounded lines, points)
-                 line_probablity: FloatFuncType = 1,
+                 line_probablity: ProbabilityFuncType = ProbabilityType(1.0),
                  radius: IntFuncType = 2,
                  name:str = "draw_voronoi"):
         super().__init__(name)
-        self.addParam("image", image, TypeInfo(ParamType.IMAGE))
-        self.addParam("points", points, TypeInfo(ParamType.POINT2D, multiple=True))
-        self.addParam("outline_colour", outline_colour, TypeInfo(ParamType.COLOUR))
-        self.addParam("point_colour", point_colour, TypeInfo(ParamType.COLOUR))
-        self.addParam("draw_options", draw_options, TypeInfo(ParamType.BOOL, size=3))
-        self.addParam("radius", radius, TypeInfo(ParamType.INT))
-        self.addParam("line_probablity", line_probablity, TypeInfo(ParamType.FLOAT, restrict_num=(0.0, 1.0, 0.1)))
+        self.addParam("image", image, Image.Image)
+        self.addParam("points", points, Points2DType)
+        self.addParam("outline_colour", outline_colour, ColourType)
+        self.addParam("point_colour", point_colour, ColourType)
+        self.addParam("draw_options", draw_options, DrawOptionsType)
+        self.addParam("radius", radius, int)
+        self.addParam("line_probablity", line_probablity, ProbabilityType)
 
 
     def process(self, image: Image.Image,

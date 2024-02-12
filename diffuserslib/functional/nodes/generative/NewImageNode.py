@@ -1,16 +1,16 @@
-from ...FunctionalNode import FunctionalNode, TypeInfo
+from ...FunctionalNode import FunctionalNode
 from ...FunctionalTyping import *
-from PIL import ImageDraw, Image
+from PIL import Image
 
 
 class NewImageNode(FunctionalNode):
     def __init__(self, 
                  name:str = "new_image",
-                 size: SizeFuncType = (512, 512),
+                 size:SizeFuncType = (512, 512),
                  background_colour: ColourFuncType = "black"):
         super().__init__(name)
-        self.addParam("size", size, TypeInfo("Size"))
-        self.addParam("background_colour", background_colour, TypeInfo("Colour"))
+        self.addParam("size", size, SizeType)
+        self.addParam("background_colour", background_colour, ColourType)
 
 
     def process(self, size: SizeType, background_colour: ColourType) -> Image.Image:

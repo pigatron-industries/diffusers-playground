@@ -1,5 +1,4 @@
-from typing import Callable, Tuple, List, Any
-from dataclasses import dataclass
+from typing import Callable, Tuple, List, NewType
 from PIL import Image
 
 # Python type definitions for node inputs
@@ -16,6 +15,11 @@ BoolsFuncType = List[bool] | Callable[[], List[bool]]
 SizeType = Tuple[int, int]
 SizeFuncType = SizeType | Callable[[], SizeType]
 
+MinMaxIntType = Tuple[int, int]
+MinMaxIntFuncType = MinMaxIntType | Callable[[], MinMaxIntType]
+MinMaxFloatType = Tuple[float, float]
+MinMaxFloatFuncType = MinMaxFloatType | Callable[[], MinMaxFloatType]
+
 Point2DType = Tuple[float, float]
 Point2DFuncType = Point2DType | Callable[[], Point2DType]
 Points2DType = List[Point2DType]
@@ -27,24 +31,15 @@ ColourType = Tuple[int, int, int] | str
 ColourFuncType = ColourType | Callable[[], ColourType]
 
 
-# workflow paramter type information
-@dataclass
-class TypeInfo:
-    type: str|None = None
-    restrict_num: Tuple[float, float, float]|None = None
-    restrict_choice: List[Any]|None = None
-    size: int|None = None
-    multiple: bool = False
-    labels: List[str]|None = None
+def ConstrainedFloat(min_value: float, max_value: float):
+    def validator(value):
+        if not isinstance(value, int):
+            raise TypeError("Value must be a float")
+        if value < min_value or value > max_value:
+            raise ValueError(f"Value must be between {min_value} and {max_value}")
+        return value
+    return NewType('ConstrainedFloat', float)
 
+ProbabilityType = ConstrainedFloat(0.0, 1.0)
+ProbabilityFuncType = ProbabilityType | Callable[[], ProbabilityType]
 
-class ParamType:
-    STRING = "String"
-    INT = "Int"
-    FLOAT = "Float"
-    BOOL = "Bool"
-    COLOUR = "Colour"
-    POINT2D = "Point2D"
-    IMAGE_SIZE = "ImageSize"
-    IMAGE = "Image"
-    FREETEXT = "FreeText"

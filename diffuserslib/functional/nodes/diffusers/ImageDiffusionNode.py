@@ -1,4 +1,4 @@
-from ...FunctionalNode import FunctionalNode, TypeInfo
+from ...FunctionalNode import FunctionalNode
 from ...FunctionalTyping import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
 from .RandomPromptProcessorNode import RandomPromptProcessorNode
@@ -28,15 +28,15 @@ class ImageDiffusionNode(FunctionalNode):
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
-        self.addParam("models", models, TypeInfo("Model.generate", multiple=True))
-        self.addParam("prompt", prompt, TypeInfo(ParamType.FREETEXT))
-        self.addParam("negprompt", negprompt, TypeInfo(ParamType.FREETEXT))
-        self.addParam("steps", steps, TypeInfo(ParamType.INT))
-        self.addParam("cfgscale", cfgscale, TypeInfo(ParamType.FLOAT))
-        self.addParam("size", size, TypeInfo(ParamType.IMAGE_SIZE))
-        self.addParam("seed", seed, TypeInfo(ParamType.INT))
-        self.addParam("scheduler", scheduler, TypeInfo(ParamType.STRING, restrict_choice=self.SCHEDULERS))
-        self.addParam("conditioning_inputs", conditioning_inputs, TypeInfo("ConditioningInput", multiple=True))
+        self.addParam("models", models, ModelsType)
+        self.addParam("prompt", prompt, str)
+        self.addParam("negprompt", negprompt, str)
+        self.addParam("steps", steps, int)
+        self.addParam("cfgscale", cfgscale, float)
+        self.addParam("size", size, SizeType)
+        self.addParam("seed", seed, int)
+        self.addParam("scheduler", scheduler, str)
+        self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
         self.prompt_processor = RandomPromptProcessorNode()
 
 

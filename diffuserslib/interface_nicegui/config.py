@@ -1,8 +1,8 @@
 from diffuserslib.functional.FunctionalTyping import *
-from diffuserslib.functional.elements.input import *
+from diffuserslib.functional import *
+from typing import List
 
-input_nodes_config = {
-    ParamType.INT: [ RandomIntNode ],
-    ParamType.FLOAT: [ RandomFloatNode ]
-}
-
+selectable_nodes_config:List[FunctionalNode] = [
+    RandomIntNode(min_max=MinMaxIntInputNode(), name="random_int"), 
+    RandomFloatNode(min_max=MinMaxFloatInputNode(), name="random_float"),
+]

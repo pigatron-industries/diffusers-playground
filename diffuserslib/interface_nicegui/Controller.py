@@ -1,8 +1,10 @@
-from diffuserslib.functional.FunctionalNode import FunctionalNode, ParameterDef
-from diffuserslib.functional.WorkflowRunner import *
+from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
+from diffuserslib.functional.WorkflowRunner import WorkflowRunner
 from .config import *
 from typing import List
 from dataclasses import dataclass
+import inspect
+import copy
 import importlib
 import importlib.util
 import sys
@@ -67,18 +69,20 @@ class Controller:
             self.workflow.setParam((node_name, param_name), value, index)
 
 
-    def getValidInputNodes(self, param:ParameterDef) -> List[str]:
-        if(param.type.type is not None and param.type.type in input_nodes_config):
-            class_list = input_nodes_config[param.type.type]
-            return [cls.__name__ for cls in class_list]
-        else:
-            return []
+    def getSelectableInputNodes(self, param:NodeParameter) -> List[str]:
+        selectable_nodes = []
+        for node in selectable_nodes_config:
+            node_return_type = inspect.signature(node.process).return_annotation
+            print(f"Node return type: {node_return_type}")
+            if(node_return_type == param.type):
+                selectable_nodes.append(node.node_name)
+        return selectable_nodes
 
 
-    def createInputNode(self, param:ParameterDef, class_name):
-        if(param.type.type is not None):
-            cls = getattr(sys.modules[__name__], class_name)
-            param.value = cls()
+    def createInputNode(self, param:NodeParameter, node_name):
+        for node in selectable_nodes_config:
+            if(node.node_name == node_name):
+                param.value = copy.deepcopy(node)
 
 
     def runWorkflow(self):

@@ -1,4 +1,4 @@
-from .FunctionalNode import FunctionalNode, ParameterInfos, TypeInfo
+from .FunctionalNode import FunctionalNode, ParameterInfos
 from typing import Any
 from dataclasses import dataclass
 
