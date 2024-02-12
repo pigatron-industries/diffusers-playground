@@ -56,7 +56,7 @@ class View:
         self.workflow_controls.refresh()
 
 
-    def setParam(self, node_name, param_name, value, index):
+    def setParam(self, node_name, param_name, value, index=None):
         self.controller.setParam(node_name, param_name, value, index)
 
 
