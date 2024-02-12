@@ -6,7 +6,7 @@ import numpy as np
 class RandomPoints2DNode(FunctionalNode):
     def __init__(self, 
                  name:str = "random_points_2d",
-                 num_points:int = 20):
+                 num_points:IntFuncType = 20):
         super().__init__(name)
         self.addParam("num_points", num_points, TypeInfo("Int"))
 

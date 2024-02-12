@@ -2,7 +2,7 @@ import torch
 import os
 import sys
 import gc
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Self
 from PIL import Image
 from diffusers.models import AutoencoderKL
 from transformers import CLIPFeatureExtractor, CLIPModel
@@ -37,6 +37,8 @@ def str_to_class(str):
 
 
 class DiffusersPipelines:
+    pipelines:Self|None = None
+
     def __init__(self, localmodelpath = '', device = DEFAULT_DEVICE, safety_checker = True, common_modifierdict = None, custom_pipeline = None, cache_dir = None):
         self.localmodelpath: str = localmodelpath
         self.localmodelcache: str = getModelsDir()

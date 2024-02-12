@@ -6,10 +6,12 @@ from PIL import Image
 StringFuncType = str | Callable[[], str]
 IntFuncType = int | Callable[[], int]
 FloatFuncType = float | Callable[[], float]
+BoolFuncType = bool | Callable[[], bool]
 
 StringsFuncType = List[str] | Callable[[], List[str]]
 IntsFuncType = List[int] | Callable[[], List[int]]
 FloatsFuncType = List[float] | Callable[[], List[float]]
+BoolsFuncType = List[bool] | Callable[[], List[bool]]
 
 SizeType = Tuple[int, int]
 SizeFuncType = SizeType | Callable[[], SizeType]
@@ -33,6 +35,7 @@ class TypeInfo:
     restrict_choice: List[Any]|None = None
     size: int|None = None
     multiple: bool = False
+    labels: List[str]|None = None
 
 
 class ParamType:
@@ -44,3 +47,4 @@ class ParamType:
     POINT2D = "Point2D"
     IMAGE_SIZE = "ImageSize"
     IMAGE = "Image"
+    FREETEXT = "FreeText"

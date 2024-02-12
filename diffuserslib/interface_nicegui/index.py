@@ -56,8 +56,8 @@ class View:
         self.workflow_controls.refresh()
 
 
-    def setParam(self, node_name, param_name, value):
-        self.controller.setParam(node_name, param_name, value)
+    def setParam(self, node_name, param_name, value, index):
+        self.controller.setParam(node_name, param_name, value, index)
 
 
     async def runWorkflow(self):
@@ -162,40 +162,58 @@ class View:
     @ui.refreshable
     def workflow_controls(self):
         if self.controller.workflow is not None:
-            self.node_parameters(self.controller.workflow)
+            with ui.card_section().classes('w-full').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
+                with ui.column():
+                    self.node_parameters(self.controller.workflow)
 
 
     def node_parameters(self, node:FunctionalNode):
         params = node.getParams()
-        with ui.card_section():
-            ui.label(node.node_name)
-            for param in params:
-                if(not callable(param.initial_value)):
-                    with ui.row():
-                        self.workflow_parameter(node, param)
+        for param in params:
+            if(not callable(param.initial_value)):
+                with ui.row():
+                    self.workflow_parameter(node, param)
+            else:
+                self.node_parameters(param.value)
 
 
     def workflow_parameter(self, node:FunctionalNode, param:ParameterDef):
-        ui.button(icon='functions', color='dark', on_click=lambda e: self.toggleParamFunctional(param)).classes('align-middle').props('dense')
+        print(node.node_name, param.name, param.value)
+        input_nodes = self.controller.getValidInputNodes(param)
+        if(len(input_nodes) > 0):
+            ui.button(icon='functions', color='dark', on_click=lambda e: self.toggleParamFunctional(param)).classes('align-middle').props('dense')
+        else:
+            ui.label().classes('w-8')
         if(isinstance(param.value, FunctionalNode)):
-            input_nodes = self.controller.getValidInputNodes(param)
-            selected_node = type(param.value).__name__ if type(param.value).__name__ in input_nodes else None
-            ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
-            self.node_parameters(param.value)
+            with ui.card_section().style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
+                with ui.column():
+                    selected_node = type(param.value).__name__ if type(param.value).__name__ in input_nodes else None
+                    ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
+                    self.node_parameters(param.value)
         else:
             match param.type.type:
                 case ParamType.INT:
-                    ui.number(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, int(e.value)))
+                    if(param.type.size == 1 or param.type.size is None):
+                        ui.number(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, int(e.value)))
+                    else:
+                        for i in range(param.type.size):
+                            ui.number(value=param.value[i], label=param.type.labels[i], on_change=lambda e: self.setParam(node.node_name, param.name, e.value, index=i))
                 case ParamType.FLOAT:
-                    ui.number(value=param.value, label=param.name, format='%.2f', on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                    if(param.type.size == 1 or param.type.size is None):
+                        ui.number(value=param.value, label=param.name, format='%.2f', on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                    else:
+                        for i in range(param.type.size):
+                            ui.number(value=param.value[i], label=param.type.labels[i], format='%.2f', on_change=lambda e: self.setParam(node.node_name, param.name, e.value, index=i))
                 case ParamType.STRING:
                     ui.input(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                case ParamType.FREETEXT:
+                    ui.textarea(value=param.value, label=param.name, on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
                 case ParamType.BOOL:
                     if(param.type.size == 1 or param.type.size is None):
                         ui.switch(value=param.value, on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
                     else:
                         for i in range(param.type.size):
-                            ui.switch(value=param.value[i], on_change=lambda e: self.setParam(node.node_name, param.name, e.value))
+                            ui.switch(value=param.value[i], on_change=lambda e: self.setParam(node.node_name, param.name, e.value, index=i))
                 case ParamType.IMAGE_SIZE:
                     ui.number(value=param.value[0], label=f"{param.name} width", on_change=lambda e: self.setParam(node.node_name, param.name, (e.value, param.value[1])))
                     ui.number(value=param.value[1], label=f"{param.name} height", on_change=lambda e: self.setParam(node.node_name, param.name, (param.value[0], e.value)))

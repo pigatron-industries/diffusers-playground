@@ -45,7 +45,6 @@ class Controller:
             sys.modules["module.workflow"] = module
             spec.loader.exec_module(module)
             workflows[module.name()] = module
-            print(f"Loaded workflow: {module.name()}")
         return workflows
     
 
@@ -55,19 +54,21 @@ class Controller:
         if workflow_name in self.workflows:
             self.model.workflow_name = workflow_name
             self.workflow = self.workflows[workflow_name].build()
+            print(f"Loaded workflow: {self.workflow.name}")
+            self.workflow.printDebug()
         else:
             self.model.workflow_name = None
             self.workflow = None
         
 
-    def setParam(self, node_name, param_name, value):
+    def setParam(self, node_name, param_name, value, index=None):
         if(self.workflow is not None):
-            print(f"Setting param {node_name}.{param_name} to {value}")
-            self.workflow.setParam((node_name, param_name), value)
+            print(f"Setting param {node_name}.{param_name}[{index}] to {value}")
+            self.workflow.setParam((node_name, param_name), value, index)
 
 
     def getValidInputNodes(self, param:ParameterDef) -> List[str]:
-        if(param.type.type is not None):
+        if(param.type.type is not None and param.type.type in input_nodes_config):
             class_list = input_nodes_config[param.type.type]
             return [cls.__name__ for cls in class_list]
         else:

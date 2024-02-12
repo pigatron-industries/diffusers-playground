@@ -77,20 +77,25 @@ class FunctionalNode:
         return paramInfos
     
     
-    def setParam(self, node_param_name:str|Tuple[str,str], value:Any):
+    def setParam(self, node_param_name:str|Tuple[str,str], value:Any, index=None):
         node_name = node_param_name[0] if(isinstance(node_param_name, Tuple)) else self.node_name
         param_name = node_param_name[1] if(isinstance(node_param_name, Tuple)) else node_param_name
         if(node_name == self.node_name):
-            self.params[param_name].value = value
+            if(index is None):
+                self.params[param_name].value = value
+            else:
+                old_value = self.params[param_name].value
+                new_value = old_value[:index] + (value,) + old_value[index+1:]
+                self.params[param_name].value = new_value
         else:
             for paramname in self.params:
                 paramvalue = self.params[paramname].value
                 if(isinstance(paramvalue, List) and any(callable(item) for item in paramvalue)):
                     for i, listvalue in enumerate(paramvalue):
                         if(isinstance(listvalue, FunctionalNode)):
-                            listvalue.setParam((node_name, param_name), value)
+                            listvalue.setParam((node_name, param_name), value, index)
                 elif(isinstance(paramvalue, FunctionalNode)):
-                    paramvalue.setParam((node_name, param_name), value)
+                    paramvalue.setParam((node_name, param_name), value, index)
 
 
     def evaluateParams(self):

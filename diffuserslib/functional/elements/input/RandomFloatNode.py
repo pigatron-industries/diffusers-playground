@@ -5,11 +5,10 @@ import random
 
 class RandomFloatNode(FunctionalNode):
     """ Select a random number between min and max """
-    def __init__(self, min:FloatFuncType=0, max:FloatFuncType=1, name:str="random_int"):
+    def __init__(self, min_max:Tuple[float, float]=(0, 1), name:str="random_int"):
         super().__init__(name)
-        self.addParam("min", min, TypeInfo(ParamType.FLOAT))
-        self.addParam("max", max, TypeInfo(ParamType.FLOAT))
+        self.addParam("min_max", min_max, TypeInfo(ParamType.FLOAT, size=2, labels=["min", "max"]))
         
         
-    def process(self, min:float, max:float) -> float:
-        return random.uniform(min, max)
+    def process(self, min_max:Tuple[float, float]) -> float:
+        return random.uniform(min_max[0], min_max[1])
