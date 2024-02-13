@@ -29,17 +29,3 @@ ImageFuncType = Image.Image | Callable[[], Image.Image]
 
 ColourType = Tuple[int, int, int] | str
 ColourFuncType = ColourType | Callable[[], ColourType]
-
-
-def ConstrainedFloat(min_value: float, max_value: float):
-    def validator(value):
-        if not isinstance(value, int):
-            raise TypeError("Value must be a float")
-        if value < min_value or value > max_value:
-            raise ValueError(f"Value must be between {min_value} and {max_value}")
-        return value
-    return NewType('ConstrainedFloat', float)
-
-ProbabilityType = ConstrainedFloat(0.0, 1.0)
-ProbabilityFuncType = ProbabilityType | Callable[[], ProbabilityType]
-

@@ -29,7 +29,7 @@ class FloatUserInputNode(UserInputNode):
         super().__init__(name)
 
     def ui(self):
-        self.input_number = ui.number(value=self.value, label=self.name, format='%.2f').bind_value(self, 'value')
+        self.input_number = ui.number(value=self.value, label=self.node_name, format='%.2f').bind_value(self, 'value')
 
     def process(self) -> float:
         return float(self.value)
@@ -41,7 +41,7 @@ class StringUserInputNode(UserInputNode):
         super().__init__(name)
 
     def ui(self):
-        self.input_string = ui.input(value=self.value, label=self.name).bind_value(self, 'value')
+        self.input_string = ui.input(value=self.value, label=self.node_name).bind_value(self, 'value')
 
     def process(self) -> str:
         return str(self.value)
@@ -53,7 +53,7 @@ class TextAreaInputNode(UserInputNode):
         super().__init__(name)
 
     def ui(self):
-        self.input_text = ui.textarea(value=self.value, label=self.name).bind_value(self, 'value')
+        self.input_text = ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value')
 
     def process(self) -> str:
         return str(self.value)
