@@ -111,3 +111,25 @@ class MinMaxFloatInputNode(UserInputNode):
 
     def process(self) -> Tuple[float, float]:
         return (float(self.min), float(self.max))
+    
+
+class BoolListUserInputNode(UserInputNode):
+    def __init__(self, value:List[bool], labels:List[str], name:str="bool_list_user_input"):
+        self.value:List[bool] = value
+        self.labels:List[str] = labels
+        super().__init__(name)
+
+    def ui(self):
+        for i in range(len(self.value)):
+            self.checkbox(i)
+
+    def checkbox(self, index:int):
+        with ui.column().classes('gap-0'):
+            ui.label(self.labels[index]).style('font-size: 12px; color:rgba(255, 255, 255, 0.7)')
+            ui.checkbox(value=self.value[index], on_change=lambda e : self.update(index, e.value))
+
+    def update(self, index:int, value:bool):
+        self.value[index] = value
+
+    def process(self) -> List[bool]:
+        return self.value
