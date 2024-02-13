@@ -5,7 +5,7 @@ from PIL import Image
 
 ConditioningInputType = ControlImageParameters
 ConditioningInputFuncType = ConditioningInputType | Callable[[], ConditioningInputType]
-ConditioningInputFuncsType = List[ConditioningInputType] | List[Callable[[], ConditioningInputType]]
+ConditioningInputFuncsType = List[ConditioningInputType] | List[Callable[[], ConditioningInputType]] | Callable[[], List[ConditioningInputType]]
 
 class ConditioningInputNode(FunctionalNode):
     def __init__(self, 

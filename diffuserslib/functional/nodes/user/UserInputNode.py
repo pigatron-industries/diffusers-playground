@@ -12,15 +12,15 @@ class UserInputNode(FunctionalNode):
 
 
 class IntUserInputNode(UserInputNode):
-    def __init__(self, value:int=0, name:str="int_user_input"):
-        self.value = int(value)
+    def __init__(self, value:int|None=0, name:str="int_user_input"):
+        self.value = int(value) if value is not None else None
         super().__init__(name)
 
     def ui(self):
         self.input_number = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
 
-    def process(self) -> int:
-        return int(self.value)
+    def process(self) -> int|None:
+        return int(self.value) if self.value is not None else None
     
 
 class FloatUserInputNode(UserInputNode):
@@ -35,30 +35,6 @@ class FloatUserInputNode(UserInputNode):
         return float(self.value)
     
 
-class StringUserInputNode(UserInputNode):
-    def __init__(self, value:str="", name:str="string_user_input"):
-        self.value = str(value)
-        super().__init__(name)
-
-    def ui(self):
-        self.input_string = ui.input(value=self.value, label=self.node_name).bind_value(self, 'value')
-
-    def process(self) -> str:
-        return str(self.value)
-    
-
-class TextAreaInputNode(UserInputNode):
-    def __init__(self, value:str="", name:str="text_area_user_input"):
-        self.value = str(value)
-        super().__init__(name)
-
-    def ui(self):
-        self.input_text = ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value')
-
-    def process(self) -> str:
-        return str(self.value)
-    
-
 class BoolUserInputNode(UserInputNode):
     def __init__(self, value:bool=False, name:str="bool_user_input"):
         self.value = bool(value)
@@ -70,6 +46,43 @@ class BoolUserInputNode(UserInputNode):
     def process(self) -> bool:
         return bool(self.value)
     
+
+class StringUserInputNode(UserInputNode):
+    def __init__(self, value:str="", name:str="string_user_input"):
+        self.value = str(value)
+        super().__init__(name)
+
+    def ui(self):
+        self.input_string = ui.input(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+
+    def process(self) -> str:
+        return str(self.value)
+    
+
+class TextAreaInputNode(UserInputNode):
+    def __init__(self, value:str="", name:str="text_area_user_input"):
+        self.value = str(value)
+        super().__init__(name)
+
+    def ui(self):
+        self.input_text = ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+
+    def process(self) -> str:
+        return str(self.value)
+    
+
+class ListSelectUserInputNode(UserInputNode):
+    def __init__(self, value:str, options:List[str], name:str="list_select_user_input"):
+        self.value = str(value)
+        self.options = options
+        super().__init__(name)
+
+    def ui(self):
+        self.input_list = ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+
+    def process(self) -> str:
+        return str(self.value)
+
 
 class SizeUserInputNode(UserInputNode):
     def __init__(self, value:SizeType=(512, 512), name:str="size_user_input"):

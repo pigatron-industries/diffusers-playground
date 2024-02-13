@@ -110,8 +110,12 @@ class View:
 
     def removeOutput(self, index):
         self.getWorkflowRunData().pop(index)
-        # TODO only remove elements that are no longer in the list
         self.workflow_outputs.refresh()
+
+        # TODO don't refresh whole list - 
+        # this should be changed to a dict[int, RunData] instead of a list so remove itesm doesn't re-index
+        # self.output_controls[index].output_container.clear()
+        # self.output_controls.pop(index)
 
 
     def toggleParamFunctional(self, param:NodeParameter):
@@ -152,7 +156,7 @@ class View:
                     ui.button('Clear', on_click=lambda e: self.clearOutputs()).classes('align-middle')
             with ui.splitter(value=40).classes("w-full h-full no-wrap overflow-auto") as splitter:
                 with splitter.before:
-                    with ui.column().classes("p-2"):
+                    with ui.column().classes("p-2 w-full"):
                         ui.select(list(self.controller.workflows.keys()), value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value))
                         self.workflow_controls()
                 with splitter.after:
@@ -171,7 +175,7 @@ class View:
         params = node.getParams()
         for param in params:
             if(isinstance(param.initial_value, UserInputNode)):
-                with ui.row():
+                with ui.row().classes('w-full'):
                     self.workflow_parameter(node, param)
             elif(isinstance(param.value, FunctionalNode)):
                 self.node_parameters(param.value)
@@ -187,7 +191,7 @@ class View:
         if(isinstance(param.value, UserInputNode)):
             param.value.ui()
         else:
-            with ui.card_section().style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
+            with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                 with ui.column():
                     selected_node = param.value.node_name if param.value.node_name != "empty" else None
                     ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))

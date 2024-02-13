@@ -27,12 +27,12 @@ class ImageDiffusionNode(FunctionalNode):
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
+        self.addParam("size", size, SizeType)
         self.addParam("models", models, ModelsType)
         self.addParam("prompt", prompt, str)
         self.addParam("negprompt", negprompt, str)
         self.addParam("steps", steps, int)
         self.addParam("cfgscale", cfgscale, float)
-        self.addParam("size", size, SizeType)
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
         self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
