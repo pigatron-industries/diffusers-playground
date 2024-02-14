@@ -132,6 +132,7 @@ class View:
 
 
     def page(self):
+        ui.page_title('Generative Toolkit')
         ui.label.default_classes('label')
         ui.select.default_classes('w-80')
         ui.query('body').style(f'background-color: rgb(24, 28, 33)')
