@@ -1,0 +1,8 @@
+
+device: mps
+safety: True
+folders:
+  outputs: ./outputs
+  embeddings: ./embeddings
+  loras: ./loras
+  models: ./models
