@@ -136,3 +136,7 @@ notebooks/*.ipynb
 cache/
 .DS_Store
 .vscode
+
+# local config files
+local_config.yml
+local_modelconfig.yml
