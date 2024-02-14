@@ -4,6 +4,7 @@ def name():
     return "Image Diffusion"
 
 def build():
+    model_input = DiffusionModelUserInputNode(name = "model")
     size_input = SizeUserInputNode(value = (512, 512), name = "size")
     prompt_input = TextAreaInputNode(value = "", name = "prompt")
     negprompt_input = TextAreaInputNode(value = "", name = "negprompt")
@@ -15,10 +16,10 @@ def build():
                                               options = ["DPMSolverMultistepScheduler",
                                                          "EulerDiscreteScheduler", 
                                                          "EulerAncestralDiscreteScheduler"])
-
+    
     # TODO - Add support for conditioning inputs
 
-    diffusion = ImageDiffusionNode(models = [ModelParameters("digiplay/Juggernaut_final")],
+    diffusion = ImageDiffusionNode(models = model_input,
                                    size = size_input,
                                    prompt = prompt_input,
                                    negprompt = negprompt_input,

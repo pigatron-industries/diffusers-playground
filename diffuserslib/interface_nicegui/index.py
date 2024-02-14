@@ -183,7 +183,6 @@ class View:
 
 
     def workflow_parameter(self, node:FunctionalNode, param:NodeParameter):
-        print(node.node_name, param.name, param.value)
         input_nodes = self.controller.getSelectableInputNodes(param)
         if(len(input_nodes) > 0):
             ui.button(icon='functions', color='dark', on_click=lambda e: self.toggleParamFunctional(param)).classes('align-middle').props('dense')

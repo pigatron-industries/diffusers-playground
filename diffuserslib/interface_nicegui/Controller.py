@@ -73,7 +73,6 @@ class Controller:
         selectable_nodes = []
         for node in selectable_nodes_config:
             node_return_type = inspect.signature(node.process).return_annotation
-            print(f"Node return type: {node_return_type}")
             if(node_return_type == param.type):
                 selectable_nodes.append(node.node_name)
         return selectable_nodes
