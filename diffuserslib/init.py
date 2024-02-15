@@ -1,10 +1,10 @@
-from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
+from diffuserslib.inference import DiffusersPipelines
+from diffuserslib.functional import WorkflowRunner
 from typing import List
 import yaml
 import os
 
 class GlobalConfig:
-    outputs_dir = None
     inputs_dirs = []
 
 
@@ -18,7 +18,8 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             device = configdata["device"]
             safety_checker = configdata["safety"]
             models = configdata["folders"]["models"]
-            GlobalConfig.outputs_dir = configdata["folders"]["outputs"]
+            outputs_dir = configdata["folders"]["outputs"]
+            WorkflowRunner.workflowrunner = WorkflowRunner(output_dir=outputs_dir)
             GlobalConfig.inputs_dirs.extend(configdata["folders"]["inputs"])
             break
 

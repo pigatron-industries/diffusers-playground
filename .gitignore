@@ -140,3 +140,7 @@ cache/
 # local config files
 local_config.yml
 local_modelconfig.yml
+/outputs
+/loras
+/models
+/inputs/*

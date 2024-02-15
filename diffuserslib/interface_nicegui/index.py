@@ -6,7 +6,7 @@ from .Controller import Controller
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
 from diffuserslib.functional.WorkflowRunner import WorkflowRunData
-from typing import List
+from typing import List, Dict
 from dataclasses import dataclass
 from PIL import Image
 
@@ -41,13 +41,14 @@ class View:
 
     @ui.page('/')
     def gui():
+        app.on_exception(ui.notify)
         view = View()
         view.page()
 
 
     def __init__(self):
         self.controller = Controller()
-        self.output_controls:List[OutputControls] = []
+        self.output_controls:Dict[int, OutputControls] = {}
 
 
     def loadWorkflow(self, workflow_name):
@@ -77,35 +78,36 @@ class View:
     def updateWorkflowProgress(self):
         if(not self.controller.workflowrunner.running):
             self.timer.deactivate()
-        for i, rundata in enumerate(self.getWorkflowRunData()):
-            if(i < len(self.output_controls)):
+        for key, rundata in self.getWorkflowRunData().items():
+            if(key in self.output_controls):
                 # Update existing output controls
-                output_container = self.output_controls[i].output_container
-                if(rundata.output is not None and self.output_controls[i].waiting_output == True and output_container is not None):
+                output_container = self.output_controls[key].output_container
+                if(rundata.output is not None and self.output_controls[key].waiting_output == True and output_container is not None):
                     output_container.clear()
                     with output_container:
-                        self.output_controls[i].output_control, self.output_controls[i].output_width, self.output_controls[i].label_saved, self.output_controls[i].waiting_output = self.workflow_output(i)
+                        self.output_controls[key].output_control, self.output_controls[key].output_width, self.output_controls[key].label_saved, self.output_controls[key].waiting_output = self.workflow_output(key)
             else:
                 # Add new output controls
                 with self.outputs_container:
                     output_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
                     with output_container:
-                        output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
-                        self.output_controls.append(OutputControls(output_container, output_control, output_width, label_saved, waiting_output))
+                        output_control, output_width, label_saved, waiting_output = self.workflow_output(key)
+                        self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
 
 
-    def getWorkflowRunData(self) -> List[WorkflowRunData]:
-        return self.controller.workflowrunner.rundata
+    def getWorkflowRunData(self) -> Dict[int, WorkflowRunData]:
+        return self.controller.getWorkflowRunData()
     
 
     def expandOutput(self, index):
         self.output_controls[index].toggleExpanded()
 
 
-    def saveOutput(self, index):
-        # TODO actually save the file
-        self.getWorkflowRunData()[index].save_file = "test/file/blah/blah/path.png"
-        self.output_controls[index].showLabelSaved(self.getWorkflowRunData()[index].save_file)
+    def saveOutput(self, key):
+        self.controller.saveOutput(key)
+        filename = self.getWorkflowRunData()[key].save_file
+        if (filename is not None):
+            self.output_controls[key].showLabelSaved(filename)
 
 
     def removeOutput(self, index):
@@ -153,7 +155,7 @@ class View:
                 with ui.row():
                     ui.number(label="Batch Size").bind_value(self.controller.model, 'batch_size').bind_visibility_from(self.controller.model, 'run_type', value=1).style("width: 100px")
                     ui.button('Run', on_click=lambda e: self.runWorkflow()).classes('align-middle')
-                    ui.button('Stop', on_click=lambda e: self.stopWorkflow()).classes('align-middle')
+                    ui.button('Stop', on_click=lambda e: self.controller.stopWorkflow()).classes('align-middle')
                     ui.button('Clear', on_click=lambda e: self.clearOutputs()).classes('align-middle')
             with ui.splitter(value=40).classes("w-full h-full no-wrap overflow-auto") as splitter:
                 with splitter.before:
@@ -200,14 +202,14 @@ class View:
 
     @ui.refreshable
     def workflow_outputs(self):
-        self.output_controls = []
+        self.output_controls = {}
         self.outputs_container = ui.column().classes('w-full p-2')
         with self.outputs_container:
-            for i, rundata in enumerate(self.getWorkflowRunData()):
+            for key, rundata in self.getWorkflowRunData().items():
                 output_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
                 with output_container:
                     output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
-                    self.output_controls.append(OutputControls(output_container, output_control, output_width, label_saved, waiting_output))
+                    self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
 
 
     @ui.refreshable

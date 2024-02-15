@@ -28,9 +28,12 @@ class Controller:
     model = Model()
     workflows = []
     workflow:FunctionalNode|None = None
-    workflowrunner = WorkflowRunner()
 
     def __init__(self):
+        if(WorkflowRunner.workflowrunner is not None):
+            self.workflowrunner = WorkflowRunner.workflowrunner
+        else:
+            raise Exception("Workflow Runner not initialized")
         self.workflows = self.loadWorkflows()
         if(self.model.workflow_name is not None):
             self.loadWorkflow(self.model.workflow_name)
@@ -85,9 +88,19 @@ class Controller:
 
 
     def runWorkflow(self):
-        if(self.workflow is not None):
-            self.workflowrunner.run(self.workflow, int(self.model.batch_size))
+        if(self.workflow is not None and WorkflowRunner.workflowrunner is not None):
+            WorkflowRunner.workflowrunner.run(self.workflow, int(self.model.batch_size))
         else:
             print("No workflow loaded")
 
 
+    def stopWorkflow(self):
+        self.workflowrunner.stop()
+
+
+    def getWorkflowRunData(self):
+        return self.workflowrunner.rundata
+
+
+    def saveOutput(self, key):
+        self.workflowrunner.save(key)
