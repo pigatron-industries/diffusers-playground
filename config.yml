@@ -2,6 +2,8 @@
 device: mps
 safety: True
 folders:
+  inputs: 
+    - "./inputs"
   outputs: ./outputs
   embeddings: ./embeddings
   loras: ./loras

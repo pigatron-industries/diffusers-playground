@@ -27,8 +27,6 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def updateModels(self):
-        print(self.basemodel)
-
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         if(self.basemodel is not None):

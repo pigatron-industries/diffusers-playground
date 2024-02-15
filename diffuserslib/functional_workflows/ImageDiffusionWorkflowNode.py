@@ -16,8 +16,7 @@ def build():
                                               options = ["DPMSolverMultistepScheduler",
                                                          "EulerDiscreteScheduler", 
                                                          "EulerAncestralDiscreteScheduler"])
-    
-    # TODO - Add support for conditioning inputs
+    conditioning_inputs = ListUserInputNode(type = ConditioningInputType, name = "conditioning_inputs")
 
     diffusion = ImageDiffusionNode(models = model_input,
                                    size = size_input,
@@ -27,5 +26,5 @@ def build():
                                    cfgscale = cfgscale_input,
                                    seed = seed_input,
                                    scheduler = scheduler_input,
-                                   conditioning_inputs = [])
+                                   conditioning_inputs = conditioning_inputs)
     return diffusion

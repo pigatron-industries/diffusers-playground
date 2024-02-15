@@ -5,6 +5,7 @@ import os
 
 class GlobalConfig:
     outputs_dir = None
+    inputs_dirs = []
 
 
 def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]=["modelconfig.yml"]):
@@ -18,6 +19,7 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             safety_checker = configdata["safety"]
             models = configdata["folders"]["models"]
             GlobalConfig.outputs_dir = configdata["folders"]["outputs"]
+            GlobalConfig.inputs_dirs.extend(configdata["folders"]["inputs"])
             break
 
     DiffusersPipelines.pipelines = DiffusersPipelines(device=device, safety_checker=safety_checker, localmodelpath=models)
