@@ -208,13 +208,13 @@ class View:
             for key, rundata in self.getWorkflowRunData().items():
                 output_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
                 with output_container:
-                    output_control, output_width, label_saved, waiting_output = self.workflow_output(i)
+                    output_control, output_width, label_saved, waiting_output = self.workflow_output(key)
                     self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
 
 
     @ui.refreshable
-    def workflow_output(self, index):
-        rundata = self.getWorkflowRunData()[index]
+    def workflow_output(self, key):
+        rundata = self.getWorkflowRunData()[key]
         with ui.row().classes('w-full'):
             output_control = None
             output_width = 0
@@ -224,15 +224,15 @@ class View:
                 waiting_output = True
             if(isinstance(rundata.output, Image.Image)):
                 output_width = rundata.output.width
-                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(index)).classes(default_output_class).style(f"max-width: {output_width}px;")
+                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(key)).classes(default_output_class).style(f"max-width: {output_width}px;")
             with ui.column():
                 for node_name in rundata.params.params:
                     for param in rundata.params.params[node_name]:
                         ui.label(f"{param.name}: {param.value}").style("line-height: 1;")
             with ui.column().classes('ml-auto'):
                 with ui.row().classes('ml-auto'):
-                    ui.button('Save', on_click=lambda e: self.saveOutput(index))
-                    ui.button('Remove', on_click=lambda e: self.removeOutput(index))      
+                    ui.button('Save', on_click=lambda e: self.saveOutput(key))
+                    ui.button('Remove', on_click=lambda e: self.removeOutput(key))      
                 with ui.row():
                     label_saved = ui.label(f"Saved to {rundata.save_file}")
                     label_saved.set_visibility(rundata.save_file is not None)

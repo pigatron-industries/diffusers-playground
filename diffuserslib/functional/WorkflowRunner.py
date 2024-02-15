@@ -7,9 +7,9 @@ import time
 @dataclass
 class WorkflowRunData:
     params:ParameterInfos
+    timestamp:int
     output: Any|None = None
     save_file:str|None = None
-    timestamp:int = int(time.time())
 
 
 class WorkflowRunner:
@@ -31,7 +31,7 @@ class WorkflowRunner:
         print(f"Running workflow {workflow.node_name} with batch size {batch_size}")
         for i in range(batch_size):
             print(f"Running workflow {workflow.node_name} batch {i+1} of {batch_size}")
-            rundata = WorkflowRunData(workflow.getStaticParams())
+            rundata = WorkflowRunData(workflow.getStaticParams(), int(time.time_ns()/1000))
             self.rundata[rundata.timestamp] = rundata
             rundata.output = workflow()
             if(self.running == False):
