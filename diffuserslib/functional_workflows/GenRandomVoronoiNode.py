@@ -13,6 +13,6 @@ def build():
     random_points = RandomPoints2DNode(num_points = num_points_input)
     new_image = NewImageNode(size = size_user_input, background_colour = (0, 0, 0))
     voronoi = DrawVoronoiNode(image = new_image, points = random_points, radius = radius_input, 
-                              line_probablity = line_probability_input, draw_options = draw_options)
+                              line_probability = line_probability_input, draw_options = draw_options)
 
     return voronoi

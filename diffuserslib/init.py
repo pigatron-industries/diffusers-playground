@@ -3,6 +3,8 @@ from diffuserslib.functional import WorkflowRunner
 from typing import List
 import yaml
 import os
+import numpy as np
+from PIL import Image
 
 class GlobalConfig:
     inputs_dirs = []
@@ -37,3 +39,12 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             DiffusersPipelines.pipelines.loadLORAs(loras)
 
 
+
+# Initialise yaml representers for yml dumps
+def ndarray_representer(dumper: yaml.Dumper, array: np.ndarray) -> yaml.Node:
+    return dumper.represent_list(array.tolist())
+def image_representer(dumper: yaml.Dumper, data: Image.Image) -> yaml.Node:
+    return dumper.represent_str("[image]")
+
+yaml.add_representer(np.ndarray, ndarray_representer)
+yaml.add_representer(Image.Image, image_representer)

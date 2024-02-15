@@ -9,6 +9,7 @@ class NodeParameter:
     type: type
     value: Any
     initial_value: Any
+    evaluated: Any = None
 
 
 @dataclass
@@ -46,34 +47,34 @@ class FunctionalNode:
     def getParams(self) -> List[NodeParameter]:
         return list(self.params.values())
     
-    def getInputParams(self) -> ParameterInfos:
-        paramInfos = ParameterInfos()
-        for paramname in self.params:
-            paramdef = self.params[paramname]
-            if(isinstance(paramdef.value, FunctionalNode)):
-                paramInfos.addAll(paramdef.value.getInputParams())
-            elif(isinstance(paramdef.value, List)):
-                for i, listvalue in enumerate(paramdef.value):
-                    if(isinstance(listvalue, FunctionalNode)):
-                        paramInfos.addAll(listvalue.getInputParams())
-        return paramInfos
+    # def getInputParams(self) -> ParameterInfos:
+    #     paramInfos = ParameterInfos()
+    #     for paramname in self.params:
+    #         paramdef = self.params[paramname]
+    #         if(isinstance(paramdef.value, FunctionalNode)):
+    #             paramInfos.addAll(paramdef.value.getInputParams())
+    #         elif(isinstance(paramdef.value, List)):
+    #             for i, listvalue in enumerate(paramdef.value):
+    #                 if(isinstance(listvalue, FunctionalNode)):
+    #                     paramInfos.addAll(listvalue.getInputParams())
+    #     return paramInfos
 
 
-    def getStaticParams(self) -> ParameterInfos:
-        paramInfos = ParameterInfos()
-        for paramname in self.params:
-            paramdef = self.params[paramname]
-            if(isinstance(paramdef.value, List) and any(callable(item) for item in paramdef.value)):
-                for i, value in enumerate(paramdef.value):
-                    if(not callable(value)):
-                        paramInfos.add(self.node_name, paramname, paramdef.type, value)
-                    elif(isinstance(value, FunctionalNode)):
-                        paramInfos.addAll(value.getStaticParams())
-            elif(not callable(paramdef.value)):
-                paramInfos.add(self.node_name, paramname, paramdef.type, paramdef.value)
-            elif(isinstance(paramdef.value, FunctionalNode)):
-                paramInfos.addAll(paramdef.value.getStaticParams())
-        return paramInfos
+    # def getStaticParams(self) -> ParameterInfos:
+    #     paramInfos = ParameterInfos()
+    #     for paramname in self.params:
+    #         paramdef = self.params[paramname]
+    #         if(isinstance(paramdef.value, List) and any(callable(item) for item in paramdef.value)):
+    #             for i, value in enumerate(paramdef.value):
+    #                 if(not callable(value)):
+    #                     paramInfos.add(self.node_name, paramname, paramdef.type, value)
+    #                 elif(isinstance(value, FunctionalNode)):
+    #                     paramInfos.addAll(value.getStaticParams())
+    #         elif(not callable(paramdef.value)):
+    #             paramInfos.add(self.node_name, paramname, paramdef.type, paramdef.value)
+    #         elif(isinstance(paramdef.value, FunctionalNode)):
+    #             paramInfos.addAll(paramdef.value.getStaticParams())
+    #     return paramInfos
     
     
     def setParam(self, node_param_name:str|Tuple[str,str], value:Any, index=None):
@@ -98,21 +99,50 @@ class FunctionalNode:
 
 
     def evaluateParams(self):
-        outargs = {}
-        for paramname in self.params.keys():
-            paramdef = self.params[paramname]
-            if(callable(paramdef.value)):
-                outargs[paramname] = paramdef.value()
-            elif(isinstance(paramdef.value, list)):
-                outargs[paramname] = []
-                for listvalue in paramdef.value:
+        paramvalues = {}
+        for paramname, param in self.params.items():
+            if(callable(param.value)):
+                paramvalues[paramname] = param.value()
+            elif(isinstance(param.value, list)):
+                paramvalues[paramname] = []
+                for listvalue in param.value:
                     if(callable(listvalue)):
-                        outargs[paramname].append(listvalue())
+                        paramvalues[paramname].append(listvalue())
                     else:
-                        outargs[paramname].append(listvalue)
+                        paramvalues[paramname].append(listvalue)
             else:
-                outargs[paramname] = paramdef.value
-        return outargs
+                paramvalues[paramname] = param.value
+            param.evaluated = paramvalues[paramname]
+        return paramvalues
+    
+
+    def getEvaluatedParamValuesRecursive(self) -> Dict[str,Dict[str, Any]]:
+        paramvalues:Dict[str, Any] = {}
+        for paramname, param in self.params.items():
+            if(isinstance(param.initial_value, FunctionalNode)):
+                paramvalues[paramname] = param.evaluated
+
+        nodeparamvalues:Dict[str,Dict[str, Any]] = {}
+        if(len(paramvalues) > 0):
+            nodeparamvalues[self.node_name] = paramvalues
+
+        for paramname, param in self.params.items():
+            if(isinstance(param.value, List)):
+                for listvalue in param.value:
+                    if(isinstance(listvalue, FunctionalNode)):
+                        childnodeparamvalues = listvalue.getEvaluatedParamValuesRecursive()
+                        for childnodename, childparamvalues in childnodeparamvalues.items():
+                            nodeparamvalues[childnodename] = childparamvalues
+            elif(isinstance(param.value, FunctionalNode)):
+                childnodeparamvalues = param.value.getEvaluatedParamValuesRecursive()
+                for childnodename, childparamvalues in childnodeparamvalues.items():
+                    nodeparamvalues[childnodename] = childparamvalues
+        
+        return nodeparamvalues
+
+                
+
+
     
 
     def printDebug(self, level=0):

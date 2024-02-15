@@ -29,7 +29,7 @@ class DrawVoronoiNode(FunctionalNode):
                  outline_colour: ColourFuncType = "white", 
                  point_colour: ColourFuncType = "white",
                  draw_options: DrawOptionsFuncType = (True, True, True),  # (bounded lines, unbounded lines, points)
-                 line_probablity: FloatFuncType = 1.0,
+                 line_probability: FloatFuncType = 1.0,
                  radius: IntFuncType = 2,
                  name:str = "draw_voronoi"):
         super().__init__(name)
@@ -39,7 +39,7 @@ class DrawVoronoiNode(FunctionalNode):
         self.addParam("point_colour", point_colour, ColourType)
         self.addParam("draw_options", draw_options, DrawOptionsType)
         self.addParam("radius", radius, int)
-        self.addParam("line_probablity", line_probablity, float)
+        self.addParam("line_probability", line_probability, float)
 
 
     def process(self, image: Image.Image,
@@ -47,7 +47,7 @@ class DrawVoronoiNode(FunctionalNode):
                 outline_colour: ColourType, 
                 point_colour: ColourType,
                 draw_options: DrawOptionsType,
-                line_probablity: float = 1,
+                line_probability: float = 1,
                 radius: float = 2) -> Image.Image:
         drawBoundedLines, drawUnboundedLines, drawPoints = draw_options
         points_array = np.array(points)
@@ -57,7 +57,7 @@ class DrawVoronoiNode(FunctionalNode):
         draw = ImageDraw.Draw(image)
 
         for line in lines:
-            if (np.random.random() < line_probablity):
+            if (np.random.random() < line_probability):
                 draw.line(line, fill=outline_colour, width=1)
 
         if (drawPoints):

@@ -226,9 +226,9 @@ class View:
                 output_width = rundata.output.width
                 output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(key)).classes(default_output_class).style(f"max-width: {output_width}px;")
             with ui.column():
-                for node_name in rundata.params.params:
-                    for param in rundata.params.params[node_name]:
-                        ui.label(f"{param.name}: {param.value}").style("line-height: 1;")
+                for node_name in rundata.params:
+                    for paramname, paramvalue in rundata.params[node_name].items():
+                        ui.label(f"{paramname}: {paramvalue}").style("line-height: 1;")
             with ui.column().classes('ml-auto'):
                 with ui.row().classes('ml-auto'):
                     ui.button('Save', on_click=lambda e: self.saveOutput(key))
