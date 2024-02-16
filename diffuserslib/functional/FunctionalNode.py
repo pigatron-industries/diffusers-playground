@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Self, Tuple
+from typing import Dict, Any, List, Self, Tuple, Callable
 from dataclasses import dataclass, field
 
 
@@ -116,10 +116,26 @@ class FunctionalNode:
         visitor(self, parents)
         for paramname, param in self.params.items():
             if(isinstance(param.value, FunctionalNode)):
-                param.value.visitNodes(visitor, parents + [self])
+                param.value.visitNodes(visitor, [param]+parents)
             elif(isinstance(param.initial_value, FunctionalNode)):
-                param.initial_value.visitNodes(visitor, parents + [self])
+                param.initial_value.visitNodes(visitor, [param]+parents)
     
+
+    def visitParams(self, visitor, parents=[]):
+        output = {}
+        for paramname, param in self.params.items():
+            output[paramname] = {}
+            visitor_output = visitor(param, parents+[param])
+            if(visitor_output is not None):
+                output[paramname].update(visitor_output)
+            if(isinstance(param.value, FunctionalNode)):
+                output[paramname].update(param.value.visitParams(visitor, parents+[param]))
+            elif(isinstance(param.initial_value, FunctionalNode)):
+                output[paramname].update(param.initial_value.visitParams(visitor, parents+[param]))
+            if(not output[paramname]):
+                del output[paramname]
+        return output
+
 
     def printDebug(self, level=0):
         print((" "*level*3) + f"* Node: {self.node_name}")

@@ -114,20 +114,29 @@ class Controller:
     def loadWorkflowParamsFromHistory(self):
         if(self.workflow is not None and self.model.workflow_name is not None and self.model.workflow_name in self.workflow_history):
             user_input_values = self.workflow_history[self.model.workflow_name]
-            print(user_input_values)
-            nodes = self.workflow.getNodes()
-            for node in nodes:
-                if(isinstance(node, UserInputNode) and node.node_name in user_input_values):
-                    node.setValue(user_input_values[node.node_name])
+
+            def visitor(param, parents):
+                paramstring = '.'.join([parent.name for parent in parents])
+                if(paramstring+'.value' in user_input_values):
+                    param.value.setValue(user_input_values[paramstring+'.value'])
+                if(paramstring+'.node' in user_input_values):
+                    self.createInputNode(param, user_input_values[paramstring+'.node'])
+            
+            self.workflow.visitParams(visitor)
 
 
     def saveWorkflowParamsToHistory(self):
         if(self.workflow is not None):
-            nodes = self.workflow.getNodes()
             user_input_values = {}
-            for node in nodes:
-                if(isinstance(node, UserInputNode)):
-                    user_input_values[node.node_name] = node.getValue()
+
+            def visitor(param, parents):
+                paramstring = '.'.join([parent.name for parent in parents])
+                if(isinstance(param.value, UserInputNode)):
+                    user_input_values[paramstring+'.value'] = param.value.getValue()
+                if(param.value != param.initial_value and isinstance(param.value, FunctionalNode) and isinstance(param.initial_value, UserInputNode)):
+                    user_input_values[paramstring+'.node'] = param.value.node_name
+                    
+            self.workflow.visitParams(visitor)
             self.workflow_history[self.model.workflow_name] = user_input_values
             self.saveWorkflowParamsHistory()
 
