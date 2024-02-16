@@ -8,17 +8,16 @@ class ListUserInputNode(UserInputNode):
     """ user interface node to supply a variable size list of items """
     def __init__(self, input_node_generator:Callable[[], FunctionalNode], name:str="list_user_input"):
         self.input_node_generator = input_node_generator
-        self.value:List[Any] = []
         super().__init__(name)
-        self.addParam("list", self.value, List[Any])
+        self.addParam("list", [], List[Any])
 
 
     def getValue(self) -> int:
-        return len(self.value)
+        return len(self.params["list"].value)
     
 
     def setValue(self, value:int):
-        self.value = [self.input_node_generator() for i in range(value)]
+        self.params["list"].value = [self.input_node_generator() for i in range(value)]
 
 
     @ui.refreshable
@@ -26,7 +25,7 @@ class ListUserInputNode(UserInputNode):
         with ui.row():
             ui.button(icon="add", on_click = lambda e: self.addInput(0)).props('dense')
             ui.label(f"{self.node_name}")
-        for i, item in enumerate(self.value):
+        for i, item in enumerate(self.params["list"].value):
             with ui.row().classes('w-full'):
                 ui.label().classes('w-8')
                 with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
@@ -41,12 +40,12 @@ class ListUserInputNode(UserInputNode):
 
     def addInput(self, index:int):
         newvalue = self.input_node_generator()
-        self.value.insert(index, newvalue)
+        self.params["list"].value.insert(index, newvalue)
         self.ui.refresh()
 
 
     def removeInput(self, index:int):
-        self.value.pop(index)
+        self.params["list"].value.pop(index)
         self.ui.refresh()
 
 

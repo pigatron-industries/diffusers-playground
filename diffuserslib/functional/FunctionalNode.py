@@ -132,6 +132,10 @@ class FunctionalNode:
                 output[paramname].update(param.value.visitParams(visitor, parents+[param]))
             elif(isinstance(param.initial_value, FunctionalNode)):
                 output[paramname].update(param.initial_value.visitParams(visitor, parents+[param]))
+            elif(isinstance(param.value, List)):
+                for i, listvalue in enumerate(param.value):
+                    if(isinstance(listvalue, FunctionalNode)):
+                        output[paramname][i] = listvalue.visitParams(visitor, parents+[param]+[i])
             if(not output[paramname]):
                 del output[paramname]
         return output

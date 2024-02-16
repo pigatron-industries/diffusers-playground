@@ -121,7 +121,7 @@ class Controller:
             user_input_values = self.workflow_history[self.model.workflow_name]
 
             def visitor(param, parents):
-                paramstring = '.'.join([parent.name for parent in parents])
+                paramstring = '.'.join([parent.name if isinstance(parent, NodeParameter) else str(parent) for parent in parents])
                 if(paramstring+'.value' in user_input_values):
                     param.value.setValue(user_input_values[paramstring+'.value'])
                 if(paramstring+'.node' in user_input_values):
@@ -135,7 +135,7 @@ class Controller:
             user_input_values = {}
 
             def visitor(param, parents):
-                paramstring = '.'.join([parent.name for parent in parents])
+                paramstring = '.'.join([parent.name if isinstance(parent, NodeParameter) else str(parent) for parent in parents])
                 if(isinstance(param.value, UserInputNode)):
                     user_input_values[paramstring+'.value'] = param.value.getValue()
                 if(param.value != param.initial_value and isinstance(param.value, FunctionalNode) and isinstance(param.initial_value, UserInputNode)):
