@@ -26,7 +26,7 @@ def str_to_class(str):
 class Controller:
 
     model = Model()
-    workflows = []
+    workflows = {}
     workflow:FunctionalNode|None = None
     history_filename = ".history.yml"
 
@@ -35,30 +35,33 @@ class Controller:
             self.workflowrunner = WorkflowRunner.workflowrunner
         else:
             raise Exception("Workflow Runner not initialized")
-        self.workflows = self.loadWorkflows()
-        if(self.model.workflow_name is not None):
-            self.loadWorkflow(self.model.workflow_name)
+        self.loadWorkflows()
+        self.loadWorkflowParamsHistory()
+        if('workflow' in self.workflow_history):
+            self.loadWorkflow(self.workflow_history['workflow'])
         
 
     def loadWorkflows(self):
         print("Loading workflows")
         path = os.path.join(os.path.dirname(__file__), '../functional_workflows')
         files = glob.glob(path + '/*.py')
-        workflows = {}
+        self.workflows = {}
         for file in files:
             spec = importlib.util.spec_from_file_location("module.workflow", file)
             module = importlib.util.module_from_spec(spec)
             sys.modules["module.workflow"] = module
             spec.loader.exec_module(module)
-            workflows[module.name()] = module
-        self.loadWorkflowParamsHistory()
-        return workflows
+            self.workflows[module.name()] = module
     
 
     def loadWorkflow(self, workflow_name):
+        print(f"Loading workflow: {workflow_name}")
+
         if(self.workflow is not None and self.workflow.name == workflow_name):
             return
+        print(f"Loading workflow: {workflow_name}")
         if workflow_name in self.workflows:
+            print(f"Loading workflow: {workflow_name}")
             self.model.workflow_name = workflow_name
             self.workflow = self.workflows[workflow_name].build()
             self.loadWorkflowParamsFromHistory()
@@ -138,6 +141,7 @@ class Controller:
                     
             self.workflow.visitParams(visitor)
             self.workflow_history[self.model.workflow_name] = user_input_values
+            self.workflow_history['workflow'] = self.model.workflow_name
             self.saveWorkflowParamsHistory()
 
 
