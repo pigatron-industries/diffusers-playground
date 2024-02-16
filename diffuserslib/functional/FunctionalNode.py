@@ -110,9 +110,6 @@ class FunctionalNode:
             if(isinstance(param.value, FunctionalNode)):
                 nodes.extend(param.value.getNodes())
         return nodes
-                
-
-
     
 
     def printDebug(self, level=0):

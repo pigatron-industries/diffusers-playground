@@ -16,6 +16,15 @@ class DiffusionModelUserInputNode(UserInputNode):
         super().__init__(name)
 
 
+    def getValue(self) -> Tuple[str|None, str|None]:
+        return (self.basemodel, self.model)
+    
+
+    def setValue(self, value:Tuple[str|None, str|None]):
+        self.basemodel = value[0]
+        self.model = value[1]
+
+
     @ui.refreshable
     def ui(self):
         if(DiffusersPipelines.pipelines is None):

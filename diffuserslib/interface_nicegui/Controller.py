@@ -28,6 +28,7 @@ class Controller:
     model = Model()
     workflows = []
     workflow:FunctionalNode|None = None
+    history_filename = ".history.yml"
 
     def __init__(self):
         if(WorkflowRunner.workflowrunner is not None):
@@ -50,6 +51,7 @@ class Controller:
             sys.modules["module.workflow"] = module
             spec.loader.exec_module(module)
             workflows[module.name()] = module
+        self.loadWorkflowParamsHistory()
         return workflows
     
 
@@ -59,12 +61,13 @@ class Controller:
         if workflow_name in self.workflows:
             self.model.workflow_name = workflow_name
             self.workflow = self.workflows[workflow_name].build()
+            self.loadWorkflowParamsFromHistory()
             print(f"Loaded workflow: {self.workflow.name}")
             self.workflow.printDebug()
         else:
             self.model.workflow_name = None
             self.workflow = None
-        
+
 
     def setParam(self, node_name, param_name, value, index=None):
         if(self.workflow is not None):
@@ -89,16 +92,44 @@ class Controller:
 
     def runWorkflow(self):
         if(self.workflow is not None and WorkflowRunner.workflowrunner is not None):
-            self.saveWorkflowParams()
+            self.saveWorkflowParamsToHistory()
             WorkflowRunner.workflowrunner.run(self.workflow, int(self.model.batch_size))
         else:
             print("No workflow loaded")
 
 
-    def saveWorkflowParams(self):
-        # TODO finish this
-        nodes = self.workflow.getNodes()
-        print(nodes)
+    def loadWorkflowParamsHistory(self):
+        if os.path.exists(self.history_filename):
+            file = open(self.history_filename, "r")
+            self.workflow_history = yaml.full_load(file)
+        else:
+            self.workflow_history = {}
+
+    
+    def saveWorkflowParamsHistory(self):
+        file = open(self.history_filename, "w")
+        yaml.dump(self.workflow_history, file)
+
+
+    def loadWorkflowParamsFromHistory(self):
+        if(self.workflow is not None and self.model.workflow_name is not None and self.model.workflow_name in self.workflow_history):
+            user_input_values = self.workflow_history[self.model.workflow_name]
+            print(user_input_values)
+            nodes = self.workflow.getNodes()
+            for node in nodes:
+                if(isinstance(node, UserInputNode)):
+                    node.setValue(user_input_values[node.node_name])
+
+
+    def saveWorkflowParamsToHistory(self):
+        if(self.workflow is not None):
+            nodes = self.workflow.getNodes()
+            user_input_values = {}
+            for node in nodes:
+                if(isinstance(node, UserInputNode)):
+                    user_input_values[node.node_name] = node.getValue()
+            self.workflow_history[self.model.workflow_name] = user_input_values
+            self.saveWorkflowParamsHistory()
 
 
     def stopWorkflow(self):

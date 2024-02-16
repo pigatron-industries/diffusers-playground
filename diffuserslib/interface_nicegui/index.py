@@ -220,7 +220,7 @@ class View:
             output_width = 0
             waiting_output = False
             if(rundata.output is None):
-                output_control = ui.label("Generating...").classes(default_output_class)
+                output_control = ui.label("Generating...").style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
                 waiting_output = True
             if(isinstance(rundata.output, Image.Image)):
                 output_width = rundata.output.width

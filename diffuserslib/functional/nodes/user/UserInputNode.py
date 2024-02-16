@@ -7,6 +7,10 @@ class UserInputNode(FunctionalNode):
     """ represents input from the user """
     def __init__(self, name:str="user_input"):
         super().__init__(name)
+    def getValue(self):
+        raise Exception("Not implemented")
+    def setValue(self, value):
+        raise Exception("Not implemented")
     def ui(self):
         raise Exception("Not implemented")
 
@@ -15,6 +19,12 @@ class IntUserInputNode(UserInputNode):
     def __init__(self, value:int|None=0, name:str="int_user_input"):
         self.value = int(value) if value is not None else None
         super().__init__(name)
+
+    def getValue(self) -> int|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
 
     def ui(self):
         self.input_number = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
@@ -28,6 +38,12 @@ class FloatUserInputNode(UserInputNode):
         self.value = float(value)
         super().__init__(name)
 
+    def getValue(self) -> float|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
+
     def ui(self):
         self.input_number = ui.number(value=self.value, label=self.node_name, format='%.2f').bind_value(self, 'value')
 
@@ -39,6 +55,12 @@ class BoolUserInputNode(UserInputNode):
     def __init__(self, value:bool=False, name:str="bool_user_input"):
         self.value = bool(value)
         super().__init__(name)
+
+    def getValue(self) -> bool|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
 
     def ui(self):
         self.input_bool = ui.checkbox(value=self.value).bind_value(self, 'value')
@@ -52,6 +74,12 @@ class StringUserInputNode(UserInputNode):
         self.value = str(value)
         super().__init__(name)
 
+    def getValue(self) -> str|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
+
     def ui(self):
         self.input_string = ui.input(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
@@ -63,6 +91,12 @@ class TextAreaInputNode(UserInputNode):
     def __init__(self, value:str="", name:str="text_area_user_input"):
         self.value = str(value)
         super().__init__(name)
+
+    def getValue(self) -> str|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
 
     def ui(self):
         self.input_text = ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
@@ -77,6 +111,12 @@ class ListSelectUserInputNode(UserInputNode):
         self.options = options
         super().__init__(name)
 
+    def getValue(self) -> str|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
+
     def ui(self):
         self.input_list = ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
@@ -89,6 +129,13 @@ class SizeUserInputNode(UserInputNode):
         self.width = value[0]
         self.height = value[1]
         super().__init__(name)
+
+    def getValue(self) -> SizeType:
+        return (self.width, self.height)
+    
+    def setValue(self, value:SizeType):
+        self.width = value[0]
+        self.height = value[1]
 
     def ui(self):
         self.input_width = ui.number(value=self.width, label="Width").bind_value(self, 'width')
@@ -104,6 +151,13 @@ class MinMaxIntInputNode(UserInputNode):
         self.max = value[1]
         super().__init__(name)
 
+    def getValue(self) -> Tuple[int, int]:
+        return (self.min, self.max)
+    
+    def setValue(self, value:Tuple[int, int]):
+        self.min = value[0]
+        self.max = value[1]
+
     def ui(self):
         self.input_min = ui.number(value=self.min, label="Min").bind_value(self, 'min')
         self.input_max = ui.number(value=self.max, label="Max").bind_value(self, 'max')
@@ -118,6 +172,13 @@ class MinMaxFloatInputNode(UserInputNode):
         self.max = value[1]
         super().__init__(name)
 
+    def getValue(self) -> Tuple[float, float]:
+        return (self.min, self.max)
+    
+    def setValue(self, value:Tuple[float, float]):
+        self.min = value[0]
+        self.max = value[1]
+
     def ui(self):
         self.input_min = ui.number(value=self.min, label="Min", format='%.2f').bind_value(self, 'min')
         self.input_max = ui.number(value=self.max, label="Max", format='%.2f').bind_value(self, 'max')
@@ -131,6 +192,12 @@ class BoolListUserInputNode(UserInputNode):
         self.value:List[bool] = value
         self.labels:List[str] = labels
         super().__init__(name)
+
+    def getValue(self) -> List[bool]:
+        return self.value
+    
+    def setValue(self, value:List[bool]):
+        self.value = value
 
     def ui(self):
         for i in range(len(self.value)):

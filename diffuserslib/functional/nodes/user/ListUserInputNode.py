@@ -11,6 +11,14 @@ class ListUserInputNode(UserInputNode):
         super().__init__(name)
 
 
+    def getValue(self):
+        return self.value
+    
+
+    def setValue(self, value):
+        self.value = value
+
+
     @ui.refreshable
     def ui(self):
         ui.button('Add', on_click = lambda e: self.add(len(self.value)))
@@ -18,7 +26,8 @@ class ListUserInputNode(UserInputNode):
             with ui.row():
                 ui.label(f"Item {i+1}").classes('mr-2')
                 self.removeButton(i)
-                
+
+
     def removeButton(self, index):
         ui.button('Remove', on_click = lambda e: self.remove(index))
 
