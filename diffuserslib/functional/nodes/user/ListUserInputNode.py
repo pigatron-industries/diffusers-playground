@@ -23,32 +23,20 @@ class ListUserInputNode(UserInputNode):
 
     @ui.refreshable
     def ui(self, child_renderer:Callable[[FunctionalNode], None]):
-        with ui.column():
+        with ui.row():
+            ui.button(icon="add", on_click = lambda e: self.addInput(0)).props('dense')
             ui.label(f"{self.node_name}")
-            ui.button(icon="add", on_click = lambda e: self.addInput(0))
         for i, item in enumerate(self.value):
             with ui.row().classes('w-full'):
                 ui.label().classes('w-8')
                 with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                     with ui.column():
-                        # TODO find child user input node and call its ui method
-                        # ui.label(f"Item {i+1}").classes('mr-2')
                         child_renderer(item)
                     self.removeButton(i)
 
 
     def removeButton(self, index):
-        ui.button(icon='remove', on_click = lambda e: self.removeInput(index))
-
-
-    def node_parameters(self, node:FunctionalNode):
-        params = node.getParams()
-        for param in params:
-            if(isinstance(param.initial_value, UserInputNode)):
-                with ui.row().classes('w-full'):
-                    self.workflow_parameter(param)
-            elif(isinstance(param.value, FunctionalNode)):
-                self.node_parameters(param.value)
+        ui.button(icon='remove', on_click = lambda e: self.removeInput(index)).props('dense')
 
 
     def addInput(self, index:int):
@@ -62,8 +50,6 @@ class ListUserInputNode(UserInputNode):
         self.ui.refresh()
 
 
-    # def process(self, list:List[Any]) -> List[Any]:
-    #     return list
+    def process(self, list:List[Any]) -> List[Any]:
+        return list
     
-    def process(self, **kwargs) -> List[Any]:
-        return self.value
