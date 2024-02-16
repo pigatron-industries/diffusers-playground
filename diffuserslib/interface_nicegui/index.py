@@ -5,6 +5,7 @@ from .api import *
 from .Controller import Controller
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
+from diffuserslib.functional.nodes.user.ListUserInputNode import ListUserInputNode
 from diffuserslib.functional.WorkflowRunner import WorkflowRunData
 from typing import List, Dict
 from dataclasses import dataclass
@@ -179,18 +180,20 @@ class View:
         for param in params:
             if(isinstance(param.initial_value, UserInputNode)):
                 with ui.row().classes('w-full'):
-                    self.workflow_parameter(node, param)
+                    self.workflow_parameter(param)
             elif(isinstance(param.value, FunctionalNode)):
                 self.node_parameters(param.value)
 
 
-    def workflow_parameter(self, node:FunctionalNode, param:NodeParameter):
+    def workflow_parameter(self, param:NodeParameter):
         input_nodes = self.controller.getSelectableInputNodes(param)
         if(len(input_nodes) > 0):
             ui.button(icon='functions', color='dark', on_click=lambda e: self.toggleParamFunctional(param)).classes('align-middle').props('dense')
         else:
             ui.label().classes('w-8')
-        if(isinstance(param.value, UserInputNode)):
+        if(isinstance(param.value, ListUserInputNode)):
+            param.value.ui(self.node_parameters)
+        elif(isinstance(param.value, UserInputNode)):
             param.value.ui()
         else:
             with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):

@@ -40,7 +40,6 @@ class DiffusionModelUserInputNode(UserInputNode):
             raise Exception("DiffusersPipelines not initialised")  
         if(self.basemodel is not None):
             models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel)
-            print(list(models.keys()))
             self.model_dropdown.options = list(models.keys())
             self.model = self.model_dropdown.value
             self.ui.refresh()

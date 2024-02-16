@@ -105,6 +105,8 @@ class Controller:
         if os.path.exists(self.history_filename):
             file = open(self.history_filename, "r")
             self.workflow_history = yaml.full_load(file)
+            if(self.workflow_history is None):
+                self.workflow_history = {}
         else:
             self.workflow_history = {}
 

@@ -4,6 +4,7 @@ from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncs
 from .RandomPromptProcessorNode import RandomPromptProcessorNode
 from ....inference.DiffusersPipelines import DiffusersPipelines
 from ....inference.GenerationParameters import GenerationParameters, ModelParameters
+from PIL import Image
 
 ModelsType = List[ModelParameters]
 ModelsFuncType = ModelsType | Callable[[], ModelsType]
@@ -66,7 +67,8 @@ class ImageDiffusionNode(FunctionalNode):
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
-        output, seed = DiffusersPipelines.pipelines.generate(params)
+        # output, seed = DiffusersPipelines.pipelines.generate(params)
+        output = Image.new("RGB", (512, 512)) # TEMPORARY
         if(type(output) == Image.Image):
             return output
         else:
