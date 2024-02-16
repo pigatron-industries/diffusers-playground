@@ -36,7 +36,7 @@ class WorkflowRunner:
             rundata = WorkflowRunData(int(time.time_ns()/1000))
             self.rundata[rundata.timestamp] = rundata
             rundata.output = workflow()
-            rundata.params = workflow.getEvaluatedParamValuesRecursive()
+            rundata.params = workflow.getEvaluatedParamValues()
             if(self.running == False):
                 break
         self.running = False

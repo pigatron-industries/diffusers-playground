@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from PIL import Image
 
 
-default_output_class = 'w-64'
+default_output_width = 256
 
 
 @dataclass
@@ -31,9 +31,9 @@ class OutputControls:
         self.expanded = not self.expanded
         if(self.output_control is not None):
             if(self.expanded):
-                self.output_control.classes(remove = default_output_class)
+                self.output_control.style(replace= f"max-width:{self.output_width}px; min-width:{self.output_width}px;")
             else:
-                self.output_control.classes(add = default_output_class)
+                self.output_control.style(replace = f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
             
 
 
@@ -110,8 +110,8 @@ class View:
             self.output_controls[key].showLabelSaved(filename)
 
 
-    def removeOutput(self, index):
-        self.getWorkflowRunData().pop(index)
+    def removeOutput(self, key):
+        self.getWorkflowRunData().pop(key)
         self.workflow_outputs.refresh()
 
         # TODO don't refresh whole list - 
@@ -215,7 +215,7 @@ class View:
     @ui.refreshable
     def workflow_output(self, key):
         rundata = self.getWorkflowRunData()[key]
-        with ui.row().classes('w-full'):
+        with ui.row().classes('w-full no-wrap'):
             output_control = None
             output_width = 0
             waiting_output = False
@@ -224,11 +224,12 @@ class View:
                 waiting_output = True
             if(isinstance(rundata.output, Image.Image)):
                 output_width = rundata.output.width
-                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(key)).classes(default_output_class).style(f"max-width: {output_width}px;")
+                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(key)).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
             with ui.column():
-                for node_name in rundata.params:
-                    for paramname, paramvalue in rundata.params[node_name].items():
-                        ui.label(f"{paramname}: {paramvalue}").style("line-height: 1;")
+                if rundata.params is not None:
+                    for node_name in rundata.params:
+                        for paramname, paramvalue in rundata.params[node_name].items():
+                            ui.label(f"{paramname}: {paramvalue}").style("line-height: 1;")
             with ui.column().classes('ml-auto'):
                 with ui.row().classes('ml-auto'):
                     ui.button('Save', on_click=lambda e: self.saveOutput(key))

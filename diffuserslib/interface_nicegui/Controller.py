@@ -89,9 +89,16 @@ class Controller:
 
     def runWorkflow(self):
         if(self.workflow is not None and WorkflowRunner.workflowrunner is not None):
+            self.saveWorkflowParams()
             WorkflowRunner.workflowrunner.run(self.workflow, int(self.model.batch_size))
         else:
             print("No workflow loaded")
+
+
+    def saveWorkflowParams(self):
+        # TODO finish this
+        nodes = self.workflow.getNodes()
+        print(nodes)
 
 
     def stopWorkflow(self):
