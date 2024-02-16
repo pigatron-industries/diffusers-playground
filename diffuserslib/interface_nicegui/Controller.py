@@ -117,7 +117,7 @@ class Controller:
             print(user_input_values)
             nodes = self.workflow.getNodes()
             for node in nodes:
-                if(isinstance(node, UserInputNode)):
+                if(isinstance(node, UserInputNode) and node.node_name in user_input_values):
                     node.setValue(user_input_values[node.node_name])
 
 

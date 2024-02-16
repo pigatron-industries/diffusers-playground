@@ -112,6 +112,15 @@ class FunctionalNode:
         return nodes
     
 
+    def visitNodes(self, visitor, parents=[]):
+        visitor(self, parents)
+        for paramname, param in self.params.items():
+            if(isinstance(param.value, FunctionalNode)):
+                param.value.visitNodes(visitor, parents + [self])
+            elif(isinstance(param.initial_value, FunctionalNode)):
+                param.initial_value.visitNodes(visitor, parents + [self])
+    
+
     def printDebug(self, level=0):
         print((" "*level*3) + f"* Node: {self.node_name}")
         for paramname in self.params:
