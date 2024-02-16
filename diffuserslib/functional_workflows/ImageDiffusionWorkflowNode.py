@@ -20,7 +20,7 @@ def build():
     
     def conditioning_input():
         new_image = NewImageNode(size = size_input)
-        conditioning_model_input = StringUserInputNode(value = "", name = "model")
+        conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
         scale_input = FloatUserInputNode(value = 1.0, name = "scale")
         return ConditioningInputNode(image = new_image, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
 
