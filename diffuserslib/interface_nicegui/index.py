@@ -247,7 +247,12 @@ class View:
                 if rundata.params is not None:
                     for node_name in rundata.params:
                         for paramname, paramvalue in rundata.params[node_name].items():
-                            ui.label(f"{paramname}: {paramvalue}").style("line-height: 1;")
+                            with ui.row():
+                                ui.label(f"{paramname}:").style("line-height: 1;")
+                                if(isinstance(paramvalue, Image.Image)):
+                                    ui.image(paramvalue).style("max-width:256px; max-height:256px; line-height: 1;")
+                                else:
+                                    ui.label(str(paramvalue)).style("line-height: 1;")
             with ui.column().classes('ml-auto'):
                 with ui.row().classes('ml-auto'):
                     ui.button('Save', on_click=lambda e: self.saveOutput(key))

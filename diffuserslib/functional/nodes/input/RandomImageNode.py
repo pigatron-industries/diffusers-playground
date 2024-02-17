@@ -16,7 +16,9 @@ class RandomImageNode(FunctionalNode):
         random_path = random.choice(paths)
         if(os.path.isdir(random_path)):
             random_path = self.getRandomChildPath(random_path)
-        return Image.open(random_path)
+        image = Image.open(random_path)
+        setattr(image, "file", random_path)
+        return image
             
 
     def getRandomChildPath(self, path:str) -> str:

@@ -1,6 +1,7 @@
 from diffuserslib.util import DeepCopyObject
 from typing import Dict, Any, List, Self, Tuple, Callable
 from dataclasses import dataclass, field
+from PIL import Image
 import copy
 
 
