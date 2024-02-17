@@ -1,4 +1,4 @@
-from nicegui import ui
+from nicegui import ui, run
 from typing import List, Callable
 from diffuserslib.GlobalConfig import GlobalConfig
 import os
@@ -9,6 +9,7 @@ class FileDialog():
     def __init__(self, callback:Callable[[List[str]], None]):
         self.callback = callback
         self.selected = []
+        self.filetree = []
         self.createDialog() # type: ignore
 
 
@@ -16,7 +17,7 @@ class FileDialog():
     def createDialog(self):
         with ui.dialog() as dialog:
             with ui.card():
-                ui.tree(self.getFileTree(), label_key='id', tick_strategy='leaf', on_tick=lambda e: self.selectFile(e.value))
+                self.tree = ui.tree(self.filetree, label_key='id', tick_strategy='leaf', on_tick=lambda e: self.selectFile(e.value))
                 ui.button('Done', on_click=self.close)
         self.dialog = dialog
 
@@ -47,7 +48,8 @@ class FileDialog():
         return tree
 
 
-    def open(self):
+    async def open(self):
+        self.filetree = await run.io_bound(self.getFileTree)
         self.createDialog.refresh()
         self.dialog.open()
 
