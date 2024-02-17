@@ -32,6 +32,7 @@ class FileDialog():
         for path in paths:
             if (os.path.exists(path)):
                 tree.append({'id': path, 'children': self.getDirTree(path)})
+        print("Input file tree loaded")
         return tree
             
 
