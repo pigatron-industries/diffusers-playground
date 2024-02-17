@@ -6,8 +6,9 @@ import os
 
 class FileDialog():
 
-    def __init__(self, callback:Callable[[List[str]], None]):
+    def __init__(self, callback:Callable[[List[str]], None], file_extensions:List[str]):
         self.callback = callback
+        self.file_extensions = file_extensions
         self.selected = []
         self.filetree = []
         self.createDialog() # type: ignore
@@ -41,10 +42,10 @@ class FileDialog():
         tree = []
         for subpath in os.listdir(path):
             fullpath = os.path.join(path, subpath)
-            if os.path.isdir(fullpath):
+            if (os.path.isdir(fullpath)):
                 tree.append({'id': fullpath, 'children': self.getDirTree(fullpath)})
-            else:
-                tree.append({'id': fullpath})
+            elif (os.path.splitext(fullpath)[1][1:] in self.file_extensions):
+                    tree.append({'id': fullpath})
         return tree
 
 

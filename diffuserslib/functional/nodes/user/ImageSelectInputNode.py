@@ -22,7 +22,7 @@ class ImageSelectInputNode(UserInputNode):
 
     @ui.refreshable
     def ui(self):
-        dialog = FileDialog(self.fileSelected)
+        dialog = FileDialog(self.fileSelected, ["png", "jpg", "jpeg"])
         with ui.row().style("padding-top: 1.4em;"):
             if(len(self.filenames) == 0):
                 ui.label('Select an image')
