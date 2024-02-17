@@ -20,7 +20,13 @@ class RandomImageNode(FunctionalNode):
             
 
     def getRandomChildPath(self, path:str) -> str:
-        childpaths = os.listdir(path)
+        childpaths = []
+        with os.scandir(path) as entries:
+            for entry in entries:
+                if(entry.is_dir()):
+                    childpaths.append(entry.name)
+                elif entry.is_file() and entry.name.endswith((".png", ".jpg", ".jpeg")):
+                    childpaths.append(entry.name)
         randompath = random.choice(childpaths)
         fullpath = os.path.join(path, randompath)
         if(os.path.isdir(fullpath)):
