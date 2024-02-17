@@ -149,6 +149,9 @@ class Controller:
 
     def stopWorkflow(self):
         self.workflowrunner.stop()
+        #  call interrupt when stop pressed a second time
+        if(self.isStopping() and DiffusersPipelines.pipelines is not None):
+            DiffusersPipelines.pipelines.interrupt()
 
 
     def getWorkflowRunData(self):

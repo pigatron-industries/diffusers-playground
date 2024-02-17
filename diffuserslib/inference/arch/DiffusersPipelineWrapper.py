@@ -70,6 +70,11 @@ class DiffusersPipelineWrapper:
             
         return True
 
+
+    def interrupt(self):
+        self.pipeline._interrupt = True
+
+
     def add_embeddings(self, token, embeddings):
         raise ValueError(f"add_embeddings not implemented for pipeline")
     

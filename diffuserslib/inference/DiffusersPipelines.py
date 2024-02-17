@@ -234,3 +234,8 @@ class DiffusersPipelines:
         torch.mps.empty_cache()
         torch.cuda.empty_cache()
         return image, seed
+
+
+    def interrupt(self):
+        if (self.pipeline is not None):
+            self.pipeline.interrupt()
