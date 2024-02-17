@@ -14,9 +14,7 @@ def build():
     seed_input = IntUserInputNode(value = None, name = "seed")
     scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", 
                                               name = "scheduler",
-                                              options = ["DPMSolverMultistepScheduler",
-                                                         "EulerDiscreteScheduler", 
-                                                         "EulerAncestralDiscreteScheduler"])
+                                              options = ImageDiffusionNode.SCHEDULERS)
     
     def conditioning_input():
         conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")

@@ -15,6 +15,7 @@ class WorkflowRunData:
     params:Dict[str,Dict[str,Any]]|None = None
     output: Any|None = None
     save_file:str|None = None
+    error:Exception|None = None
 
 
 @dataclass
@@ -61,10 +62,15 @@ class WorkflowRunner:
                 print(f"Running workflow {queue_data.workflow.node_name} batch {i+1} of {queue_data.batch_size}")
                 rundata = WorkflowRunData(int(time.time_ns()/1000))
                 self.rundata[rundata.timestamp] = rundata
-                rundata.output = queue_data.workflow()
-                rundata.params = queue_data.workflow.getEvaluatedParamValues()
-                self.progress.jobs_completed += 1
-                self.progress.jobs_remaining -= 1
+                try:
+                    rundata.output = queue_data.workflow()
+                    rundata.params = queue_data.workflow.getEvaluatedParamValues()
+                    self.progress.jobs_completed += 1
+                    self.progress.jobs_remaining -= 1
+                except Exception as e:
+                    rundata.error = e
+                    print(f"Error running workflow {queue_data.workflow.node_name}: {e}")
+                    self.stopping = True
                 if(self.stopping == True):
                     break
         self.running = False
