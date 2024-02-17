@@ -26,12 +26,12 @@ class FileDialog():
 
 
     def getFileTree(self):
+        print("Loading input file tree...")
         paths = GlobalConfig.inputs_dirs
         tree = []
         for path in paths:
             if (os.path.exists(path)):
                 tree.append({'id': path, 'children': self.getDirTree(path)})
-        print(tree)
         return tree
             
 
