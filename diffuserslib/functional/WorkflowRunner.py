@@ -55,21 +55,21 @@ class WorkflowRunner:
             return
 
         self.running = True
-        print(f"Running workflow {workflow.node_name} with batch size {batch_size}")
         while len(self.queue) > 0:
-            queue_data = self.queue.pop(0)
-            for i in range(batch_size):
-                print(f"Running workflow {queue_data.workflow.node_name} batch {i+1} of {queue_data.batch_size}")
+            current_batch = self.queue.pop(0)
+            print(f"Running workflow {workflow.node_name} with batch size {current_batch.batch_size}")
+            for i in range(current_batch.batch_size):
+                print(f"Running workflow {current_batch.workflow.node_name} batch {i+1} of {current_batch.batch_size}")
                 rundata = WorkflowRunData(int(time.time_ns()/1000))
                 self.rundata[rundata.timestamp] = rundata
                 try:
-                    rundata.output = queue_data.workflow()
-                    rundata.params = queue_data.workflow.getEvaluatedParamValues()
-                    self.progress.jobs_completed += 1
-                    self.progress.jobs_remaining -= 1
+                    rundata.output = current_batch.workflow()
+                    rundata.params = current_batch.workflow.getEvaluatedParamValues()
+                    self.progress.jobs_completed = len(self.rundata)
+                    self.progress.jobs_remaining = current_batch.batch_size - self.progress.jobs_completed + sum([batch.batch_size for batch in self.queue])
                 except Exception as e:
                     rundata.error = e
-                    print(f"Error running workflow {queue_data.workflow.node_name}: {e}")
+                    print(f"Error running workflow {current_batch.workflow.node_name}: {e}")
                     self.stopping = True
                 if(self.stopping == True):
                     break
