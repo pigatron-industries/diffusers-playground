@@ -1,5 +1,5 @@
 from diffuserslib.functional import *
-from PIL import Image
+
 
 def name():
     return "Image Diffusion"
@@ -19,10 +19,10 @@ def build():
                                                          "EulerAncestralDiscreteScheduler"])
     
     def conditioning_input():
-        new_image = NewImageNode(size = size_input)
         conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
         scale_input = FloatUserInputNode(value = 1.0, name = "scale")
-        return ConditioningInputNode(image = new_image, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
+        image_input = ImageSelectInputNode(name = "image")
+        return ConditioningInputNode(image = image_input, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
 
     conditioning_inputs = ListUserInputNode(input_node_generator = conditioning_input, name = "conditioning_inputs")
 

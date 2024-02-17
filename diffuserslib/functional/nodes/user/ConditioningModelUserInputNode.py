@@ -1,5 +1,5 @@
 from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
-from diffuserslib.inference.GenerationParameters import ModelParameters
+from diffuserslib.inference.GenerationParameters import ControlImageType
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsType
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
@@ -30,15 +30,10 @@ class ConditioningModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("controlimage", self.diffusion_model_input.basemodel)
-        self.model_dropdown = ui.select(options=list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('grow')
+        self.model_dropdown = ui.select(options=[ControlImageType.IMAGETYPE_INITIMAGE]+list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('grow')
 
 
-    def updateModels(self): 
-        print('here')
-        # if(self.diffusion_model_input.basemodel is not None):
-        #     models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel)
-        #     self.model_dropdown.options = list(models.keys())
-        #     self.model = self.model_dropdown.value
+    def updateModels(self):
         self.ui.refresh()
 
 

@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, List, NewType
+from typing import Callable, Tuple, List, Any
 from PIL import Image
 
 # Python type definitions for node inputs
@@ -29,3 +29,6 @@ ImageFuncType = Image.Image | Callable[[], Image.Image]
 
 ColourType = Tuple[int, int, int] | str
 ColourFuncType = ColourType | Callable[[], ColourType]
+
+ListType = List[Any]
+ListFuncType = ListType | Callable[[], ListType]

@@ -1,13 +1,11 @@
 from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.functional import WorkflowRunner
+from diffuserslib.GlobalConfig import GlobalConfig
 from typing import List
 import yaml
 import os
 import numpy as np
 from PIL import Image
-
-class GlobalConfig:
-    inputs_dirs = []
 
 
 def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]=["modelconfig.yml"]):

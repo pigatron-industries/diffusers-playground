@@ -141,7 +141,7 @@ cache/
 local_config.yml
 local_modelconfig.yml
 .history.yml
+/inputs
 /outputs
 /loras
 /models
-/inputs/*

@@ -68,7 +68,7 @@ class ImageDiffusionNode(FunctionalNode):
         )
 
         output, seed = DiffusersPipelines.pipelines.generate(params)
-        if(type(output) == Image.Image):
+        if(isinstance(output, Image.Image)):
             return output
         else:
             raise Exception("Output is not an image")
