@@ -130,10 +130,10 @@ class DiffusersPipelineWrapper:
         diffusers_params['num_inference_steps'] = params.steps
 
     def addInferenceParamsImg2Img(self, params:GenerationParameters, diffusers_params):
-        initimage = params.getInitImage()
-        if(initimage is not None and initimage.image is not None):
-            diffusers_params['image'] = initimage.image.convert("RGB")
-            diffusers_params['strength'] = params.strength
+        initimageparams = params.getInitImage()
+        if(initimageparams is not None and initimageparams.image is not None):
+            diffusers_params['image'] = initimageparams.image.convert("RGB")
+            diffusers_params['strength'] = initimageparams.condscale
 
     def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
@@ -143,7 +143,7 @@ class DiffusersPipelineWrapper:
         diffusers_params['image'] = initimageparams.image.convert("RGB")
         diffusers_params['mask_image'] = maskimageparams.image.convert("RGB")
         diffusers_params['num_inference_steps'] = params.steps
-        diffusers_params['strength'] = params.strength
+        diffusers_params['strength'] = initimageparams.condscale
         diffusers_params['width'] = initimageparams.image.width
         diffusers_params['height'] = initimageparams.image.height
 
