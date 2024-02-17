@@ -9,7 +9,7 @@ class FileDialog():
     def __init__(self, callback:Callable[[List[str]], None]):
         self.callback = callback
         self.selected = []
-        self.createDialog()
+        self.createDialog() # type: ignore
 
 
     @ui.refreshable
@@ -29,7 +29,8 @@ class FileDialog():
         paths = GlobalConfig.inputs_dirs
         tree = []
         for path in paths:
-            tree.append({'id': path, 'children': self.getDirTree(path)})
+            if (os.path.exists(path)):
+                tree.append({'id': path, 'children': self.getDirTree(path)})
         print(tree)
         return tree
             
