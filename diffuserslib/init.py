@@ -19,11 +19,14 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             configdata = yaml.safe_load(open(config, "r"))
             device = configdata["device"]
             safety_checker = configdata["safety"]
-            models = configdata["folders"]["models"]
-            outputs_dir = configdata["folders"]["outputs"]
-            WorkflowRunner.workflowrunner = WorkflowRunner(output_dir=outputs_dir)
-            GlobalConfig.inputs_dirs.extend(configdata["folders"]["inputs"])
-            break
+            folders = configdata["folders"]
+            if ("models" in folders):
+                models = folders["models"]
+            if ("outputs" in folders):
+                outputs_dir = folders["outputs"]
+                WorkflowRunner.workflowrunner = WorkflowRunner(output_dir=outputs_dir)
+            if ("inputs" in folders):
+                GlobalConfig.inputs_dirs.extend(folders["inputs"])
 
     DiffusersPipelines.pipelines = DiffusersPipelines(device=device, safety_checker=safety_checker, localmodelpath=models)
     for modelconfig in modelconfigs:
