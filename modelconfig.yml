@@ -12,6 +12,8 @@ generate:
     models:
       - id: stabilityai/stable-diffusion-xl-base-1.0
       - id: stabilityai/stable-diffusion-xl-refiner-1.0
+      - id: playgroundai/playground-v2-1024px-aesthetic
+      - id: stablediffusionapi/juggernaut-xl-v5
   - base: kandinsky_2_1
     pipelines:
       generate: KandinskyGeneratePipeline
