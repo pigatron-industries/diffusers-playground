@@ -18,41 +18,63 @@ class FileDialog():
     def createDialog(self):
         with ui.dialog() as dialog:
             with ui.card():
-                self.tree = ui.tree(self.filetree, tick_strategy='strict', on_tick=lambda e: self.selectFile(e.value))
+                self.tree = ui.tree(self.filetree, tick_strategy='strict', on_tick=lambda e: self.selectFile(e.value), on_expand=lambda e: self.onExpand(e.value))
                 ui.button('Done', on_click=self.close)
         self.dialog = dialog
 
 
+    def onExpand(self, expanded_paths:List[str]):
+        for path in expanded_paths:
+            print(path)
+            self.populateGrandChildren(path)
+
+
     def selectFile(self, values):
-        print(values)
         self.selected = values
 
 
-    def getFileTree(self):
-        print("Loading input file tree...")
+    def initFileTree(self):
+        self.filetree = []
         paths = GlobalConfig.inputs_dirs
-        tree = []
         for path in paths:
             if (os.path.exists(path)):
-                tree.append({'id': path, 'label': path, 'children': self.getDirTree(path)})
-        print("Input file tree loaded")
-        return tree
-            
+                node = {'id': path, 'label': path, 'children': []}
+                self.populateChildren(node)
+                self.filetree.append(node)
+                
 
-    def getDirTree(self, path:str):
-        tree = []
-        for subpath in os.listdir(path):
-            print(subpath)
-            fullpath = os.path.join(path, subpath)
-            if (os.path.isdir(fullpath)):
-                tree.append({'id': fullpath, 'label': subpath, 'children': self.getDirTree(fullpath)})
-            elif (os.path.splitext(fullpath)[1][1:] in self.file_extensions):
-                    tree.append({'id': fullpath, 'label': subpath})
-        return tree
+
+    def populateChildren(self, node):
+        path = node['id']
+        if(len(node['children']) == 0 and os.path.isdir(path)):
+            for subpath in os.listdir(path):
+                fullpath = os.path.join(path, subpath)
+                if (os.path.isdir(fullpath)):
+                    node['children'].append({'id': fullpath, 'label': subpath, 'children': []})
+                elif (os.path.splitext(fullpath)[1][1:] in self.file_extensions):
+                    node['children'].append({'id': fullpath, 'label': subpath, 'children': []})
+
+
+    def populateGrandChildren(self, path:str):
+        node = self.findNode(path, self.filetree)
+        if (node is not None):
+            for child in node['children']:
+                self.populateChildren(child)
+
+
+    def findNode(self, path:str, tree:List[dict]):
+        for node in tree:
+            if (node['id'] == path):
+                return node
+            else:
+                result = self.findNode(path, node['children'])
+                if (result is not None):
+                    return result
+        return None
 
 
     async def open(self):
-        self.filetree = await run.io_bound(self.getFileTree)
+        self.initFileTree()
         self.createDialog.refresh()
         self.dialog.open()
 
