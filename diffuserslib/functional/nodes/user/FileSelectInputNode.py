@@ -5,9 +5,9 @@ from diffuserslib.util import FileDialog
 from nicegui import ui
 from PIL import Image
 
-# TODO change this to select a single image file from the local directory and uplaod it
-class ImageSelectInputNode(UserInputNode):
-    def __init__(self, name:str="image_input"):
+
+class FileSelectInputNode(UserInputNode):
+    def __init__(self, name:str="files_input"):
         self.filenames = []
         super().__init__(name)
 
@@ -38,10 +38,8 @@ class ImageSelectInputNode(UserInputNode):
         self.ui.refresh()
 
     
-    def process(self) -> Image.Image:
-        if(len(self.filenames) == 0):
-            raise Exception("Image not selected")
-        return Image.open(self.filenames[0])
+    def process(self) -> list[str]:
+        return self.filenames
     
 
 
