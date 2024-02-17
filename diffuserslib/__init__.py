@@ -5,6 +5,7 @@ from .ModelUtils import *
 from .FileUtils import *
 from .Web import *
 
+from .util import *
 from .models import *
 from .inference import *
 from .batch import *

@@ -79,6 +79,7 @@ class View:
     def updateWorkflowProgress(self):
         if(not self.controller.workflowrunner.running):
             self.timer.deactivate()
+        self.status.refresh()
         for key, rundata in self.getWorkflowRunData().items():
             if(key in self.output_controls):
                 # Update existing output controls
@@ -86,13 +87,13 @@ class View:
                 if(rundata.output is not None and self.output_controls[key].waiting_output == True and output_container is not None):
                     output_container.clear()
                     with output_container:
-                        self.output_controls[key].output_control, self.output_controls[key].output_width, self.output_controls[key].label_saved, self.output_controls[key].waiting_output = self.workflow_output(key)
+                        self.output_controls[key].output_control, self.output_controls[key].output_width, self.output_controls[key].label_saved, self.output_controls[key].waiting_output = self.workflow_output(key) # type: ignore
             else:
                 # Add new output controls
                 with self.outputs_container:
                     output_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
                     with output_container:
-                        output_control, output_width, label_saved, waiting_output = self.workflow_output(key)
+                        output_control, output_width, label_saved, waiting_output = self.workflow_output(key) # type: ignore
                         self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
 
 
@@ -152,7 +153,7 @@ class View:
         with ui.column().classes("w-full h-full no-wrap gap-0"):
             with ui.row().classes("w-full p-2 place-content-between").style("background-color:#2b323b; border-bottom:1px solid #585b5f"):
                 ui.toggle({1: 'Batch', 2: 'Animate', 3: 'Realtime'}).bind_value(self.controller.model, 'run_type').style('margin-top:1.3em; margin-right:5em; margin-bottom:0.1em;')
-
+                self.status() # type: ignore
                 with ui.row():
                     ui.number(label="Batch Size").bind_value(self.controller.model, 'batch_size').bind_visibility_from(self.controller.model, 'run_type', value=1).style("width: 100px")
                     ui.button('Run', on_click=lambda e: self.runWorkflow()).classes('align-middle')
@@ -162,9 +163,23 @@ class View:
                 with splitter.before:
                     with ui.column().classes("p-2 w-full"):
                         ui.select(list(self.controller.workflows.keys()), value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value))
-                        self.workflow_controls()
+                        self.workflow_controls() # type: ignore
                 with splitter.after:
-                    self.workflow_outputs()
+                    self.workflow_outputs() # type: ignore
+
+
+    @ui.refreshable
+    def status(self):
+        with ui.column().classes("gap-0").style("align-items:center; margin-top:1.3em;"):
+            if(self.controller.isStopping()):
+                ui.label("Stopping...").style("color: #ff0000;")
+            elif(self.controller.isRunning()):
+                ui.label("Generating...").style("color: #ffcc00;")
+            else:
+                ui.label("Idle").style("color: #00ff00;")
+            progress = self.controller.getWorkflowProgress()
+            ui.label(f"Completed: {progress.jobs_completed} - Remaining: {progress.jobs_remaining}")
+        
 
 
     @ui.refreshable
@@ -192,7 +207,7 @@ class View:
         else:
             ui.label().classes('w-8')
         if(isinstance(param.value, ListUserInputNode)):
-            param.value.ui(self.node_parameters)
+            param.value.ui(child_renderer=self.node_parameters) # type: ignore
         elif(isinstance(param.value, UserInputNode)):
             param.value.ui()
         else:
@@ -211,7 +226,7 @@ class View:
             for key, rundata in self.getWorkflowRunData().items():
                 output_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
                 with output_container:
-                    output_control, output_width, label_saved, waiting_output = self.workflow_output(key)
+                    output_control, output_width, label_saved, waiting_output = self.workflow_output(key=key) # type: ignore
                     self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
 
 

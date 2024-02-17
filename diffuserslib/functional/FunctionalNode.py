@@ -1,5 +1,7 @@
+from diffuserslib.util import DeepCopyObject
 from typing import Dict, Any, List, Self, Tuple, Callable
 from dataclasses import dataclass, field
+import copy
 
 
 @dataclass
@@ -27,10 +29,11 @@ class ParameterInfos:
                 self.params[node] = paramInfos.params[node]
 
 
-class FunctionalNode:
+class FunctionalNode(DeepCopyObject):
     name = "FunctionalNode"
 
     def __init__(self, node_name:str):
+        super().__init__()
         self.node_name = node_name
         self.params:Dict[str, NodeParameter] = {}
 

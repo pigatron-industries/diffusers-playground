@@ -153,6 +153,18 @@ class Controller:
 
     def getWorkflowRunData(self):
         return self.workflowrunner.rundata
+    
+
+    def getWorkflowProgress(self):
+        return self.workflowrunner.progress
+    
+
+    def isRunning(self):
+        return self.workflowrunner.running
+
+
+    def isStopping(self):
+        return self.workflowrunner.stopping
 
 
     def saveOutput(self, key):

@@ -7,6 +7,7 @@ class UserInputNode(FunctionalNode):
     """ represents input from the user """
     def __init__(self, name:str="user_input"):
         super().__init__(name)
+        self.deepcopy_excluded_modules = ["nicegui"]
     def getValue(self):
         raise Exception("Not implemented")
     def setValue(self, value):
@@ -27,7 +28,7 @@ class IntUserInputNode(UserInputNode):
         self.value = value
 
     def ui(self):
-        self.input_number = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
+        self.input = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
 
     def process(self) -> int|None:
         return int(self.value) if self.value is not None else None
@@ -45,7 +46,7 @@ class FloatUserInputNode(UserInputNode):
         self.value = value
 
     def ui(self):
-        self.input_number = ui.number(value=self.value, label=self.node_name, format='%.2f').bind_value(self, 'value')
+        ui.number(value=self.value, label=self.node_name, format='%.2f').bind_value(self, 'value')
 
     def process(self) -> float:
         return float(self.value)
@@ -63,7 +64,7 @@ class BoolUserInputNode(UserInputNode):
         self.value = value
 
     def ui(self):
-        self.input_bool = ui.checkbox(value=self.value).bind_value(self, 'value')
+        ui.checkbox(value=self.value).bind_value(self, 'value')
 
     def process(self) -> bool:
         return bool(self.value)
@@ -81,7 +82,7 @@ class StringUserInputNode(UserInputNode):
         self.value = value
 
     def ui(self):
-        self.input_string = ui.input(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+        ui.input(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
         return str(self.value)
@@ -99,7 +100,7 @@ class TextAreaInputNode(UserInputNode):
         self.value = value
 
     def ui(self):
-        self.input_text = ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+        ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
         return str(self.value)
@@ -118,7 +119,7 @@ class ListSelectUserInputNode(UserInputNode):
         self.value = value
 
     def ui(self):
-        self.input_list = ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+        ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
         return str(self.value)
@@ -138,8 +139,8 @@ class SizeUserInputNode(UserInputNode):
         self.height = value[1]
 
     def ui(self):
-        self.input_width = ui.number(value=self.width, label="Width").bind_value(self, 'width')
-        self.input_height = ui.number(value=self.height, label="Height").bind_value(self, 'height')
+        ui.number(value=self.width, label="Width").bind_value(self, 'width')
+        ui.number(value=self.height, label="Height").bind_value(self, 'height')
 
     def process(self) -> SizeType:
         return (int(self.width), int(self.height))
@@ -159,8 +160,8 @@ class MinMaxIntInputNode(UserInputNode):
         self.max = value[1]
 
     def ui(self):
-        self.input_min = ui.number(value=self.min, label="Min").bind_value(self, 'min')
-        self.input_max = ui.number(value=self.max, label="Max").bind_value(self, 'max')
+        ui.number(value=self.min, label="Min").bind_value(self, 'min')
+        ui.number(value=self.max, label="Max").bind_value(self, 'max')
 
     def process(self) -> Tuple[int, int]:
         return (int(self.min), int(self.max))
@@ -180,8 +181,8 @@ class MinMaxFloatInputNode(UserInputNode):
         self.max = value[1]
 
     def ui(self):
-        self.input_min = ui.number(value=self.min, label="Min", format='%.2f').bind_value(self, 'min')
-        self.input_max = ui.number(value=self.max, label="Max", format='%.2f').bind_value(self, 'max')
+        ui.number(value=self.min, label="Min", format='%.2f').bind_value(self, 'min')
+        ui.number(value=self.max, label="Max", format='%.2f').bind_value(self, 'max')
 
     def process(self) -> Tuple[float, float]:
         return (float(self.min), float(self.max))
