@@ -1,5 +1,6 @@
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.WorkflowRunner import WorkflowRunner
+from diffuserslib.util import ModuleLoader
 from .config import *
 from typing import List
 from dataclasses import dataclass
@@ -26,7 +27,8 @@ def str_to_class(str):
 class Controller:
 
     model = Model()
-    workflows = {}
+    workflows:Dict[str, WorkflowBuilder] = {}
+    subworkflows:Dict[str, WorkflowBuilder] = {}
     workflow:FunctionalNode|None = None
     history_filename = ".history.yml"
 
@@ -42,24 +44,25 @@ class Controller:
         
 
     def loadWorkflows(self):
-        print("Loading workflows")
+        print("Loading workflow builders")
         path = os.path.join(os.path.dirname(__file__), '../functional_workflows')
-        files = glob.glob(path + '/*.py')
-        self.workflows = {}
-        for file in files:
-            spec = importlib.util.spec_from_file_location("module.workflow", file)
-            module = importlib.util.module_from_spec(spec)
-            sys.modules["module.workflow"] = module
-            spec.loader.exec_module(module)
-            self.workflows[module.name()] = module
+        modules = ModuleLoader.load_from_directory(path)
+        for module in modules:
+            vars = ModuleLoader.get_vars(module)
+            for name, builder in vars.items():
+                if(issubclass(builder, WorkflowBuilder)):
+                    workflow = builder()
+                    if(workflow.workflow):
+                        self.workflows[name] = builder()
+                    if(workflow.subworkflow):
+                        self.subworkflows[name] = workflow
+                    print(f"Loading workflow builder: {name}")
     
 
     def loadWorkflow(self, workflow_name):
-        print(f"Loading workflow: {workflow_name}")
-
         if(self.workflow is not None and self.workflow.name == workflow_name):
             return
-        print(f"Loading workflow: {workflow_name}")
+        print(f"Loading workflow instance: {workflow_name}")
         if workflow_name in self.workflows:
             print(f"Loading workflow: {workflow_name}")
             self.model.workflow_name = workflow_name
@@ -79,18 +82,16 @@ class Controller:
 
 
     def getSelectableInputNodes(self, param:NodeParameter) -> List[str]:
-        selectable_nodes = []
-        for node in selectable_nodes_config:
-            node_return_type = inspect.signature(node.process).return_annotation
-            if(node_return_type == param.type):
-                selectable_nodes.append(node.node_name)
-        return selectable_nodes
+        selectable_subworkflows = []
+        for name, workflow in self.subworkflows.items():
+            if(workflow.type == param.type):
+                selectable_subworkflows.append(name)
+        return selectable_subworkflows
 
 
-    def createInputNode(self, param:NodeParameter, node_name):
-        for node in selectable_nodes_config:
-            if(node.node_name == node_name):
-                param.value = copy.deepcopy(node)
+    def createInputNode(self, param:NodeParameter, workflow_name):
+        param.value = self.subworkflows[workflow_name].build()
+        param.value.node_name = workflow_name
 
 
     def runWorkflow(self):
