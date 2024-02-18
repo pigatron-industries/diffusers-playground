@@ -81,13 +81,19 @@ class WorkflowRunner:
                 self.progress.jobs_completed = len(self.rundata)
                 self.progress.jobs_remaining = sum([batch.batch_size for batch in self.batchqueue]) + current_batch.batch_size - len(current_batch.rundata)
                 if(self.stopping == True):
+                    self.stopping = False
                     break
         self.running = False
         self.stopping = False
 
         
     def stop(self):
-        self.stopping = True
+        if(self.stopping == False):
+            # Cancel current batch
+            self.stopping = True
+        elif(len(self.batchqueue) > 0):
+            # Cancel next batch
+            self.batchqueue.pop(0)
 
 
     def save(self, timestamp:int):
