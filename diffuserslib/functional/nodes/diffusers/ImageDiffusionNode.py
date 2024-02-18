@@ -66,8 +66,8 @@ class ImageDiffusionNode(FunctionalNode):
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
-        # output, seed = DiffusersPipelines.pipelines.generate(params)
-        output = Image.new("RGB", (size[0], size[1]), (255, 255, 255))
+        output, seed = DiffusersPipelines.pipelines.generate(params)
+        # output = Image.new("RGB", (size[0], size[1]), (255, 255, 255))
         if(isinstance(output, Image.Image)):
             return output
         else:
