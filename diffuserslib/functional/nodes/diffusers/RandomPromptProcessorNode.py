@@ -40,7 +40,15 @@ class RandomPromptProcessorNode(FunctionalNode):
 
     def setWildcardDict(self, wildcards:List[str]):
         self.wildcard_dict = wildcards
+
+
+    def setValue(self, value:str):
+        self.prompt = value
         
+        
+    def getValue(self) -> str:
+        return self.prompt
+
 
     def process(self, prompt:str, shuffle:bool) -> str:
         outprompt = prompt

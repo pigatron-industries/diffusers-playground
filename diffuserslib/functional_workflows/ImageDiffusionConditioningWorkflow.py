@@ -26,10 +26,11 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
             return ConditioningInputNode(image = image_input, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
 
         conditioning_inputs = ListUserInputNode(input_node_generator = conditioning_input, name = "conditioning_inputs")
+        prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
 
         diffusion = ImageDiffusionNode(models = model_input,
                                     size = size_input,
-                                    prompt = prompt_input,
+                                    prompt = prompt_processor,
                                     negprompt = negprompt_input,
                                     steps = steps_input,
                                     cfgscale = cfgscale_input,
@@ -37,5 +38,5 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     scheduler = scheduler_input,
                                     conditioning_inputs = conditioning_inputs)
         
-        model_input.addUpdateListener(lambda: diffusion.prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
+        model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
         return diffusion

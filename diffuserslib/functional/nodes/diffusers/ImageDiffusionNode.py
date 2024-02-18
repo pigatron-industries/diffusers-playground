@@ -37,7 +37,6 @@ class ImageDiffusionNode(FunctionalNode):
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
         self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
-        self.prompt_processor = RandomPromptProcessorNode()
 
 
     def process(self, 
@@ -58,8 +57,8 @@ class ImageDiffusionNode(FunctionalNode):
             width=size[0],
             height=size[1],
             models=models,
-            prompt=self.prompt_processor.process(prompt, False),
-            negprompt=self.prompt_processor.process(negprompt, False),
+            prompt=prompt,
+            negprompt=prompt,
             steps=steps,
             cfgscale=cfgscale,
             seed=seed,
@@ -67,7 +66,8 @@ class ImageDiffusionNode(FunctionalNode):
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
-        output, seed = DiffusersPipelines.pipelines.generate(params)
+        # output, seed = DiffusersPipelines.pipelines.generate(params)
+        output = Image.new("RGB", (size[0], size[1]), (255, 255, 255))
         if(isinstance(output, Image.Image)):
             return output
         else:
