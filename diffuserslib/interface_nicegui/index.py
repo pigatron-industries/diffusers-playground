@@ -232,10 +232,9 @@ class View:
         self.outputs_container = ui.column().classes('w-full')
         with self.outputs_container:
             for batchid, batchdata in self.controller.getBatchRunData().items():
-                self.workflow_output_batchdata(batchid) # type: ignore
+                self.workflow_output_batchdata(batchid)
 
 
-    @ui.refreshable
     def workflow_output_batchdata(self, batchid):
         batchdata = self.controller.getBatchRunData()[batchid]
         batchdata_container = ui.column().classes('w-full p-2')
@@ -259,12 +258,16 @@ class View:
             output_control = None
             output_width = 0
             waiting_output = False
-            if(rundata.output is None):
+
+            if(rundata.error is not None):
+                output_control = ui.label(f"Error: {rundata.error}").style("color: #ff0000;")
+            elif(rundata.output is None):
                 output_control = ui.label("Generating...").style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
                 waiting_output = True
-            if(isinstance(rundata.output, Image.Image)):
+            elif(isinstance(rundata.output, Image.Image)):
                 output_width = rundata.output.width
                 output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(runid)).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+
             with ui.column():
                 if rundata.params is not None:
                     for node_name in rundata.params:
