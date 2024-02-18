@@ -19,16 +19,27 @@ class RandomPromptProcessorNode(FunctionalNode):
                 _colour[2-3,]_  =  "red, green, blue"
                 _colour[2-3 and]_  =  "red and green and blue"
     """
-    modifier_dict:Dict[str, List[str]]
-    wildcard_dict:List[str]
+    modifier_dict:Dict[str, List[str]] = {}
+
+
+    @staticmethod
+    def loadModifierDictFile(modifier_config_files:str):
+         # TODO
+        pass
+
 
     def __init__(self, 
                  prompt:StringFuncType="", 
                  shuffle:BoolFuncType=False,
                  name:str = "random_prompt_processor"):
         super().__init__(name)
+        self.wildcard_dict:List[str] = []
         self.addParam("prompt", prompt, str)
         self.addParam("shuffle", shuffle, bool)
+
+
+    def setWildcardDict(self, wildcards:List[str]):
+        self.wildcard_dict = wildcards
         
 
     def process(self, prompt:str, shuffle:bool) -> str:

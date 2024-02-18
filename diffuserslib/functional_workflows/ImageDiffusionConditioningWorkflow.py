@@ -36,4 +36,6 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     seed = seed_input,
                                     scheduler = scheduler_input,
                                     conditioning_inputs = conditioning_inputs)
+        
+        model_input.addUpdateListener(lambda: diffusion.prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
         return diffusion

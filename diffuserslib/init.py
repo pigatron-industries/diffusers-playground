@@ -1,6 +1,7 @@
 from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.functional import WorkflowRunner
 from diffuserslib.GlobalConfig import GlobalConfig
+from diffuserslib.functional.nodes.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
 from typing import List
 import yaml
 import os
@@ -8,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 
-def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]=["modelconfig.yml"]):
+def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]=["modelconfig.yml"], promptmods:List[str]=[]):
     safety_checker = True
     device = "cuda"
     models = "./models"
@@ -38,6 +39,9 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             loras = configdata["folders"]["loras"]
             DiffusersPipelines.pipelines.loadTextEmbeddings(embeddings)
             DiffusersPipelines.pipelines.loadLORAs(loras)
+
+    for promptmod in promptmods:
+        RandomPromptProcessorNode.loadModifierDictFile(promptmod)
 
 
 

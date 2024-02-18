@@ -4,7 +4,7 @@ from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsTyp
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
 from .DiffusionModelUserInputNode import DiffusionModelUserInputNode
-from .UserInputNode import UserInputNode
+from ...user.UserInputNode import UserInputNode
 from nicegui import ui
 
 

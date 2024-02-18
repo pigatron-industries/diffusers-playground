@@ -3,7 +3,7 @@ from diffuserslib.inference.GenerationParameters import ModelParameters
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsType
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
-from .UserInputNode import UserInputNode
+from ...user.UserInputNode import UserInputNode
 from nicegui import ui
 
 
@@ -36,8 +36,15 @@ class DiffusionModelUserInputNode(UserInputNode):
             raise Exception("DiffusersPipelines not initialised")  
         with ui.column().classes('grow'):
             models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel)
-            self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label="Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('w-full')  
+            with ui.row().classes('w-full'):
+                self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label="Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
+                ui.button(icon="settings", on_click=lambda e: self.modelSettings()).classes('align-middle').props('dense')
+
             self.model_dropdown = ui.select(options=list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('w-full')
+
+
+    def modelSettings(self):
+        pass
 
 
     def updateModels(self):

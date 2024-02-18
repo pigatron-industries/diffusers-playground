@@ -3,7 +3,6 @@ from diffuserslib.functional.FunctionalTyping import *
 from .UserInputNode import UserInputNode
 from diffuserslib.util import FileDialog
 from nicegui import ui
-from PIL import Image
 
 
 class FileSelectInputNode(UserInputNode):
