@@ -4,9 +4,8 @@ from dataclasses import dataclass, field
 from PIL import Image
 import time
 import yaml
-import numpy as np
 import copy
-import sys
+import traceback
 
 
 @dataclass
@@ -76,6 +75,7 @@ class WorkflowRunner:
                 except Exception as e:
                     rundata.error = e
                     print(f"Error running workflow {current_batch.workflow.node_name}: {e}")
+                    traceback.print_exc()
                     break
                 rundata.params = current_batch.workflow.getEvaluatedParamValues()
                 self.progress.jobs_completed = len(self.rundata)

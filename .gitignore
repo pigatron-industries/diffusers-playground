@@ -138,8 +138,8 @@ cache/
 .vscode
 
 # local config files
-local_config.yml
-local_modelconfig.yml
+/config/local_config.yml
+/config/local_modelconfig.yml
 .history.yml
 /inputs
 /outputs
