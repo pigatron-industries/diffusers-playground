@@ -1,6 +1,6 @@
 from .FunctionalNode import FunctionalNode
 from typing import Any, Dict, Self, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from PIL import Image
 import time
 import yaml
@@ -19,9 +19,12 @@ class WorkflowRunData:
 
 
 @dataclass
-class WorkflowQueueData:
+class WorkflowBatchData:
+    id:int
     workflow:FunctionalNode
     batch_size:int
+    rundata:Dict[int, WorkflowRunData] = field(default_factory= lambda: {})
+    error:Exception|None = None
 
 
 @dataclass
@@ -37,10 +40,12 @@ class WorkflowRunner:
     def __init__(self, output_dir:str):
         self.output_dir = output_dir
         self.rundata:Dict[int, WorkflowRunData] = {}
-        self.queue:List[WorkflowQueueData] = []
+        self.batchrundata:Dict[int, WorkflowBatchData] = {}
+        self.batchqueue:List[WorkflowBatchData] = []
         self.progress:ProgressData = ProgressData(0,0)
         self.stopping = False
         self.running = False
+        self.batchcount = 0
 
     def setWorkflow(self, workflow:FunctionalNode):
         self.workflow = workflow
@@ -49,28 +54,31 @@ class WorkflowRunner:
         self.rundata = {}
 
     def run(self, workflow:FunctionalNode, batch_size:int = 1):
-        self.queue.append(WorkflowQueueData(copy.deepcopy(workflow), batch_size))
+        self.batchqueue.append(WorkflowBatchData(self.batchcount, copy.deepcopy(workflow), batch_size))
+        self.batchcount += 1
         self.progress.jobs_remaining += batch_size
         if(self.running):
             return
 
         self.running = True
-        while len(self.queue) > 0:
-            current_batch = self.queue.pop(0)
+        while len(self.batchqueue) > 0:
+            current_batch = self.batchqueue.pop(0)
+            self.batchrundata[current_batch.id] = current_batch
             print(f"Running workflow {workflow.node_name} with batch size {current_batch.batch_size}")
             for i in range(current_batch.batch_size):
                 print(f"Running workflow {current_batch.workflow.node_name} batch {i+1} of {current_batch.batch_size}")
                 rundata = WorkflowRunData(int(time.time_ns()/1000))
+                current_batch.rundata[rundata.timestamp] = rundata
                 self.rundata[rundata.timestamp] = rundata
                 try:
                     rundata.output = current_batch.workflow()
-                    rundata.params = current_batch.workflow.getEvaluatedParamValues()
-                    self.progress.jobs_completed = len(self.rundata)
-                    self.progress.jobs_remaining = current_batch.batch_size - self.progress.jobs_completed + sum([batch.batch_size for batch in self.queue])
                 except Exception as e:
                     rundata.error = e
                     print(f"Error running workflow {current_batch.workflow.node_name}: {e}")
-                    self.stopping = True
+                    break
+                rundata.params = current_batch.workflow.getEvaluatedParamValues()
+                self.progress.jobs_completed = len(self.rundata)
+                self.progress.jobs_remaining = current_batch.batch_size - self.progress.jobs_completed + sum([batch.batch_size for batch in self.batchqueue])
                 if(self.stopping == True):
                     break
         self.running = False

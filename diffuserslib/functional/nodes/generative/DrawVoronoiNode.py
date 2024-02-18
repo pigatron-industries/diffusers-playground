@@ -51,6 +51,7 @@ class DrawVoronoiNode(FunctionalNode):
                 radius: float = 2) -> Image.Image:
         drawBoundedLines, drawUnboundedLines, drawPoints = draw_options
         points_array = np.array(points)
+        image = image.copy()
 
         points = points_array * image.size
         lines = self.getLines(points, boundedLines=drawBoundedLines, unboundedLines=drawUnboundedLines)

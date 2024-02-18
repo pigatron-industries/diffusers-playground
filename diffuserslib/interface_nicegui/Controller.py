@@ -153,8 +153,19 @@ class Controller:
             DiffusersPipelines.pipelines.interrupt()
 
 
+    def removeRunData(self, batchid, runid):
+        self.workflowrunner.batchrundata[batchid].rundata.pop(runid)
+        self.workflowrunner.rundata.pop(runid)
+        if(len(self.workflowrunner.batchrundata[batchid].rundata) == 0):
+            self.workflowrunner.batchrundata.pop(batchid)
+
+
     def getWorkflowRunData(self):
         return self.workflowrunner.rundata
+    
+
+    def getBatchRunData(self):
+        return self.workflowrunner.batchrundata
     
 
     def getWorkflowProgress(self):

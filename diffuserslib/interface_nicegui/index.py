@@ -16,8 +16,8 @@ default_output_width = 256
 
 
 @dataclass
-class OutputControls:
-    output_container:Element|None
+class RunDataControls:
+    rundata_container:Element|None
     output_control:Element|None
     output_width:int
     label_saved:Label
@@ -37,6 +37,10 @@ class OutputControls:
                 self.output_control.style(replace = f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
             
 
+@dataclass
+class BatchDataControls:
+    batch_container:Element|None
+
 
 class View:
 
@@ -49,7 +53,8 @@ class View:
 
     def __init__(self):
         self.controller = Controller()
-        self.output_controls:Dict[int, OutputControls] = {}
+        self.rundata_controls:Dict[int, RunDataControls] = {}
+        self.batchdata_controls:Dict[int, BatchDataControls] = {}
 
 
     def loadWorkflow(self, workflow_name):
@@ -80,21 +85,27 @@ class View:
         if(not self.controller.workflowrunner.running):
             self.timer.deactivate()
         self.status.refresh()
-        for key, rundata in self.getWorkflowRunData().items():
-            if(key in self.output_controls):
-                # Update existing output controls
-                output_container = self.output_controls[key].output_container
-                if(rundata.output is not None and self.output_controls[key].waiting_output == True and output_container is not None):
-                    output_container.clear()
-                    with output_container:
-                        self.output_controls[key].output_control, self.output_controls[key].output_width, self.output_controls[key].label_saved, self.output_controls[key].waiting_output = self.workflow_output(key) # type: ignore
+        for batchid, batchdata in self.controller.getBatchRunData().items():
+            if(batchid in self.batchdata_controls):
+                batchdata_container = self.batchdata_controls[batchid].batch_container
+                for runid, rundata in batchdata.rundata.items():
+                    if(runid in self.rundata_controls):
+                        # Update existing output controls
+                        rundata_container = self.rundata_controls[runid].rundata_container
+                        if(rundata.output is not None and self.rundata_controls[runid].waiting_output == True and rundata_container is not None):
+                            rundata_container.clear()
+                            with rundata_container:
+                                self.rundata_controls[runid].output_control, self.rundata_controls[runid].output_width, self.rundata_controls[runid].label_saved, self.rundata_controls[runid].waiting_output = self.workflow_output(batchid, runid) # type: ignore
+                    elif(batchdata_container is not None):
+                        # Add new output controls
+                        with batchdata_container:
+                            rundata_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
+                            with rundata_container:
+                                output_control, output_width, label_saved, waiting_output = self.workflow_output(batchid, runid) # type: ignore
+                                self.rundata_controls[runid] = RunDataControls(rundata_container, output_control, output_width, label_saved, waiting_output)
             else:
-                # Add new output controls
-                with self.outputs_container:
-                    output_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
-                    with output_container:
-                        output_control, output_width, label_saved, waiting_output = self.workflow_output(key) # type: ignore
-                        self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
+                 with self.outputs_container:
+                    self.workflow_output_batchdata(batchid) # type: ignore
 
 
     def getWorkflowRunData(self) -> Dict[int, WorkflowRunData]:
@@ -102,24 +113,24 @@ class View:
     
 
     def expandOutput(self, index):
-        self.output_controls[index].toggleExpanded()
+        self.rundata_controls[index].toggleExpanded()
 
 
     def saveOutput(self, key):
         self.controller.saveOutput(key)
         filename = self.getWorkflowRunData()[key].save_file
         if (filename is not None):
-            self.output_controls[key].showLabelSaved(filename)
+            self.rundata_controls[key].showLabelSaved(filename)
 
 
-    def removeOutput(self, key):
-        self.getWorkflowRunData().pop(key)
+    def removeOutput(self, batchid, runid):
+        self.controller.removeRunData(batchid, runid)
         self.workflow_outputs.refresh()
 
         # TODO don't refresh whole list - 
         # this should be changed to a dict[int, RunData] instead of a list so remove itesm doesn't re-index
-        # self.output_controls[index].output_container.clear()
-        # self.output_controls.pop(index)
+        # self.rundata_controls[index].output_container.clear()
+        # self.rundata_controls.pop(index)
 
 
     def toggleParamFunctional(self, param:NodeParameter):
@@ -220,19 +231,29 @@ class View:
 
     @ui.refreshable
     def workflow_outputs(self):
-        self.output_controls = {}
-        self.outputs_container = ui.column().classes('w-full p-2')
+        self.rundata_controls = {}
+        self.outputs_container = ui.column().classes('w-full')
         with self.outputs_container:
-            for key, rundata in self.getWorkflowRunData().items():
-                output_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
-                with output_container:
-                    output_control, output_width, label_saved, waiting_output = self.workflow_output(key=key) # type: ignore
-                    self.output_controls[key] = OutputControls(output_container, output_control, output_width, label_saved, waiting_output)
+            for batchid, batchdata in self.controller.getBatchRunData().items():
+                self.workflow_output_batchdata(batchid) # type: ignore
 
 
     @ui.refreshable
-    def workflow_output(self, key):
-        rundata = self.getWorkflowRunData()[key]
+    def workflow_output_batchdata(self, batchid):
+        batchdata = self.controller.getBatchRunData()[batchid]
+        batchdata_container = ui.column().classes('w-full p-2')
+        with batchdata_container:
+            ui.label(f"Batch {batchid}")
+            for runid, rundata in batchdata.rundata.items():
+                rundata_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
+                with rundata_container:
+                    output_control, output_width, label_saved, waiting_output = self.workflow_output(batchid=batchid, runid=runid) # type: ignore
+                    self.rundata_controls[runid] = RunDataControls(rundata_container, output_control, output_width, label_saved, waiting_output)
+        self.batchdata_controls[batchid] = BatchDataControls(batchdata_container)
+
+    @ui.refreshable
+    def workflow_output(self, batchid, runid):
+        rundata = self.getWorkflowRunData()[runid]
         with ui.row().classes('w-full no-wrap'):
             output_control = None
             output_width = 0
@@ -242,7 +263,7 @@ class View:
                 waiting_output = True
             if(isinstance(rundata.output, Image.Image)):
                 output_width = rundata.output.width
-                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(key)).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+                output_control = ui.image(rundata.output).on('click', lambda e: self.expandOutput(runid)).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
             with ui.column():
                 if rundata.params is not None:
                     for node_name in rundata.params:
@@ -255,8 +276,8 @@ class View:
                                     ui.label(str(paramvalue)).style("line-height: 1;")
             with ui.column().classes('ml-auto'):
                 with ui.row().classes('ml-auto'):
-                    ui.button('Save', on_click=lambda e: self.saveOutput(key))
-                    ui.button('Remove', on_click=lambda e: self.removeOutput(key))      
+                    ui.button('Save', on_click=lambda e: self.saveOutput(runid))
+                    ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))      
                 with ui.row():
                     label_saved = ui.label(f"Saved to {rundata.save_file}")
                     label_saved.set_visibility(rundata.save_file is not None)
