@@ -79,15 +79,16 @@ class WorkflowRunner:
                     break
                 rundata.params = current_batch.workflow.getEvaluatedParamValues()
                 self.progress.jobs_completed = len(self.rundata)
-                self.progress.jobs_remaining = current_batch.batch_size - self.progress.jobs_completed + sum([batch.batch_size for batch in self.batchqueue])
+                self.progress.jobs_remaining = sum([batch.batch_size for batch in self.batchqueue]) + current_batch.batch_size - len(current_batch.rundata)
                 if(self.stopping == True):
                     break
         self.running = False
         self.stopping = False
-        self.progress = ProgressData(0,0)
+
         
     def stop(self):
         self.stopping = True
+
 
     def save(self, timestamp:int):
         save_file = f"{self.output_dir}/output_{timestamp}"
