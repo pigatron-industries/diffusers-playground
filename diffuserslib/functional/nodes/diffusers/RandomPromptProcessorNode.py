@@ -2,6 +2,8 @@ from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.FunctionalTyping import *
 import random
 import re
+import yaml
+import os
 from typing import List, Dict
 
 
@@ -23,9 +25,11 @@ class RandomPromptProcessorNode(FunctionalNode):
 
 
     @staticmethod
-    def loadModifierDictFile(modifier_config_files:str):
-         # TODO
-        pass
+    def loadModifierDictFile(modifier_config_file:str):
+        if(os.path.exists(modifier_config_file)):
+            modifier_config = yaml.safe_load(open(modifier_config_file, "r"))
+            for key, value in modifier_config.items():
+                RandomPromptProcessorNode.modifier_dict[key] = value
 
 
     def __init__(self, 
