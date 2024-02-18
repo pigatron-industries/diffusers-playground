@@ -28,6 +28,8 @@ class DiffusionModelUserInputNode(UserInputNode):
     def setValue(self, value:Tuple[str|None, str|None]):
         self.basemodel = value[0]
         self.model = value[1]
+        for listener in self.update_listeners:
+            listener()
 
 
     @ui.refreshable
@@ -48,6 +50,7 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def updateModels(self):
+        print("updateModels")
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         if(self.basemodel is not None):
