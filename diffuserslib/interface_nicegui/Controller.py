@@ -168,6 +168,14 @@ class Controller:
         return self.workflowrunner.batchrundata
     
 
+    def getBatchCurrentData(self) -> WorkflowBatchData|None:
+        return self.workflowrunner.batchcurrent
+
+
+    def getBatchQueueData(self):
+        return self.workflowrunner.batchqueue
+
+
     def getWorkflowProgress(self):
         return self.workflowrunner.progress
     

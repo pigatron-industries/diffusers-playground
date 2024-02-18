@@ -122,6 +122,7 @@ class View:
 
     def removeOutput(self, batchid, runid):
         self.controller.removeRunData(batchid, runid)
+        self.status.refresh()
         self.workflow_outputs.refresh()
 
         # TODO don't refresh whole list - 
@@ -178,16 +179,30 @@ class View:
 
     @ui.refreshable
     def status(self):
-        with ui.column().classes("gap-0").style("align-items:center; margin-top:1.3em;"):
+        with ui.column().classes("gap-0").style("align-items:center;"):  #margin-top:1.3em;
             if(self.controller.isStopping()):
                 ui.label("Stopping...").style("color: #ff0000;")
             elif(self.controller.isRunning()):
                 ui.label("Generating...").style("color: #ffcc00;")
             else:
                 ui.label("Idle").style("color: #00ff00;")
-            progress = self.controller.getWorkflowProgress()
-            ui.label(f"Completed: {progress.jobs_completed} - Remaining: {progress.jobs_remaining}")
+            self.batch_queue_progress()
         
+
+    def batch_queue_progress(self):
+        donebatches = self.controller.getBatchRunData()
+        currentbatch = self.controller.getBatchCurrentData()
+        queuebatches = self.controller.getBatchQueueData()
+        with ui.row():
+            for batchid, batch in donebatches.items():
+                if(batch != currentbatch):
+                    ui.button(f"{len(batch.rundata)}", color="slate").classes('px-2 text-green-500').props('dense')
+            if(currentbatch is not None):
+                currentbatch_done = len(currentbatch.rundata)
+                currentbatch_remaining = currentbatch.batch_size - currentbatch_done
+                ui.button(f"{currentbatch_done} - {currentbatch_remaining}", color="slate").classes('px-2 text-yellow-500').props('dense')
+            for batch in queuebatches:
+                ui.button(f"{batch.batch_size}", color="slate").classes('px-2 text-gray-500').props('dense')
 
 
     @ui.refreshable
