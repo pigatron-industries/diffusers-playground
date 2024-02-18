@@ -95,14 +95,11 @@ class View:
                         if(rundata.output is not None and self.rundata_controls[runid].waiting_output == True and rundata_container is not None):
                             rundata_container.clear()
                             with rundata_container:
-                                self.rundata_controls[runid].output_control, self.rundata_controls[runid].output_width, self.rundata_controls[runid].label_saved, self.rundata_controls[runid].waiting_output = self.workflow_output(batchid, runid) # type: ignore
+                                self.rundata_controls[runid].output_control, self.rundata_controls[runid].output_width, self.rundata_controls[runid].label_saved, self.rundata_controls[runid].waiting_output = self.workflow_output_rundata(batchid, runid)
                     elif(batchdata_container is not None):
                         # Add new output controls
                         with batchdata_container:
-                            rundata_container = ui.card_section().classes('w-full').style("background-color:rgb(43, 50, 59); border-radius:8px;")
-                            with rundata_container:
-                                output_control, output_width, label_saved, waiting_output = self.workflow_output(batchid, runid) # type: ignore
-                                self.rundata_controls[runid] = RunDataControls(rundata_container, output_control, output_width, label_saved, waiting_output)
+                            self.workflow_output_rundata_container(batchid, runid)
             else:
                  with self.outputs_container:
                     self.workflow_output_batchdata(batchid) # type: ignore
@@ -245,14 +242,18 @@ class View:
         with batchdata_container:
             ui.label(f"Batch {batchid}")
             for runid, rundata in batchdata.rundata.items():
-                rundata_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
-                with rundata_container:
-                    output_control, output_width, label_saved, waiting_output = self.workflow_output(batchid=batchid, runid=runid) # type: ignore
-                    self.rundata_controls[runid] = RunDataControls(rundata_container, output_control, output_width, label_saved, waiting_output)
+                self.workflow_output_rundata_container(batchid, runid)
         self.batchdata_controls[batchid] = BatchDataControls(batchdata_container)
 
-    @ui.refreshable
-    def workflow_output(self, batchid, runid):
+
+    def workflow_output_rundata_container(self, batchid, runid):
+        rundata_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
+        with rundata_container:
+            output_control, output_width, label_saved, waiting_output = self.workflow_output_rundata(batchid=batchid, runid=runid)
+            self.rundata_controls[runid] = RunDataControls(rundata_container, output_control, output_width, label_saved, waiting_output)
+
+
+    def workflow_output_rundata(self, batchid, runid):
         rundata = self.getWorkflowRunData()[runid]
         with ui.row().classes('w-full no-wrap'):
             output_control = None

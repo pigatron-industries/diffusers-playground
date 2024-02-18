@@ -52,6 +52,7 @@ class WorkflowRunner:
 
     def clearRunData(self):
         self.rundata = {}
+        self.batchrundata = {}
 
     def run(self, workflow:FunctionalNode, batch_size:int = 1):
         self.batchqueue.append(WorkflowBatchData(self.batchcount, copy.deepcopy(workflow), batch_size))
