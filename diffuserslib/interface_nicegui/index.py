@@ -250,7 +250,7 @@ class View:
                             with ui.row().classes('no-wrap'):
                                 ui.label(f"{paramname}:").style("line-height: 1;")
                                 if(isinstance(paramvalue, Image.Image)):
-                                    ui.image(paramvalue).style("max-width:256px; max-height:256px; line-height: 1;")
+                                    ui.image(paramvalue).style("min-width:128px; min-height:128px;")
                                 else:
                                     ui.label(str(paramvalue)).style("line-height: 1;")
             with ui.column().classes('ml-auto'):
