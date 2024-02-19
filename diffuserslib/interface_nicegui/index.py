@@ -293,6 +293,7 @@ class View:
                                     ui.image(paramvalue).style("min-width:128px; min-height:128px;")
                                 else:
                                     ui.label(str(paramvalue)).style("line-height: 1;")
+
             with ui.column().classes('ml-auto'):
                 with ui.row().classes('ml-auto'):
                     ui.button('Save', on_click=lambda e: self.saveOutput(runid))
