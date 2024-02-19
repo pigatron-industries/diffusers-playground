@@ -90,12 +90,13 @@ class WorkflowRunner:
 
         
     def stop(self):
-        if(self.stopping == False):
-            # Cancel current batch
-            self.stopping = True
-        elif(len(self.batchqueue) > 0):
-            # Cancel next batch
-            self.batchqueue.pop(0)
+        if(self.running):
+            if(not self.stopping):
+                # Cancel current batch
+                self.stopping = True
+            elif(len(self.batchqueue) > 0):
+                # Cancel next batch
+                self.batchqueue.pop(0)
 
 
     def save(self, timestamp:int):
