@@ -73,7 +73,6 @@ class WorkflowRunner:
                 self.rundata[rundata.timestamp] = rundata
                 try:
                     rundata.output = self.batchcurrent.workflow()
-                    time.sleep(3)
                 except Exception as e:
                     rundata.error = e
                     print(f"Error running workflow {self.batchcurrent.workflow.node_name}: {e}")
