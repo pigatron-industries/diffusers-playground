@@ -79,6 +79,7 @@ class View:
     def clearOutputs(self):
         self.controller.workflowrunner.clearRunData()
         self.workflow_outputs.refresh()
+        self.status.refresh()
 
 
     def updateWorkflowProgress(self):
