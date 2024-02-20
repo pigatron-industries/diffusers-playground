@@ -42,6 +42,19 @@ class FunctionalNode(DeepCopyObject):
         args = self.evaluateParams()
         return self.process(**args)
     
+
+    def update(self):
+        # TODO: update should only be called on a node once, and then the node should be marked as updated
+        """ Send update signal to all child nodes in case of continuously changing parameters"""
+        for paramname, param in self.params.items():
+            if(isinstance(param.value, FunctionalNode)):
+                param.value.update()
+            elif(isinstance(param.value, List)):
+                for listvalue in param.value:
+                    if(isinstance(listvalue, FunctionalNode)):
+                        listvalue.update()
+
+    
     def process(self, **kwargs):
         raise Exception("Not implemented")
     

@@ -9,6 +9,12 @@ class BoundingPoints2DNode(FunctionalNode):
                  name:str = "bounce_points_2d"):
         super().__init__(name)
         self.addParam("points", points, Points2DType)
+        self.points = points
+
+
+    def update(self):
+        #TODO update points to new positions
+        pass
 
 
     def process(self, points:Points2DType) -> Points2DType:
