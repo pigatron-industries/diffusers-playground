@@ -58,7 +58,7 @@ class ImageDiffusionNode(FunctionalNode):
             height=size[1],
             models=models,
             prompt=prompt,
-            negprompt=prompt,
+            negprompt=negprompt,
             steps=steps,
             cfgscale=cfgscale,
             seed=seed,
