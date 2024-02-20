@@ -151,7 +151,6 @@ upscale:
 controlnet:
   - base: sd_1_5
     models:
-      # Control Net Models
       - id: lllyasviel/control_v11p_sd15_canny
       - id: lllyasviel/control_v11f1p_sd15_depth
       - id: lllyasviel/control_v11p_sd15_inpaint
@@ -166,8 +165,6 @@ controlnet:
       - id: lllyasviel/control_v11f1e_sd15_tile
       - id: ioclab/control_v1p_sd15_brightness
       - id: monster-labs/control_v1p_sd15_qrcode_monster
-      # T2I Adapter Models
-      - id: TencentARC/t2iadapter_canny_sd15v2
         colourspace: L
   - base: sd_2_1
     models:
@@ -178,12 +175,9 @@ controlnet:
       - id: thibaud/controlnet-sd21-scribble-diffusers
   - base: sdxl_1_0
     models:
-    # Control Net Models
       - id: diffusers/controlnet-canny-sdxl-1.0-small
       - id: diffusers/controlnet-depth-sdxl-1.0-small
       - id: thibaud/controlnet-openpose-sdxl-1.0
-    # T2I Adapter Models
-      - id: TencentARC/t2i-adapter-canny-sdxl-1.0
         colourspace: L
 
 t2iadapter:
@@ -214,7 +208,7 @@ ipadapter:
       - id: h94/IP-Adapter/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.safetensors
 
 
-ipadpaterfaceid:
+ipadapterfaceid:
   - base: sd_1_5
     models:
       - id: h94/IP-Adapter-FaceID/ip-adapter-faceid_sd15.bin
