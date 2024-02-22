@@ -37,22 +37,26 @@ class FunctionalNode(DeepCopyObject):
         super().__init__()
         self.node_name = node_name
         self.params:Dict[str, NodeParameter] = {}
+        self.output = None
+
 
     def __call__(self) -> Any:
+        if(self.output is not None):
+            return self.output
         args = self.evaluateParams()
-        return self.process(**args)
+        self.output = self.process(**args)
+        return self.output
     
 
-    def update(self):
-        # TODO: update should only be called on a node once, and then the node should be marked as updated
-        """ Send update signal to all child nodes in case of continuously changing parameters"""
+    def init(self):
+        self.output = None
         for paramname, param in self.params.items():
             if(isinstance(param.value, FunctionalNode)):
-                param.value.update()
+                param.value.init()
             elif(isinstance(param.value, List)):
                 for listvalue in param.value:
                     if(isinstance(listvalue, FunctionalNode)):
-                        listvalue.update()
+                        listvalue.init()
 
     
     def process(self, **kwargs):

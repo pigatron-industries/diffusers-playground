@@ -15,8 +15,8 @@ class FrameAggregator(FunctionalNode):
 
     def __call__(self) -> Any:
         for i in range(self.num_frames):
+            self.init()
             args = self.evaluateParams()
-            self.update()
             return self.process(**args)
     
 
