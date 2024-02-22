@@ -1,5 +1,11 @@
 
 generate:
+  - base: sc_1_0
+    pipelines:
+      generate: StableCascadeGeneratePipeline
+    models:
+      - id: stabilityai/stable-cascade-prior
+        decoder: stabilityai/stable-cascade
   - base: svd_1_0
     pipelines:
       generate: StableVideoDiffusionGeneratePipeline

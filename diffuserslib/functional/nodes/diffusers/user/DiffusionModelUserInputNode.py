@@ -8,7 +8,7 @@ from nicegui import ui
 
 
 class DiffusionModelUserInputNode(UserInputNode):
-    basemodels = ["sd_1_5", "sd_2_1", "sdxl_1_0"]
+    basemodels = ["sd_1_5", "sd_2_1", "sdxl_1_0", "sc_1_0"]
 
     def __init__(self, name:str="diffusion_model_user_input"):
         self.basemodel = None
