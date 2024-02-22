@@ -185,6 +185,7 @@ controlnet:
       - id: diffusers/controlnet-depth-sdxl-1.0-small
       - id: thibaud/controlnet-openpose-sdxl-1.0
         colourspace: L
+      - id: monster-labs/control_v1p_sdxl_qrcode_monster
 
 t2iadapter:
   - base: sd_1_5
