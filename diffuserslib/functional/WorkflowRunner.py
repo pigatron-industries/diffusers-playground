@@ -108,7 +108,7 @@ class WorkflowRunner:
                 rundata.output.save(f"{save_file}.png")
                 rundata.save_file = f"{save_file}.png"
                 file = open(f"{save_file}.yaml", "w")
-                yaml.dump(rundata.params, file)
+                yaml.dump(rundata.params, file, width=float("inf"))
                 print(rundata.params)
                 print(f"Saved output to {save_file}")
             else:
