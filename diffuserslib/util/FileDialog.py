@@ -23,31 +23,32 @@ class FileDialog():
         self.dialog = dialog
 
 
-    def onExpand(self, expanded_paths:List[str]):
+    async def onExpand(self, expanded_paths:List[str]):
         for path in expanded_paths:
             print(path)
-            self.populateGrandChildren(path)
+            await self.populateGrandChildren(path)
 
 
     def selectFile(self, values):
         self.selected = values
 
 
-    def initFileTree(self):
+    async def initFileTree(self):
         self.filetree = []
         paths = GlobalConfig.inputs_dirs
         for path in paths:
             if (os.path.exists(path)):
                 node = {'id': path, 'label': path, 'children': []}
-                self.populateChildren(node)
+                await self.populateChildren(node)
                 self.filetree.append(node)
                 
 
 
-    def populateChildren(self, node):
+    async def populateChildren(self, node):
         path = node['id']
         if(len(node['children']) == 0 and os.path.isdir(path)):
-            for subpath in os.listdir(path):
+            dirlist = await run.io_bound(os.listdir, path)
+            for subpath in dirlist:
                 fullpath = os.path.join(path, subpath)
                 if (os.path.isdir(fullpath)):
                     node['children'].append({'id': fullpath, 'label': subpath, 'children': []})
@@ -55,11 +56,11 @@ class FileDialog():
                     node['children'].append({'id': fullpath, 'label': subpath, 'children': []})
 
 
-    def populateGrandChildren(self, path:str):
+    async def populateGrandChildren(self, path:str):
         node = self.findNode(path, self.filetree)
         if (node is not None):
             for child in node['children']:
-                self.populateChildren(child)
+                await self.populateChildren(child)
 
 
     def findNode(self, path:str, tree:List[dict]):
@@ -74,7 +75,7 @@ class FileDialog():
 
 
     async def open(self):
-        self.initFileTree()
+        await self.initFileTree()
         self.createDialog.refresh()
         self.dialog.open()
 
