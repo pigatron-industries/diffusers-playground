@@ -18,11 +18,11 @@ class LORAModelUserInputNode(UserInputNode):
 
 
     def getValue(self) -> str|None:
-        return self.model
+        return self.lora
     
 
     def setValue(self, value:str|None):
-        self.model = value
+        self.lora = value
 
 
     @ui.refreshable
@@ -30,7 +30,7 @@ class LORAModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         loras = DiffusersPipelines.pipelines.getLORAsByBase(self.diffusion_model_input.basemodel)
-        self.lora_dropdown = ui.select(options=[None]+list(loras), value=self.lora, label="Lora").bind_value(self, 'model').classes('grow')
+        self.lora_dropdown = ui.select(options=[None]+list(loras), value=self.lora, label="Lora").bind_value(self, 'lora').classes('grow')
 
 
     def updateModels(self):
