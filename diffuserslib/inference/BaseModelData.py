@@ -1,11 +1,13 @@
 from .TextEmbedding import TextEmbeddings
+from .LORA import LORA
+from typing import Dict
 
 
 class BaseModelData:
     def __init__(self, base : str, textembeddings : TextEmbeddings, modifierdict = None):  #: Dict[str, list[str]]
-        self.base : str = base
-        self.textembeddings : TextEmbeddings = textembeddings
-        self.loras = {}
+        self.base:str = base
+        self.textembeddings:TextEmbeddings = textembeddings
+        self.loras:Dict[str, LORA] = {}
         if (modifierdict is None):
             self.modifierdict = {}
         else:

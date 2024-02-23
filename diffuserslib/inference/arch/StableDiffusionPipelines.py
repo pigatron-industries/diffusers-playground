@@ -1,5 +1,6 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters, ControlImageType
+from diffuserslib.inference.LORA import LORA
 from PIL import Image
 from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
@@ -121,6 +122,11 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             text_encoder.resize_token_embeddings(len(tokenizer))
             token_id = tokenizer.convert_tokens_to_ids(tokenpart)
             text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
+
+
+    def add_lora(self, lora:LORA, weight:float):
+        self.pipeline.load_lora_weights(lora.path)
+        self.pipeline.fuse_lora(lora_scale = weight)
     
 
 
