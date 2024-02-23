@@ -48,15 +48,15 @@ class FunctionalNode(DeepCopyObject):
         return self.output
     
 
-    def init(self):
+    def flush(self):
         self.output = None
         for paramname, param in self.params.items():
             if(isinstance(param.value, FunctionalNode)):
-                param.value.init()
+                param.value.flush()
             elif(isinstance(param.value, List)):
                 for listvalue in param.value:
                     if(isinstance(listvalue, FunctionalNode)):
-                        listvalue.init()
+                        listvalue.flush()
 
     
     def process(self, **kwargs):

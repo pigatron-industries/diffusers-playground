@@ -1,23 +1,30 @@
+from diffuserslib.batch.BatchRunner import evaluateArguments
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
+from diffuserslib.functional.types import Vector, MovingBody, MovingBodiesFuncType
 import numpy as np
 
 
-class BoundingPoints2DNode(FunctionalNode):
+class BouncingPoints2DNode(FunctionalNode):
     def __init__(self, 
-                 points:Points2DFuncType,
-                 name:str = "bounce_points_2d"):
+                 init_bodies:MovingBodiesFuncType,
+                 name:str = "bouncing_points_2d"):
         super().__init__(name)
-        self.addParam("points", points, Points2DType)
-        self.points = points
+        self.addParam("init_bodies", init_bodies, List[MovingBody])
+        self.bodies:List[MovingBody] = []
+        self.dt = 0.1
+        self.init_frames()
 
 
-    def update(self):
-        #TODO update points to new positions
-        pass
+    def init_frames(self):
+        params = self.evaluateParams()
+        self.bodies = params["init_bodies"]
 
 
-    def process(self, points:Points2DType) -> Points2DType:
-        # TODO
-        return points 
+    def process(self, init_bodies:List[MovingBody]) -> List[Vector]:
+        positions:List[Vector] = []
+        for body in self.bodies:
+            body.update_position(self.dt)
+            positions.append(body.position)
+        return positions
     

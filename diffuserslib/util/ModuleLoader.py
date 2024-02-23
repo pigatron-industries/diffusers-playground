@@ -11,8 +11,10 @@ from diffuserslib.functional import *
 class ModuleLoader:
 
     @staticmethod
-    def load_from_directory(path):
+    def load_from_directory(path, recursive = True):
         files = glob.glob(path + '/*.py')
+        if(recursive):
+            files.extend(glob.glob(path + '/**/*.py'))
         modules = []
         for file in files:
             modules.append(ModuleLoader.load_from_file(file))
