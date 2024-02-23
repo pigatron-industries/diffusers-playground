@@ -138,6 +138,10 @@ class DiffusersPipelines:
     def getLORAList(self, model):
         base = self.getModel(model).base
         return list(self.getBaseModelData(base).loras.keys())
+    
+
+    def getLORAsByBase(self, base):
+        return list(self.getBaseModelData(base).loras.keys())
 
 
     def _addLORAsToPipeline(self, params:GenerationParameters):

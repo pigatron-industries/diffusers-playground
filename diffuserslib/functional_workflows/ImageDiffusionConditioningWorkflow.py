@@ -9,6 +9,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
 
     def build(self):
         model_input = DiffusionModelUserInputNode(name = "model")
+        lora_input = LORAModelUserInputNode(diffusion_model_input = model_input, name = "lora")
         size_input = SizeUserInputNode(value = (512, 512), name = "size")
         prompt_input = TextAreaInputNode(value = "", name = "prompt")
         negprompt_input = TextAreaInputNode(value = "", name = "negprompt")
@@ -29,6 +30,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
 
         diffusion = ImageDiffusionNode(models = model_input,
+                                    loras = lora_input,
                                     size = size_input,
                                     prompt = prompt_processor,
                                     negprompt = negprompt_input,

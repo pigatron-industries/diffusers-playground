@@ -3,12 +3,13 @@ from ...FunctionalTyping import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
 from .RandomPromptProcessorNode import RandomPromptProcessorNode
 from ....inference.DiffusersPipelines import DiffusersPipelines
-from ....inference.GenerationParameters import GenerationParameters, ModelParameters
+from ....inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
 from PIL import Image
 
 ModelsType = List[ModelParameters]
 ModelsFuncType = ModelsType | Callable[[], ModelsType]
-
+LorasType = List[LoraParameters]
+LorasFuncType = LorasType | Callable[[], LorasType]
 
 class ImageDiffusionNode(FunctionalNode):
 
@@ -18,6 +19,7 @@ class ImageDiffusionNode(FunctionalNode):
 
     def __init__(self,
                  models:ModelsFuncType = [],
+                 loras:LorasFuncType = [],
                  size:SizeFuncType = (512, 512),
                  prompt:StringFuncType = "",
                  negprompt:StringFuncType = "",
@@ -30,6 +32,7 @@ class ImageDiffusionNode(FunctionalNode):
         super().__init__(name)
         self.addParam("size", size, SizeType)
         self.addParam("models", models, ModelsType)
+        self.addParam("loras", loras, LorasType)
         self.addParam("prompt", prompt, str)
         self.addParam("negprompt", negprompt, str)
         self.addParam("steps", steps, int)
@@ -42,6 +45,7 @@ class ImageDiffusionNode(FunctionalNode):
     def process(self, 
                 size:SizeType, 
                 models:ModelsType, 
+                loras:LorasType,
                 prompt:str, 
                 negprompt:str, 
                 steps:int, 
@@ -57,6 +61,7 @@ class ImageDiffusionNode(FunctionalNode):
             width=size[0],
             height=size[1],
             models=models,
+            loras=loras,
             prompt=prompt,
             negprompt=negprompt,
             steps=steps,

@@ -1,0 +1,44 @@
+from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
+from diffuserslib.inference.GenerationParameters import LoraParameters
+from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import LorasType
+from diffuserslib.functional.FunctionalNode import *
+from diffuserslib.functional.FunctionalTyping import *
+from .DiffusionModelUserInputNode import DiffusionModelUserInputNode
+from ...user.UserInputNode import UserInputNode
+from nicegui import ui
+
+
+class LORAModelUserInputNode(UserInputNode):
+
+    def __init__(self, diffusion_model_input:DiffusionModelUserInputNode, name:str="lora_model_user_input"):
+        self.lora = None
+        self.diffusion_model_input = diffusion_model_input
+        diffusion_model_input.addUpdateListener(self.updateModels)
+        super().__init__(name)
+
+
+    def getValue(self) -> str|None:
+        return self.model
+    
+
+    def setValue(self, value:str|None):
+        self.model = value
+
+
+    @ui.refreshable
+    def ui(self):
+        if(DiffusersPipelines.pipelines is None):
+            raise Exception("DiffusersPipelines not initialised")  
+        loras = DiffusersPipelines.pipelines.getLORAsByBase(self.diffusion_model_input.basemodel)
+        self.lora_dropdown = ui.select(options=[None]+list(loras), value=self.lora, label="Lora").bind_value(self, 'model').classes('grow')
+
+
+    def updateModels(self):
+        self.ui.refresh()
+
+
+    def process(self) -> LorasType:
+        loraparams:List[LoraParameters] = []
+        if self.lora is not None:
+            loraparams.append(LoraParameters(self.lora, 1.0))
+        return loraparams
