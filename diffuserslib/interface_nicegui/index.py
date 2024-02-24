@@ -26,21 +26,25 @@ class View:
 
     def __init__(self):
         self.controller = Controller()
-        self.interface_components = BatchInterfaceComponents(self.controller)
+        self.setInterfaceComponents()
 
 
     def onUpdateRunType(self):
         print("run type updated")
+        self.setInterfaceComponents()
+        self.status.refresh()
+        self.buttons.refresh()
+        self.controls.refresh()
+        self.outputs.refresh()
+
+
+    def setInterfaceComponents(self):
         if(self.controller.model.run_type == 1):
             self.interface_components = BatchInterfaceComponents(self.controller)
         elif(self.controller.model.run_type == 3):
             self.interface_components = RealtimeInterfaceComponents(self.controller)
         else:
             self.interface_components = InterfaceComponents(self.controller)
-        self.status.refresh()
-        self.buttons.refresh()
-        self.controls.refresh()
-        self.outputs.refresh()
 
 
     def page(self):

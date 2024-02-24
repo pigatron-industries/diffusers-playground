@@ -20,13 +20,19 @@ class RealtimeInterfaceComponents(InterfaceComponents):
         super().__init__(controller)
         self.output = None
         self.timer = ui.timer(0.1, lambda: self.updateWorkflowOutput(), active=False)
+        self.running = False
 
 
     def runWorkflow(self):
+        self.controller.saveWorkflowParamsToHistory()
         self.timer.activate()
+        self.running = True
+        self.status.refresh()
 
     def stopWorkflow(self):
         self.timer.deactivate()
+        self.running = False
+        self.status.refresh()
 
 
     def toggleParamFunctional(self, param:NodeParameter):
@@ -47,8 +53,12 @@ class RealtimeInterfaceComponents(InterfaceComponents):
             self.controller.workflow.flush()
             output = self.controller.workflow()
             self.output = output
-            self.output_control.style(replace = f"max-width:{output.width}px; max-height:{output.height}px;")
-            self.output_control.set_source(output)
+            if(isinstance(output, Image.Image)):
+                self.output_control.style(replace = f"max-width:{output.width}px; max-height:{output.height}px;")
+                self.output_control.set_source(output)
+            else:
+                self.output_label.set_text(f"Unsupported output type: {type(output)}")
+                self.output_control.set_source(None)
 
 
     def resetWorkflow(self):
@@ -61,7 +71,7 @@ class RealtimeInterfaceComponents(InterfaceComponents):
     @ui.refreshable
     def status(self):
         with ui.column().classes("gap-0").style("align-items:center;"):  #margin-top:1.3em;
-            if(self.controller.isRunning()):
+            if(self.running):
                 ui.label("Running").style("color: #ffcc00;")
             else:
                 ui.label("Idle").style("color: #00ff00;")
@@ -86,6 +96,7 @@ class RealtimeInterfaceComponents(InterfaceComponents):
         self.output_container = ui.column().classes('w-full')
         with self.output_container:
             with ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;"):
+                self.output_label = ui.label("")
                 if(self.output is not None):
                     self.output_control = ui.interactive_image(self.output).style(replace = f"max-width:{self.output.width}px; max-height:{self.output.height}px;")
                 else:

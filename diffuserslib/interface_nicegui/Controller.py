@@ -39,6 +39,8 @@ class Controller:
             raise Exception("Workflow Runner not initialized")
         self.loadWorkflows()
         self.loadWorkflowParamsHistory()
+        if('run_type' in self.workflow_history):
+            self.model.run_type = self.workflow_history['run_type']
         if('workflow' in self.workflow_history):
             self.loadWorkflow(self.workflow_history['workflow'])
         
@@ -152,6 +154,7 @@ class Controller:
             self.workflow.visitParams(visitor)
             self.workflow_history[self.model.workflow_name] = user_input_values
             self.workflow_history['workflow'] = self.model.workflow_name
+            self.workflow_history['run_type'] = self.model.run_type
             self.saveWorkflowParamsHistory()
 
 

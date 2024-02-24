@@ -12,21 +12,22 @@ class FrameAggregatorNode(FunctionalNode):
         self.addParam("num_frames", num_frames, int)
         self.addParam("frame", frame, Image.Image)
         self.args = {}
+        self.frames = []
 
 
     def __call__(self) -> List[Image.Image]:
-        self.output = []
+        self.frames = []
         self.frame()
         num_frames = self.args["num_frames"]
         for i in range(1, num_frames):
             self.frame()
-        return self.output
+        return self.frames
     
 
     def frame(self) -> Image.Image:
         self.flush()
         self.args = self.evaluateParams()
         frame = self.args["frame"]
-        self.output.append(frame)
+        self.frames.append(frame)
         return frame
     

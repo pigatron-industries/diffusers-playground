@@ -43,6 +43,12 @@ class Vector:
         else:
             raise ValueError("Cannot normalize the zero vector")
         
+    def getX(self):
+        return self.coordinates[0]
+    
+    def getY(self):
+        return self.coordinates[1]
+        
 
 VectorFuncType = Vector | Callable[[], Vector]
 VectorsFuncType = List[Vector] | Callable[[], List[Vector]]

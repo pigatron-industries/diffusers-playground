@@ -7,7 +7,7 @@ from diffuserslib.functional.types import Vector, MovingBody, MovingBodiesFuncTy
 class BouncingPoints2DNode(FunctionalNode):
     def __init__(self, 
                  init_bodies:MovingBodiesFuncType,
-                 dt:FloatFuncType = 0.1,
+                 dt:FloatFuncType = 0.01,
                  name:str = "bouncing_points_2d"):
         super().__init__(name)
         self.addParam("init_bodies", init_bodies, List[MovingBody])
