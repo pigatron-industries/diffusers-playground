@@ -11,6 +11,7 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
         size_input = SizeUserInputNode(value = (512, 512))
         prompt_input = TextAreaInputNode(value = "", name="prompt")
         negprompt_input = StringUserInputNode(value = "", name="negprompt")
+        seed_input = SeedUserInputNode(value = None, name="seed")
         steps_input = IntUserInputNode(value = 20, name = "steps")
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
@@ -20,6 +21,7 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
                                             size = size_input, 
                                             prompt = prompt_processor,
                                             negprompt = negprompt_input,
+                                            seed = seed_input,
                                             steps = steps_input,
                                             cfgscale = cfgscale_input,
                                             scheduler = scheduler_input)

@@ -1,6 +1,7 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
 from nicegui import ui
+import random
 
 
 class UserInputNode(FunctionalNode):
@@ -32,6 +33,29 @@ class IntUserInputNode(UserInputNode):
 
     def process(self) -> int|None:
         return int(self.value) if self.value is not None else None
+    
+
+class SeedUserInputNode(UserInputNode):
+    MAX_SEED = 2**32 - 1
+
+    def __init__(self, value:int|None=None, name:str="seed_user_input"):
+        self.value = int(value) if value is not None else None
+        super().__init__(name)
+
+    def getValue(self) -> int|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
+
+    def ui(self):
+        self.input = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
+
+    def process(self) -> int|None:
+        if(self.value is None):
+            return random.randint(0, self.MAX_SEED)
+        else:
+            return int(self.value)
     
 
 class FloatUserInputNode(UserInputNode):

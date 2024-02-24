@@ -15,7 +15,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         negprompt_input = TextAreaInputNode(value = "", name = "negprompt")
         steps_input = IntUserInputNode(value = 40, name = "steps")
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
-        seed_input = IntUserInputNode(value = None, name = "seed")
+        seed_input = SeedUserInputNode(value = None, name = "seed")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", 
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
