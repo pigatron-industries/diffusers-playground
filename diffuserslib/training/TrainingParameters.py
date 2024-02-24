@@ -11,15 +11,10 @@ class TrainingParameters:
     trainDataFiles: List[str] = field(default_factory=lambda: ["*"])
     outputDir: str = '/output'          # A folder where the checkpoints will be saved.
     outputPrefix: str = 'object'        # The filename of the checkpoint.
-    placeholderToken: str = '<token>'   # A token to use as a placeholder for the concept.
-    initializerToken: str = 'person'    # A token to use as initializer word.
-    learnableProperty: str = 'object'   # Choose between 'object' and 'style' and 'subject_style'
-    subject: str = ''                   # The subject of the example data, only used when `learnableProperty` is 'subject_style'.
     seed: int|None = None               # A seed for reproducible training.
     resolution: Tuple[int, int] = (512, 512) # The resolution for input images, all the images in the train/validation dataset will be resized to this resolution
     centreCrop: bool = False            # Whether to center crop images before resizing to resolution.
     repeats: int = 100                  # Number of times to repeat the dataset.
-    numVectors: int|None = None         # Number of vectors to train.
     mixedPrecision: str = 'no'          # Whether to use mixed precision training. Choose between ['no', 'fp16', 'bf16']
     safetensors: bool = True            # Whether to save in savetensor format.
 

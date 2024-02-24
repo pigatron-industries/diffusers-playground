@@ -1,11 +1,7 @@
-from .StableDiffusionEmbeddingTrainer import StableDiffusionEmbeddingTrainer, TextEncoderTrainer
-from .TrainingParameters import TrainingParameters
-from .TextEncoderTrainer import TextEncoderTrainer
+from .StableDiffusionEmbeddingTrainer import StableDiffusionEmbeddingTrainer
+from .EmbeddingTrainingParameters import EmbeddingTrainingParameters
 
-from diffusers import (
-    DiffusionPipeline,
-    DDPMScheduler
-)
+from diffusers import DiffusionPipeline, DDPMScheduler
 
 
 class NoWatermark:
@@ -15,16 +11,13 @@ class NoWatermark:
 
 class StableDiffusionXLEmbeddingTrainer(StableDiffusionEmbeddingTrainer):
 
-    def __init__(self, params:TrainingParameters):
+    def __init__(self, params:EmbeddingTrainingParameters):
         super().__init__(params)
 
 
     def load_models(self):
-        self.pipeline = DiffusionPipeline.from_pretrained(self.params.model, safety_checker=None, torch_dtype=self.weight_dtype)
-        self.text_encoder_trainers = [self.createTextEncoderTrainer("tokenizer", "text_encoder"), self.createTextEncoderTrainer("tokenizer_2", "text_encoder_2")]
-        self.noise_scheduler = DDPMScheduler.from_pretrained(self.params.model, subfolder="scheduler")
-        self.vae = self.pipeline.components["vae"]
-        self.unet = self.pipeline.components["unet"]
+        super().load_models()
+        self.text_encoder_trainers.append(self.createTextEncoderTrainer("tokenizer_2", "text_encoder_2"))
 
 
     def load_validation_pipeline(self):

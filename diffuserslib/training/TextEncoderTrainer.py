@@ -59,4 +59,6 @@ class TextEncoderTrainer():
         """Return the embeddings of the placeholder tokens"""
         return self.accelerator.unwrap_model(self.text_encoder).get_input_embeddings().weight[min(self.placeholder_token_ids) : max(self.placeholder_token_ids) + 1].detach().cpu()
 
-            
+
+    def fetch_text_encoder_parameters(self):
+        self.text_lora_parameters_one = list(filter(lambda p: p.requires_grad, self.text_encoder.parameters()))            

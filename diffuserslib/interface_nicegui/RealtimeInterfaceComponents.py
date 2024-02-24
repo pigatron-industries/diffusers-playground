@@ -14,40 +14,11 @@ from PIL import Image
 default_output_width = 256
 
 
-@dataclass
-class RunDataControls:
-    rundata_container:Element|None
-    output_control:Element|None
-    output_width:int
-    label_saved:Label
-    waiting_output:bool = False
-    expanded:bool = False
-
-    def showLabelSaved(self, filename:str):
-        self.label_saved.set_text(f"Saved to {filename}")
-        self.label_saved.set_visibility(True)
-
-    def toggleExpanded(self):
-        self.expanded = not self.expanded
-        if(self.output_control is not None):
-            if(self.expanded):
-                self.output_control.style(replace= f"max-width:{self.output_width}px; min-width:{self.output_width}px;")
-            else:
-                self.output_control.style(replace = f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-            
-
-@dataclass
-class BatchDataControls:
-    batch_container:Element|None
-
-
-class BatchInterfaceComponents(InterfaceComponents):
+class RealtimeInterfaceComponents(InterfaceComponents):
 
     def __init__(self, controller:Controller):
         super().__init__(controller)
-        self.rundata_controls:Dict[int, RunDataControls] = {}
-        self.batchdata_controls:Dict[int, BatchDataControls] = {}
-        self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
+        self.timer = ui.timer(0.1, lambda: self.updateWorkflowOutput(), active=False)
 
 
     def loadWorkflow(self, workflow_name):
@@ -58,7 +29,6 @@ class BatchInterfaceComponents(InterfaceComponents):
 
     async def runWorkflow(self):
         self.timer.activate()
-        result = await run.io_bound(self.controller.runWorkflow)
 
 
     def toggleParamFunctional(self, param:NodeParameter):
@@ -74,52 +44,17 @@ class BatchInterfaceComponents(InterfaceComponents):
         self.controls.refresh()
 
 
-    def updateWorkflowProgress(self):
-        if(not self.controller.workflowrunner.running):
-            self.timer.deactivate()
-        self.status.refresh()
-        for batchid, batchdata in self.controller.getBatchRunData().items():
-            if(batchid in self.batchdata_controls):
-                batchdata_container = self.batchdata_controls[batchid].batch_container
-                for runid, rundata in batchdata.rundata.items():
-                    if(runid in self.rundata_controls):
-                        # Update existing output controls
-                        rundata_container = self.rundata_controls[runid].rundata_container
-                        if(rundata.output is not None and self.rundata_controls[runid].waiting_output == True and rundata_container is not None):
-                            rundata_container.clear()
-                            with rundata_container:
-                                self.rundata_controls[runid].output_control, self.rundata_controls[runid].output_width, self.rundata_controls[runid].label_saved, self.rundata_controls[runid].waiting_output = self.workflow_output_rundata(batchid, runid)
-                    elif(batchdata_container is not None):
-                        # Add new output controls
-                        with batchdata_container:
-                            self.workflow_output_rundata_container(batchid, runid)
-            else:
-                 with self.outputs_container:
-                    self.workflow_output_batchdata(batchid) # type: ignore
+    def updateWorkflowOutput(self):
+        if(self.controller.workflow is not None):
+            self.controller.workflow.flush()
+            output = self.controller.workflow()
+            # TODO show output
 
 
     def clearOutputs(self):
         self.controller.workflowrunner.clearRunData()
         self.outputs.refresh()
         self.status.refresh()
-
-
-    def saveOutput(self, key):
-        self.controller.saveOutput(key)
-        filename = self.controller.getWorkflowRunData()[key].save_file
-        if (filename is not None):
-            self.rundata_controls[key].showLabelSaved(filename)
-
-
-    def removeOutput(self, batchid, runid):
-        self.controller.removeRunData(batchid, runid)
-        self.status.refresh()
-        self.outputs.refresh()
-        # TODO don't refresh whole list - 
-        # this should be changed to a dict[int, RunData] instead of a list so remove itesm doesn't re-index
-        # self.rundata_controls[index].output_container.clear()
-        # self.rundata_controls.pop(index)
-
 
     
     @ui.refreshable

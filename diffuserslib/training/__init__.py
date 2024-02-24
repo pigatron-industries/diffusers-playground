@@ -1,4 +1,3 @@
 from .TrainingParameters import *
-from .TextualInversionDataset import *
-from .StableDiffusionEmbeddingTrainer import *
-from .StableDiffusionXLEmbeddingTrainer import *
+
+from .embedding import *

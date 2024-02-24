@@ -25,7 +25,8 @@ def str_to_class(str):
 class Controller:
 
     model = Model()
-    workflows:Dict[str, WorkflowBuilder] = {}
+    workflows_batch:Dict[str, WorkflowBuilder] = {}
+    workflows_realtime:Dict[str, WorkflowBuilder] = {}
     subworkflows:Dict[str, WorkflowBuilder] = {}
     workflow:FunctionalNode|None = None
     history_filename = ".history.yml"
@@ -51,9 +52,11 @@ class Controller:
                 if(issubclass(builder, WorkflowBuilder)):
                     workflow = builder()
                     if(workflow.workflow):
-                        self.workflows[name] = builder()
+                        self.workflows_batch[name] = builder()
                     if(workflow.subworkflow):
                         self.subworkflows[name] = workflow
+                    if(workflow.realtime):
+                        self.workflows_realtime[name] = workflow
                     print(f"Loading workflow builder: {name}")
     
 
@@ -61,10 +64,10 @@ class Controller:
         if(self.workflow is not None and self.workflow.name == workflow_name):
             return
         print(f"Loading workflow instance: {workflow_name}")
-        if workflow_name in self.workflows:
+        if workflow_name in self.workflows_batch:
             print(f"Loading workflow: {workflow_name}")
             self.model.workflow_name = workflow_name
-            self.workflow = self.workflows[workflow_name].build()
+            self.workflow = self.workflows_batch[workflow_name].build()
             self.loadWorkflowParamsFromHistory()
             print(f"Loaded workflow: {self.workflow.name}")
             self.workflow.printDebug()
