@@ -6,7 +6,6 @@ import time
 import yaml
 import copy
 import traceback
-import ffmpeg
 import shutil
 
 
