@@ -30,6 +30,8 @@ class LORAModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         loras = DiffusersPipelines.pipelines.getLORAsByBase(self.diffusion_model_input.basemodel)
+        if (self.lora is not None and self.lora not in loras):
+            self.lora = None
         self.lora_dropdown = ui.select(options=[None]+list(loras), value=self.lora, label="Lora").bind_value(self, 'lora').classes('grow')
 
 
