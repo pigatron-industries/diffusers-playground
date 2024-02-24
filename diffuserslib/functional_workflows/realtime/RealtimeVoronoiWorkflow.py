@@ -4,7 +4,7 @@ from diffuserslib.functional import *
 class RealtimeVoronoiWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Realtime Voronoi", Image.Image, workflow=False, subworkflow=False, realtime=True)
+        super().__init__("Realtime Voronoi", Image.Image, workflow=False, subworkflow=True, realtime=True)
 
 
     def build(self):

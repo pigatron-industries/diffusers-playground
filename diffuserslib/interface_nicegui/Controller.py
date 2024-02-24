@@ -58,11 +58,11 @@ class Controller:
                 if(issubclass(builder, WorkflowBuilder)):
                     workflow = builder()
                     self.workflows[name] = workflow
-                    if(workflow.workflow):
+                    if(workflow.workflow and name not in self.workflows_batch):
                         self.workflows_batch.append(name)
-                    if(workflow.subworkflow):
+                    if(workflow.subworkflow and name not in self.workflows_sub):
                         self.workflows_sub.append(name)
-                    if(workflow.realtime):
+                    if(workflow.realtime and name not in self.workflows_realtime):
                         self.workflows_realtime.append(name)
                     print(f"Loading workflow builder: {name}")
     

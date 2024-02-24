@@ -1,0 +1,17 @@
+from diffuserslib.functional import *
+from diffuserslib.functional_workflows.ImageDiffusionConditioningWorkflow import ImageDiffusionConditioningWorkflow
+
+
+class AnimateDiffusionConditioningWorkflow(WorkflowBuilder):
+
+    def __init__(self):
+        super().__init__("Animate Diffusion Conditioning", Image.Image, workflow=True, subworkflow=False, realtime=False)
+
+
+    def build(self):
+        diffusion = ImageDiffusionConditioningWorkflow().build()
+
+        num_frames_input = IntUserInputNode(value = 20, name = "num_frames")
+        frame_aggregator = FrameAggregatorNode(frame = diffusion, num_frames = num_frames_input)
+        frames_to_video = FramesToVideoNode(frames = frame_aggregator, fps = 10)
+        return frames_to_video
