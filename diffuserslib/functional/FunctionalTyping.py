@@ -26,6 +26,7 @@ Points2DType = List[Point2DType]
 Points2DFuncType = Points2DType | Callable[[], Points2DType]
 
 ImageFuncType = Image.Image | Callable[[], Image.Image]
+FramesFuncType = List[Image.Image] | Callable[[], List[Image.Image]]
 
 ColourType = Tuple[int, int, int] | str
 ColourFuncType = ColourType | Callable[[], ColourType]

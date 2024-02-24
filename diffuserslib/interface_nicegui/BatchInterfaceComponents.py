@@ -1,12 +1,12 @@
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
-from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
-from diffuserslib.functional.nodes.user.ListUserInputNode import ListUserInputNode
+from diffuserslib.functional.nodes.user import UserInputNode, ListUserInputNode
+from diffuserslib.functional.nodes.animated import Video
 from .Controller import Controller
 from .InterfaceComponents import InterfaceComponents
 from nicegui import ui, run
 from nicegui.element import Element
 from nicegui.elements.label import Label
-from typing import Dict
+from typing import Dict, List
 from dataclasses import dataclass
 from PIL import Image
 
@@ -185,6 +185,8 @@ class BatchInterfaceComponents(InterfaceComponents):
             elif(isinstance(rundata.output, Image.Image)):
                 output_width = rundata.output.width
                 output_control = ui.image(rundata.output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+            elif(isinstance(rundata.output, Video)):
+                output_control = ui.video(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
 
             with ui.column():
                 if rundata.params is not None:
