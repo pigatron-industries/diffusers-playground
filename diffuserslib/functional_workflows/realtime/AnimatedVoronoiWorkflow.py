@@ -1,14 +1,14 @@
 from diffuserslib.functional import *
-from diffuserslib.functional.nodes.animated.BouncingPointsNode import BouncingPoints2DNode
 
 
 class AnimatedVoronoiWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Animated Voronoi", Image.Image, workflow=True, subworkflow=False)
+        super().__init__("Animated Voronoi", Image.Image, workflow=True, subworkflow=False, realtime=True)
 
 
     def build(self):
+        # num_frames_input = IntUserInputNode(value = 20, name = "num_frames")
         size_user_input = SizeUserInputNode(value = (512, 512), name = "size")
         num_points_input = IntUserInputNode(value = 20, name = "num_points")
         radius_input = IntUserInputNode(value = 2, name = "radius")
@@ -22,8 +22,5 @@ class AnimatedVoronoiWorkflow(WorkflowBuilder):
         voronoi = DrawVoronoiNode(image = new_image, points = bouncing_points, radius = radius_input, 
                                 line_probability = line_probability_input, draw_options = draw_options)
         
-        
-        # TODO add frame aggregation
-
-
+        # frame_aggregator = FrameAggregatorNode(frame = voronoi, num_frames = num_frames_input)
         return voronoi
