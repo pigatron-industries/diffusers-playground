@@ -1,4 +1,4 @@
-from .FunctionalNode import FunctionalNode
+from diffuserslib.functional import Video, FunctionalNode
 from typing import Any, Dict, Self, List
 from dataclasses import dataclass, field
 from PIL import Image
@@ -7,6 +7,7 @@ import yaml
 import copy
 import traceback
 import ffmpeg
+import shutil
 
 
 @dataclass
@@ -108,9 +109,13 @@ class WorkflowRunner:
             if(isinstance(rundata.output, Image.Image)):
                 rundata.output.save(f"{save_file}.png")
                 rundata.save_file = f"{save_file}.png"
-                file = open(f"{save_file}.yaml", "w")
-                yaml.dump(rundata.params, file, width=float("inf"))
-                print(rundata.params)
-                print(f"Saved output to {save_file}")
+            elif(isinstance(rundata.output, Video)):
+                shutil.copyfile(rundata.output.file.name, f"{save_file}.mp4")
+                rundata.save_file = f"{save_file}.mp4"
             else:
-                raise Exception("Output is not an image")
+                raise Exception("Output format not supported")
+
+            file = open(f"{save_file}.yaml", "w")
+            yaml.dump(rundata.params, file, width=float("inf"))
+            print(rundata.params)
+            print(f"Saved output to {save_file}")
