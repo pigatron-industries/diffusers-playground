@@ -25,9 +25,10 @@ def str_to_class(str):
 class Controller:
 
     model = Model()
-    workflows_batch:Dict[str, WorkflowBuilder] = {}
-    workflows_realtime:Dict[str, WorkflowBuilder] = {}
-    subworkflows:Dict[str, WorkflowBuilder] = {}
+    workflows:Dict[str, WorkflowBuilder] = {}
+    workflows_batch:List[str] = []
+    workflows_realtime:List[str] = []
+    workflows_sub:List[str] = []
     workflow:FunctionalNode|None = None
     history_filename = ".history.yml"
 
@@ -44,6 +45,9 @@ class Controller:
 
     def loadWorkflows(self):
         print("Loading workflow builders")
+        self.workflows_batch = []
+        self.workflows_realtime = []
+        self.workflows_sub = []
         path = os.path.join(os.path.dirname(__file__), '../functional_workflows')
         modules = ModuleLoader.load_from_directory(path)
         for module in modules:
@@ -51,12 +55,13 @@ class Controller:
             for name, builder in vars.items():
                 if(issubclass(builder, WorkflowBuilder)):
                     workflow = builder()
+                    self.workflows[name] = workflow
                     if(workflow.workflow):
-                        self.workflows_batch[name] = builder()
+                        self.workflows_batch.append(name)
                     if(workflow.subworkflow):
-                        self.subworkflows[name] = workflow
+                        self.workflows_sub.append(name)
                     if(workflow.realtime):
-                        self.workflows_realtime[name] = workflow
+                        self.workflows_realtime.append(name)
                     print(f"Loading workflow builder: {name}")
     
 
@@ -64,10 +69,10 @@ class Controller:
         if(self.workflow is not None and self.workflow.name == workflow_name):
             return
         print(f"Loading workflow instance: {workflow_name}")
-        if workflow_name in self.workflows_batch:
+        if workflow_name in self.workflows:
             print(f"Loading workflow: {workflow_name}")
             self.model.workflow_name = workflow_name
-            self.workflow = self.workflows_batch[workflow_name].build()
+            self.workflow = self.workflows[workflow_name].build()
             self.loadWorkflowParamsFromHistory()
             print(f"Loaded workflow: {self.workflow.name}")
             self.workflow.printDebug()
@@ -84,14 +89,15 @@ class Controller:
 
     def getSelectableInputNodes(self, param:NodeParameter) -> List[str]:
         selectable_subworkflows = []
-        for name, workflow in self.subworkflows.items():
+        for name in self.workflows_sub:
+            workflow = self.workflows[name]
             if(workflow.type == param.type):
                 selectable_subworkflows.append(name)
         return selectable_subworkflows
 
 
     def createInputNode(self, param:NodeParameter, workflow_name):
-        param.value = self.subworkflows[workflow_name].build()
+        param.value = self.workflows[workflow_name].build()
         param.value.node_name = workflow_name
 
 

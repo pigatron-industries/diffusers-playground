@@ -13,10 +13,11 @@ class BouncingPoints2DNode(FunctionalNode):
         self.addParam("init_bodies", init_bodies, List[MovingBody])
         self.addParam("dt", dt, float)
         self.bodies:List[MovingBody] = []
-        self.init_frames()
+        self.reset()
 
 
-    def init_frames(self):
+    def reset(self):
+        super().reset()
         params = self.evaluateParams()
         self.bodies = params["init_bodies"]
 

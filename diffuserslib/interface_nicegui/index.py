@@ -5,7 +5,9 @@ from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
 from diffuserslib.functional.nodes.user.ListUserInputNode import ListUserInputNode
 from diffuserslib.functional.WorkflowRunner import WorkflowRunData
-from .BatchInterfaceComponents import InterfaceComponents, BatchInterfaceComponents
+from .InterfaceComponents import InterfaceComponents
+from .BatchInterfaceComponents import BatchInterfaceComponents
+from .RealtimeInterfaceComponents import RealtimeInterfaceComponents
 from typing import Dict
 from dataclasses import dataclass
 from PIL import Image
@@ -31,6 +33,8 @@ class View:
         print("run type updated")
         if(self.controller.model.run_type == 1):
             self.interface_components = BatchInterfaceComponents(self.controller)
+        elif(self.controller.model.run_type == 3):
+            self.interface_components = RealtimeInterfaceComponents(self.controller)
         else:
             self.interface_components = InterfaceComponents(self.controller)
         self.status.refresh()

@@ -58,6 +58,17 @@ class FunctionalNode(DeepCopyObject):
                     if(isinstance(listvalue, FunctionalNode)):
                         listvalue.flush()
 
+
+    def reset(self):
+        self.output = None
+        for paramname, param in self.params.items():
+            if(isinstance(param.value, FunctionalNode)):
+                param.value.reset()
+            elif(isinstance(param.value, List)):
+                for listvalue in param.value:
+                    if(isinstance(listvalue, FunctionalNode)):
+                        listvalue.reset()
+
     
     def process(self, **kwargs):
         raise Exception("Not implemented")
