@@ -2,7 +2,6 @@ from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
 
 
-
 class FrameAggregatorNode(FunctionalNode):
     def __init__(self, 
                  frame:ImageFuncType,
@@ -31,3 +30,9 @@ class FrameAggregatorNode(FunctionalNode):
         self.frames.append(frame)
         return frame
     
+
+    def getProgress(self) -> WorkflowProgress|None:
+        if len(self.frames) == 0:
+            return WorkflowProgress(0, None)
+        else:
+            return WorkflowProgress(len(self.frames), self.frames[-1])

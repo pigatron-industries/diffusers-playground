@@ -2,7 +2,7 @@ from diffuserslib.functional import *
 from diffuserslib.functional_workflows.ImageDiffusionConditioningWorkflow import ImageDiffusionConditioningWorkflow
 
 
-class AnimateDiffusionConditioningWorkflow(WorkflowBuilder):
+class VideoDiffusionConditioningWorkflow(WorkflowBuilder):
 
     def __init__(self):
         super().__init__("Animate Diffusion Conditioning", Image.Image, workflow=True, subworkflow=False, realtime=False)

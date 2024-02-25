@@ -16,18 +16,9 @@ class NodeParameter:
 
 
 @dataclass
-class ParameterInfos:
-    params:Dict[str,List[NodeParameter]] = field(default_factory= lambda: {})
-
-    def add(self, node:str, name:str, type:type, value:Any):
-        if(node not in self.params):
-            self.params[node] = []
-        self.params[node].append(NodeParameter(node, name, type, value, value))
-
-    def addAll(self, paramInfos:Self):
-        for node in paramInfos.params:
-            if(node not in self.params):
-                self.params[node] = paramInfos.params[node]
+class WorkflowProgress:
+    progress: float
+    output: Any
 
 
 class FunctionalNode(DeepCopyObject):
@@ -68,6 +59,16 @@ class FunctionalNode(DeepCopyObject):
                 for listvalue in param.value:
                     if(isinstance(listvalue, FunctionalNode)):
                         listvalue.reset()
+
+
+    def getProgress(self) -> WorkflowProgress|None:
+        for paramname, param in self.params.items():
+            if(isinstance(param.value, FunctionalNode)):
+                return param.value.getProgress()
+            elif(isinstance(param.value, List)):
+                for listvalue in param.value:
+                    if(isinstance(listvalue, FunctionalNode)):
+                        return listvalue.getProgress()
 
     
     def process(self, **kwargs):

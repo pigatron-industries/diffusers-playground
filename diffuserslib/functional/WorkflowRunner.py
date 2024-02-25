@@ -1,4 +1,4 @@
-from diffuserslib.functional import Video, FunctionalNode
+from diffuserslib.functional import Video, FunctionalNode, WorkflowProgress
 from typing import Any, Dict, Self, List
 from dataclasses import dataclass, field
 from PIL import Image
@@ -23,14 +23,15 @@ class WorkflowBatchData:
     id:int
     workflow:FunctionalNode
     batch_size:int
-    rundata:Dict[int, WorkflowRunData] = field(default_factory= lambda: {})
+    rundata:Dict[int, WorkflowRunData] = field(default_factory = lambda: {})
     error:Exception|None = None
 
 
 @dataclass
-class ProgressData:
+class BatchProgressData:
     jobs_remaining:int
     jobs_completed:int
+    run_progress:WorkflowProgress|None = None
 
 
 
@@ -43,7 +44,7 @@ class WorkflowRunner:
         self.batchrundata:Dict[int, WorkflowBatchData] = {}
         self.batchqueue:List[WorkflowBatchData] = []
         self.batchcurrent:WorkflowBatchData|None = None
-        self.progress:ProgressData = ProgressData(0,0)
+        self.progress:BatchProgressData = BatchProgressData(0,0)
         self.stopping = False
         self.running = False
         self.batchcount = 0
@@ -89,6 +90,14 @@ class WorkflowRunner:
         self.batchcurrent = None
         self.running = False
         self.stopping = False
+
+
+    def getProgress(self):
+        if(self.batchcurrent is not None):
+            self.progress.run_progress = self.batchcurrent.workflow.getProgress()
+        else:
+            self.progress.run_progress = None
+        return self.progress
 
         
     def stop(self):

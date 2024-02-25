@@ -111,6 +111,11 @@ class Controller:
             print("No workflow loaded")
 
 
+    def getProgress(self) -> BatchProgressData|None:
+        if(WorkflowRunner.workflowrunner is not None):
+            return WorkflowRunner.workflowrunner.getProgress()
+
+
     def loadWorkflowParamsHistory(self):
         if os.path.exists(self.history_filename):
             file = open(self.history_filename, "r")
