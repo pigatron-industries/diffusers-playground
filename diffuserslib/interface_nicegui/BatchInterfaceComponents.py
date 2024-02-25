@@ -17,9 +17,9 @@ default_output_width = 256
 @dataclass
 class RunDataControls:
     rundata_container:Element|None
-    output_control:Element|None
-    output_width:int
-    label_saved:Label|None
+    output_control:Element|None = None
+    output_width:int = 0
+    label_saved:Label|None = None
     waiting_output:bool = False
     expanded:bool = False
 
@@ -49,6 +49,7 @@ class BatchInterfaceComponents(InterfaceComponents):
         self.rundata_controls:Dict[int, RunDataControls] = {}
         self.batchdata_controls:Dict[int, BatchDataControls] = {}
         self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
+        self.progress = 0
 
 
     async def runWorkflow(self):
@@ -73,7 +74,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                                 # run finished, errored, or haven't created control yet, completely remove and re-add output controls
                                 rundata_container.clear()
                                 with rundata_container:
-                                    self.rundata_controls[runid].output_control, self.rundata_controls[runid].output_width, self.rundata_controls[runid].label_saved, self.rundata_controls[runid].waiting_output = self.workflow_output_rundata(batchid, runid)
+                                    self.workflow_output_rundata(batchid, runid)
                             else:
                                 # just update progress
                                 self.workflow_generating_update(batchid, runid)
@@ -173,24 +174,21 @@ class BatchInterfaceComponents(InterfaceComponents):
     def workflow_output_rundata_container(self, batchid, runid):
         rundata_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
         with rundata_container:
-            output_control, output_width, label_saved, waiting_output = self.workflow_output_rundata(batchid=batchid, runid=runid)
-            self.rundata_controls[runid] = RunDataControls(rundata_container, output_control, output_width, label_saved, waiting_output)
+            self.rundata_controls[runid] = RunDataControls(rundata_container)
+            self.workflow_output_rundata(batchid=batchid, runid=runid)
 
 
     def workflow_output_rundata(self, batchid, runid):
+        controls = self.rundata_controls[runid]
         rundata = self.controller.getWorkflowRunData()[runid]
         with ui.row().classes('w-full no-wrap'):
-            output_control = None
-            output_width = 0
-            waiting_output = False
-
             if(rundata.error is not None):
-                output_control = ui.label(f"Error: {rundata.error}").style("color: #ff0000;")
+                controls.output_control = ui.label(f"Error: {rundata.error}").style("color: #ff0000;")
             elif(rundata.output is None):
-                waiting_output = True
-                output_width, output_control = self.workflow_generating(batchid, runid)
+                controls.waiting_output = True
+                self.workflow_generating(batchid, runid)
             else:
-                output_width, output_control = self.workflow_output(batchid, runid)
+                self.workflow_output(batchid, runid)
                 
             if(rundata.output is not None):
                 with ui.column():
@@ -209,30 +207,28 @@ class BatchInterfaceComponents(InterfaceComponents):
                         ui.button('Save', on_click=lambda e: self.saveOutput(runid))
                         ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))      
                     with ui.row():
-                        label_saved = ui.label(f"Saved to {rundata.save_file}")
-                        label_saved.set_visibility(rundata.save_file is not None)
+                        controls.label_saved = ui.label(f"Saved to {rundata.save_file}")
+                        controls.label_saved.set_visibility(rundata.save_file is not None)
             else:
-                label_saved = None
-        return output_control, output_width, label_saved, waiting_output
+                controls.label_saved = None
     
 
     def workflow_generating(self, batchid, runid):
-        output_control = None
-        output_width = 0
+        controls = self.rundata_controls[runid]
         with ui.column():
             ui.label("Generating...").style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+            ui.linear_progress(show_value=False).bind_value_from(self, 'progress')
             if (self.controller.workflow is not None):
                 progress = self.controller.getProgress()
                 if(progress is not None and progress.run_progress is not None and progress.run_progress.output is not None):
                     output = progress.run_progress.output
                     if(isinstance(output, Image.Image)):
-                        output_width = output.width
-                        output_control = ui.image(output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+                        controls.output_width = output.width
+                        controls.output_control = ui.image(output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
                     else:
-                        output_width = 0
-                        output_control = None
+                        controls.output_width = 0
+                        controls.output_control = None
                         ui.label("Output format not supported").style("color: #ff0000;")
-            return output_width, output_control
         
 
     def workflow_generating_update(self, batchid, runid):
@@ -241,18 +237,19 @@ class BatchInterfaceComponents(InterfaceComponents):
         if(progress is not None and progress.run_progress is not None and output_control is not None):
             output = progress.run_progress.output
             if(isinstance(output, Image.Image) and isinstance(output_control, ui.image)):
-                output_control.set_source(output)
+                output_control.set_source(output) # type: ignore
+                self.progress = progress.run_progress.progress
 
 
     def workflow_output(self, batchid, runid):
+        controls = self.rundata_controls[runid]
         rundata = self.controller.getWorkflowRunData()[runid]
         if(isinstance(rundata.output, Image.Image)):
-            output_width = rundata.output.width
-            output_control = ui.image(rundata.output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+            controls.output_width = rundata.output.width
+            controls.output_control = ui.image(rundata.output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
         elif(isinstance(rundata.output, Video)):
-            output_width = 512  #TODO get video width
-            output_control = ui.video(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+            controls.output_width = 512  #TODO get video width
+            controls.output_control = ui.video(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
         else:
-            output_width = 0
-            output_control = ui.label("Output format not supported").style("color: #ff0000;")
-        return output_width, output_control
+            controls.output_width = 0
+            controls.output_control = ui.label("Output format not supported").style("color: #ff0000;")

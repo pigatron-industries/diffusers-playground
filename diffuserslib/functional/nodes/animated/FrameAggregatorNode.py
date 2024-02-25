@@ -17,8 +17,8 @@ class FrameAggregatorNode(FunctionalNode):
     def __call__(self) -> List[Image.Image]:
         self.frames = []
         self.frame()
-        num_frames = self.args["num_frames"]
-        for i in range(1, num_frames):
+        self.num_frames = self.args["num_frames"]
+        for i in range(1, self.num_frames):
             self.frame()
         return self.frames
     
@@ -35,4 +35,4 @@ class FrameAggregatorNode(FunctionalNode):
         if len(self.frames) == 0:
             return WorkflowProgress(0, None)
         else:
-            return WorkflowProgress(len(self.frames), self.frames[-1])
+            return WorkflowProgress(float(len(self.frames)) / float(self.num_frames), self.frames[-1])
