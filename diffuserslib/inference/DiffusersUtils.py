@@ -2,7 +2,7 @@ from PIL import Image
 import random, copy
 from ..ImageUtils import compositeImages, tiledImageProcessor, applyColourCorrection
 from .DiffusersPipelines import MAX_SEED, DiffusersPipelines
-from .GenerationParameters import GenerationParameters
+from .GenerationParameters import GenerationParameters, ControlImageType
 from huggingface_hub import login
 from typing import List
 
@@ -17,7 +17,7 @@ def tiledImageToImage(pipelines:DiffusersPipelines, params:GenerationParameters,
     initimageparams = params.getInitImage()
     if initimageparams is None:
         raise Exception("tiledImageToImage requires initimage to be set in params")
-    controlimages = [ controlimageparams.image for controlimageparams in params.getControlImages() ]
+    controlimages = [ controlimageparams.image for controlimageparams in params.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE) ]
     if(params.seed is None):
         params.seed = random.randint(0, MAX_SEED)
     
@@ -37,7 +37,7 @@ def tiledInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, tile
     initimageparams = params.getInitImage()
     if initimageparams is None:
         raise Exception("tiledImageToImage requires initimage to be set in params")
-    controlimages = [ controlimageparams.image for controlimageparams in params.getControlImages() ]
+    controlimages = [ controlimageparams.image for controlimageparams in params.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE) ]
     if(params.seed is None):
         params.seed = random.randint(0, MAX_SEED)
 
