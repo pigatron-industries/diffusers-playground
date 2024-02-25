@@ -21,6 +21,12 @@ class WorkflowProgress:
     output: Any
 
 
+class WorkflowInterruptedException(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 class FunctionalNode(DeepCopyObject):
     name = "FunctionalNode"
 
@@ -29,6 +35,7 @@ class FunctionalNode(DeepCopyObject):
         self.node_name = node_name
         self.params:Dict[str, NodeParameter] = {}
         self.output = None
+        self.stopping = False
 
 
     def __call__(self) -> Any:
@@ -41,34 +48,37 @@ class FunctionalNode(DeepCopyObject):
 
     def flush(self):
         self.output = None
-        for paramname, param in self.params.items():
-            if(isinstance(param.value, FunctionalNode)):
-                param.value.flush()
-            elif(isinstance(param.value, List)):
-                for listvalue in param.value:
-                    if(isinstance(listvalue, FunctionalNode)):
-                        listvalue.flush()
+        self.stopping = False
+        self.recursive_action("flush")
 
 
     def reset(self):
         self.output = None
-        for paramname, param in self.params.items():
-            if(isinstance(param.value, FunctionalNode)):
-                param.value.reset()
-            elif(isinstance(param.value, List)):
-                for listvalue in param.value:
-                    if(isinstance(listvalue, FunctionalNode)):
-                        listvalue.reset()
+        self.stopping = False
+        self.recursive_action("reset")
+
+
+    def stop(self):
+        self.stopping = True
+        self.recursive_action("stop")
 
 
     def getProgress(self) -> WorkflowProgress|None:
+        return self.recursive_action("getProgress", return_value=True)
+
+
+    def recursive_action(self, action:str, return_value:bool=False):
         for paramname, param in self.params.items():
             if(isinstance(param.value, FunctionalNode)):
-                return param.value.getProgress()
+                result = getattr(param.value, action)()
+                if(return_value and result is not None):
+                    return result
             elif(isinstance(param.value, List)):
                 for listvalue in param.value:
                     if(isinstance(listvalue, FunctionalNode)):
-                        return listvalue.getProgress()
+                        result = getattr(listvalue, action)()
+                        if(return_value and result is not None):
+                            return result
 
     
     def process(self, **kwargs):

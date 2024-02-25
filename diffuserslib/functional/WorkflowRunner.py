@@ -105,6 +105,8 @@ class WorkflowRunner:
             if(not self.stopping):
                 # Cancel current batch
                 self.stopping = True
+                if(self.batchcurrent is not None):
+                    self.batchcurrent.workflow.stop()
             elif(len(self.batchqueue) > 0):
                 # Cancel next batch
                 self.batchqueue.pop(0)

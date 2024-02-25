@@ -1,6 +1,6 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
-
+import time
 
 class FrameAggregatorNode(FunctionalNode):
     def __init__(self, 
@@ -24,7 +24,10 @@ class FrameAggregatorNode(FunctionalNode):
     
 
     def frame(self) -> Image.Image:
+        if(self.stopping):
+            raise WorkflowInterruptedException("Workflow interrupted")
         self.flush()
+        time.sleep(5)
         self.args = self.evaluateParams()
         frame = self.args["frame"]
         self.frames.append(frame)
