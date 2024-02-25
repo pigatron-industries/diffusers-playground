@@ -70,7 +70,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                         rundata_container = self.rundata_controls[runid].rundata_container
                         output_control = self.rundata_controls[runid].output_control
                         if(self.rundata_controls[runid].waiting_output == True and rundata_container is not None):
-                            if(rundata.output is not None or rundata.error is not None or output_control is None): 
+                            if(rundata.output is not None or rundata.error is not None or output_control is None):
                                 # run finished, errored, or haven't created control yet, completely remove and re-add output controls
                                 rundata_container.clear()
                                 with rundata_container:
@@ -183,11 +183,13 @@ class BatchInterfaceComponents(InterfaceComponents):
         rundata = self.controller.getWorkflowRunData()[runid]
         with ui.row().classes('w-full no-wrap'):
             if(rundata.error is not None):
+                controls.waiting_output = False
                 controls.output_control = ui.label(f"Error: {rundata.error}").style("color: #ff0000;")
             elif(rundata.output is None):
                 controls.waiting_output = True
                 self.workflow_generating(batchid, runid)
             else:
+                controls.waiting_output = False
                 self.workflow_output(batchid, runid)
                 
             if(rundata.output is not None):
@@ -236,9 +238,9 @@ class BatchInterfaceComponents(InterfaceComponents):
         progress = self.controller.getProgress()
         if(progress is not None and progress.run_progress is not None and output_control is not None):
             output = progress.run_progress.output
+            self.progress = progress.run_progress.progress
             if(isinstance(output, Image.Image) and isinstance(output_control, ui.image)):
                 output_control.set_source(output) # type: ignore
-                self.progress = progress.run_progress.progress
 
 
     def workflow_output(self, batchid, runid):

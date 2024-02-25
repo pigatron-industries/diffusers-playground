@@ -198,21 +198,23 @@ class FunctionalNode(DeepCopyObject):
 
     def visitParams(self, visitor, parents=[]):
         output = {}
-        for paramname, param in self.params.items():
-            output[paramname] = {}
-            visitor_output = visitor(param, parents+[param])
-            if(visitor_output is not None):
-                output[paramname].update(visitor_output)
-            if(isinstance(param.value, FunctionalNode)):
-                output[paramname].update(param.value.visitParams(visitor, parents+[param]))
-            elif(isinstance(param.initial_value, FunctionalNode)):
-                output[paramname].update(param.initial_value.visitParams(visitor, parents+[param]))
-            elif(isinstance(param.value, List)):
-                for i, listvalue in enumerate(param.value):
-                    if(isinstance(listvalue, FunctionalNode)):
-                        output[paramname][i] = listvalue.visitParams(visitor, parents+[param]+[i])
-            if(not output[paramname]):
-                del output[paramname]
+        paramdicts = [self.initparams, self.params]
+        for paramdict in paramdicts:
+            for paramname, param in paramdict.items():
+                output[paramname] = {}
+                visitor_output = visitor(param, parents+[param])
+                if(visitor_output is not None):
+                    output[paramname].update(visitor_output)
+                if(isinstance(param.value, FunctionalNode)):
+                    output[paramname].update(param.value.visitParams(visitor, parents+[param]))
+                elif(isinstance(param.initial_value, FunctionalNode)):
+                    output[paramname].update(param.initial_value.visitParams(visitor, parents+[param]))
+                elif(isinstance(param.value, List)):
+                    for i, listvalue in enumerate(param.value):
+                        if(isinstance(listvalue, FunctionalNode)):
+                            output[paramname][i] = listvalue.visitParams(visitor, parents+[param]+[i])
+                if(not output[paramname]):
+                    del output[paramname]
         return output
 
 
