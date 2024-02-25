@@ -74,7 +74,7 @@ class WorkflowRunner:
                 self.batchcurrent.rundata[rundata.timestamp] = rundata
                 self.rundata[rundata.timestamp] = rundata
                 try:
-                    self.batchcurrent.workflow.flush()
+                    self.batchcurrent.workflow.reset()
                     rundata.output = self.batchcurrent.workflow()
                 except Exception as e:
                     rundata.error = e

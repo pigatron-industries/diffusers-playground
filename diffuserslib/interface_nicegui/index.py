@@ -30,7 +30,6 @@ class View:
 
 
     def onUpdateRunType(self):
-        print("run type updated")
         self.setInterfaceComponents()
         self.status.refresh()
         self.buttons.refresh()

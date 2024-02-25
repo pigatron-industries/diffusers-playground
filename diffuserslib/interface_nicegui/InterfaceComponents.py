@@ -58,7 +58,7 @@ class InterfaceComponents:
 
 
     def node_parameters(self, node:FunctionalNode):
-        params = node.getParams()
+        params = node.getInitParams() + node.getParams()
         for param in params:
             if(isinstance(param.initial_value, UserInputNode)):
                 with ui.row().classes('w-full'):

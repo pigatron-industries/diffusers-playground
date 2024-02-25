@@ -10,19 +10,17 @@ class BouncingPoints2DNode(FunctionalNode):
                  dt:FloatFuncType = 0.01,
                  name:str = "bouncing_points_2d"):
         super().__init__(name)
-        self.addParam("init_bodies", init_bodies, List[MovingBody])
+        self.addInitParam("init_bodies", init_bodies, List[MovingBody])
         self.addParam("dt", dt, float)
         self.bodies:List[MovingBody] = []
         self.reset()
 
 
-    def reset(self):
-        super().reset()
-        params = self.evaluateParams()
-        self.bodies = params["init_bodies"]
+    def init(self, init_bodies:List[MovingBody]):
+        self.bodies = init_bodies
 
 
-    def process(self, init_bodies:List[MovingBody], dt:float) -> List[Vector]:
+    def process(self, dt:float) -> List[Vector]:
         positions:List[Vector] = []
         for body in self.bodies:
             body.update_position(dt)
