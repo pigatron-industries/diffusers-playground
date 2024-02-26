@@ -1,30 +1,25 @@
 from ...FunctionalNode import FunctionalNode
 from ...FunctionalTyping import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
+from .ImageDiffusionNode import ModelsFuncType, LorasFuncType, ModelsType, LorasType
 from ....inference.DiffusersPipelines import DiffusersPipelines
-from ....inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
+from ....inference.GenerationParameters import GenerationParameters
 from PIL import Image
 
-ModelsType = List[ModelParameters]
-ModelsFuncType = ModelsType | Callable[[], ModelsType]
-LorasType = List[LoraParameters]
-LorasFuncType = LorasType | Callable[[], LorasType]
 
-class ImageDiffusionNode(FunctionalNode):
-
-    SCHEDULERS = [
-        "DPMSolverMultistepScheduler", "EulerDiscreteScheduler", "EulerAncestralDiscreteScheduler"
-    ]
+class LatentBlendingFramesNode(FunctionalNode):
 
     def __init__(self,
                  models:ModelsFuncType = [],
                  loras:LorasFuncType = [],
                  size:SizeFuncType = (512, 512),
-                 prompt:StringFuncType = "",
+                 prompt1:StringFuncType = "",
+                 prompt2:StringFuncType = "",
                  negprompt:StringFuncType = "",
                  steps:IntFuncType = 40,
                  cfgscale:FloatFuncType = 7.0,
-                 seed:IntFuncType|None = None,
+                 seed1:IntFuncType|None = None,
+                 seed2:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
@@ -32,11 +27,13 @@ class ImageDiffusionNode(FunctionalNode):
         self.addParam("size", size, SizeType)
         self.addParam("models", models, ModelsType)
         self.addParam("loras", loras, LorasType)
-        self.addParam("prompt", prompt, str)
+        self.addParam("prompt1", prompt1, str)
+        self.addParam("prompt2", prompt2, str)
         self.addParam("negprompt", negprompt, str)
         self.addParam("steps", steps, int)
         self.addParam("cfgscale", cfgscale, float)
-        self.addParam("seed", seed, int)
+        self.addParam("seed1", seed1, int)
+        self.addParam("seed2", seed2, int)
         self.addParam("scheduler", scheduler, str)
         self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
 
@@ -45,11 +42,13 @@ class ImageDiffusionNode(FunctionalNode):
                 size:SizeType, 
                 models:ModelsType, 
                 loras:LorasType,
-                prompt:str, 
+                prompt1:str, 
+                prompt2:str, 
                 negprompt:str, 
                 steps:int, 
                 cfgscale:float, 
-                seed:int|None, 
+                seed1:int|None, 
+                seed2:int|None,
                 scheduler:str,
                 conditioning_inputs:List[ConditioningInputType]|None = None) -> Image.Image:
         if(DiffusersPipelines.pipelines is None):
@@ -61,11 +60,11 @@ class ImageDiffusionNode(FunctionalNode):
             height=size[1],
             models=models,
             loras=loras,
-            prompt=prompt,
+            prompt=prompt1,
             negprompt=negprompt,
             steps=steps,
             cfgscale=cfgscale,
-            seed=seed,
+            seed=seed1,
             scheduler=scheduler,
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
