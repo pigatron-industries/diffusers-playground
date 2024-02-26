@@ -5,9 +5,13 @@ from .ImageDiffusionNode import ModelsFuncType, LorasFuncType, ModelsType, Loras
 from ....inference.DiffusersPipelines import DiffusersPipelines
 from ....inference.GenerationParameters import GenerationParameters
 from PIL import Image
+from .latentblending.blending_engine import BlendingEngine
+import random
 
 
 class LatentBlendingFramesNode(FunctionalNode):
+
+    MAX_SEED = 2**32 - 1
 
     def __init__(self,
                  models:ModelsFuncType = [],
@@ -50,7 +54,7 @@ class LatentBlendingFramesNode(FunctionalNode):
                 seed1:int|None, 
                 seed2:int|None,
                 scheduler:str,
-                conditioning_inputs:List[ConditioningInputType]|None = None) -> Image.Image:
+                conditioning_inputs:List[ConditioningInputType]|None = None) -> List[Image.Image]:
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
@@ -69,10 +73,18 @@ class LatentBlendingFramesNode(FunctionalNode):
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
-        output, seed = DiffusersPipelines.pipelines.generate(params)
-        # output = Image.new("RGB", (size[0], size[1]), (255, 255, 255))
-        if(isinstance(output, Image.Image)):
-            return output
-        else:
-            raise Exception("Output is not an image")
+        if(seed1 is None):
+            seed1 = random.randint(0, self.MAX_SEED)
+        if(seed2 is None):
+            seed2 = random.randint(0, self.MAX_SEED)
+
+        pipelineWrapper = DiffusersPipelines.pipelines.createPipeline(params)
+        prompt1 = DiffusersPipelines.pipelines.processPrompt(prompt1, pipelineWrapper)
+        prompt2 = DiffusersPipelines.pipelines.processPrompt(prompt2, pipelineWrapper)
+        be = BlendingEngine(pipelineWrapper.pipeline)
+        be.set_prompt1(prompt1)
+        be.set_prompt2(prompt2)
+        be.set_negative_prompt(negprompt)
+        frames = be.run_transition(fixed_seeds = [seed1, seed2])
+        return frames
         

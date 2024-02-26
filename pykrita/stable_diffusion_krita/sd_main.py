@@ -214,7 +214,7 @@ class ModifierDialog(QDialog):
 
 dialogfields = {
     'txt2img':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'seed', 'batch', 'scheduler', 'lora'],
-    'img2img':         ['prompt', 'negprompt', 'base', 'model', 'strength', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
+    'img2img':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
     'upscale':         ['prompt', 'model', 'upscale_amount', 'scale', 'scheduler', 'image'],
     'inpaint':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'strength', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
     'generateTiled':   ['prompt', 'negprompt', 'base', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image'],
@@ -330,11 +330,6 @@ class SDDialog(QDialog):
             self.tile_alignmenty.addItems(['tile_centre', 'tile_edge'])
             # self.tile_alignmenty.setCurrentText(self.config.params.tilealignmenty)
             formLayout.addWidget(self.tile_alignmenty)
-
-        if('strength' in self.actionfields):
-            self.strength_label = QLabel("Strength")
-            formLayout.addWidget(self.strength_label)
-            self.strength, self.strength_value = createSlider(self, formLayout, 100, 0, 100, 1, 100)
 
         if('steps' in self.actionfields):
             self.steps_label=QLabel("Steps")
@@ -499,13 +494,6 @@ class SDDialog(QDialog):
                     action = "img2img"
                     break
         print("controlModelChanged", action)
-        # if (hasattr(self, 'strength') and hasattr(self, 'steps')):
-            # self.steps.setVisible(action != "img2img")
-            # self.steps_label.setVisible(action != "img2img")
-            # self.steps_value.setVisible(action != "img2img")
-            # self.strength.setVisible(action == "img2img")
-            # self.strength_label.setVisible(action == "img2img")
-            # self.strength_value.setVisible(action == "img2img")
 
 
     def maxSizePixmap(self, image, max_size):
@@ -555,8 +543,6 @@ class SDDialog(QDialog):
                 self.loraweight.setValue(100)
         if('upscale_amount' in self.actionfields):
             self.upscale_amount.setValue(params.upscaleamount)
-        if('strength' in self.actionfields):
-            self.strength.setValue(int(params.strength*100))
         if('steps' in self.actionfields):
             self.steps.setValue(params.steps)
         if('scale' in self.actionfields):
@@ -617,9 +603,6 @@ class SDDialog(QDialog):
         if('batch' in self.actionfields):
             dialogParams.batch = int(self.batch.value())
             genParams.batch = int(self.batch.value())
-        if('strength' in self.actionfields):
-            dialogParams.strength = self.strength.value()/100
-            genParams.strength = self.strength.value()/100
         if('steps' in self.actionfields):
             dialogParams.steps = int(self.steps.value())
             genParams.steps = int(self.steps.value())
@@ -648,8 +631,8 @@ class SDDialog(QDialog):
             genParams.controlimages = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
                 if (control_model_dropdown.currentText() == IMAGETYPE_INITIMAGE):
-                    dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE))
-                    genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, image64 = images64[i]))
+                    dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, condscale = self.control_scale_sliders[i].value()/100))
+                    genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, image64 = images64[i], condscale = self.control_scale_sliders[i].value()/100))
                 else:
                     dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
                                                                                    model = control_model_dropdown.currentText(), 
