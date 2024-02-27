@@ -22,6 +22,7 @@ safetensors
 # image tools
 scikit-image==0.19.3
 blendmodes
+lpips
 
 # web
 flask==2.1.3

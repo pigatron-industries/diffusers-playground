@@ -8,9 +8,9 @@ from PIL import Image
 from typing import List, Optional
 import lpips
 import platform
-from latentblending.diffusers_holder import DiffusersHolder
-from latentblending.utils import interpolate_spherical, interpolate_linear, add_frames_linear_interp
-from lunar_tools import MovieSaver, fill_up_frames_linear_interpolation
+from .diffusers_holder import DiffusersHolder
+from .utils import interpolate_spherical, interpolate_linear, add_frames_linear_interp
+# from lunar_tools import MovieSaver, fill_up_frames_linear_interpolation
 warnings.filterwarnings('ignore')
 torch.backends.cudnn.benchmark = False
 torch.set_grad_enabled(False)
@@ -787,51 +787,3 @@ class BlendingEngine():
             b_parent1 = tmp
 
         return b_parent1, b_parent2
-
-#%%
-if __name__ == "__main__":
-    
-    # %% First let us spawn a stable diffusion holder. Uncomment your version of choice.
-    from diffusers_holder import DiffusersHolder
-    from diffusers import DiffusionPipeline
-    from diffusers import AutoencoderTiny
-    # pretrained_model_name_or_path = "stabilityai/stable-diffusion-xl-base-1.0"
-    pretrained_model_name_or_path = "stabilityai/sdxl-turbo"
-    pipe = DiffusionPipeline.from_pretrained(pretrained_model_name_or_path)
-    
-    
-    # pipe.to("mps")
-    pipe.to("cuda")
-    
-    # pipe.vae = AutoencoderTiny.from_pretrained('madebyollin/taesdxl', torch_device='cuda', torch_dtype=torch.float16)
-    # pipe.vae = pipe.vae.cuda()
-
-    dh = DiffusersHolder(pipe)
-    
-    xxx
-    # %% Next let's set up all parameters
-    prompt1 = "photo of underwater landscape, fish, und the sea, incredible detail, high resolution"
-    prompt2 = "rendering of an alien planet, strange plants, strange creatures, surreal"
-    negative_prompt = "blurry, ugly, pale"  # Optional
-
-    duration_transition = 12  # In seconds
-
-    # Spawn latent blending
-    be = BlendingEngine(dh)
-    be.set_prompt1(prompt1)
-    be.set_prompt2(prompt2)
-    be.set_negative_prompt(negative_prompt)
-
-    # Run latent blending
-    t0 = time.time()
-    be.run_transition(fixed_seeds=[420, 421])
-    dt = time.time() - t0
-    print(f"dt = {dt}")
-
-    # Save movie
-    fp_movie = f'test.mp4'
-    be.write_movie_transition(fp_movie, duration_transition)
-    
-
-
-

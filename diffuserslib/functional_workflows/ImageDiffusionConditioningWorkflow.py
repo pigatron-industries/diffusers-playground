@@ -4,7 +4,7 @@ from diffuserslib.functional import *
 class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Image Diffusion", Image.Image, workflow=True, subworkflow=False)
+        super().__init__("Image Diffusion with Conditioning", Image.Image, workflow=True, subworkflow=False)
 
 
     def build(self):

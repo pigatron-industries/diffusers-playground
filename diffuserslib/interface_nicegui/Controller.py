@@ -26,9 +26,9 @@ class Controller:
 
     model = Model()
     workflows:Dict[str, WorkflowBuilder] = {}
-    workflows_batch:List[str] = []
-    workflows_realtime:List[str] = []
-    workflows_sub:List[str] = []
+    workflows_batch:Dict[str, str] = {}
+    workflows_realtime:Dict[str, str] = {}
+    workflows_sub:Dict[str, str] = {}
     workflow:FunctionalNode|None = None
     history_filename = ".history.yml"
 
@@ -47,9 +47,9 @@ class Controller:
 
     def loadWorkflows(self):
         print("Loading workflow builders")
-        self.workflows_batch = []
-        self.workflows_realtime = []
-        self.workflows_sub = []
+        self.workflows_batch = {}
+        self.workflows_realtime = {}
+        self.workflows_sub = {}
         path = os.path.join(os.path.dirname(__file__), '../functional_workflows')
         modules = ModuleLoader.load_from_directory(path)
         for module in modules:
@@ -59,12 +59,16 @@ class Controller:
                     workflow = builder()
                     self.workflows[name] = workflow
                     if(workflow.workflow and name not in self.workflows_batch):
-                        self.workflows_batch.append(name)
+                        self.workflows_batch[name] = workflow.name
                     if(workflow.subworkflow and name not in self.workflows_sub):
-                        self.workflows_sub.append(name)
+                        self.workflows_sub[name] = workflow.name
                     if(workflow.realtime and name not in self.workflows_realtime):
-                        self.workflows_realtime.append(name)
+                        self.workflows_realtime[name] = workflow.name
                     print(f"Loading workflow builder: {name}")
+        self.workflows_batch = dict(sorted(self.workflows_batch.items(), key=lambda item: item[1]))
+        self.workflows_realtime = dict(sorted(self.workflows_realtime.items(), key=lambda item: item[1]))
+        self.workflows_sub = dict(sorted(self.workflows_sub.items(), key=lambda item: item[1]))
+        print(self.workflows_batch)
     
 
     def loadWorkflow(self, workflow_name):
