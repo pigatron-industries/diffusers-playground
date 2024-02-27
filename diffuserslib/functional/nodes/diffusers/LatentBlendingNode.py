@@ -9,7 +9,7 @@ from .latentblending.blending_engine import BlendingEngine
 import random
 
 
-class LatentBlendingFramesNode(FunctionalNode):
+class LatentBlendingNode(FunctionalNode):
 
     MAX_SEED = 2**32 - 1
 
