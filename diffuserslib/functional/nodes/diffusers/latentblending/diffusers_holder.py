@@ -102,7 +102,7 @@ class DiffusersHolder():
             self.pipe.unet.config.in_channels,
             self.height_img,
             self.width_img,
-            torch.float16,
+            torch.float32,
             self.pipe._execution_device,
             torch.Generator(device=self.device).manual_seed(int(seed)),
             None,
