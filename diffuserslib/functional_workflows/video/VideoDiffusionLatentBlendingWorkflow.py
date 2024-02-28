@@ -32,7 +32,5 @@ class VideoDiffusionLatentBlendingWorkflow(WorkflowBuilder):
                                              seed2 = seed2_input,
                                              scheduler = scheduler_input)
 
-        # num_frames_input = IntUserInputNode(value = 20, name = "num_frames")
-        # frame_aggregator = FrameAggregatorNode(frame = diffusion, num_frames = num_frames_input)
-        # frames_to_video = FramesToVideoNode(frames = frame_aggregator, fps = 10)
-        return latent_blending
+        frames_to_video = FramesToVideoNode(frames = latent_blending, fps = 10)
+        return frames_to_video
