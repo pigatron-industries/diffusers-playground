@@ -70,10 +70,7 @@ class BlendingEngine():
         self.multi_transition_img_first = None
         self.multi_transition_img_last = None
         self.dt_unet_step = 0
-        if platform.system() == "Darwin":
-            self.lpips = lpips.LPIPS(net='alex')
-        else:
-            self.lpips = lpips.LPIPS(net='alex').cuda(self.device)
+        self.lpips = lpips.LPIPS(net='alex').to(self.device)
 
         self.set_prompt1("")
         self.set_prompt2("")
@@ -747,10 +744,10 @@ class BlendingEngine():
         Used to determine the optimal point of insertion to create smooth transitions.
         High values indicate low similarity.
         """
-        tensorA = torch.from_numpy(np.asarray(imgA)).float().cuda(self.device)
+        tensorA = torch.from_numpy(np.asarray(imgA)).float().to(self.device)
         tensorA = 2 * tensorA / 255.0 - 1
         tensorA = tensorA.permute([2, 0, 1]).unsqueeze(0)
-        tensorB = torch.from_numpy(np.asarray(imgB)).float().cuda(self.device)
+        tensorB = torch.from_numpy(np.asarray(imgB)).float().to(self.device)
         tensorB = 2 * tensorB / 255.0 - 1
         tensorB = tensorB.permute([2, 0, 1]).unsqueeze(0)
         lploss = self.lpips(tensorA, tensorB)

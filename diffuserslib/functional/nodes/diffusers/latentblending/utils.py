@@ -49,8 +49,8 @@ def interpolate_spherical(p0, p1, fract_mixing: float):
     else:
         recast_to = 'fp32'
 
-    p0 = p0.double()
-    p1 = p1.double()
+    # p0 = p0.double()
+    # p1 = p1.double()
     norm = torch.linalg.norm(p0) * torch.linalg.norm(p1)
     epsilon = 1e-7
     dot = torch.sum(p0 * p1) / norm
