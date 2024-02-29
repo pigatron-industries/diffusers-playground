@@ -194,6 +194,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                 
             if(rundata.output is not None):
                 with ui.column():
+                    ui.label(f"Duration: {rundata.duration}")
                     if rundata.params is not None:
                         for node_name in rundata.params:
                             for paramname, paramvalue in rundata.params[node_name].items():

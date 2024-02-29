@@ -3,6 +3,7 @@ from typing import Any, Dict, Self, List
 from dataclasses import dataclass, field
 from PIL import Image
 import time
+import datetime
 import yaml
 import copy
 import traceback
@@ -16,6 +17,9 @@ class WorkflowRunData:
     output: Any|None = None
     save_file:str|None = None
     error:Exception|None = None
+    start_time:datetime.datetime|None = None
+    end_time:datetime.datetime|None = None
+    duration:datetime.timedelta|None = None
 
 
 @dataclass
@@ -71,6 +75,7 @@ class WorkflowRunner:
             for i in range(self.batchcurrent.batch_size):
                 print(f"Running workflow {self.batchcurrent.workflow.node_name} batch {i+1} of {self.batchcurrent.batch_size}")
                 rundata = WorkflowRunData(int(time.time_ns()/1000))
+                rundata.start_time = datetime.datetime.now()
                 self.batchcurrent.rundata[rundata.timestamp] = rundata
                 self.rundata[rundata.timestamp] = rundata
                 try:
@@ -82,6 +87,9 @@ class WorkflowRunner:
                     traceback.print_exc()
                     break
                 rundata.params = self.batchcurrent.workflow.getEvaluatedParamValues()
+                rundata.end_time = datetime.datetime.now()
+                rundata.duration = rundata.end_time - rundata.start_time
+                print(rundata.duration)
                 self.progress.jobs_completed = len(self.rundata)
                 self.progress.jobs_remaining = sum([batch.batch_size for batch in self.batchqueue]) + self.batchcurrent.batch_size - len(self.batchcurrent.rundata)
                 if(self.stopping == True):
