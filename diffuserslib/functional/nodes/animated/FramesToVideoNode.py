@@ -17,14 +17,14 @@ class Video:
 class FramesToVideoNode(FunctionalNode):
     def __init__(self, 
                  frames:FramesFuncType,
-                 fps:IntFuncType = 30,
+                 fps:FloatFuncType = 7.5,
                  name:str = "frames_to_video"):
         super().__init__(name)
         self.addParam("frames", frames, List[Image.Image])
-        self.addParam("fps", fps, int)
+        self.addParam("fps", fps, float)
 
 
-    def process(self, frames:List[Image.Image], fps:int) -> Video:
+    def process(self, frames:List[Image.Image], fps:float) -> Video:
         temp_file = tempfile.NamedTemporaryFile(suffix = ".mp4", delete = True)
         height = frames[0].height
         width = frames[0].width

@@ -141,6 +141,7 @@ class Controller:
 
             def visitor(param, parents):
                 paramstring = '.'.join([parent.name if isinstance(parent, NodeParameter) else str(parent) for parent in parents])
+                print(paramstring)
                 if(paramstring+'.value' in user_input_values):
                     param.value.setValue(user_input_values[paramstring+'.value'])
                 if(paramstring+'.node' in user_input_values):

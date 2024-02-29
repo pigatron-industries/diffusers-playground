@@ -678,30 +678,6 @@ class BlendingEngine():
             img_leaf.save(os.path.join(dp_img, f"lowres_img_{str(i).zfill(4)}.jpg"))
         fp_yml = os.path.join(dp_img, "lowres.yaml")
 
-    def write_movie_transition(self, fp_movie, duration_transition, fps=30):
-        r"""
-        Writes the transition movie to fp_movie, using the given duration and fps..
-        The missing frames are linearly interpolated.
-        Args:
-            fp_movie: str
-                file pointer to the final movie.
-            duration_transition: float
-                duration of the movie in seonds
-            fps: int
-                fps of the movie
-        """
-
-        # Let's get more cheap frames via linear interpolation (duration_transition*fps frames)
-        imgs_transition_ext = fill_up_frames_linear_interpolation(self.tree_final_imgs, duration_transition, fps)
-
-        # Save as MP4
-        if os.path.isfile(fp_movie):
-            os.remove(fp_movie)
-        ms = MovieSaver(fp_movie, fps=fps, shape_hw=[self.dh.height_img, self.dh.width_img])
-        for img in tqdm(imgs_transition_ext):
-            ms.write_frame(img)
-        ms.finalize()
-
 
     def get_state_dict(self):
         state_dict = {}
