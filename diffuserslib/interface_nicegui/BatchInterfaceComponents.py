@@ -93,8 +93,8 @@ class BatchInterfaceComponents(InterfaceComponents):
         self.status.refresh()
 
 
-    def saveOutput(self, key):
-        self.controller.saveOutput(key)
+    async def saveOutput(self, key):
+        result = await run.io_bound(self.controller.saveOutput, key)
         filename = self.controller.getWorkflowRunData()[key].save_file
         if (filename is not None):
             self.rundata_controls[key].showLabelSaved(filename)
