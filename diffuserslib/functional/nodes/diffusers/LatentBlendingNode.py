@@ -66,16 +66,8 @@ class LatentBlendingNode(FunctionalNode):
         
         params = GenerationParameters(
             safetychecker=False,
-            width=size[0],
-            height=size[1],
             models=models,
             loras=loras,
-            prompt=prompt1,
-            negprompt=negprompt,
-            steps=steps,
-            cfgscale=cfgscale,
-            seed=seed1,
-            scheduler=scheduler,
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
@@ -87,11 +79,15 @@ class LatentBlendingNode(FunctionalNode):
         pipelineWrapper = DiffusersPipelines.pipelines.createPipeline(params)
         prompt1 = DiffusersPipelines.pipelines.processPrompt(prompt1, pipelineWrapper)
         prompt2 = DiffusersPipelines.pipelines.processPrompt(prompt2, pipelineWrapper)
+
         be = BlendingEngine(pipelineWrapper.pipeline)
         be.set_prompt1(prompt1)
         be.set_prompt2(prompt2)
         be.set_negative_prompt(negprompt)
-        be.set_branching(nmb_max_branches=max_branches, depth_strength = depth_strength)
+        be.set_num_inference_steps(steps)
+        be.set_guidance_scale(cfgscale)
+        be.set_dimensions(size)
+        be.set_branching(nmb_max_branches = max_branches, depth_strength = depth_strength)
         frames = be.run_transition(fixed_seeds = [seed1, seed2])
         return frames
         

@@ -12,6 +12,8 @@ from diffusers.models.attention_processor import (
     XFormersAttnProcessor,
 )
 from diffusers.pipelines.stable_diffusion_xl.pipeline_stable_diffusion_xl import retrieve_timesteps
+from tqdm.auto import tqdm
+
 warnings.filterwarnings('ignore')
 torch.backends.cudnn.benchmark = False
 torch.set_grad_enabled(False)
@@ -309,7 +311,7 @@ class DiffusersHolder():
             ).to(device=device, dtype=latents.dtype)
             
         self.pipe._num_timesteps = len(timesteps)
-        for i, t in enumerate(timesteps):
+        for i, t in enumerate(tqdm(timesteps)):
             # Set the right starting latents
             # Write latents out and skip
             if i < idx_start:
