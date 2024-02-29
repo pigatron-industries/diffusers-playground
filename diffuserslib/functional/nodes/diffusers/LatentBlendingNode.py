@@ -26,6 +26,8 @@ class LatentBlendingNode(FunctionalNode):
                  seed2:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
+                 max_branches:IntFuncType = 10,
+                 depth_strength:FloatFuncType = 0.5,
                  name:str = "image_diffusion"):
         super().__init__(name)
         self.addParam("size", size, SizeType)
@@ -40,6 +42,8 @@ class LatentBlendingNode(FunctionalNode):
         self.addParam("seed2", seed2, int)
         self.addParam("scheduler", scheduler, str)
         self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
+        self.addParam("max_branches", max_branches, int)
+        self.addParam("depth_strength", depth_strength, float)
 
 
     def process(self, 
@@ -54,7 +58,9 @@ class LatentBlendingNode(FunctionalNode):
                 seed1:int|None, 
                 seed2:int|None,
                 scheduler:str,
-                conditioning_inputs:List[ConditioningInputType]|None = None) -> List[Image.Image]:
+                conditioning_inputs:List[ConditioningInputType]|None,
+                max_branches:int,
+                depth_strength:float) -> List[Image.Image]:
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
@@ -85,6 +91,7 @@ class LatentBlendingNode(FunctionalNode):
         be.set_prompt1(prompt1)
         be.set_prompt2(prompt2)
         be.set_negative_prompt(negprompt)
+        be.set_branching(nmb_max_branches=max_branches, depth_strength = depth_strength)
         frames = be.run_transition(fixed_seeds = [seed1, seed2])
         return frames
         

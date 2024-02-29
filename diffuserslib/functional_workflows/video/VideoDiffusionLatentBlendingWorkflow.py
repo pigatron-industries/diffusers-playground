@@ -19,6 +19,8 @@ class VideoDiffusionLatentBlendingWorkflow(WorkflowBuilder):
         steps_input = IntUserInputNode(value = 20, name = "steps")
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
+        max_branches_input = IntUserInputNode(value = 10, name = "max_branches")
+        depth_strength_input = FloatUserInputNode(value = 0.5, name = "depth_strength")
 
         latent_blending = LatentBlendingNode(models = models_input, 
                                              loras = [],
@@ -30,7 +32,9 @@ class VideoDiffusionLatentBlendingWorkflow(WorkflowBuilder):
                                              cfgscale = cfgscale_input,
                                              seed1 = seed1_input,
                                              seed2 = seed2_input,
-                                             scheduler = scheduler_input)
+                                             scheduler = scheduler_input,
+                                             max_branches=max_branches_input,
+                                             depth_strength=depth_strength_input)
 
         frames_to_video = FramesToVideoNode(frames = latent_blending, fps = 10)
         return frames_to_video
