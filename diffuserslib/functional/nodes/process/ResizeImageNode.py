@@ -1,21 +1,21 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.FunctionalTyping import *
-import random
+from enum import Enum
 
 
 class ResizeImageNode(FunctionalNode):
 
-    class ResizeType:
+    class ResizeType(Enum):
         STRETCH = "stretch"
         FIT = "fit"
         EXTEND = "extend"
 
-    class HorizontalAlign:
+    class HorizontalAlign(Enum):
         LEFT = "left"
         CENTRE = "centre"
         RIGHT = "right"
 
-    class VerticalAlign:
+    class VerticalAlign(Enum):
         TOP = "top"
         CENTRE = "centre"
         BOTTOM = "bottom"
@@ -24,9 +24,9 @@ class ResizeImageNode(FunctionalNode):
     def __init__(self, 
                  image:ImageFuncType, 
                  size=SizeFuncType, 
-                 type:StringFuncType = ResizeType.STRETCH,
-                 halign:StringFuncType = HorizontalAlign.CENTRE,
-                 valign:StringFuncType = VerticalAlign.CENTRE,
+                 type:StringFuncType = ResizeType.STRETCH.value,
+                 halign:StringFuncType = HorizontalAlign.CENTRE.value,
+                 valign:StringFuncType = VerticalAlign.CENTRE.value,
                  fill:ColourFuncType = "black",
                  name:str="resize_image"):
         super().__init__(name)
