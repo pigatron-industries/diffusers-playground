@@ -9,7 +9,6 @@ from .util import *
 from .models import *
 from .inference import *
 from .batch import *
-from .animation import *
 from .processing import *
 from .imagetools import *
 from .interface_notebook import *
