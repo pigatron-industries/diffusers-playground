@@ -1,5 +1,5 @@
 from ...FunctionalNode import FunctionalNode
-from ...FunctionalTyping import *
+from ...types.FunctionalTyping import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
 from ....inference.DiffusersPipelines import DiffusersPipelines
 from ....inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters

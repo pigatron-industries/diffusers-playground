@@ -1,5 +1,5 @@
 from ...FunctionalNode import FunctionalNode
-from ...FunctionalTyping import *
+from ...types.FunctionalTyping import *
 from ....inference.GenerationParameters import ControlImageParameters, ControlImageType
 from PIL import Image
 

@@ -1,5 +1,5 @@
 from diffuserslib.functional.FunctionalNode import *
-from diffuserslib.functional.FunctionalTyping import *
+from diffuserslib.functional.types.FunctionalTyping import *
 from .UserInputNode import UserInputNode
 from diffuserslib.util import FileDialog
 from nicegui import ui

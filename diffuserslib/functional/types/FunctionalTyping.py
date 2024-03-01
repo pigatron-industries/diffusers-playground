@@ -25,6 +25,9 @@ Point2DFuncType = Point2DType | Callable[[], Point2DType]
 Points2DType = List[Point2DType]
 Points2DFuncType = Points2DType | Callable[[], Points2DType]
 
+RectType = Tuple[float, float, float, float]
+RectFuncType = RectType | Callable[[], RectType]
+
 ImageFuncType = Image.Image | Callable[[], Image.Image]
 FramesFuncType = List[Image.Image] | Callable[[], List[Image.Image]]
 

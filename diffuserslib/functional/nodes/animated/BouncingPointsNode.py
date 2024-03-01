@@ -1,6 +1,6 @@
 from diffuserslib.batch.BatchRunner import evaluateArguments
 from diffuserslib.functional.FunctionalNode import *
-from diffuserslib.functional.FunctionalTyping import *
+from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.types import Vector, MovingBody, MovingBodiesFuncType
 
 

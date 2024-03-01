@@ -1,5 +1,5 @@
-from ...FunctionalNode import FunctionalNode
-from ...FunctionalTyping import *
+from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.types.FunctionalTyping import *
 from PIL import Image
 
 

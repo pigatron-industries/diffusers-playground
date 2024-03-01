@@ -1,5 +1,5 @@
 from ...FunctionalNode import FunctionalNode
-from diffuserslib.functional.FunctionalTyping import *
+from diffuserslib.functional.types.FunctionalTyping import *
 from PIL import ImageDraw, Image
 from typing import Tuple
 

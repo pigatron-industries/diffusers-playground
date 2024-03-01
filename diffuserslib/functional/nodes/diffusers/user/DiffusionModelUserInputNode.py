@@ -2,7 +2,7 @@ from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
 from diffuserslib.inference.GenerationParameters import ModelParameters
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsType
 from diffuserslib.functional.FunctionalNode import *
-from diffuserslib.functional.FunctionalTyping import *
+from diffuserslib.functional.types.FunctionalTyping import *
 from ...user.UserInputNode import UserInputNode
 from nicegui import ui
 
