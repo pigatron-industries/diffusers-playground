@@ -10,11 +10,7 @@ ModelsFuncType = ModelsType | Callable[[], ModelsType]
 LorasType = List[LoraParameters]
 LorasFuncType = LorasType | Callable[[], LorasType]
 
-class ImageDiffusionNode(FunctionalNode):
-
-    SCHEDULERS = [
-        "DDIMScheduler", "DPMSolverMultistepScheduler", "EDMDPMSolverMultistepScheduler", "EulerDiscreteScheduler", "EulerAncestralDiscreteScheduler"
-    ]
+class VideoDiffusionAnimateDiffNode(FunctionalNode):
 
     def __init__(self,
                  models:ModelsFuncType = [],
@@ -26,7 +22,8 @@ class ImageDiffusionNode(FunctionalNode):
                  cfgscale:FloatFuncType = 7.0,
                  seed:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
-                 conditioning_inputs:ConditioningInputFuncsType|None = None,
+                 frames:IntFuncType = 16,
+                #  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
         self.addParam("size", size, SizeType)
@@ -38,7 +35,8 @@ class ImageDiffusionNode(FunctionalNode):
         self.addParam("cfgscale", cfgscale, float)
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
-        self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
+        self.addParam("frames", frames, int)
+        # self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
 
 
     def process(self, 
@@ -51,11 +49,12 @@ class ImageDiffusionNode(FunctionalNode):
                 cfgscale:float, 
                 seed:int|None, 
                 scheduler:str,
-                conditioning_inputs:List[ConditioningInputType]|None = None) -> Image.Image:
+                frames:int) -> List[Image.Image]:
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
         params = GenerationParameters(
+            generationtype="animatediff",
             safetychecker=False,
             width=size[0],
             height=size[1],
@@ -67,13 +66,14 @@ class ImageDiffusionNode(FunctionalNode):
             cfgscale=cfgscale,
             seed=seed,
             scheduler=scheduler,
-            controlimages=conditioning_inputs if conditioning_inputs is not None else []
+            frames=frames,
+            # controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
         output, seed = DiffusersPipelines.pipelines.generate(params)
         # output = Image.new("RGB", (size[0], size[1]), (255, 255, 255))
-        if(isinstance(output, Image.Image)):
+        if(isinstance(output, List)):
             return output
         else:
-            raise Exception("Output is not an image")
+            raise Exception("Output is not a list of images")
         

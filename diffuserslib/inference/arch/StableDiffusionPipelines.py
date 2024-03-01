@@ -223,8 +223,17 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
-        adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=torch.float16)
-        super().__init__(AnimateDiffPipeline, params, device, motion_adapter = adapter, torch_dtype=torch.float16)
+        self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=torch.float16)
+        super().__init__(AnimateDiffPipeline, params, device)
+
+
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        self.addPipelineParamsCommon(params, pipeline_params)
+        pipeline_params['motion_adapter'] = self.adapter
+        pipeline_params['torch_dtype'] = torch.float16
+        return pipeline_params
+
 
     def inference(self, params:GenerationParameters):
         diffusers_params = {}
