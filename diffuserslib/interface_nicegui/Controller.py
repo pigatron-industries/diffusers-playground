@@ -43,6 +43,7 @@ class Controller:
             self.model.run_type = self.workflow_history['run_type']
         if('workflow' in self.workflow_history):
             self.loadWorkflow(self.workflow_history['workflow'])
+        self.loadSettings()
         
 
     def loadWorkflows(self):
@@ -211,4 +212,16 @@ class Controller:
 
 
     def saveOutput(self, key):
-        self.workflowrunner.save(key)
+        self.workflowrunner.save(key, self.output_subdir)
+        self.saveSettings()
+
+
+    def saveSettings(self):
+        self.workflow_history['output_subdir'] = self.output_subdir
+        self.saveWorkflowParamsHistory()
+
+
+    def loadSettings(self):
+        if('output_subdir' in self.workflow_history):
+            self.output_subdir = self.workflow_history['output_subdir']
+        

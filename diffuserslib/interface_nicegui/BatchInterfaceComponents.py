@@ -1,3 +1,4 @@
+from turtle import onclick
 from diffuserslib.functional import WorkflowRunData
 from diffuserslib.functional.nodes.animated import Video
 
@@ -146,6 +147,10 @@ class BatchInterfaceComponents(InterfaceComponents):
         ui.button('Clear', on_click=lambda e: self.clearOutputs()).classes('align-middle')
 
 
+    def settings(self):
+        ui.input(label='Output Sub-Directory').bind_value(self.controller, 'output_subdir')
+
+
     @ui.refreshable
     def controls(self):
         self.workflowSelect(self.controller.workflows_batch)
@@ -208,7 +213,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                 with ui.column().classes('ml-auto'):
                     with ui.row().classes('ml-auto'):
                         ui.button('Save', on_click=lambda e: self.saveOutput(runid))
-                        ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))      
+                        ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))
                     with ui.row():
                         controls.label_saved = ui.label(f"Saved to {rundata.save_file}")
                         controls.label_saved.set_visibility(rundata.save_file is not None)

@@ -8,6 +8,7 @@ import yaml
 import copy
 import traceback
 import shutil
+import os
 
 
 @dataclass
@@ -120,8 +121,17 @@ class WorkflowRunner:
                 self.batchqueue.pop(0)
 
 
-    def save(self, timestamp:int):
-        save_file = f"{self.output_dir}/output_{timestamp}"
+    def save(self, timestamp:int, output_subdir:str|None = None):
+        output_filename = f"output_{timestamp}"
+        if(output_subdir is not None and len(output_subdir) > 0):
+            output_dir = f"{self.output_dir}/{output_subdir}"
+            try:
+                os.makedirs(output_dir)
+            except FileExistsError:
+                pass
+        else:
+            output_dir = f"{self.output_dir}"
+        save_file = f"{output_dir}/{output_filename}"
         rundata = self.rundata[timestamp]
         if(rundata.output is not None):
             if(isinstance(rundata.output, Image.Image)):

@@ -66,6 +66,8 @@ class View:
                 self.status() # type: ignore
                 with ui.row():
                     self.buttons() # type: ignore
+                    ui.button(icon='settings', color='dark', on_click=self.settings).classes('align-middle')
+                    
             with ui.splitter(value=40).classes("w-full h-full no-wrap overflow-auto") as splitter:
                 with splitter.before:
                     with ui.column().classes("p-2 w-full"):
@@ -82,6 +84,11 @@ class View:
     @ui.refreshable
     def buttons(self):
         self.interface_components.buttons()
+
+
+    def settings(self):
+        with ui.dialog(value=True) as settings_dialog, ui.card():
+            self.interface_components.settings()
 
 
     @ui.refreshable

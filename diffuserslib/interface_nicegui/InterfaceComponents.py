@@ -2,7 +2,7 @@ from .Controller import Controller
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes import UserInputNode, ListUserInputNode
 from nicegui import ui
-from typing import List
+from typing import Dict
 
 
 class InterfaceComponents:
@@ -36,6 +36,9 @@ class InterfaceComponents:
     def buttons(self):
         pass
 
+    def settings(self):
+        pass
+
     def controls(self):
         pass
 
@@ -43,7 +46,7 @@ class InterfaceComponents:
         pass
 
     
-    def workflowSelect(self, workflow_list:List[str]):
+    def workflowSelect(self, workflow_list:Dict[str, str]):
         if(self.controller.model.workflow_name not in workflow_list):
             self.controller.model.workflow_name = None
             self.controller.workflow = None
