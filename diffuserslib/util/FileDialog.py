@@ -24,30 +24,33 @@ class FileDialog():
 
 
     async def onExpand(self, expanded_paths:List[str]):
-        for path in expanded_paths:
-            print(path)
-            await self.populateGrandChildren(path)
+        def expand():
+            for path in expanded_paths:
+                print(path)
+                self.populateGrandChildren(path)
+        await run.io_bound(expand)
 
 
     def selectFile(self, values):
         self.selected = values
 
 
-    async def initFileTree(self):
+    def initFileTree(self):
         self.filetree = []
         paths = GlobalConfig.inputs_dirs
         for path in paths:
             if (os.path.exists(path)):
                 node = {'id': path, 'label': path, 'children': []}
-                await self.populateChildren(node)
+                self.populateChildren(node)
                 self.filetree.append(node)
                 
 
 
-    async def populateChildren(self, node):
+    def populateChildren(self, node):
         path = node['id']
         if(len(node['children']) == 0 and os.path.isdir(path)):
-            dirlist = await run.io_bound(os.listdir, path)
+            dirlist = os.listdir(path)
+            # dirlist = await run.io_bound(os.listdir, path)
             for subpath in dirlist:
                 fullpath = os.path.join(path, subpath)
                 if (os.path.isdir(fullpath)):
@@ -56,11 +59,11 @@ class FileDialog():
                     node['children'].append({'id': fullpath, 'label': subpath, 'children': []})
 
 
-    async def populateGrandChildren(self, path:str):
+    def populateGrandChildren(self, path:str):
         node = self.findNode(path, self.filetree)
         if (node is not None):
             for child in node['children']:
-                await self.populateChildren(child)
+                self.populateChildren(child)
 
 
     def findNode(self, path:str, tree:List[dict]):
@@ -75,7 +78,7 @@ class FileDialog():
 
 
     async def open(self):
-        await self.initFileTree()
+        await run.io_bound(self.initFileTree)
         self.createDialog.refresh()
         self.dialog.open()
 
