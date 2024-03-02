@@ -42,11 +42,7 @@ class DiffusersView(FlaskView):
     @route("/api/models", methods=["GET"])
     def models(self):
         if("type" in request.args):
-            if(request.args["type"] == "inpaint"):
-                presets = self.pipelines.presets.getModelsByTypeAndBase("inpaint", request.args["base"])
-            elif(request.args["type"] == "control"):
-                presets = self.pipelines.presets.getModelsByTypeAndBase("controlnet", request.args["base"])
-            elif(request.args["type"] == "upscale"):
+            if(request.args["type"] == "upscale"):
                 presets = self.pipelines.presets.getModelsByType("upscale")
             else:
                 presets = self.pipelines.presets.getModelsByTypeAndBase(request.args["type"], request.args["base"])

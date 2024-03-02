@@ -120,7 +120,7 @@ class DiffusersModelList:
         return matchingmodels
 
     def getModelsByTypeAndBase(self, modeltype, base) -> Dict[str, DiffusersModel]:
-        if modeltype == 'controlimage':
+        if modeltype == 'conditioning':
             modeltypes = ['controlnet', 't2iadapter', 'ipadapter']
         else:
             modeltypes = [modeltype]

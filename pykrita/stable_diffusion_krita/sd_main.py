@@ -468,7 +468,7 @@ class SDDialog(QDialog):
         if('base' in self.actionfields):
             base = self.base.currentText()
         models = getModels(modeltype, base)
-        control_models = getModels("control", base)
+        control_models = getModels("conditioning", base)
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
