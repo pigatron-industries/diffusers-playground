@@ -29,7 +29,7 @@ class ConditioningModelUserInputNode(UserInputNode):
     def ui(self):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
-        models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("controlimage", self.diffusion_model_input.basemodel)
+        models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("conditioning", self.diffusion_model_input.basemodel)
         options = [ControlImageType.IMAGETYPE_INITIMAGE]+list(models.keys())
         if(self.model not in options):
             self.model = None
