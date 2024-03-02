@@ -72,6 +72,7 @@ class WorkflowRunner:
         while len(self.batchqueue) > 0:
             self.batchcurrent = self.batchqueue.pop(0)
             self.batchrundata[self.batchcurrent.id] = self.batchcurrent
+            self.batchcurrent.workflow.reset()
             print(f"Running workflow {workflow.node_name} with batch size {self.batchcurrent.batch_size}")
             for i in range(self.batchcurrent.batch_size):
                 print(f"Running workflow {self.batchcurrent.workflow.node_name} batch {i+1} of {self.batchcurrent.batch_size}")
@@ -80,7 +81,7 @@ class WorkflowRunner:
                 self.batchcurrent.rundata[rundata.timestamp] = rundata
                 self.rundata[rundata.timestamp] = rundata
                 try:
-                    self.batchcurrent.workflow.reset()
+                    self.batchcurrent.workflow.flush()
                     rundata.output = self.batchcurrent.workflow()
                 except Exception as e:
                     rundata.error = e
