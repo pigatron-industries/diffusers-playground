@@ -2,7 +2,7 @@ from .Controller import Controller
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes import UserInputNode, ListUserInputNode
 from nicegui import ui
-from typing import Dict
+from typing import Dict, List
 
 
 class InterfaceComponents:
@@ -68,6 +68,10 @@ class InterfaceComponents:
                     self.node_parameter(param)
             elif(isinstance(param.value, FunctionalNode)):
                 self.node_parameters(param.value)
+            elif(isinstance(param.value, List)):
+                for item in param.value:
+                    if(isinstance(item, FunctionalNode)):
+                        self.node_parameters(item)
 
 
     def node_parameter(self, param:NodeParameter):
