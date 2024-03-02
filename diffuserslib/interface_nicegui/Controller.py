@@ -104,8 +104,9 @@ class Controller:
 
 
     def createInputNode(self, param:NodeParameter, workflow_name):
-        param.value = self.workflows[workflow_name].build()
-        param.value.node_name = workflow_name
+        if(workflow_name in self.workflows):
+            param.value = self.workflows[workflow_name].build()
+            param.value.node_name = workflow_name
 
 
     def runWorkflow(self):
