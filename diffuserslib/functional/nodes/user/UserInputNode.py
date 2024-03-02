@@ -152,7 +152,7 @@ class ListSelectUserInputNode(UserInputNode):
 
 class EnumSelectUserInputNode(UserInputNode):
     def __init__(self, value:Any, enum:type[Enum], name:str="enum_select_user_input"):
-        self.value = value
+        self.value = value.value
         self.enum = enum
         self.options = [option.value for option in self.enum]
         super().__init__(name)
@@ -164,7 +164,7 @@ class EnumSelectUserInputNode(UserInputNode):
         self.value = str(value)
 
     def ui(self):
-        ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+        ui.select(options=self.options, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> Enum|None:
         for member in self.enum:
