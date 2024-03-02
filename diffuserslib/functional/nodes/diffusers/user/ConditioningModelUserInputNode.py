@@ -30,6 +30,9 @@ class ConditioningModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("controlimage", self.diffusion_model_input.basemodel)
+        options = [ControlImageType.IMAGETYPE_INITIMAGE]+list(models.keys())
+        if(self.model not in options):
+            self.model = None
         self.model_dropdown = ui.select(options=[ControlImageType.IMAGETYPE_INITIMAGE]+list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('grow')
 
 
