@@ -5,7 +5,7 @@ from diffuserslib.functional_workflows.ImageDiffusionConditioningWorkflow import
 class VideoDiffusionLatentBlendingWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Diffusion Latent Blending", Image.Image, workflow=True, subworkflow=False, realtime=False)
+        super().__init__("Video Diffusion - Latent Blending", Image.Image, workflow=True, subworkflow=False, realtime=False)
 
 
     def build(self):

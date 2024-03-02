@@ -4,7 +4,7 @@ from diffuserslib.functional_workflows.animate.AnimateVoronoiWorkflow import Ani
 class VideoVoronoiWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Voronoi", Image.Image, workflow=True, subworkflow=False, realtime=False)
+        super().__init__("Video - Voronoi", Image.Image, workflow=True, subworkflow=False, realtime=False)
 
 
     def build(self):

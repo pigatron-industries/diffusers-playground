@@ -229,9 +229,9 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
 
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
-        self.addPipelineParamsCommon(params, pipeline_params)
         pipeline_params['motion_adapter'] = self.adapter
         pipeline_params['torch_dtype'] = torch.float16
+        self.addPipelineParamsCommon(params, pipeline_params)
         return pipeline_params
 
 

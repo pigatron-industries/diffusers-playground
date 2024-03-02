@@ -5,7 +5,7 @@ from diffuserslib.functional_workflows.ImageDiffusionConditioningWorkflow import
 class VideoDiffusionConditioningWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Diffusion Conditioning", Image.Image, workflow=True, subworkflow=False, realtime=False)
+        super().__init__("Video Diffusion - Animated Conditioning", Video, workflow=True, subworkflow=False, realtime=False)
 
 
     def build(self):

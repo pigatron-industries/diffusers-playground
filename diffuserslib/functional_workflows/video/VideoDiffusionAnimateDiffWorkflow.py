@@ -4,7 +4,7 @@ from diffuserslib.functional import *
 class VideoDiffusionAnimateDiffWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Diffusion AnimateDiff", Video, workflow=True, subworkflow=True)
+        super().__init__("Video Diffusion - AnimateDiff", Video, workflow=True, subworkflow=True)
 
     def build(self):
         models_input = DiffusionModelUserInputNode(basemodels=["sd_1_5"])
