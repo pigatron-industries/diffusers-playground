@@ -20,15 +20,16 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
         
-        def conditioning_input():
+        def create_conditioning_input():
             conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
             scale_input = FloatUserInputNode(value = 1.0, name = "scale")
             image_input = ImageSelectInputNode(name = "image")
+            resize_type_input = EnumSelectUserInputNode(value = ResizeImageNode.ResizeType.EXTEND, enum = ResizeImageNode.ResizeType, name = "resize_type")
             # TODO prevent size fields showing twice if they are linked to 2 different nodes
-            resize_image = ResizeImageNode(image = image_input, size = size_input, name = "resize_image")
+            resize_image = ResizeImageNode(image = image_input, size = size_input, type = resize_type_input, name = "resize_image")
             return ConditioningInputNode(image = resize_image, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
 
-        conditioning_inputs = ListUserInputNode(input_node_generator = conditioning_input, name = "conditioning_inputs")
+        conditioning_inputs = ListUserInputNode(input_node_generator = create_conditioning_input, name = "conditioning_inputs")
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
 
         diffusion = ImageDiffusionNode(models = model_input,

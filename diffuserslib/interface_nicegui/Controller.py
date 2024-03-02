@@ -94,12 +94,12 @@ class Controller:
             self.workflow.setParam((node_name, param_name), value, index)
 
 
-    def getSelectableInputNodes(self, param:NodeParameter) -> List[str]:
-        selectable_subworkflows = []
+    def getSelectableInputNodes(self, param:NodeParameter) -> Dict[str, str]:
+        selectable_subworkflows = {}
         for name in self.workflows_sub:
             workflow = self.workflows[name]
             if(workflow.type == param.type):
-                selectable_subworkflows.append(name)
+                selectable_subworkflows[name] = workflow.name
         return selectable_subworkflows
 
 

@@ -1,6 +1,7 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from nicegui import ui
+from enum import Enum, EnumType
 import random
 
 
@@ -147,6 +148,29 @@ class ListSelectUserInputNode(UserInputNode):
 
     def process(self) -> str:
         return str(self.value)
+    
+
+class EnumSelectUserInputNode(UserInputNode):
+    def __init__(self, value:Any, enum:type[Enum], name:str="enum_select_user_input"):
+        self.value = value
+        self.enum = enum
+        self.options = [option.value for option in self.enum]
+        super().__init__(name)
+
+    def getValue(self) -> str|None:
+        return str(self.value)
+    
+    def setValue(self, value:str):
+        self.value = str(value)
+
+    def ui(self):
+        ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+
+    def process(self) -> Enum|None:
+        for member in self.enum:
+            if member.value == self.value:
+                return member
+        return None
 
 
 class SizeUserInputNode(UserInputNode):
