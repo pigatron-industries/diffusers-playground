@@ -9,6 +9,7 @@ from PIL import Image
 class ImageSelectInputNode(UserInputNode):
     def __init__(self, name:str="image_input"):
         self.filenames = []
+        self.image = None
         super().__init__(name)
 
     def getValue(self) -> List[str]:
@@ -19,6 +20,7 @@ class ImageSelectInputNode(UserInputNode):
             self.filenames = []
         else:
             self.filenames = value
+            self.image = Image.open(self.filenames[0])
 
     @ui.refreshable
     def ui(self):
@@ -35,15 +37,11 @@ class ImageSelectInputNode(UserInputNode):
 
     def fileSelected(self, selected_files:List[str]):
         self.filenames = selected_files
+        self.image = Image.open(self.filenames[0])
         self.ui.refresh()
 
     
     def process(self) -> Image.Image:
-        if(len(self.filenames) == 0):
+        if(self.image is None):
             raise Exception("Image not selected")
-        return Image.open(self.filenames[0])
-    
-
-
-
-    
+        return self.image

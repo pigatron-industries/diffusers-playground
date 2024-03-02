@@ -1,10 +1,10 @@
 from diffuserslib.functional import *
 
 
-class AnimateVoronoiWorkflow(WorkflowBuilder):
+class RealtimeVoronoiWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Realtime Voronoi", Image.Image, workflow=False, subworkflow=True, realtime=True)
+        super().__init__("Animate Voronoi - Bouncing Points", Image.Image, workflow=False, subworkflow=True, realtime=True)
 
 
     def build(self):
@@ -22,6 +22,4 @@ class AnimateVoronoiWorkflow(WorkflowBuilder):
         new_image = NewImageNode(size = size_user_input, background_colour = (0, 0, 0))
         voronoi = DrawVoronoiNode(image = new_image, points = bouncing_points, radius = radius_input, 
                                 line_probability = line_probability_input, draw_options = draw_options)
-        
-        # frame_aggregator = FrameAggregatorNode(frame = voronoi, num_frames = num_frames_input)
         return voronoi

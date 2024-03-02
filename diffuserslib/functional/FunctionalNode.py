@@ -33,7 +33,10 @@ class FunctionalNode(DeepCopyObject):
         self.node_name = node_name
         self.params:Dict[str, NodeParameter] = {}
         self.initparams:Dict[str, NodeParameter] = {}
+        self.inited = False
         self.output = None
+        self.previous_outputs = []
+        self.previous_outputs_size = 1
         self.stopping = False
 
 
@@ -46,6 +49,10 @@ class FunctionalNode(DeepCopyObject):
     
 
     def flush(self):
+        """Flush the node's output. This is called between animation frames to force regeneration in the next frame."""
+        self.previous_outputs.append(self.output)
+        if(len(self.previous_outputs) > self.previous_outputs_size):
+            self.previous_outputs.pop(0)
         self.output = None
         self.stopping = False
         self.recursive_action("flush")
@@ -53,12 +60,22 @@ class FunctionalNode(DeepCopyObject):
 
 
     def reset(self):
+        """Reset the node to its initial state. This is called when the workflow is reset."""
+        self.previous_output = None
         self.output = None
         self.stopping = False
         args = self.evaluateInitParams()
         self.init(**args)
         self.recursive_action("reset")
         self.recursive_action("reset", init_params=True)
+        self.inited = True
+
+
+    def getPreviousOutput(self, index=-1) -> Any:
+        try:
+            return self.previous_outputs[index]
+        except IndexError:
+            return None
 
 
     def stop(self):
@@ -103,25 +120,25 @@ class FunctionalNode(DeepCopyObject):
     def getInitParams(self) -> List[NodeParameter]:
         return list(self.initparams.values())
     
-    def setParam(self, node_param_name:str|Tuple[str,str], value:Any, index=None):
-        node_name = node_param_name[0] if(isinstance(node_param_name, Tuple)) else self.node_name
-        param_name = node_param_name[1] if(isinstance(node_param_name, Tuple)) else node_param_name
-        if(node_name == self.node_name):
-            if(index is None):
-                self.params[param_name].value = value
-            else:
-                old_value = self.params[param_name].value
-                new_value = old_value[:index] + (value,) + old_value[index+1:]
-                self.params[param_name].value = new_value
-        else:
-            for paramname in self.params:
-                paramvalue = self.params[paramname].value
-                if(isinstance(paramvalue, List) and any(callable(item) for item in paramvalue)):
-                    for i, listvalue in enumerate(paramvalue):
-                        if(isinstance(listvalue, FunctionalNode)):
-                            listvalue.setParam((node_name, param_name), value, index)
-                elif(isinstance(paramvalue, FunctionalNode)):
-                    paramvalue.setParam((node_name, param_name), value, index)
+    # def setParam(self, node_param_name:str|Tuple[str,str], value:Any, index=None):
+    #     node_name = node_param_name[0] if(isinstance(node_param_name, Tuple)) else self.node_name
+    #     param_name = node_param_name[1] if(isinstance(node_param_name, Tuple)) else node_param_name
+    #     if(node_name == self.node_name):
+    #         if(index is None):
+    #             self.params[param_name].value = value
+    #         else:
+    #             old_value = self.params[param_name].value
+    #             new_value = old_value[:index] + (value,) + old_value[index+1:]
+    #             self.params[param_name].value = new_value
+    #     else:
+    #         for paramname in self.params:
+    #             paramvalue = self.params[paramname].value
+    #             if(isinstance(paramvalue, List) and any(callable(item) for item in paramvalue)):
+    #                 for i, listvalue in enumerate(paramvalue):
+    #                     if(isinstance(listvalue, FunctionalNode)):
+    #                         listvalue.setParam((node_name, param_name), value, index)
+    #             elif(isinstance(paramvalue, FunctionalNode)):
+    #                 paramvalue.setParam((node_name, param_name), value, index)
 
 
     def evaluateParams(self):
@@ -214,6 +231,10 @@ class FunctionalNode(DeepCopyObject):
                 if(not output[paramname]):
                     del output[paramname]
         return output
+    
+
+    def setValue(self, value:Any):
+        pass
 
 
     def printDebug(self, level=0):

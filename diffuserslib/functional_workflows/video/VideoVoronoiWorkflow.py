@@ -1,5 +1,5 @@
 from diffuserslib.functional import *
-from diffuserslib.functional_workflows.animate.AnimateVoronoiWorkflow import AnimateVoronoiWorkflow
+from diffuserslib.functional_workflows.realtime.RealtimeVoronoiWorkflow import RealtimeVoronoiWorkflow
 
 class VideoVoronoiWorkflow(WorkflowBuilder):
 
@@ -8,7 +8,7 @@ class VideoVoronoiWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        voronoi = AnimateVoronoiWorkflow().build()
+        voronoi = RealtimeVoronoiWorkflow().build()
         
         num_frames_input = IntUserInputNode(value = 20, name = "num_frames")
         frame_aggregator = FrameAggregatorNode(frame = voronoi, num_frames = num_frames_input)

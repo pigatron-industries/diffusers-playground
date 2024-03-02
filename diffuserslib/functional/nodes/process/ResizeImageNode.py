@@ -21,26 +21,30 @@ class ResizeImageNode(FunctionalNode):
         BOTTOM = "bottom"
 
 
+    ResizeTypeFuncType = ResizeType | Callable[[], ResizeType]
+    HorizontalAlignFuncType = HorizontalAlign | Callable[[], HorizontalAlign]
+    VerticalAlignFuncType = VerticalAlign | Callable[[], VerticalAlign]
+
     def __init__(self, 
                  image:ImageFuncType, 
                  size=SizeFuncType, 
-                 type:StringFuncType = ResizeType.STRETCH.value,
-                 halign:StringFuncType = HorizontalAlign.CENTRE.value,
-                 valign:StringFuncType = VerticalAlign.CENTRE.value,
+                 type:ResizeTypeFuncType = ResizeType.STRETCH,
+                 halign:HorizontalAlignFuncType = HorizontalAlign.CENTRE,
+                 valign:VerticalAlignFuncType = VerticalAlign.CENTRE,
                  fill:ColourFuncType = "black",
                  name:str="resize_image"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
         self.addParam("size", size, Tuple[int, int])
-        self.addParam("type", type, str)
+        self.addParam("type", type, self.ResizeType)
         self.addParam("halign", halign, str)
         self.addParam("valign", valign, str)
         self.addParam("fill", fill, str)
         
         
-    def process(self, image:Image.Image, size:Tuple[int, int], type:str, halign:str, valign:str, fill:str) -> Image.Image:
+    def process(self, image:Image.Image, size:Tuple[int, int], type:ResizeType, halign:VerticalAlign, valign:HorizontalAlign, fill:str) -> Image.Image:
         if(type == self.ResizeType.STRETCH):
-            return image.resize(size, resample=Image.Resampling.LANCZOS)
+            newimage = image.resize(size, resample=Image.Resampling.LANCZOS)
         if(type == self.ResizeType.FIT):
             ratio = min(size[0]/image.width, size[1]/image.height)
             image = image.resize((int(image.width*ratio), int(image.height*ratio)), resample=Image.Resampling.LANCZOS)

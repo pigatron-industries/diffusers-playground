@@ -25,6 +25,8 @@ class RealtimeInterfaceComponents(InterfaceComponents):
 
     def runWorkflow(self):
         self.controller.saveWorkflowParamsToHistory()
+        if(self.controller.workflow is not None and not self.controller.workflow.inited):
+            self.controller.workflow.reset()
         self.timer.activate()
         self.running = True
         self.status.refresh()
