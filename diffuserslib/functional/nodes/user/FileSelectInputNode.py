@@ -6,6 +6,8 @@ from nicegui import ui
 
 
 class FileSelectInputNode(UserInputNode):
+    """A node that allows the user to select a file or multiple files. The output is a list of strings, each string being the path to a file."""
+
     def __init__(self, name:str="files_input"):
         self.filenames = []
         super().__init__(name)
