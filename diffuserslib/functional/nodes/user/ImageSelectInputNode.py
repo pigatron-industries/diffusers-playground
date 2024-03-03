@@ -37,7 +37,8 @@ class ImageSelectInputNode(UserInputNode):
 
     def fileSelected(self, selected_files:List[str]):
         self.filenames = selected_files
-        self.image = Image.open(self.filenames[0])
+        if(len(self.filenames) > 0):
+            self.image = Image.open(self.filenames[0])
         self.ui.refresh()
 
     
