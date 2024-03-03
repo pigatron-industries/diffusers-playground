@@ -230,9 +230,13 @@ class BatchInterfaceComponents(InterfaceComponents):
                 progress = self.controller.getProgress()
                 if(progress is not None and progress.run_progress is not None and progress.run_progress.output is not None):
                     output = progress.run_progress.output
-                    if(isinstance(output, Image.Image)):
-                        controls.output_width = output.width
-                        controls.output_control = ui.image(output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+                    if(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
+                        image = output[-1]
+                        controls.output_width = image.width
+                        controls.output_control = ui.image(image).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+                    if(isinstance(output, Video)):
+                        controls.output_width = 512
+                        controls.output_control = ui.video(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
                     else:
                         controls.output_width = 0
                         controls.output_control = None

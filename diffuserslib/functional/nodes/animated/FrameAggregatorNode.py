@@ -6,7 +6,7 @@ class FrameAggregatorNode(FunctionalNode):
     def __init__(self, 
                  frame:ImageFuncType,
                  num_frames:IntFuncType,
-                 name:str = "frame_collector"):
+                 name:str = "frame_aggregator"):
         super().__init__(name)
         self.addInitParam("num_frames", num_frames, int)
         self.addParam("frame", frame, Image.Image)
@@ -40,4 +40,4 @@ class FrameAggregatorNode(FunctionalNode):
         if len(self.frames) == 0:
             return WorkflowProgress(0, None)
         else:
-            return WorkflowProgress(float(len(self.frames)) / float(self.num_frames), self.frames[-1])
+            return WorkflowProgress(float(len(self.frames)) / float(self.num_frames), self.frames)
