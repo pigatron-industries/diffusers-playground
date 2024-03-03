@@ -42,12 +42,13 @@ class FramesToVideoNode(FunctionalNode):
         return Video(frames, temp_file)
     
 
-    def getProgress(self) -> WorkflowProgress|None:
-        frames_input_node = self.params["frames"]
-        fps = self.params["fps"]
-        if (isinstance(frames_input_node, FunctionalNode) and isinstance(fps, float)):
-            progress = frames_input_node.getProgress()
-            if (progress is not None):
-                video = self.process(progress.output, fps)
-                return WorkflowProgress(progress.progress, video)
-        return None
+    # TODO don't regenerate the video every time getProgress is called
+    # def getProgress(self) -> WorkflowProgress|None:
+    #     frames_input_node = self.params["frames"]
+    #     fps = self.params["fps"]
+    #     if (isinstance(frames_input_node, FunctionalNode) and isinstance(fps, float)):
+    #         progress = frames_input_node.getProgress()
+    #         if (progress is not None):
+    #             video = self.process(progress.output, fps)
+    #             return WorkflowProgress(progress.progress, video)
+    #     return None
