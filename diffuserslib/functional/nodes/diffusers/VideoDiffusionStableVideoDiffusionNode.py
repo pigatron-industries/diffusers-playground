@@ -1,8 +1,9 @@
-from ...FunctionalNode import FunctionalNode
-from ...types.FunctionalTyping import *
+from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.types import *
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
-from ....inference.DiffusersPipelines import DiffusersPipelines
-from ....inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
+from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
+from diffuserslib.inference.GenerationParameters import ModelParameters, LoraParameters
+from diffuserslib.inference.arch.StableVideoDiffusionPipelines import StableVideoDiffusionGenerationParameters
 from PIL import Image
 
 ModelsType = List[ModelParameters]
@@ -16,49 +17,41 @@ class VideoDiffusionStableVideoDiffusionNode(FunctionalNode):
                  models:ModelsFuncType = [],
                  loras:LorasFuncType = [],
                  size:SizeFuncType = (512, 512),
-                 steps:IntFuncType = 40,
-                 cfgscale:FloatFuncType = 7.0,
                  seed:IntFuncType|None = None,
-                 scheduler:StringFuncType = "DPMSolverMultistepScheduler",
                  frames:IntFuncType = 16,
+                 fps:IntFuncType = 7,
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
         self.addParam("size", size, SizeType)
         self.addParam("models", models, ModelsType)
         self.addParam("loras", loras, LorasType)
-        self.addParam("steps", steps, int)
-        self.addParam("cfgscale", cfgscale, float)
         self.addParam("seed", seed, int)
-        self.addParam("scheduler", scheduler, str)
         self.addParam("frames", frames, int)
+        self.addParam("fps", fps, int)
         self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
 
 
     def process(self, 
                 size:SizeType, 
                 models:ModelsType, 
-                loras:LorasType,
-                steps:int, 
-                cfgscale:float, 
-                seed:int|None, 
-                scheduler:str,
+                loras:LorasType, 
+                seed:int|None,
                 frames:int,
+                fps:int,
                 conditioning_inputs:List[ConditioningInputType]|None = None) -> List[Image.Image]:
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
-        params = GenerationParameters(
+        params = StableVideoDiffusionGenerationParameters(
             safetychecker=False,
             width=size[0],
             height=size[1],
             models=models,
             loras=loras,
-            steps=steps,
-            cfgscale=cfgscale,
             seed=seed,
-            scheduler=scheduler,
             frames=frames,
+            fps=fps,
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 

@@ -1,11 +1,12 @@
 from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
-from ..GenerationParameters import GenerationParameters, ControlImageType
-from typing import List
-from PIL import Image
-from diffusers import ( # Pipelines
-                        StableVideoDiffusionPipeline)
-from compel import Compel, ReturnedEmbeddingsType
-import torch
+from ..GenerationParameters import GenerationParameters
+from dataclasses import dataclass
+from diffusers import StableVideoDiffusionPipeline
+
+
+@dataclass
+class StableVideoDiffusionGenerationParameters(GenerationParameters):
+    fps:int = 7
 
 
 class StableVideoDiffusionPipelineWrapper(StableDiffusionPipelineWrapper):
@@ -28,7 +29,7 @@ class StableVideoDiffusionGeneratePipelineWrapper(StableVideoDiffusionPipelineWr
     def __init__(self, params:GenerationParameters, device):
         super().__init__(params=params, device=device, cls=StableVideoDiffusionPipeline)
 
-    def inference(self, params:GenerationParameters):
+    def inference(self, params:StableVideoDiffusionGenerationParameters):
         diffusers_params = {}
         initimageparams = params.getInitImage()
         if(initimageparams is None or initimageparams.image is None):
@@ -38,7 +39,7 @@ class StableVideoDiffusionGeneratePipelineWrapper(StableVideoDiffusionPipelineWr
         diffusers_params['height'] = initimageparams.image.height
         diffusers_params['seed'] = params.seed
         diffusers_params['num_frames'] = params.frames
-        diffusers_params['fps'] = 7
+        diffusers_params['fps'] = params.fps
         diffusers_params['min_guidance_scale'] = 1.0
         diffusers_params['max_guidance_scale'] = 3.0
         diffusers_params['motion_bucket_id'] = 127
