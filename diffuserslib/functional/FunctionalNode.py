@@ -71,74 +71,67 @@ class FunctionalNode(DeepCopyObject):
         self.inited = True
 
 
-    def getPreviousOutput(self, index=-1) -> Any:
-        try:
-            return self.previous_outputs[index]
-        except IndexError:
-            return None
-
-
     def stop(self):
         self.stopping = True
         self.recursive_action("stop")
+
+
+    def getNode(self, node_name:str) -> Self|None:
+        if(self.node_name == node_name):
+            return self
+        return self.recursive_action("getNode", return_value=True, node_name=node_name)
 
 
     def getProgress(self) -> WorkflowProgress|None:
         return self.recursive_action("getProgress", return_value=True)
 
 
-    def recursive_action(self, action:str, return_value:bool=False, init_params:bool=False):
+    def recursive_action(self, action:str, return_value:bool=False, init_params:bool=False, **kwargs):
         params = self.initparams if(init_params) else self.params
         for paramname, param in params.items():
             if(isinstance(param.value, FunctionalNode)):
-                result = getattr(param.value, action)()
+                func = getattr(param.value, action)
+                result = func(**kwargs)
                 if(return_value and result is not None):
                     return result
             elif(isinstance(param.value, List)):
                 for listvalue in param.value:
                     if(isinstance(listvalue, FunctionalNode)):
-                        result = getattr(listvalue, action)()
+                        func = getattr(listvalue, action)
+                        result = func(**kwargs)
                         if(return_value and result is not None):
                             return result
 
 
     def init(self, **kwargs):
         pass
-    
+
+
     def process(self, **kwargs):
         raise Exception("Not implemented")
+    
+
+    def getPreviousOutput(self, index=-1) -> Any:
+        try:
+            return self.previous_outputs[index]
+        except IndexError:
+            return None
+        
     
     def addParam(self, name:str, value:Any, type:type):
         self.params[name] = NodeParameter(node=self.node_name, name=name, value=value, initial_value=value, type=type)
 
+
     def addInitParam(self, name:str, value:Any, type:type):
         self.initparams[name] = NodeParameter(node=self.node_name, name=name, value=value, initial_value=value, type=type)
+
 
     def getParams(self) -> List[NodeParameter]:
         return list(self.params.values())
 
+
     def getInitParams(self) -> List[NodeParameter]:
         return list(self.initparams.values())
-    
-    # def setParam(self, node_param_name:str|Tuple[str,str], value:Any, index=None):
-    #     node_name = node_param_name[0] if(isinstance(node_param_name, Tuple)) else self.node_name
-    #     param_name = node_param_name[1] if(isinstance(node_param_name, Tuple)) else node_param_name
-    #     if(node_name == self.node_name):
-    #         if(index is None):
-    #             self.params[param_name].value = value
-    #         else:
-    #             old_value = self.params[param_name].value
-    #             new_value = old_value[:index] + (value,) + old_value[index+1:]
-    #             self.params[param_name].value = new_value
-    #     else:
-    #         for paramname in self.params:
-    #             paramvalue = self.params[paramname].value
-    #             if(isinstance(paramvalue, List) and any(callable(item) for item in paramvalue)):
-    #                 for i, listvalue in enumerate(paramvalue):
-    #                     if(isinstance(listvalue, FunctionalNode)):
-    #                         listvalue.setParam((node_name, param_name), value, index)
-    #             elif(isinstance(paramvalue, FunctionalNode)):
-    #                 paramvalue.setParam((node_name, param_name), value, index)
 
 
     def evaluateParams(self):
