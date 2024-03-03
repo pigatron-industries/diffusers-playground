@@ -54,6 +54,7 @@ class InterfaceComponents:
 
 
     def workflow_parameters(self):
+        self.input_nodes = []
         if self.controller.workflow is not None:
             with ui.card_section().classes('w-full').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                 with ui.column():
@@ -63,7 +64,8 @@ class InterfaceComponents:
     def node_parameters(self, node:FunctionalNode):
         params = node.getInitParams() + node.getParams()
         for param in params:
-            if(isinstance(param.initial_value, UserInputNode)):
+            if(isinstance(param.initial_value, UserInputNode) and param.initial_value not in self.input_nodes):
+                self.input_nodes.append(param.initial_value)
                 with ui.row().classes('w-full'):
                     self.node_parameter(param)
             elif(isinstance(param.value, FunctionalNode)):
