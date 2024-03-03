@@ -16,7 +16,9 @@ class VideoDiffusionStableVideoDiffussionWorkflow(WorkflowBuilder):
         frames_input = IntUserInputNode(value = 16, name = "frames")
 
         image_input = ImageSelectInputNode(name = "image")
-        conditioning_inputs = [ConditioningInputNode(image = image_input, model = "initimage")]
+
+        resize_image = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
+        conditioning_inputs = [ConditioningInputNode(image = resize_image, model = "initimage")]
 
         animatediff = VideoDiffusionStableVideoDiffusionNode(models = model_input, 
                                                             size = size_input, 
