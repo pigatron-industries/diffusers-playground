@@ -19,7 +19,7 @@ class StableVideoDiffusionPipelineWrapper(StableDiffusionPipelineWrapper):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
-        output = self.pipeline(image, decode_chunk_size = 8, generator=generator, **kwargs)
+        output = self.pipeline(image, generator=generator, **kwargs)
         return output, seed
 
 
@@ -34,6 +34,15 @@ class StableVideoDiffusionGeneratePipelineWrapper(StableVideoDiffusionPipelineWr
         if(initimageparams is None or initimageparams.image is None):
             raise ValueError("No init image specified")
         diffusers_params['image'] = initimageparams.image.convert("RGB")
+        diffusers_params['width'] = initimageparams.image.width
+        diffusers_params['height'] = initimageparams.image.height
         diffusers_params['seed'] = params.seed
+        diffusers_params['num_frames'] = params.frames
+        diffusers_params['fps'] = 7
+        diffusers_params['min_guidance_scale'] = 1.0
+        diffusers_params['max_guidance_scale'] = 3.0
+        diffusers_params['motion_bucket_id'] = 127
+        diffusers_params['noise_aug_strength'] = 0.02
+        diffusers_params['decode_chunk_size'] = 8
         output, seed = super().diffusers_inference(**diffusers_params)
         return output.frames[0], seed
