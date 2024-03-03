@@ -18,12 +18,10 @@ class VideoDiffusionStableVideoDiffussionWorkflow(WorkflowBuilder):
         resize_image = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
         conditioning_inputs = [ConditioningInputNode(image = resize_image, model = "initimage")]
 
-        animatediff = VideoDiffusionStableVideoDiffusionNode(models = model_input, 
+        video_diffusion = VideoDiffusionStableVideoDiffusionNode(models = model_input, 
                                                             size = size_input, 
                                                             seed = seed_input,
                                                             frames = frames_input,
                                                             conditioning_inputs = conditioning_inputs)
-        frames_to_video = FramesToVideoNode(frames = animatediff, fps = fps_input)
-        
-        # model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(models_input.basemodel)))
+        frames_to_video = FramesToVideoNode(frames = video_diffusion, fps = fps_input)
         return frames_to_video

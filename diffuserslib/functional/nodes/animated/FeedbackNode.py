@@ -14,7 +14,6 @@ class FeedbackNode(FunctionalNode):
 
 
     def init(self, init_value:Any):
-        print("FeedbackNode init")
         self.init_value = init_value
 
 
