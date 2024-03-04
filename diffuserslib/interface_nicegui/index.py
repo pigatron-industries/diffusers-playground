@@ -1,18 +1,9 @@
 from nicegui import ui, context
 from .api import *
 from .Controller import Controller
-from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
-from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
-from diffuserslib.functional.nodes.user.ListUserInputNode import ListUserInputNode
-from diffuserslib.functional.WorkflowRunner import WorkflowRunData
 from .InterfaceComponents import InterfaceComponents
 from .BatchInterfaceComponents import BatchInterfaceComponents
 from .RealtimeInterfaceComponents import RealtimeInterfaceComponents
-from typing import Dict
-from dataclasses import dataclass
-from PIL import Image
-
-
 
 
 class View:
@@ -87,6 +78,8 @@ class View:
 
 
     def settings(self):
+        if(self.controller.workflow is not None):
+            self.controller.workflow.printDebug()
         with ui.dialog(value=True) as settings_dialog, ui.card():
             self.interface_components.settings()
 

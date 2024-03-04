@@ -20,13 +20,13 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
         
-        model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
+        model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
 
         def create_conditioning_input():
             conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
             scale_input = FloatUserInputNode(value = 1.0, name = "scale")
-            image_input = ImageSelectInputNode(name = "image")
+            image_input = ImageSelectInputNode(name = "image_input")
             resize_type_input = EnumSelectUserInputNode(value = ResizeImageNode.ResizeType.EXTEND, enum = ResizeImageNode.ResizeType, name = "resize_type")
             resize_image = ResizeImageNode(image = image_input, size = size_input, type = resize_type_input, name = "resize_image")
             return ConditioningInputNode(image = resize_image, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
@@ -42,4 +42,6 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     seed = seed_input,
                                     scheduler = scheduler_input,
                                     conditioning_inputs = conditioning_inputs)
-        return diffusion
+        
+        feedback_image = FeedbackNode(input = diffusion, init_value = None, name = "feedback_image")
+        return diffusion, feedback_image

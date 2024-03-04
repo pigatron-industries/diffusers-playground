@@ -132,6 +132,15 @@ class FunctionalNode(DeepCopyObject):
 
     def getInitParams(self) -> List[NodeParameter]:
         return list(self.initparams.values())
+    
+
+    def setParam(self, name:str, value:Any):
+        if(name in self.params):
+            self.params[name].value = value
+        elif(name in self.initparams):
+            self.initparams[name].value = value
+        else:
+            raise Exception(f"Parameter {name} not found in node {self.node_name}")
 
 
     def evaluateParams(self):
@@ -231,12 +240,14 @@ class FunctionalNode(DeepCopyObject):
 
 
     def printDebug(self, level=0):
-        print((" "*level*3) + f"* Node: {self.node_name}")
+        print((" "*level*3) + f"* Node: {self.node_name} ({self.__class__.__name__})")
         for paramname in self.params:
             paramdef = self.params[paramname]
-            print((" "*level*3) + f"   - {paramname}: {paramdef.value}")
+            if(not isinstance(paramdef.value, FunctionalNode) and not isinstance(paramdef.value, List)):
+                print((" "*level*3) + f" - {paramname}: {paramdef.value}")
         for paramname in self.params:
             paramdef = self.params[paramname]
+            print((" "*level*3) + f" - {paramname}:")
             if(isinstance(paramdef.value, List)):
                 for i, listvalue in enumerate(paramdef.value):
                     if(isinstance(listvalue, FunctionalNode)):
