@@ -195,7 +195,8 @@ class BatchInterfaceComponents(InterfaceComponents):
                 self.workflow_generating(batchid, runid)
             else:
                 controls.waiting_output = False
-                self.workflow_output(batchid, runid)
+                output = self.controller.getWorkflowRunData()[runid].output
+                self.workflow_output_control(runid, output)
                 
             if(rundata.output is not None):
                 with ui.column():
@@ -230,17 +231,22 @@ class BatchInterfaceComponents(InterfaceComponents):
                 progress = self.controller.getProgress()
                 if(progress is not None and progress.run_progress is not None and progress.run_progress.output is not None):
                     output = progress.run_progress.output
-                    if(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
-                        image = output[-1]
-                        controls.output_width = image.width
-                        controls.output_control = ui.image(image).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-                    if(isinstance(output, Video)):
-                        controls.output_width = 512
-                        controls.output_control = ui.video(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-                    else:
-                        controls.output_width = 0
-                        controls.output_control = None
-                        ui.label("Output format not supported").style("color: #ff0000;")
+                    self.workflow_output_control(runid, output)
+
+
+    def workflow_output_control(self, runid, output):
+        controls = self.rundata_controls[runid]
+        if(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
+            image = output[-1]
+            controls.output_width = image.width
+            controls.output_control = ui.image(image).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(output, Video)):
+            controls.output_width = 512  #TODO get video width
+            controls.output_control = ui.video(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        else:
+            controls.output_width = 0
+            controls.output_control = None
+            ui.label("Output format not supported").style("color: #ff0000;")
         
 
     def workflow_generating_update(self, batchid, runid):
@@ -251,17 +257,5 @@ class BatchInterfaceComponents(InterfaceComponents):
             self.progress = progress.run_progress.progress
             if(isinstance(output, Image.Image) and isinstance(output_control, ui.image)):
                 output_control.set_source(output) # type: ignore
-
-
-    def workflow_output(self, batchid, runid):
-        controls = self.rundata_controls[runid]
-        rundata = self.controller.getWorkflowRunData()[runid]
-        if(isinstance(rundata.output, Image.Image)):
-            controls.output_width = rundata.output.width
-            controls.output_control = ui.image(rundata.output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(rundata.output, Video)):
-            controls.output_width = 512  #TODO get video width
-            controls.output_control = ui.video(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        else:
-            controls.output_width = 0
-            controls.output_control = ui.label("Output format not supported").style("color: #ff0000;")
+            elif(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
+                output_control.set_source(output[-1]) # type: ignore
