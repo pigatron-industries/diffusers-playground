@@ -106,10 +106,6 @@ class Controller:
         for name, workflow in self.workflows_sub.items():
             if(workflow.type == param.type):
                 selectable_subworkflows[name] = workflow.name
-        print()
-        print(param.name)
-        print(param.type)
-        print(selectable_subworkflows)
         return selectable_subworkflows
 
 
