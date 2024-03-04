@@ -153,7 +153,7 @@ class BatchInterfaceComponents(InterfaceComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.controller.workflows_batch)
+        self.workflowSelect(self.controller.builders_batch)
         self.workflow_parameters()
 
 

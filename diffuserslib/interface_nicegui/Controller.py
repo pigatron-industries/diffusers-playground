@@ -1,6 +1,6 @@
 from diffuserslib.functional import *
 from diffuserslib.util import ModuleLoader
-from typing import List
+from typing import List, get_type_hints
 from dataclasses import dataclass
 import inspect
 import copy
@@ -25,11 +25,12 @@ def str_to_class(str):
 class Controller:
 
     model = Model()
-    workflows:Dict[str, WorkflowBuilder] = {}
-    workflows_batch:Dict[str, str] = {}
-    workflows_realtime:Dict[str, str] = {}
-    workflows_sub:Dict[str, str] = {}
+    builders:Dict[str, WorkflowBuilder] = {}
+    builders_batch:Dict[str, str] = {}
+    builders_realtime:Dict[str, str] = {}
+    builders_sub:Dict[str, str] = {}
     workflow:FunctionalNode|None = None
+    workflows_sub:Dict[str, FunctionalNode] = {}
     history_filename = ".history.yml"
 
     def __init__(self):
@@ -48,38 +49,46 @@ class Controller:
 
     def loadWorkflows(self):
         print("Loading workflow builders")
-        self.workflows_batch = {}
-        self.workflows_realtime = {}
-        self.workflows_sub = {}
+        self.builders_batch = {}
+        self.builders_realtime = {}
+        self.builders_sub = {}
         path = os.path.join(os.path.dirname(__file__), '../functional_workflows')
         modules = ModuleLoader.load_from_directory(path)
         for module in modules:
             vars = ModuleLoader.get_vars(module)
-            for name, builder in vars.items():
-                if(issubclass(builder, WorkflowBuilder)):
-                    workflow = builder()
-                    self.workflows[name] = workflow
-                    if(workflow.workflow and name not in self.workflows_batch):
-                        self.workflows_batch[name] = workflow.name
-                    if(workflow.subworkflow and name not in self.workflows_sub):
-                        self.workflows_sub[name] = workflow.name
-                    if(workflow.realtime and name not in self.workflows_realtime):
-                        self.workflows_realtime[name] = workflow.name
+            for name, buildercls in vars.items():
+                if(issubclass(buildercls, WorkflowBuilder)):
+                    builder = buildercls()
+                    self.builders[name] = builder
+                    if(builder.workflow and name not in self.builders_batch):
+                        self.builders_batch[name] = builder.name
+                    if(builder.subworkflow and name not in self.builders_sub):
+                        self.builders_sub[name] = builder.name
+                    if(builder.realtime and name not in self.builders_realtime):
+                        self.builders_realtime[name] = builder.name
                     print(f"Loading workflow builder: {name}")
-        self.workflows_batch = dict(sorted(self.workflows_batch.items(), key=lambda item: item[1]))
-        self.workflows_realtime = dict(sorted(self.workflows_realtime.items(), key=lambda item: item[1]))
-        self.workflows_sub = dict(sorted(self.workflows_sub.items(), key=lambda item: item[1]))
-        print(self.workflows_batch)
+        self.builders_batch = dict(sorted(self.builders_batch.items(), key=lambda item: item[1]))
+        self.builders_realtime = dict(sorted(self.builders_realtime.items(), key=lambda item: item[1]))
+        self.builders_sub = dict(sorted(self.builders_sub.items(), key=lambda item: item[1]))
+        print(self.builders_batch)
     
 
     def loadWorkflow(self, workflow_name):
         if(self.workflow is not None and self.workflow.name == workflow_name):
             return
         print(f"Loading workflow instance: {workflow_name}")
-        if workflow_name in self.workflows:
+        self.workflows_sub = {}
+        if workflow_name in self.builders:
             print(f"Loading workflow: {workflow_name}")
             self.model.workflow_name = workflow_name
-            self.workflow = self.workflows[workflow_name].build()
+            workflow_or_tuple = self.builders[workflow_name].build()
+            if(isinstance(workflow_or_tuple, tuple)):
+                self.workflow = workflow_or_tuple[0]
+                secondary_workflows = workflow_or_tuple[1:]
+                for secondary_workflow in secondary_workflows:
+                    self.workflows_sub[secondary_workflow.name] = secondary_workflow
+            else:
+                self.workflow = workflow_or_tuple
             self.loadWorkflowParamsFromHistory()
             print(f"Loaded workflow: {self.workflow.name}")
             self.workflow.printDebug()
@@ -88,24 +97,28 @@ class Controller:
             self.workflow = None
 
 
-    def setParam(self, node_name, param_name, value, index=None):
-        if(self.workflow is not None):
-            print(f"Setting param {node_name}.{param_name}[{index}] to {value}")
-            self.workflow.setParam((node_name, param_name), value, index)
-
-
     def getSelectableInputNodes(self, param:NodeParameter) -> Dict[str, str]:
         selectable_subworkflows = {}
-        for name in self.workflows_sub:
-            workflow = self.workflows[name]
+        for name in self.builders_sub:
+            builder = self.builders[name]
+            if(builder.type == param.type):
+                selectable_subworkflows[name] = builder.name
+        for name, workflow in self.workflows_sub.items():
             if(workflow.type == param.type):
                 selectable_subworkflows[name] = workflow.name
+        print()
+        print(param.name)
+        print(param.type)
+        print(selectable_subworkflows)
         return selectable_subworkflows
 
 
     def createInputNode(self, param:NodeParameter, workflow_name):
-        if(workflow_name in self.workflows):
-            param.value = self.workflows[workflow_name].build()
+        if(workflow_name in self.builders):
+            param.value = self.builders[workflow_name].build()
+            param.value.node_name = workflow_name
+        elif(workflow_name in self.workflows_sub):
+            param.value = self.workflows_sub[workflow_name]
             param.value.node_name = workflow_name
 
 

@@ -4,7 +4,7 @@ from diffuserslib.functional import *
 class ImageRotateAnimateWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Image Rotation - Animate", Image.Image, workflow=True, subworkflow=True, realtime=True)
+        super().__init__("Image Rotation - Animate", Image.Image, workflow=False, subworkflow=True, realtime=False)
 
 
     def build(self):

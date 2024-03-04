@@ -55,6 +55,12 @@ class ImageDiffusionNode(FunctionalNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
+        conditioningparams = []
+        if(conditioning_inputs is not None):
+            for conditioning_input in conditioning_inputs:
+                if(conditioning_input.image is not None):
+                    conditioningparams.append(conditioning_input)
+        
         params = GenerationParameters(
             safetychecker=False,
             width=size[0],
@@ -67,7 +73,7 @@ class ImageDiffusionNode(FunctionalNode):
             cfgscale=cfgscale,
             seed=seed,
             scheduler=scheduler,
-            controlimages=conditioning_inputs if conditioning_inputs is not None else []
+            controlimages=conditioningparams
         )
 
         output, seed = DiffusersPipelines.pipelines.generate(params)

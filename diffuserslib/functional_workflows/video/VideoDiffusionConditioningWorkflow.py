@@ -9,9 +9,9 @@ class VideoDiffusionConditioningWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        diffusion = ImageDiffusionConditioningWorkflow().build()
+        diffusion, feedback = ImageDiffusionConditioningWorkflow().build()
 
         num_frames_input = IntUserInputNode(value = 20, name = "num_frames")
         frame_aggregator = FrameAggregatorNode(frame = diffusion, num_frames = num_frames_input)
         frames_to_video = FramesToVideoNode(frames = frame_aggregator, fps = 10)
-        return frames_to_video
+        return frames_to_video, feedback

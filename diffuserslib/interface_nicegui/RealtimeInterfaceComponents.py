@@ -88,7 +88,7 @@ class RealtimeInterfaceComponents(InterfaceComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.controller.workflows_realtime)
+        self.workflowSelect(self.controller.builders_realtime)
         self.workflow_parameters()
 
 

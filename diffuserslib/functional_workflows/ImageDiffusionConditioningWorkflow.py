@@ -43,5 +43,5 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     scheduler = scheduler_input,
                                     conditioning_inputs = conditioning_inputs)
         
-        feedback_image = FeedbackNode(input = diffusion, init_value = None, name = "feedback_image")
+        feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = None, name = "feedback_image", display_name="Feedback Image")
         return diffusion, feedback_image

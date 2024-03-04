@@ -42,7 +42,9 @@ class ResizeImageNode(FunctionalNode):
         self.addParam("fill", fill, str)
         
         
-    def process(self, image:Image.Image, size:Tuple[int, int], type:ResizeType, halign:VerticalAlign, valign:HorizontalAlign, fill:str) -> Image.Image:
+    def process(self, image:Image.Image, size:Tuple[int, int], type:ResizeType, halign:VerticalAlign, valign:HorizontalAlign, fill:str) -> Image.Image|None:
+        if(image is None):
+            return None
         if(type == self.ResizeType.STRETCH):
             newimage = image.resize(size, resample=Image.Resampling.LANCZOS)
         if(type == self.ResizeType.FIT):

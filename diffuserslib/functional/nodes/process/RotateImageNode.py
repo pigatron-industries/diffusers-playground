@@ -16,5 +16,7 @@ class RotateImageNode(FunctionalNode):
         self.addParam("fill_colour", fill_colour, str)
         
         
-    def process(self, image:Image.Image, angle:float, fill_colour:ColourType) -> Image.Image:
+    def process(self, image:Image.Image|None, angle:float, fill_colour:ColourType) -> Image.Image|None:
+        if(image is None):
+            return None
         return image.rotate(angle, resample=Image.Resampling.NEAREST, fillcolor=fill_colour)

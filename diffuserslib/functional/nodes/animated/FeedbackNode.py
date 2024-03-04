@@ -5,9 +5,12 @@ from diffuserslib.functional.types.FunctionalTyping import *
 class FeedbackNode(FunctionalNode):
     def __init__(self, 
                  init_value:Any,
+                 type:type = Any,
                  input:FunctionalNode|None = None,
-                 name:str = "feedback"):
-        super().__init__(name)
+                 name:str = "feedback",
+                 display_name:str = "Feedback"):
+        super().__init__(name, type)
+        self.name = display_name
         self.input = input
         self.init_value = None
         self.addInitParam("init_value", init_value, Any)
