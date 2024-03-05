@@ -18,8 +18,10 @@ class VideoDiffusionPIAWorkflow(WorkflowBuilder):
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
         frames_input = IntUserInputNode(value = 16, name = "frames")
 
+        resize_image = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
+
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
-        animatediff = VideoDiffusionPIANode(image = image_input,
+        animatediff = VideoDiffusionPIANode(image = resize_image,
                                             models = models_input, 
                                             size = size_input, 
                                             prompt = prompt_processor,
