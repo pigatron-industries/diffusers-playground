@@ -6,7 +6,7 @@ from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionControlNetPipeline,
                         StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
-                        StableDiffusionAdapterPipeline, AnimateDiffPipeline,
+                        StableDiffusionAdapterPipeline, AnimateDiffPipeline, PIAPipeline,
                         # Conditioning models
                         T2IAdapter, ControlNetModel, MotionAdapter,
                         # Schedulers
@@ -237,6 +237,38 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
 
     def inference(self, params:GenerationParameters):
         diffusers_params = {}
+        diffusers_params['prompt'] = params.prompt
+        diffusers_params['negative_prompt'] = params.negprompt
+        diffusers_params['seed'] = params.seed
+        diffusers_params['guidance_scale'] = params.cfgscale
+        diffusers_params['num_inference_steps'] = params.steps
+        diffusers_params['scheduler'] = params.scheduler
+        diffusers_params['width'] = params.width
+        diffusers_params['height'] = params.height
+        diffusers_params['num_frames'] = params.frames
+        output, seed = super().diffusers_inference(**diffusers_params)
+        return output.frames[0], seed
+
+
+class StableDiffusionPersonalizedImageAnimatorPipelineWrapper(StableDiffusionPipelineWrapper):
+    def __init__(self, params:GenerationParameters, device):
+        self.adapter = MotionAdapter.from_pretrained("openmmlab/PIA-condition-adapter", torch_dtype=torch.float16)
+        super().__init__(PIAPipeline, params, device)
+
+
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        pipeline_params['motion_adapter'] = self.adapter
+        pipeline_params['torch_dtype'] = torch.float16
+        self.addPipelineParamsCommon(params, pipeline_params)
+        return pipeline_params
+
+
+    def inference(self, params:GenerationParameters):
+        diffusers_params = {}
+        imageparams = params.getInitImage()
+        if(imageparams is not None and imageparams.image is not None):
+            diffusers_params['image'] = imageparams.image
         diffusers_params['prompt'] = params.prompt
         diffusers_params['negative_prompt'] = params.negprompt
         diffusers_params['seed'] = params.seed

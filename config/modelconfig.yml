@@ -51,6 +51,7 @@ generate:
     pipelines:
       generate: StableDiffusionGeneratePipeline
       animatediff: StableDiffusionAnimateDiffPipeline
+      pia: StableDiffusionPersonalizedImageAnimatorPipeline
     models:
       - id: runwayml/stable-diffusion-v1-5  # official
         vae: stabilityai/sd-vae-ft-mse

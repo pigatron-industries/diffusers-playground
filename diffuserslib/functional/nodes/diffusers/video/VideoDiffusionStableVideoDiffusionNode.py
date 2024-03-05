@@ -1,6 +1,6 @@
 from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.types import *
-from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
+from ..ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
 from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
 from diffuserslib.inference.GenerationParameters import ModelParameters, LoraParameters
 from diffuserslib.inference.arch.StableVideoDiffusionPipelines import StableVideoDiffusionGenerationParameters

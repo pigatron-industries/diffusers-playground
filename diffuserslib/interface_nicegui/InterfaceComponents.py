@@ -50,7 +50,7 @@ class InterfaceComponents:
         if(self.controller.model.workflow_name not in workflow_list):
             self.controller.model.workflow_name = None
             self.controller.workflow = None
-        ui.select(workflow_list, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value))
+        ui.select(workflow_list, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
 
 
     def workflow_parameters(self):
