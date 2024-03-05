@@ -57,7 +57,7 @@ class VideoDiffusionPIANode(FunctionalNode):
             raise Exception("DiffusersPipelines is not initialized")
         
         params = GenerationParameters(
-            generationtype="animatediff",
+            generationtype="pia",
             safetychecker=False,
             width=size[0],
             height=size[1],
