@@ -14,6 +14,7 @@ class VideoDiffusionPIAWorkflow(WorkflowBuilder):
         negprompt_input = StringUserInputNode(value = "", name="negprompt")
         seed_input = SeedUserInputNode(value = None, name="seed")
         steps_input = IntUserInputNode(value = 20, name = "steps")
+        strength_input = FloatUserInputNode(value = 1.0, name = "strength")
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
         frames_input = IntUserInputNode(value = 16, name = "frames")
@@ -28,6 +29,7 @@ class VideoDiffusionPIAWorkflow(WorkflowBuilder):
                                             negprompt = negprompt_input,
                                             seed = seed_input,
                                             steps = steps_input,
+                                            strength = strength_input,
                                             cfgscale = cfgscale_input,
                                             scheduler = scheduler_input,
                                             frames = frames_input)
