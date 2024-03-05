@@ -70,7 +70,7 @@ class VideoDiffusionPIANode(FunctionalNode):
             seed=seed,
             scheduler=scheduler,
             frames=frames,
-            controlimages=[ControlImageParameters(image = image, condscale = strength, type = ControlImageType.IMAGETYPE_INITIMAGE)]
+            controlimages=[ControlImageParameters(image = image, condscale = strength, type = ControlImageType.IMAGETYPE_INITIMAGE, model = "initimage")]
         )
 
         output, seed = DiffusersPipelines.pipelines.generate(params)
