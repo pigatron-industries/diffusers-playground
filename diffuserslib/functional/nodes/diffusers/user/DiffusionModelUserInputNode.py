@@ -48,7 +48,16 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def modelSettings(self):
-        pass
+        if(DiffusersPipelines.pipelines is None):
+            raise Exception("DiffusersPipelines not initialised") 
+        with ui.dialog(value = True):
+            with ui.card().classes('grow').style('width: 100%; height: 100%'):
+                with ui.column():
+                    ui.label("Embeddings")
+                    embeddings = DiffusersPipelines.pipelines.getEmbeddingTokens(self.basemodel)
+                    with ui.scroll_area().classes('w-32 h-32 border grow'):
+                        for embedding in embeddings:
+                            ui.label(embedding)
 
 
     def updateModels(self):
