@@ -1,6 +1,7 @@
 from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
 from diffuserslib.inference.GenerationParameters import ModelParameters
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsType
+from diffuserslib.functional.nodes.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from ...user.UserInputNode import UserInputNode
@@ -48,18 +49,37 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def modelSettings(self):
+        with ui.dialog(value = True).style('width: 100%; height: 100%'):
+            with ui.row().style('width: 100%; height: 100%'):
+                self.embeddingsList()
+                self.modifiersList()
+        
+
+
+    def embeddingsList(self):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised") 
-        with ui.dialog(value = True):
-            with ui.card().classes('grow').style('width: 100%; height: 100%'):
-                with ui.column().classes('grow'):
-                    ui.label("Embeddings")
-                    embeddings = DiffusersPipelines.pipelines.getEmbeddingTokens(self.basemodel)
-                    with ui.scroll_area().classes('w-32 h-32 border grow').style('width:300px;'):
-                        with ui.list().props('dense'):
-                            for embedding in embeddings:
-                                with ui.item():
-                                    ui.label(embedding)
+        with ui.card().classes('grow').style('height:100%;width:300px;'):
+            with ui.column().classes('grow'):
+                ui.label("Embeddings")
+                embeddings = DiffusersPipelines.pipelines.getEmbeddingTokens(self.basemodel)
+                with ui.scroll_area().classes('w-32 h-32 border grow').style('width:300px;'):
+                    with ui.list().props('dense'):
+                        for embedding in embeddings:
+                            with ui.item():
+                                ui.label(embedding)
+
+
+    def modifiersList(self):
+        with ui.card().classes('grow').style('height:100%;width:300px;'):
+            with ui.column().classes('grow'):
+                ui.label("Modifiers")
+                modifiers = RandomPromptProcessorNode.modifier_dict
+                with ui.scroll_area().classes('w-32 h-32 border grow').style('width:300px;'):
+                    with ui.list().props('dense'):
+                        for modifier in modifiers:
+                            with ui.item():
+                                ui.label(modifier)
 
 
     def updateModels(self):
