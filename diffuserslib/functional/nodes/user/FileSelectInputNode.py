@@ -22,7 +22,7 @@ class FileSelectInputNode(UserInputNode):
             self.filenames = value
 
     @ui.refreshable
-    def ui(self):
+    def gui(self):
         dialog = FileDialog(self.fileSelected, ["png", "jpg", "jpeg"])
         with ui.row().style("padding-top: 1.4em;"):
             if(len(self.filenames) == 0):
@@ -36,7 +36,7 @@ class FileSelectInputNode(UserInputNode):
 
     def fileSelected(self, selected_files:List[str]):
         self.filenames = selected_files
-        self.ui.refresh()
+        self.gui.refresh()
 
     
     def process(self) -> list[str]:

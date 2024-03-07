@@ -85,7 +85,7 @@ class InterfaceComponents:
         if(isinstance(param.value, ListUserInputNode)):
             param.value.ui(child_renderer=self.node_parameters) # type: ignore
         elif(isinstance(param.value, UserInputNode)):
-            param.value.ui()
+            param.value.gui()
         else:
             with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                 with ui.column():

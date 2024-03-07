@@ -26,7 +26,7 @@ class ConditioningModelUserInputNode(UserInputNode):
 
 
     @ui.refreshable
-    def ui(self):
+    def gui(self):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("conditioning", self.diffusion_model_input.basemodel)
@@ -37,7 +37,7 @@ class ConditioningModelUserInputNode(UserInputNode):
 
 
     def updateModels(self):
-        self.ui.refresh()
+        self.gui.refresh()
 
 
     def process(self) -> str:

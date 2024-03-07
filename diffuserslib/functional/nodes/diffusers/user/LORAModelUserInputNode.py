@@ -26,7 +26,7 @@ class LORAModelUserInputNode(UserInputNode):
 
 
     @ui.refreshable
-    def ui(self):
+    def gui(self):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         loras = DiffusersPipelines.pipelines.getLORAsByBase(self.diffusion_model_input.basemodel)
@@ -36,7 +36,7 @@ class LORAModelUserInputNode(UserInputNode):
 
 
     def updateModels(self):
-        self.ui.refresh()
+        self.gui.refresh()
 
 
     def process(self) -> LorasType:

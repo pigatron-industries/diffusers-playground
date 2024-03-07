@@ -14,7 +14,7 @@ class UserInputNode(FunctionalNode):
         raise Exception("Not implemented")
     def setValue(self, value):
         raise Exception("Not implemented")
-    def ui(self):
+    def gui(self):
         raise Exception("Not implemented")
 
 
@@ -29,7 +29,7 @@ class IntUserInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         self.input = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
 
     def process(self) -> int|None:
@@ -49,7 +49,7 @@ class SeedUserInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         self.input = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
 
     def process(self) -> int|None:
@@ -70,7 +70,7 @@ class FloatUserInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         ui.number(value=self.value, label=self.node_name, format='%.2f').bind_value(self, 'value')
 
     def process(self) -> float:
@@ -88,7 +88,7 @@ class BoolUserInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         ui.checkbox(value=self.value).bind_value(self, 'value')
 
     def process(self) -> bool:
@@ -106,7 +106,7 @@ class StringUserInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         ui.input(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
@@ -124,7 +124,7 @@ class TextAreaInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
@@ -143,7 +143,7 @@ class ListSelectUserInputNode(UserInputNode):
     def setValue(self, value):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
@@ -163,7 +163,7 @@ class EnumSelectUserInputNode(UserInputNode):
     def setValue(self, value:str):
         self.value = str(value)
 
-    def ui(self):
+    def gui(self):
         ui.select(options=self.options, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> Enum|None:
@@ -186,7 +186,7 @@ class SizeUserInputNode(UserInputNode):
         self.width = value[0]
         self.height = value[1]
 
-    def ui(self):
+    def gui(self):
         ui.number(value=self.width, label="Width").bind_value(self, 'width')
         ui.number(value=self.height, label="Height").bind_value(self, 'height')
 
@@ -207,7 +207,7 @@ class MinMaxIntInputNode(UserInputNode):
         self.min = value[0]
         self.max = value[1]
 
-    def ui(self):
+    def gui(self):
         ui.number(value=self.min, label="Min").bind_value(self, 'min')
         ui.number(value=self.max, label="Max").bind_value(self, 'max')
 
@@ -228,7 +228,7 @@ class MinMaxFloatInputNode(UserInputNode):
         self.min = value[0]
         self.max = value[1]
 
-    def ui(self):
+    def gui(self):
         ui.number(value=self.min, label="Min", format='%.2f').bind_value(self, 'min')
         ui.number(value=self.max, label="Max", format='%.2f').bind_value(self, 'max')
 
@@ -248,7 +248,7 @@ class BoolListUserInputNode(UserInputNode):
     def setValue(self, value:List[bool]):
         self.value = value
 
-    def ui(self):
+    def gui(self):
         for i in range(len(self.value)):
             self.checkbox(i)
 

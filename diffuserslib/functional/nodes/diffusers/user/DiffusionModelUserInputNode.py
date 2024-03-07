@@ -17,6 +17,7 @@ class DiffusionModelUserInputNode(UserInputNode):
         self.basemodel = None
         self.model = None
         self.update_listeners = []
+        self.selected_modifier = None
         super().__init__(name)
 
 
@@ -36,7 +37,7 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     @ui.refreshable
-    def ui(self):
+    def gui(self):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         with ui.column().classes('grow'):
@@ -44,15 +45,15 @@ class DiffusionModelUserInputNode(UserInputNode):
             with ui.row().classes('w-full'):
                 self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label="Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
                 ui.button(icon="settings", on_click=lambda e: self.modelSettings()).classes('align-middle').props('dense')
-
             self.model_dropdown = ui.select(options=list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('w-full')
 
 
     def modelSettings(self):
         with ui.dialog(value = True):
-            with ui.row().style('height: 100%; max-width: 800px;'):
+            with ui.row().style('height: 100%; max-width: 1000px;'):
                 self.embeddingsList()
                 self.modifiersList()
+                self.modifierEditor()  # type: ignore
         
 
 
@@ -70,6 +71,7 @@ class DiffusionModelUserInputNode(UserInputNode):
                                 ui.label(embedding)
 
 
+    @ui.refreshable
     def modifiersList(self):
         with ui.card().style('height:100%;width:300px;'):
             with ui.column().classes('grow').style('width:100%;'):
@@ -78,8 +80,44 @@ class DiffusionModelUserInputNode(UserInputNode):
                 with ui.scroll_area().classes('w-32 h-32 border grow').style('width:100%;'):
                     with ui.list().props('dense'):
                         for modifier in modifiers:
-                            with ui.item():
-                                ui.label(modifier)
+                            self.modifierListItem(modifier)
+                
+
+    def modifierListItem(self, modifier:str):
+        if(self.selected_modifier == modifier):
+            style = 'background-color:rgb(88, 152, 212)'
+        else:
+            style = ''
+        with ui.item(on_click=lambda: self.selectModifier(modifier)).style(style):
+            if(self.selected_modifier == modifier):
+                ui.label(modifier)
+            else:
+                ui.label(modifier)
+
+
+    @ui.refreshable
+    def modifierEditor(self):
+        with ui.card().style('height:100%;width:300px;'):
+            if(self.selected_modifier is not None):
+                with ui.column().classes('grow').style('width:100%;'):
+                    ui.label("Edit Modifier")
+                    modifierItems = RandomPromptProcessorNode.modifier_dict[self.selected_modifier]
+                    with ui.scroll_area().classes('w-32 h-32 border grow').style('width:100%;'):
+                        with ui.list().props('dense'):
+                            for modifierItem in modifierItems:
+                                self.modifierItem(modifierItem)
+
+
+    def modifierItem(self, modifierItem:str):
+        with ui.item():
+            ui.label(modifierItem)
+
+
+    def selectModifier(self, modifier:str):
+        self.selected_modifier = modifier
+        self.modifiersList.refresh()
+        self.modifierEditor.refresh()
+        
 
 
     def updateModels(self):
@@ -90,7 +128,7 @@ class DiffusionModelUserInputNode(UserInputNode):
             models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel)
             self.model = None
             self.model_dropdown.options = list(models.keys())
-            self.ui.refresh()
+            self.gui.refresh()
             for listener in self.update_listeners:
                 listener()
 

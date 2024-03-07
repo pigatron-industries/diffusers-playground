@@ -25,7 +25,7 @@ class ImageSelectInputNode(UserInputNode):
             self.filename = value
 
     @ui.refreshable
-    def ui(self):
+    def gui(self):
         with ui.dialog() as dialog:
             ui.upload(on_upload=self.handleUpload)
         with ui.row().style("padding-top: 1.4em;"):
@@ -38,7 +38,7 @@ class ImageSelectInputNode(UserInputNode):
     
     def handleUpload(self, e: events.UploadEventArguments):
         self.image = Image.open(e.content)
-        self.ui.refresh()
+        self.gui.refresh()
 
     
     def process(self) -> Image.Image:
