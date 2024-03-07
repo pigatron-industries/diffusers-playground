@@ -49,8 +49,8 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def modelSettings(self):
-        with ui.dialog(value = True).style('width: 100%; height: 100%'):
-            with ui.row().style('width: 100%; height: 100%'):
+        with ui.dialog(value = True):
+            with ui.row().style('height: 100%; max-width: 800px;'):
                 self.embeddingsList()
                 self.modifiersList()
         
@@ -60,10 +60,10 @@ class DiffusionModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised") 
         with ui.card().style('height:100%;width:300px;'):
-            with ui.column().classes('grow'):
+            with ui.column().classes('grow').style('width:100%;'):
                 ui.label("Embeddings")
                 embeddings = DiffusersPipelines.pipelines.getEmbeddingTokens(self.basemodel)
-                with ui.scroll_area().classes('w-32 h-32 border grow').style('width:300px;'):
+                with ui.scroll_area().classes('w-32 h-32 border grow').style('width:100%;'):
                     with ui.list().props('dense'):
                         for embedding in embeddings:
                             with ui.item():
@@ -72,10 +72,10 @@ class DiffusionModelUserInputNode(UserInputNode):
 
     def modifiersList(self):
         with ui.card().style('height:100%;width:300px;'):
-            with ui.column().classes('grow'):
+            with ui.column().classes('grow').style('width:100%;'):
                 ui.label("Modifiers")
                 modifiers = RandomPromptProcessorNode.modifier_dict
-                with ui.scroll_area().classes('w-32 h-32 border grow').style('width:300px;'):
+                with ui.scroll_area().classes('w-32 h-32 border grow').style('width:100%;'):
                     with ui.list().props('dense'):
                         for modifier in modifiers:
                             with ui.item():
