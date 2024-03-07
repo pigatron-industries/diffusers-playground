@@ -59,7 +59,7 @@ class DiffusionModelUserInputNode(UserInputNode):
     def embeddingsList(self):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised") 
-        with ui.card().classes('grow').style('height:100%;width:300px;'):
+        with ui.card().style('height:100%;width:300px;'):
             with ui.column().classes('grow'):
                 ui.label("Embeddings")
                 embeddings = DiffusersPipelines.pipelines.getEmbeddingTokens(self.basemodel)
@@ -71,7 +71,7 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def modifiersList(self):
-        with ui.card().classes('grow').style('height:100%;width:300px;'):
+        with ui.card().style('height:100%;width:300px;'):
             with ui.column().classes('grow'):
                 ui.label("Modifiers")
                 modifiers = RandomPromptProcessorNode.modifier_dict
