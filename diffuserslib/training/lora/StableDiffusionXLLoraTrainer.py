@@ -3,6 +3,7 @@ from ..DiffusersTrainer import DiffusersTrainer
 
 import os
 import torch
+import torch.utils.data
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
@@ -92,31 +93,78 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
             cast_training_params(models, dtype=torch.float32)
 
         self.unet_lora_parameters = list(filter(lambda p: p.requires_grad, self.unet.parameters()))
-        if self.params.trainTextEncoder:
-            for text_encoder_trainer in self.text_encoder_trainers:
-                text_encoder_trainer.fetch_text_encoder_parameters()
 
         # Optimization parameters
         unet_lora_parameters_with_lr = {"params": self.unet_lora_parameters, "lr": self.params.learningRate}
+        params_to_optimize = [unet_lora_parameters_with_lr]
         if self.params.trainTextEncoder:
-            # different learning rate for text encoder and unet
-            text_lora_parameters_one_with_lr = {
-                "params": text_lora_parameters_one,
-                "weight_decay": args.adam_weight_decay_text_encoder,
-                "lr": args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
-            }
-            text_lora_parameters_two_with_lr = {
-                "params": text_lora_parameters_two,
-                "weight_decay": args.adam_weight_decay_text_encoder,
-                "lr": args.text_encoder_lr if args.text_encoder_lr else args.learning_rate,
-            }
-            params_to_optimize = [
-                unet_lora_parameters_with_lr,
-                text_lora_parameters_one_with_lr,
-                text_lora_parameters_two_with_lr,
-            ]
-        else:
-            params_to_optimize = [unet_lora_parameters_with_lr]
+            for text_encoder_trainer in self.text_encoder_trainers:
+                params_to_optimize.append({
+                    "params": text_encoder_trainer.fetch_text_encoder_parameters(),
+                    "lr": self.params.learningRate,
+                    "weight_decay": self.params.textEncoderWeightDecay,
+                })
+
+        # Optimizer creation
+        self.optimizer = torch.optim.AdamW(
+            params_to_optimize,
+            betas=(self.params.adamBeta1, self.params.adamBeta2),
+            weight_decay =  self.params.adamWeightDecay,
+            eps = self.params.adamEpsilon,
+        )
+
+        # Dataset and DataLoaders creation:
+        self.train_dataset = DreamBoothDataset(
+            instance_data_root=self.params.trainDataDir,
+            instance_prompt=self.params.instancePrompt,
+            class_prompt=self.params.classPrompt,
+            class_data_root=self.params.classDir if self.params.priorPreservation else None,
+            class_num=self.params.numClassImages,
+            size=self.params.resolution,
+            repeats=self.params.repeats,
+            center_crop=self.params.centreCrop,
+        )
+
+        self.train_dataloader = torch.utils.data.DataLoader(
+            self.train_dataset,
+            batch_size = self.params.batchSize,
+            shuffle = True,
+            collate_fn = lambda examples: self.collate(examples, self.params.priorPreservation),
+            num_workers = 1,
+        )
+
+        # If no type of tuning is done on the text_encoder and custom instance prompts are NOT
+        # provided (i.e. the --instance_prompt is used for all images), we encode the instance prompt once to avoid
+        # the redundant encoding.
+        if not self.params.trainTextEncoder and not train_dataset.custom_instance_prompts:
+            instance_prompt_hidden_states, instance_pooled_prompt_embeds = compute_text_embeddings(
+                args.instance_prompt, text_encoders, tokenizers
+            )
+
+
+
+    def collate(self, examples, with_prior_preservation=False):
+        pixel_values = [example["instance_images"] for example in examples]
+        prompts = [example["instance_prompt"] for example in examples]
+        original_sizes = [example["original_size"] for example in examples]
+        crop_top_lefts = [example["crop_top_left"] for example in examples]
+
+        # Concat class and instance examples for prior preservation.
+        # We do this to avoid doing two forward passes.
+        if with_prior_preservation:
+            pixel_values += [example["class_images"] for example in examples]
+            prompts += [example["class_prompt"] for example in examples]
+
+        pixel_values = torch.stack(pixel_values)
+        pixel_values = pixel_values.to(memory_format=torch.contiguous_format).float()
+
+        batch = {
+            "pixel_values": pixel_values,
+            "prompts": prompts,
+            "original_sizes": original_sizes,
+            "crop_top_lefts": crop_top_lefts,
+        }
+        return batch
 
 
     def generate_class_images(self):

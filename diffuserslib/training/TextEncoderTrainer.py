@@ -61,4 +61,6 @@ class TextEncoderTrainer():
 
 
     def fetch_text_encoder_parameters(self):
-        self.text_lora_parameters_one = list(filter(lambda p: p.requires_grad, self.text_encoder.parameters()))            
+        self.params = list(filter(lambda p: p.requires_grad, self.text_encoder.parameters()))
+        return self.params
+

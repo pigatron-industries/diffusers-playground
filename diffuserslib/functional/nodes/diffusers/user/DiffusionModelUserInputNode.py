@@ -52,7 +52,7 @@ class DiffusionModelUserInputNode(UserInputNode):
         with ui.dialog(value = True):
             with ui.row().style('height: 100%; max-width: 1000px;'):
                 self.embeddingsList()
-                self.modifiersList()
+                self.modifiersList()   # type: ignore
                 self.modifierEditor()  # type: ignore
         
 
