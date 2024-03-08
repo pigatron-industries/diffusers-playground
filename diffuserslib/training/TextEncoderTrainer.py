@@ -64,3 +64,13 @@ class TextEncoderTrainer():
         self.params = list(filter(lambda p: p.requires_grad, self.text_encoder.parameters()))
         return self.params
 
+
+    def tokenize_prompt(self, prompt:str):
+        text_inputs = self.tokenizer(
+            prompt,
+            padding="max_length",
+            max_length=self.tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        return text_inputs.input_ids

@@ -2,6 +2,7 @@ from .LoraTrainingParameters import LoraTrainingParameters
 from ..DiffusersTrainer import DiffusersTrainer
 
 import os
+import math
 import torch
 import torch.utils.data
 from accelerate import Accelerator
@@ -136,11 +137,67 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
         # If no type of tuning is done on the text_encoder and custom instance prompts are NOT
         # provided (i.e. the --instance_prompt is used for all images), we encode the instance prompt once to avoid
         # the redundant encoding.
-        if not self.params.trainTextEncoder and not train_dataset.custom_instance_prompts:
-            instance_prompt_hidden_states, instance_pooled_prompt_embeds = compute_text_embeddings(
-                args.instance_prompt, text_encoders, tokenizers
-            )
+        if not self.params.trainTextEncoder and not self.train_dataset.custom_instance_prompts:
+            instance_prompt_hidden_states, instance_pooled_prompt_embeds = self.compute_text_embeddings(self.params.instancePrompt)
 
+        # Handle class prompt for prior-preservation.
+        if self.params.priorPreservation and not self.params.trainTextEncoder:
+            class_prompt_hidden_states, class_pooled_prompt_embeds = self.compute_text_embeddings(self.params.classPrompt)
+
+        # If custom instance prompts are NOT provided (i.e. the instance prompt is used for all images),
+        # pack the statically computed variables appropriately here. This is so that we don't
+        # have to pass them to the dataloader.
+        if not self.train_dataset.custom_instance_prompts:
+            if not self.params.trainTextEncoder:
+                prompt_embeds = instance_prompt_hidden_states
+                unet_add_text_embeds = instance_pooled_prompt_embeds
+                if self.params.priorPreservation:
+                    prompt_embeds = torch.cat([prompt_embeds, class_prompt_hidden_states], dim=0)
+                    unet_add_text_embeds = torch.cat([unet_add_text_embeds, class_pooled_prompt_embeds], dim=0)
+            # if we're optmizing the text encoder (both if instance prompt is used for all images or custom prompts) we need to tokenize and encode the
+            # batch prompts on all training steps
+            else:
+                text_encoder_tokens = []
+                for text_encoder_trainer in self.text_encoder_trainers:
+                    tokens = text_encoder_trainer.tokenize_prompt(self.params.instancePrompt)
+                    if self.params.priorPreservation:
+                        class_tokens = text_encoder_trainer.tokenize_prompt(self.params.classPrompt)
+                        tokens = torch.cat([tokens, class_tokens], dim=0)
+                    text_encoder_tokens.append(tokens)
+
+        self.calcTrainingSteps()
+        self.createScheduler()
+
+        # Prepare everything with our `accelerator`.
+        self.optimizer, self.train_dataloader, self.lr_scheduler, self.unet = self.accelerator.prepare(self.optimizer, self.train_dataloader, self.lr_scheduler, self.unet)
+        if(self.params.trainTextEncoder):
+            for text_encoder_trainer in self.text_encoder_trainers:
+                text_encoder_trainer.text_encoder = self.accelerator.prepare(text_encoder_trainer.text_encoder)
+
+        # We need to recalculate our total training steps as the size of the training dataloader may have changed.
+        self.calcTrainingSteps()
+
+        # Train!
+        total_batch_size = self.params.batchSize * self.accelerator.num_processes * self.params.gradientAccumulationSteps
+        logger.info("***** Running training *****")
+        logger.info(f"  Num examples = {len(self.train_dataset)}")
+        logger.info(f"  Num batches each epoch = {len(self.train_dataloader)}")
+        logger.info(f"  Num Epochs = {self.params.numEpochs}")
+        logger.info(f"  Instantaneous batch size per device = {self.params.batchSize}")
+        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
+        logger.info(f"  Gradient Accumulation steps = {self.params.gradientAccumulationSteps}")
+        logger.info(f"  Total optimization steps = {self.params.maxSteps}")
+        self.global_step = 0
+        self.start_epoch = 0
+
+        self.createProgressBar()
+        # TODO log validation images
+        self.train_loop()
+
+
+    def generate_class_images(self):
+        # TODO
+        pass
 
 
     def collate(self, examples, with_prior_preservation=False):
@@ -165,11 +222,14 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
             "crop_top_lefts": crop_top_lefts,
         }
         return batch
+    
 
-
-    def generate_class_images(self):
-        # TODO
-        pass
+    def compute_text_embeddings(self, prompt):
+        with torch.no_grad():
+            prompt_embeds, pooled_prompt_embeds = self.pipeline.encode_prompt(prompt=prompt)
+            prompt_embeds = prompt_embeds.to(self.accelerator.device)
+            pooled_prompt_embeds = pooled_prompt_embeds.to(self.accelerator.device)
+        return prompt_embeds, pooled_prompt_embeds
 
 
     def save_params(self):
@@ -178,3 +238,8 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
         trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-params.json"
         with open(trainparamsfile, 'w') as f:
             f.write(self.params.toJson())
+
+
+    def train_loop(self):
+        # TODO
+        pass

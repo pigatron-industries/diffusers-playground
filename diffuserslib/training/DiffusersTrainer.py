@@ -2,14 +2,16 @@ from .TrainingParameters import TrainingParameters
 from .TextEncoderTrainer import TextEncoderTrainer
 
 import torch
-
+import math
 import logging
 import diffusers
 import transformers
+import tqdm
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 from diffusers import DiffusionPipeline
+from diffusers.optimization import get_scheduler
 
 logger = get_logger(__name__)
 
@@ -63,3 +65,35 @@ class DiffusersTrainer():
             self.params.learningRate = (
                 self.params.learningRate * self.params.gradientAccumulationSteps * self.params.batchSize * self.accelerator.num_processes
             )
+
+
+    def calcTrainingSteps(self):
+        # Scheduler and math around the number of training steps.
+        if self.params.maxSteps is None or self.override_max_train_steps:
+            self.override_max_train_steps = True
+        else:
+            self.override_max_train_steps = False
+        num_update_steps_per_epoch = math.ceil(len(self.train_dataloader) / self.params.gradientAccumulationSteps)
+        if self.override_max_train_steps:
+            self.params.maxSteps = self.params.numEpochs * num_update_steps_per_epoch
+        self.params.numEpochs = math.ceil(self.params.maxSteps / num_update_steps_per_epoch)
+
+
+    def createScheduler(self):
+        self.lr_scheduler = get_scheduler(
+            self.params.learningRateSchedule,
+            optimizer=self.optimizer,
+            num_warmup_steps=self.params.learningRateWarmupSteps * self.accelerator.num_processes,
+            num_training_steps=self.params.maxSteps * self.accelerator.num_processes,
+            num_cycles=self.params.learningRateNumCycles,
+        )
+
+    def createProgressBar(self):
+        initial_global_step = 0
+        self.progress_bar = tqdm(
+            range(0, self.params.maxSteps),
+            initial=initial_global_step,
+            desc="Steps",
+            # Only show the progress bar once on each machine.
+            disable=not self.accelerator.is_local_main_process,
+        )

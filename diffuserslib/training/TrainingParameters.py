@@ -39,6 +39,7 @@ class TrainingParameters:
     learningRateSchedule: str = 'constant' # The scheduler type to use. Choose between ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]
     learningRateWarmupSteps: int = 500  # Number of steps for the warmup in the lr scheduler.
     learningRateNumCycles: int = 1      # Number of hard resets of the lr in cosine_with_restarts scheduler.
+    learningRatePower: float = 1.0      # Power factor for polynomial learning rate schedule.
     adamBeta1: float = 0.9              # The beta1 parameter for the Adam optimizer.
     adamBeta2: float = 0.999            # The beta2 parameter for the Adam optimizer.
     adamWeightDecay: float = 1e-2       # Weight decay to use.

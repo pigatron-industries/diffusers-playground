@@ -91,20 +91,8 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
             train_dataset, batch_size=self.params.batchSize, shuffle=True, num_workers=0
         )
 
-        # Scheduler and math around the number of training steps.
-        overrode_max_train_steps = False
-        num_update_steps_per_epoch = math.ceil(len(self.train_dataloader) / self.params.gradientAccumulationSteps)
-        if self.params.maxSteps is None:
-            self.params.maxSteps = self.params.numEpochs * num_update_steps_per_epoch
-            overrode_max_train_steps = True
-
-        self.lr_scheduler = get_scheduler(
-            self.params.learningRateSchedule,
-            optimizer=self.optimizer,
-            num_warmup_steps=self.params.learningRateWarmupSteps * self.accelerator.num_processes,
-            num_training_steps=self.params.maxSteps * self.accelerator.num_processes,
-            num_cycles=self.params.learningRateNumCycles,
-        )
+        self.calcTrainingSteps()
+        self.createScheduler()
 
         # Prepare everything with our `accelerator`.
         for text_encoder_trainer in self.text_encoder_trainers:
@@ -116,10 +104,7 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
         self.vae.to(self.accelerator.device, dtype=self.weight_dtype)
 
         # We need to recalculate our total training steps as the size of the training dataloader may have changed.
-        num_update_steps_per_epoch = math.ceil(len(self.train_dataloader) / self.params.gradientAccumulationSteps)
-        if overrode_max_train_steps:
-            self.params.maxSteps = self.params.numEpochs * num_update_steps_per_epoch
-        self.params.numEpochs = math.ceil(self.params.maxSteps / num_update_steps_per_epoch)
+        self.calcTrainingSteps()
 
         # We need to initialize the trackers we use, and also store our configuration.
         # The trackers initializes automatically on the main process.
@@ -139,14 +124,7 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
         self.global_step = 0
         self.start_epoch = 0
     
-        initial_global_step = 0
-        self.progress_bar = tqdm(
-            range(0, self.params.maxSteps),
-            initial=initial_global_step,
-            desc="Steps",
-            # Only show the progress bar once on each machine.
-            disable=not self.accelerator.is_local_main_process,
-        )
+        self.createProgressBar()
 
         # keep original embeddings as reference
         for text_encoder_trainer in self.text_encoder_trainers:
