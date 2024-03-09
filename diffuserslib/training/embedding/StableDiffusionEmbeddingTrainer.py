@@ -1,5 +1,3 @@
-import logging
-import math
 import os
 import gc
 from typing import List
@@ -149,14 +147,13 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
                 loss = self.train_step(batchitem)
 
                 # Checks if the accelerator has performed an optimization step behind the scenes
-                if self.accelerator.sync_gradients:
+                if (self.accelerator.is_main_process and self.accelerator.sync_gradients):
                     self.progress_bar.update(1)
                     self.global_step += 1
                     if self.global_step % self.params.saveSteps == 0:
                         self.save_progress()
-                    if self.accelerator.is_main_process:
-                        if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0:
-                            self.log_validation(epoch)
+                    if self.params.validationPrompt is not None and self.global_step % self.params.validationSteps == 0:
+                        self.log_validation(epoch)
 
                 logs = {"loss": loss.detach().item(), "lr": self.lr_scheduler.get_last_lr()[0]}
                 self.progress_bar.set_postfix(**logs)

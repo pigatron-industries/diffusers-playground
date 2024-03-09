@@ -12,7 +12,7 @@ class TrainingParameters:
     outputDir: str = '/output'          # A folder where the checkpoints will be saved.
     outputPrefix: str = 'object'        # The filename of the checkpoint.
     seed: int|None = None               # A seed for reproducible training.
-    resolution: Tuple[int, int] = (512, 512) # The resolution for input images, all the images in the train/validation dataset will be resized to this resolution
+    resolution: Tuple[int, int]|int = (512, 512) # The resolution for input images, all the images in the train/validation dataset will be resized to this resolution
     centreCrop: bool = False            # Whether to center crop images before resizing to resolution.
     repeats: int = 100                  # Number of times to repeat the dataset.
     mixedPrecision: str = 'no'          # Whether to use mixed precision training. Choose between ['no', 'fp16', 'bf16']
