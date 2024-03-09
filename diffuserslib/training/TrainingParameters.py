@@ -6,6 +6,7 @@ import json
 class TrainingParameters:
     base: str
     description: str = ''
+    name: str = 'lora'              # The name of the training run.
     model: str = 'runwayml/stable-diffusion-v1-5'
     trainDataDir: str = '/train'        # A folder containing the training data.
     trainDataFiles: List[str] = field(default_factory=lambda: ["*"])
@@ -61,8 +62,7 @@ class TrainingParameters:
 
         self.validationSteps = self.saveSteps
         if outputDirPrefix is not None:
-            tokenfolder = self.placeholderToken.replace('<', '').replace('>', '')
-            self.outputDir = f"{outputDirPrefix}/{self.base}/{tokenfolder}"
+            self.outputDir = f"{outputDirPrefix}/{self.base}/{self.name}"
 
 
     def toJson(self):

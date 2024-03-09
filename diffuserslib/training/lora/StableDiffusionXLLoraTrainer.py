@@ -6,20 +6,16 @@ import os
 import gc
 import torch
 import torch.utils.data
-from accelerate import Accelerator
 from accelerate.logging import get_logger
-from accelerate.utils import ProjectConfiguration, set_seed
+from accelerate.utils import set_seed
 import torch.nn.functional as F
 from IPython.display import display
-from diffusers.utils import (
-    convert_state_dict_to_diffusers,
-    convert_unet_state_dict_to_peft,
-    is_wandb_available,
-)
+from diffusers.utils import convert_state_dict_to_diffusers
 
-from diffusers.training_utils import _set_state_dict_into_text_encoder, cast_training_params, compute_snr
+from diffusers import DiffusionPipeline, EulerDiscreteScheduler
+from diffusers.training_utils import cast_training_params
 from peft.utils import get_peft_model_state_dict
-from peft import LoraConfig, set_peft_model_state_dict
+from peft import LoraConfig
 
 
 logger = get_logger(__name__)
@@ -34,6 +30,7 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
 
     def load_models(self):
         super().load_models()
+        # append extra text encoders for SDXL
         self.text_encoder_trainers.append(self.createTextEncoderTrainer("tokenizer_2", "text_encoder_2"))
 
 
@@ -462,7 +459,7 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
                              height = self.params.validationSize[1]).images[0]
             display(image)
             images.append(image)
-            filename = f"{self.params.loraName}-{self.global_step}-{i}"
+            filename = f"{self.params.name}-{self.global_step}-{i}"
             image.save(f"{self.params.outputDir}/{filename}.png")
 
         gc.collect()

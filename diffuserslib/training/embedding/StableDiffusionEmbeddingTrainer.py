@@ -27,6 +27,7 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
 
     def __init__(self, params:EmbeddingTrainingParameters):
         self.params = params
+        self.placeholderToken = f"<{params.name}>"
         super().__init__(params)
 
 
@@ -238,7 +239,7 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
         # Add the placeholder tokens in tokenizer
         placeholder_tokens = []
         for i in range(0, self.params.numVectors):
-            placeholder_tokens.append(f"{self.params.placeholderToken}_{i}")
+            placeholder_tokens.append(f"{self.placeholderToken}_{i}")
         self.placeholder_token_string = " ".join(placeholder_tokens)
 
         for text_encoder_trainer in self.text_encoder_trainers:
@@ -284,7 +285,7 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
                              height = self.params.validationSize[1]).images[0]
             display(image)
             images.append(image)
-            tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
+            tokenName = self.placeholderToken.replace('<', '').replace('>', '')
             filename = f"{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}-{self.global_step}>-{i}"
             image.save(f"{self.params.outputDir}/{filename}.png")
 
@@ -298,17 +299,14 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
     def save_params(self):
         if self.params.outputDir is not None:
             os.makedirs(self.params.outputDir, exist_ok=True)
-        tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
-        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}>-params.json"
+        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-<{self.params.name}-{self.params.numVectors}>-params.json"
         with open(trainparamsfile, 'w') as f:
             f.write(self.params.toJson())
 
 
     def save_progress(self):
         logger.info("Saving embeddings")
-
-        tokenName = self.params.placeholderToken.replace('<', '').replace('>', '')
-        filename = f"{self.params.outputPrefix}-<{tokenName}-{self.params.numVectors}-{self.global_step}>"
+        filename = f"{self.params.outputPrefix}-<{self.params.name}-{self.params.numVectors}-{self.global_step}>"
         weight_name = (
             f"{filename}.safetensors"
             if self.params.safetensors
@@ -330,5 +328,5 @@ class StableDiffusionEmbeddingTrainer(DiffusersTrainer):
     def to_state_dict(self, learned_embeds):
         """ convert embed to state dict for saving to file """
         return {
-            self.params.placeholderToken: learned_embeds[0]
+            self.placeholderToken: learned_embeds[0]
         }
