@@ -6,7 +6,7 @@ import math
 import logging
 import diffusers
 import transformers
-import tqdm
+from tqdm.auto import tqdm
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed

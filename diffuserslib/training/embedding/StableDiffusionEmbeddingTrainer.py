@@ -13,7 +13,6 @@ import torch.utils.checkpoint
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
 
-from tqdm.auto import tqdm
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 from diffusers import DiffusionPipeline, EulerDiscreteScheduler
