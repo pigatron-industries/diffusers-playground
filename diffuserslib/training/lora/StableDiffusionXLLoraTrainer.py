@@ -483,7 +483,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
 
         self.pipeline.save_lora_weights(
             save_directory = self.params.outputDir,
-            weight_name = f"{self.params.loraName}-{self.global_step}",
+            weight_name = f"{self.params.name}-{self.global_step}",
             unet_lora_layers = unet_lora_layers,
             text_encoder_lora_layers = text_encoder_lora_layers[0] if self.params.trainTextEncoder else None,
             text_encoder_2_lora_layers = text_encoder_lora_layers[1] if self.params.trainTextEncoder else None,
