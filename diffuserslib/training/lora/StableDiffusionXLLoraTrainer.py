@@ -137,7 +137,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
             batch_size = self.params.batchSize,
             shuffle = True,
             collate_fn = self.collate,
-            num_workers = 1,
+            num_workers = 0
         )
 
         # If no type of tuning is done on the text_encoder and custom instance prompts are NOT
