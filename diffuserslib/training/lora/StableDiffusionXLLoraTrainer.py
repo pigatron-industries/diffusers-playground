@@ -155,11 +155,11 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
         # have to pass them to the dataloader.
         if not self.train_dataset.custom_instance_prompts:
             if not self.params.trainTextEncoder:
-                prompt_embeds = instance_prompt_hidden_states
-                unet_add_text_embeds = instance_pooled_prompt_embeds
+                self.prompt_embeds = instance_prompt_hidden_states
+                self.unet_add_text_embeds = instance_pooled_prompt_embeds
                 if self.params.priorPreservation:
-                    prompt_embeds = torch.cat([prompt_embeds, class_prompt_hidden_states], dim=0)
-                    unet_add_text_embeds = torch.cat([unet_add_text_embeds, class_pooled_prompt_embeds], dim=0)
+                    self.prompt_embeds = torch.cat([self.prompt_embeds, class_prompt_hidden_states], dim=0)
+                    self.unet_add_text_embeds = torch.cat([self.unet_add_text_embeds, class_pooled_prompt_embeds], dim=0)
             # if we're optmizing the text encoder (both if instance prompt is used for all images or custom prompts) we need to tokenize and encode the
             # batch prompts on all training steps
             else:
@@ -286,7 +286,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
             # encode batch prompts when custom prompts are provided for each image -
             if self.train_dataset.custom_instance_prompts:
                 if not self.params.trainTextEncoder:
-                    prompt_embeds, unet_add_text_embeds = self.compute_text_embeddings(prompts)
+                    self.prompt_embeds, self.unet_add_text_embeds = self.compute_text_embeddings(prompts)
                 else:
                     self.text_encoder_tokens = []
                     for text_encoder_trainer in self.text_encoder_trainers:
@@ -327,9 +327,9 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
             if not self.params.trainTextEncoder:
                 unet_added_conditions = {
                     "time_ids": add_time_ids,
-                    "text_embeds": unet_add_text_embeds.repeat(elems_to_repeat_text_embeds, 1),
+                    "text_embeds": self.unet_add_text_embeds.repeat(elems_to_repeat_text_embeds, 1),
                 }
-                prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
+                prompt_embeds_input = self.prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
                 model_pred = self.unet(
                     noisy_model_input,
                     timesteps,
