@@ -236,7 +236,10 @@ class BatchInterfaceComponents(InterfaceComponents):
 
     def workflow_output_control(self, runid, output):
         controls = self.rundata_controls[runid]
-        if(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
+        if(isinstance(output, Image.Image)):
+            controls.output_width = output.width
+            controls.output_control = ui.image(output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
             image = output[-1]
             controls.output_width = image.width
             controls.output_control = ui.image(image).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
