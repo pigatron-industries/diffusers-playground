@@ -20,6 +20,7 @@ class DiffusersTrainer():
 
     def __init__(self, params:TrainingParameters):
         self.params = params
+        self.override_max_train_steps = False
         self.accelerator = Accelerator(
             gradient_accumulation_steps = params.gradientAccumulationSteps,
             project_config = ProjectConfiguration(project_dir=params.outputDir),
