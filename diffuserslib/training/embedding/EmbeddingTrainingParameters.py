@@ -11,3 +11,6 @@ class EmbeddingTrainingParameters(TrainingParameters):
     subject: str = ''                   # The subject of the example data, only used when `learnableProperty` is 'subject_style'.
     numVectors: int|None = None         # Number of vectors to train.
 
+
+    def __init__(self, base:str, outputDirPrefix:str|None=None, **kwargs):
+        super().__init__(base, outputDirPrefix, **kwargs)

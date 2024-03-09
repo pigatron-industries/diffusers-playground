@@ -47,7 +47,7 @@ class TrainingParameters:
     adamEpsilon: float = 1e-08          # Epsilon value for the Adam optimizer
 
 
-    def __init__(self, base:str, outputDirPrefix:str=None, **kwargs):
+    def __init__(self, base:str, outputDirPrefix:str|None=None, **kwargs):
         self.base = base
         if base == 'sd_1_5':
             self.model = 'runwayml/stable-diffusion-v1-5'

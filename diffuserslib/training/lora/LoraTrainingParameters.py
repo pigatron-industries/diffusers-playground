@@ -20,3 +20,7 @@ class LoraTrainingParameters(TrainingParameters):
 
     trainTextEncoder:bool = False
     textEncoderWeightDecay:float = 1e-03
+
+
+    def __init__(self, base:str, outputDirPrefix:str|None=None, **kwargs):
+        super().__init__(base, outputDirPrefix, **kwargs)
