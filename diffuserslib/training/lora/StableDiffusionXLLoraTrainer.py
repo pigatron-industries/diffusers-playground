@@ -124,7 +124,8 @@ class StableDiffusionLoraTrainer(DiffusersTrainer):
 
         # Dataset and DataLoaders creation:
         self.train_dataset = DreamBoothDataset(
-            instance_data_root=self.params.trainDataDir,
+            data_root=self.params.trainDataDir,
+            data_files=self.params.trainDataFiles,
             instance_prompt=self.params.instancePrompt,
             class_prompt=self.params.classPrompt,
             class_data_root=self.params.classDir if self.params.priorPreservation else None,

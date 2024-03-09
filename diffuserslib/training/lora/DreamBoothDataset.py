@@ -4,8 +4,10 @@ from torchvision.transforms.functional import crop
 from PIL import Image
 from PIL.ImageOps import exif_transpose
 from pathlib import Path
+from typing import List
 import itertools
 import random
+import glob
 
 
 
@@ -18,7 +20,8 @@ class DreamBoothDataset(Dataset):
 
     def __init__(
         self,
-        instance_data_root,
+        data_root:str,
+        data_files:List[str],
         instance_prompt,
         class_prompt,
         class_data_root=None,
@@ -27,6 +30,8 @@ class DreamBoothDataset(Dataset):
         repeats=1,
         center_crop=False,
     ):
+        self.data_root = data_root
+        self.data_files = data_files
         self.size = size
         self.center_crop = center_crop
 
@@ -34,11 +39,12 @@ class DreamBoothDataset(Dataset):
         self.custom_instance_prompts = None
         self.class_prompt = class_prompt
         
-        self.instance_data_root = Path(instance_data_root)
-        if not self.instance_data_root.exists():
-            raise ValueError("Instance images root doesn't exists.")
+        self.image_paths = []
+        for filename in self.data_files:
+            image_paths = glob.glob(f"{self.data_root}/{filename}")
+            self.image_paths.extend(image_paths)
 
-        instance_images = [Image.open(path) for path in list(Path(instance_data_root).iterdir())]
+        instance_images = [Image.open(path) for path in self.image_paths]
         self.custom_instance_prompts = None
 
         self.instance_images = []
