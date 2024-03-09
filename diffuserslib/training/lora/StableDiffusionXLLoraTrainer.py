@@ -21,7 +21,7 @@ from peft import LoraConfig
 logger = get_logger(__name__)
 
 
-class StableDiffusionLoraTrainer(DiffusersTrainer):
+class StableDiffusionXLLoraTrainer(DiffusersTrainer):
 
     def __init__(self, params:LoraTrainingParameters):
         self.params = params
