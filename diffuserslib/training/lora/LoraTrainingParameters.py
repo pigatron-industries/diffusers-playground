@@ -6,11 +6,11 @@ import json
 @dataclass
 class LoraTrainingParameters(TrainingParameters):
     
+    instancePrompt:str = ""
+
     priorPreservation:bool = False
     rank:int = 4                      # The dimension of the LoRA update matrices.
     maxGradientNorm:float = 1.0       # The maximum norm of the gradient.
-
-    instancePrompt:str = ""
 
     priorPreservation:bool = False
     classDir:str = ""
