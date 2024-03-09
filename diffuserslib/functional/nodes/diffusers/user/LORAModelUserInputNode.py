@@ -23,10 +23,14 @@ class LORAModelUserInputNode(UserInputNode):
     
 
     def setValue(self, value:tuple[str|None, float]|None):
-        if value is not None:
-            self.lora = value[0]
-            self.weight = value[1]
-        else:
+        try:
+            if value is not None:
+                self.lora = value[0]
+                self.weight = value[1]
+            else:
+                self.lora = None
+                self.weight = 1.0
+        except:
             self.lora = None
             self.weight = 1.0
 
