@@ -242,7 +242,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
     def save_params(self):
         if self.params.outputDir is not None:
             os.makedirs(self.params.outputDir, exist_ok=True)
-        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-params.json"
+        trainparamsfile = f"{self.params.outputDir}/{self.params.outputPrefix}-{self.params.name}-params.json"
         with open(trainparamsfile, 'w') as f:
             f.write(self.params.toJson())
 
