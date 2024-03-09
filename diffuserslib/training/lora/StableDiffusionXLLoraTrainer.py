@@ -136,7 +136,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
             self.train_dataset,
             batch_size = self.params.batchSize,
             shuffle = True,
-            collate_fn = lambda examples: self.collate(examples, self.params.priorPreservation),
+            collate_fn = self.collate,
             num_workers = 1,
         )
 
@@ -207,7 +207,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
         pass
 
 
-    def collate(self, examples, with_prior_preservation=False):
+    def collate(self, examples):
         pixel_values = [example["instance_images"] for example in examples]
         prompts = [example["instance_prompt"] for example in examples]
         original_sizes = [example["original_size"] for example in examples]
@@ -215,7 +215,7 @@ class StableDiffusionXLLoraTrainer(DiffusersTrainer):
 
         # Concat class and instance examples for prior preservation.
         # We do this to avoid doing two forward passes.
-        if with_prior_preservation:
+        if self.params.priorPreservation:
             pixel_values += [example["class_images"] for example in examples]
             prompts += [example["class_prompt"] for example in examples]
 
