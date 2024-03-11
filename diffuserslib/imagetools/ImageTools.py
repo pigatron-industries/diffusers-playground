@@ -1,4 +1,5 @@
 import os, subprocess, sys
+from typing_extensions import deprecated
 from PIL import Image
 from pathlib import Path
 from .ESRGAN_upscaler import ESRGANUpscaler

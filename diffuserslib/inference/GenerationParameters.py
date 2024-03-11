@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from ..ImageUtils import base64DecodeImage
 from ..models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 import json, inspect
+from pydantic import BaseModel, ConfigDict
 
 
 class ControlImageType:
@@ -49,7 +50,9 @@ class ControlImageParameters:
 
 
 @dataclass(unsafe_hash=True)
-class GenerationParameters:
+class GenerationParameters(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     generationtype:str = "generate"
     batch:int = 1
     prescale:float = 1.0
