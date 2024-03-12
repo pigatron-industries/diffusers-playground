@@ -37,8 +37,10 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             configdata = yaml.safe_load(open(config, "r"))
             embeddings = configdata["folders"]["embeddings"]
             loras = configdata["folders"]["loras"]
-            DiffusersPipelines.pipelines.loadTextEmbeddings(embeddings)
-            DiffusersPipelines.pipelines.loadLORAs(loras)
+            for embeddingdir in embeddings:
+                DiffusersPipelines.pipelines.loadTextEmbeddings(embeddingdir)
+            for loradir in loras:
+                DiffusersPipelines.pipelines.loadLORAs(loradir)
 
     for promptmod in promptmods:
         RandomPromptProcessorNode.loadModifierDictFile(promptmod)

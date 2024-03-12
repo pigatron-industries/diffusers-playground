@@ -3,7 +3,9 @@ safety: True
 folders:
   inputs: 
     - "./inputs"
-  outputs: ./outputs
-  embeddings: ./embeddings
-  loras: ./loras
+  embeddings: 
+    - "./embeddings"
+  loras: 
+    - "./loras"
   models: ./models
+  outputs: ./outputs
