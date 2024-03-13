@@ -1,6 +1,7 @@
 from typing import List
 from PIL import Image
-from dataclasses import dataclass, field
+from dataclasses import field
+from pydantic.dataclasses import dataclass
 from ..ImageUtils import base64DecodeImage
 from ..models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 import json, inspect
@@ -21,19 +22,23 @@ GENERATIONTYPE_INPAINT = "inpaint"
 GENERATIONTYPE_UPSCALE = "upscale"
 
 
-@dataclass(unsafe_hash=True)
+class ModelConfig:
+    arbitrary_types_allowed = True
+
+
+@dataclass
 class ModelParameters:
     name:str
     weight:float = 1.0
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
 class LoraParameters:
     name:str
     weight:float = 1.0
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(config=ModelConfig)
 class ControlImageParameters:
     image:Image.Image|None = None
     image64:str = ""
@@ -49,10 +54,8 @@ class ControlImageParameters:
             self.image = base64DecodeImage(self.image64)
 
 
-@dataclass(unsafe_hash=True)
-class GenerationParameters(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+@dataclass(config=ModelConfig)
+class GenerationParameters:
     generationtype:str = "generate"
     batch:int = 1
     prescale:float = 1.0
