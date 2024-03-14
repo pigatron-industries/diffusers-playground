@@ -1,5 +1,5 @@
 from nicegui import ui
-from diffuserslib.interface_nicegui import *
+from diffuserslib.interface import *
 from diffuserslib.init import initializeDiffusers
 
 initializeDiffusers(configs=["config/config.yml", "config/local_config.yml"], 

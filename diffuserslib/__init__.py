@@ -9,8 +9,7 @@ from .inference import *
 from .batch import *
 from .processing import *
 from .imagetools import *
-from .interface_notebook import *
-from .interface_nicegui import *
+from .interface import *
 from .training import *
 from .video import *
 from .functional import *
