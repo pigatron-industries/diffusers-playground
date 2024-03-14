@@ -6,8 +6,15 @@ from diffuserslib.ImageUtils import base64EncodeImage, alphaToMask
 from diffuserslib.inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledImageToImage, tiledInpaint, compositedInpaint
 from diffuserslib.processing.ProcessingPipelineFactory import ProcessingPipelineBuilder
 from diffuserslib import ImageTools
+from diffuserslib.processing.processors.transformers import *
+from diffuserslib.processing.processors.filters import *
 from typing import List
 from PIL import Image
+import sys
+
+
+def str_to_class(str):
+    return getattr(sys.modules[__name__], str)
 
 
 class DiffusersJob():
@@ -21,6 +28,12 @@ class RestApi:
     job: DiffusersJob = DiffusersJob()
     tools: ImageTools = ImageTools(device = 'mps') #TODO get device from global config, convert to Upscale workflow
 
+
+    @staticmethod
+    @app.get("/api/")
+    def info():
+        return 'stable-diffusion'
+    
 
     @staticmethod
     @app.get("/api/models")
@@ -47,19 +60,6 @@ class RestApi:
     @app.get("/api/async")
     def getJobAsync():
         return RestApi.job.status
-    
-
-    @staticmethod
-    @app.post("/api/async/<action>")
-    def asyncAction(action:str, params:GenerationParameters):
-        if (RestApi.job.thread is not None and RestApi.job.thread.is_alive()):
-            return RestApi.getJobAsync()
-
-        runfunc = getattr(RestApi, f'{action}Run')
-        RestApi.job.thread = Thread(target = runfunc, args=[params])
-        RestApi.job.thread.start()
-        RestApi.job.status = {"status":"running", "action": action}
-        return RestApi.job.status
 
 
     @staticmethod
@@ -70,12 +70,27 @@ class RestApi:
         return output
 
 
+    @staticmethod
+    def startAsync(action, function, params):
+        if (RestApi.job.thread is not None and RestApi.job.thread.is_alive()):
+            return RestApi.getJobAsync()
+        RestApi.job.thread = Thread(target = function, args=[params])
+        RestApi.job.thread.start()
+        RestApi.job.status = {"status":"running", "action": action}
+        return RestApi.job.status
+
 
     @staticmethod
     def updateProgress(description, total, done):
         RestApi.job.status['description'] = description
         RestApi.job.status['total'] = total
         RestApi.job.status['done'] = done
+
+
+    @staticmethod
+    @app.post("/api/async/generate")
+    def generateAsync(params:GenerationParameters):
+        return RestApi.startAsync("generate", RestApi.generateRun, params)
 
 
     @staticmethod
@@ -103,8 +118,13 @@ class RestApi:
         
 
     @staticmethod
-    def inpaintRun(data:bytes):
-        params = GenerationParameters.from_json(data)
+    @app.post("/api/async/inpaint")
+    def inpaintAsync(params:GenerationParameters):
+        return RestApi.startAsync("inpaint", RestApi.inpaintRun, params)
+
+
+    @staticmethod
+    def inpaintRun(params:GenerationParameters):
         RestApi.validateParams(params)
         
         try:
@@ -140,6 +160,13 @@ class RestApi:
 
 
     @staticmethod
+    @app.post("/api/async/generateTiled")
+    def generateTiledAsync(params:TiledGenerationParameters):
+        print(params)
+        return RestApi.startAsync("generateTiled", RestApi.generateTiledRun, params)
+
+
+    @staticmethod
     def generateTiledRun(params:TiledGenerationParameters):
         RestApi.validateParams(params)
 
@@ -167,6 +194,12 @@ class RestApi:
         except Exception as e:
             RestApi.job.status = { "status":"error", "action":"img2imgTiled", "error":str(e) }
             raise e
+
+
+    @staticmethod
+    @app.post("/api/async/upscale")
+    def upscaleAsync(params:UpscaleGenerationParameters):
+        return RestApi.startAsync("upscale", RestApi.upscaleRun, params)
 
 
     @staticmethod
@@ -200,8 +233,13 @@ class RestApi:
         
 
     @staticmethod
-    def preprocessRun(data:bytes):
-        params = GenerationParameters.from_json(data)
+    @app.post("/api/async/preprocess")
+    def preprocessAsync(params:GenerationParameters):
+        return RestApi.startAsync("preprocess", RestApi.preprocessRun, params)
+
+
+    @staticmethod
+    def preprocessRun(params:GenerationParameters):
         # print(params)
         try:
             print('=== preprocess ===')

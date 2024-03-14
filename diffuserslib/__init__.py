@@ -1,9 +1,7 @@
-from .DiffusersWeb import *
 from .imagetools.ImageTools import *
 from .ImageUtils import *
 from .ModelUtils import *
 from .FileUtils import *
-from .Web import *
 
 from .util import *
 from .models import *

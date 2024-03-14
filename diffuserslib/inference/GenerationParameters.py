@@ -148,7 +148,7 @@ class GenerationParameters:
         raise Exception("Control image index out of range")
 
 
-@dataclass
+@dataclass(config=ModelConfig)
 class TiledGenerationParameters(GenerationParameters):
     tilemethod:str = "singlepass"
     tilealignmentx:str = "tile_centre"
@@ -158,7 +158,7 @@ class TiledGenerationParameters(GenerationParameters):
     tileoverlap:int = 0
 
 
-@dataclass
+@dataclass(config=ModelConfig)
 class UpscaleGenerationParameters(GenerationParameters):
     upscalemethod:str = "esrgan"
     upscaleamount:int = 4
