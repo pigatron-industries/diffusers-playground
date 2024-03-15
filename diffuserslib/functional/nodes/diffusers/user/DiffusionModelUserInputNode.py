@@ -45,7 +45,7 @@ class DiffusionModelUserInputNode(UserInputNode):
             with ui.row().classes('w-full'):
                 self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label="Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
                 ui.button(icon="settings", on_click=lambda e: self.modelSettings()).classes('align-middle').props('dense')
-            self.model_dropdown = ui.select(options=list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('w-full')
+            self.model_dropdown = ui.select(options=list(models.keys()), label="Model").bind_value(self, 'model').classes('w-full')
 
 
     def modelSettings(self):
