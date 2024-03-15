@@ -47,6 +47,9 @@ class View:
                 .align-middle {
                     transform: translateY(50%);
                 }
+                .small-number {
+                    width: 4em;
+                }
             </style>
         ''')
         context.get_client().content.classes('h-[100vh] p-0')
