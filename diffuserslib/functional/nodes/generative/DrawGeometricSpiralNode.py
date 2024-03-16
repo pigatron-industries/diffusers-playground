@@ -30,6 +30,10 @@ class DrawGeometricSpiralNode(FunctionalNode):
         ANTICLOCKWISE = "anticlockwise"
 
 
+    DirectionFuncType = Direction | Callable[[], Direction]
+    TurnFuncType = Turn | Callable[[], Turn]
+
+
     def __init__(self, 
                  image:ImageFuncType,
                  rect:RectFuncType = (0, 0, 1, 1), 
@@ -37,8 +41,8 @@ class DrawGeometricSpiralNode(FunctionalNode):
                  fill_colour:ColourFuncType = "black", 
                  ratio:FloatFuncType = GOLDEN_RATIO, 
                  iterations:IntFuncType = 7, 
-                 direction:StringFuncType = Direction.RIGHT.value, 
-                 turn:StringFuncType = Turn.CLOCKWISE.value,
+                 direction:DirectionFuncType = Direction.RIGHT, 
+                 turn:TurnFuncType = Turn.CLOCKWISE,
                  draw_options:DrawOptionsFuncType = (True, True),
                  name:str = "geometric_spiral"):
         super().__init__(name)
@@ -59,8 +63,8 @@ class DrawGeometricSpiralNode(FunctionalNode):
                 fill_colour:ColourType, 
                 ratio:float, 
                 iterations:int, 
-                direction:str, 
-                turn:str, 
+                direction:Direction, 
+                turn:Turn, 
                 draw_options:DrawOptionsType) -> Image.Image:
         startx = rect[0] * image.size[0]
         starty = rect[1] * image.size[1]
@@ -68,10 +72,10 @@ class DrawGeometricSpiralNode(FunctionalNode):
         endy = rect[3] * image.size[1]
         rectpix = (startx, starty, endx, endy)
 
-        if(turn == self.Turn.CLOCKWISE.value):
-            directions = [self.Direction.RIGHT.value, self.Direction.DOWN.value, self.Direction.LEFT.value, self.Direction.UP.value]
+        if(turn == self.Turn.CLOCKWISE):
+            directions = [self.Direction.RIGHT, self.Direction.DOWN, self.Direction.LEFT, self.Direction.UP]
         else:
-            directions = [self.Direction.RIGHT.value, self.Direction.UP.value, self.Direction.LEFT.value, self.Direction.DOWN.value]
+            directions = [self.Direction.RIGHT, self.Direction.UP, self.Direction.LEFT, self.Direction.DOWN]
         directionIndex = directions.index(direction)
 
         image = image.copy()
@@ -94,26 +98,26 @@ class DrawGeometricSpiralNode(FunctionalNode):
         if(drawSpiral):
             width = rect[x2] - rect[x1]
             height = rect[y2] - rect[y1]
-            if(direction == "right"):
+            if(direction == self.Direction.RIGHT):
                 arc_centre = (rect[x2], rect[y2])
                 arc_height = height * -1
                 arc_width = width * -1
-            if(direction == "left"):
+            if(direction == self.Direction.LEFT):
                 arc_centre = (rect[x1], rect[y1])
                 arc_height = height * 1
                 arc_width = width * 1
-            if(direction == "down"):
+            if(direction == self.Direction.DOWN):
                 arc_centre = (rect[x1], rect[y2])
                 arc_height = height * -1
                 arc_width = width * 1
-            if(direction == "up"):
+            if(direction == self.Direction.UP):
                 arc_centre = (rect[x2], rect[y1])
                 arc_height = height * 1
                 arc_width = width * -1
-            if(turn != "clockwise" and direction in ("up", "down")):
+            if(turn != self.Turn.CLOCKWISE and direction in (self.Direction.UP, self.Direction.DOWN)):
                 arc_centre = (arc_centre[0]+arc_width, arc_centre[1])
                 arc_width = arc_width * -1
-            if(turn != "clockwise" and direction in ("left", "right")):
+            if(turn != self.Turn.CLOCKWISE and direction in (self.Direction.LEFT, self.Direction.RIGHT)):
                 arc_centre = (arc_centre[0], arc_centre[1]+arc_height)
                 arc_height = arc_height * -1
 
@@ -128,18 +132,18 @@ class DrawGeometricSpiralNode(FunctionalNode):
                 y_start = y_end
 
 
-    def splitRectangle(self, rect:RectType, ratio:float, direction:str) -> Tuple[RectType, RectType]:
-        if(direction == "right"):
+    def splitRectangle(self, rect:RectType, ratio:float, direction:Direction) -> Tuple[RectType, RectType]:
+        if(direction == self.Direction.RIGHT):
             rect_left_width = (rect[x2]-rect[x1]) * ratio
             rect_left = (rect[x1], rect[y1], rect[x1]+rect_left_width, rect[y2])
             rect_right = (rect_left[x2], rect[y1], rect[x2], rect[y2])
             return rect_left, rect_right
-        elif(direction == "left"):
+        elif(direction == self.Direction.LEFT):
             rect_left_width = (rect[x2]-rect[x1]) * (1-ratio)
             rect_left = (rect[x1], rect[y1], rect[x1]+rect_left_width, rect[y2])
             rect_right = (rect_left[x2], rect[y1], rect[x2], rect[y2])
             return rect_right, rect_left
-        elif(direction == "down"):
+        elif(direction == self.Direction.DOWN):
             rect_top_height = (rect[y2]-rect[y1]) * ratio
             rect_top = (rect[x1], rect[y1], rect[x2], rect[y1]+rect_top_height)
             rect_bottom = (rect[x1], rect_top[y2], rect[x2], rect[y2])

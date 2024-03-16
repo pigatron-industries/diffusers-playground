@@ -4,7 +4,7 @@ from diffuserslib.functional import *
 class RandomVoronoiWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Random Voronoi", Image.Image, workflow=True, subworkflow=True)
+        super().__init__("Image Generation - Random Voronoi", Image.Image, workflow=True, subworkflow=True)
 
 
     def build(self):
