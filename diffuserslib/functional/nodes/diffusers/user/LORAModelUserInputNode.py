@@ -18,15 +18,15 @@ class LORAModelUserInputNode(UserInputNode):
         super().__init__(name)
 
 
-    def getValue(self) -> tuple[str|None, float]|None:
-        return self.lora, self.weight
+    def getValue(self) -> List[Tuple[str|None, float]]|None:
+        return list(zip(self.selected_loras, self.selected_weights))
     
 
-    def setValue(self, value:tuple[str|None, float]|None):
+    def setValue(self, value:List[Tuple[str|None, float]]|None):
         try:
             if value is not None:
-                self.lora = value[0]
-                self.weight = value[1]
+                self.selected_loras = [v[0] for v in value]
+                self.selected_weights = [v[1] for v in value]
             else:
                 self.lora = None
                 self.weight = 1.0
