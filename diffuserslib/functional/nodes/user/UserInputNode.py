@@ -195,46 +195,54 @@ class SizeUserInputNode(UserInputNode):
         return (int(self.width), int(self.height))
     
 
-class MinMaxIntInputNode(UserInputNode):
-    def __init__(self, value:Tuple[int, int]=(0, 100), name:str="min_max_user_input"):
-        self.min = value[0]
-        self.max = value[1]
+class IntTupleInputNode(UserInputNode):
+    def __init__(self, value:Tuple[int, int]=(0, 100), labels:Tuple[str, str]=("Min", "Max"), name:str="min_max_user_input"):
+        self.value1 = value[0]
+        self.value2 = value[1]
+        self.labels = labels
         super().__init__(name)
 
     def getValue(self) -> Tuple[int, int]:
-        return (self.min, self.max)
+        return (self.value1, self.value2)
     
     def setValue(self, value:Tuple[int, int]):
-        self.min = value[0]
-        self.max = value[1]
+        try:
+            self.value1 = value[0]
+            self.value2 = value[1]
+        except:
+            print(f"Invalid value for MinMaxFloatInputNode: {value}")
 
     def gui(self):
-        ui.number(value=self.min, label="Min").bind_value(self, 'min')
-        ui.number(value=self.max, label="Max").bind_value(self, 'max')
+        ui.number(value=self.value1, label="Min").bind_value(self, 'value1')
+        ui.number(value=self.value2, label="Max").bind_value(self, 'value2')
 
     def process(self) -> Tuple[int, int]:
-        return (int(self.min), int(self.max))
+        return (int(self.value1), int(self.value2))
 
 
-class MinMaxFloatInputNode(UserInputNode):
-    def __init__(self, value:Tuple[float, float]=(0.0, 100.0), name:str="min_max_float_user_input"):
-        self.min = value[0]
-        self.max = value[1]
+class FloatTupleInputNode(UserInputNode):
+    def __init__(self, value:Tuple[float, float]=(0.0, 100.0), labels:Tuple[str, str]=("Min", "Max"), name:str="float_tuple_user_input"):
+        self.value1 = value[0]
+        self.value2 = value[1]
+        self.labels = labels
         super().__init__(name)
 
     def getValue(self) -> Tuple[float, float]:
-        return (self.min, self.max)
+        return (self.value1, self.value2)
     
     def setValue(self, value:Tuple[float, float]):
-        self.min = value[0]
-        self.max = value[1]
+        try:
+            self.value1 = value[0]
+            self.value2 = value[1]
+        except:
+            print(f"Invalid value for MinMaxFloatInputNode: {value}")
 
     def gui(self):
-        ui.number(value=self.min, label="Min", format='%.2f').bind_value(self, 'min')
-        ui.number(value=self.max, label="Max", format='%.2f').bind_value(self, 'max')
+        ui.number(value=self.value1, label=self.labels[0], format='%.2f').bind_value(self, 'value1')
+        ui.number(value=self.value2, label=self.labels[1], format='%.2f').bind_value(self, 'value2')
 
     def process(self) -> Tuple[float, float]:
-        return (float(self.min), float(self.max))
+        return (float(self.value1), float(self.value2))
     
 
 class BoolListUserInputNode(UserInputNode):

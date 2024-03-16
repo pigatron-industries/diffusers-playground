@@ -7,7 +7,7 @@ class RandomIntWorkflow(WorkflowBuilder):
         super().__init__("Random Integer", int, workflow=False, subworkflow=True)
 
     def build(self):
-        min_max = MinMaxIntInputNode()
+        min_max = IntTupleInputNode()
         random_int = RandomIntNode(min_max = min_max)
         return random_int
     
@@ -18,7 +18,7 @@ class RandomFloatWorkflow(WorkflowBuilder):
         super().__init__("Random Float", float, workflow=False, subworkflow=True)
 
     def build(self):
-        min_max = MinMaxFloatInputNode()
+        min_max = FloatTupleInputNode()
         random_float = RandomFloatNode(min_max = min_max)
         return random_float
 

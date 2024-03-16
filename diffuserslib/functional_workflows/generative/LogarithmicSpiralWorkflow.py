@@ -10,9 +10,9 @@ class LogarithmicSpiralWorkflow(WorkflowBuilder):
     def build(self):
         size_user_input = SizeUserInputNode(value = (512, 512), name = "size")
         revolutions_input = FloatUserInputNode(value = 8, name = "revolutions")
-        segment_angle_input = IntUserInputNode(value = 1, name = "segment_agnle")
+        segment_angle_input = IntUserInputNode(value = 1, name = "segment_angle")
         tightness_input = FloatUserInputNode(value = 0.25, format = '%.3f', name = "tightness")
-        scale_input = FloatUserInputNode(value = 1.0, name = "scale")
+        scale_input = FloatTupleInputNode(value = (1.0, 1.0), labels=("scale_x", "scale_y"), name = "scale")
         rotate_input = IntUserInputNode(value = 0, name = "rotate")
 
         new_image = NewImageNode(size = size_user_input, background_colour = (0, 0, 0))
