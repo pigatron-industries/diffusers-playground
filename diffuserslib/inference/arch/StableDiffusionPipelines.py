@@ -19,6 +19,7 @@ import sys
 import numpy as np
 from compel import Compel
 from typing import List
+from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 
 
 
@@ -237,8 +238,19 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
 
 class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
+        self.features = self.getPipelineFeatures(params)
+        cls = self.getPipelineClass(params)
         self.adapter = MotionAdapter.from_pretrained("vladmandic/animatediff-v3", torch_dtype=torch.float16)
-        super().__init__(AnimateDiffPipeline, params, device)
+        super().__init__(cls, params, device)
+
+
+    def getPipelineClass(self, params:GenerationParameters):
+        if(self.features.controlnet):
+            return "pipeline_animatediff_controlnet"
+        elif(self.features.img2img):
+            return "pipeline_animatediff_img2video"
+        else:
+            return AnimateDiffPipeline
 
 
     def createPipelineParams(self, params:GenerationParameters):
@@ -246,6 +258,8 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
         pipeline_params['motion_adapter'] = self.adapter
         pipeline_params['torch_dtype'] = torch.float16
         self.addPipelineParamsCommon(params, pipeline_params)
+        if(self.features.controlnet):
+            self.addPipelineParamsControlNet(params, pipeline_params)
         return pipeline_params
 
 
@@ -260,8 +274,28 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
         diffusers_params['width'] = params.width
         diffusers_params['height'] = params.height
         diffusers_params['num_frames'] = params.frames
+        if(self.features.controlnet):
+            self.addInferenceParamsControlNet(params, diffusers_params)
+        if(self.features.img2img):
+            self.addInferenceParamsImg2Img(params, diffusers_params)
+            diffusers_params['latent_interpolation_method'] = "slerp"  # "slerp" or "lerp"
+        if(self.features.ipadapter):
+            self.addInferenceParamsIpAdapter(params, diffusers_params)
         output, seed = super().diffusers_inference(**diffusers_params)
         return output.frames[0], seed
+    
+
+    def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
+        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
+        videos = []
+        scales = []
+        for controlnetparam in controlnetparams:
+            if(controlnetparam.image is not None):
+                video = controlnetparam.image
+                videos.append(video)
+                scales.append(controlnetparam.condscale)
+        diffusers_params['conditioning_frames'] = videos
+        diffusers_params['controlnet_conditioning_scale'] = scales
 
 
 class StableDiffusionPersonalizedImageAnimatorPipelineWrapper(StableDiffusionPipelineWrapper):
