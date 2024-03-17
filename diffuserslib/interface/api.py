@@ -63,14 +63,6 @@ class RestApi:
 
 
     @staticmethod
-    @app.post("/api/<action>")
-    def syncAction(action:str, params:GenerationParameters):
-        runfunc = getattr(RestApi, f'{action}Run')
-        output = runfunc(params)
-        return output
-
-
-    @staticmethod
     def startAsync(action, function, params):
         if (RestApi.job.thread is not None and RestApi.job.thread.is_alive()):
             return RestApi.getJobAsync()
@@ -94,6 +86,7 @@ class RestApi:
 
 
     @staticmethod
+    @app.post("/api/generate")
     def generateRun(params:GenerationParameters):
         RestApi.validateParams(params)
 
@@ -124,6 +117,7 @@ class RestApi:
 
 
     @staticmethod
+    @app.post("/api/inpaint")
     def inpaintRun(params:GenerationParameters):
         RestApi.validateParams(params)
         
@@ -165,6 +159,7 @@ class RestApi:
 
 
     @staticmethod
+    @app.post("/api/generateTiled")
     def generateTiledRun(params:TiledGenerationParameters):
         RestApi.validateParams(params)
 
@@ -201,6 +196,7 @@ class RestApi:
 
 
     @staticmethod
+    @app.post("/api/upscale")
     def upscaleRun(params:UpscaleGenerationParameters):
         params.generationtype = "upscale"
         RestApi.validateParams(params)
@@ -237,6 +233,7 @@ class RestApi:
 
 
     @staticmethod
+    @app.post("/api/preprocess")
     def preprocessRun(params:GenerationParameters):
         # print(params)
         try:

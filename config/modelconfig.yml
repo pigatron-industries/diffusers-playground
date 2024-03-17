@@ -233,7 +233,7 @@ ipadapterfaceid:
 animatediff:
   - base: sd_1_5
     models:
-      - id: guoyww/animatediff-motion-adapter-v1-5-2
+      - id: vladmandic/animatediff-v3
     loras:
       - id: guoyww/animatediff-motion-lora-zoom-in
       - id: guoyww/animatediff-motion-lora-zoom-out

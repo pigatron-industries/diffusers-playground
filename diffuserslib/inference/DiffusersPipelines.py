@@ -145,17 +145,18 @@ class DiffusersPipelines:
 
 
     def _addLORAsToPipeline(self, params:GenerationParameters):
+        if(self.pipeline is None or self.pipeline.initparams.modelConfig is None):
+            return
+        base = self.pipeline.initparams.modelConfig.base
+
+        loras = []
+        weights = []
         for loraparams in params.loras:
-            self._addLORAToPipeline(loraparams.name, loraparams.weight)
+            if (base in self.baseModelData and loraparams.name in self.baseModelData[base].loras):
+                loras.append(self.baseModelData[base].loras[loraparams.name])
+                weights.append(loraparams.weight)
+        self.pipeline.add_loras(loras, weights)
 
-
-    def _addLORAToPipeline(self, lora_name, weight:float=1.0):
-        if(self.pipeline is not None and self.pipeline.initparams.modelConfig is not None):
-            base = self.pipeline.initparams.modelConfig.base
-            if (base in self.baseModelData and lora_name in self.baseModelData[base].loras):
-                print(f"Loading LORA {lora_name}")
-                self.pipeline.add_lora(self.baseModelData[base].loras[lora_name], weight=weight)
-                # self.baseModelData[self.pipeline.initparams.modelConfig.base].loras[lora_name].add_to_model(self.pipeline.pipeline, weight=weight, device=self.device)
 
     #=============== MODEL MERGING ==============
 
