@@ -130,7 +130,6 @@ class RestApi:
         try:
             print('=== inpaint ===')
             initimageparams = params.getInitImage()
-            initimage = initimageparams.image
             if (initimageparams is None):
                 raise Exception("No init image provided")
             if (params.getMaskImage() is None):
@@ -162,7 +161,6 @@ class RestApi:
     @staticmethod
     @app.post("/api/async/generateTiled")
     def generateTiledAsync(params:TiledGenerationParameters):
-        print(params)
         return RestApi.startAsync("generateTiled", RestApi.generateTiledRun, params)
 
 
