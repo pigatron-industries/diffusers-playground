@@ -129,7 +129,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     def add_lora(self, lora:LORA):
         if(lora.name not in self.lora_names):
             self.lora_names.append(lora.name)
-            self.pipeline.load_lora_weights(lora.path, adapter_name=lora.name)
+            self.pipeline.load_lora_weights(lora.path, adapter_name=lora.name.split('.', 1)[0])
 
 
     def add_loras(self, loras:List[LORA], weights:List[float]):
@@ -139,7 +139,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         lora_names = []
         for i, lora in enumerate(loras):
             lora_weights.append(weights[i])
-            lora_names.append(lora.name)
+            lora_names.append(lora.name.split('.', 1)[0])
         self.pipeline.set_adapters(lora_names, lora_weights)
 
 
