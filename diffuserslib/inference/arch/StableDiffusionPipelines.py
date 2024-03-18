@@ -281,7 +281,13 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
         if(self.features.controlnet):
             self.addInferenceParamsControlNet(params, diffusers_params)
         if(self.features.img2img):
-            self.addInferenceParamsImg2Img(params, diffusers_params)
+            initimageparams = params.getInitImage()
+            if(initimageparams is not None):
+                diffusers_params['strength'] = initimageparams.condscale
+                if(isinstance(initimageparams.image, list)):
+                    diffusers_params['video'] = initimageparams.image
+                else:
+                    diffusers_params['image'] = initimageparams.image
             diffusers_params['latent_interpolation_method'] = "slerp"  # "slerp" or "lerp"
         if(self.features.ipadapter):
             self.addInferenceParamsIpAdapter(params, diffusers_params)
