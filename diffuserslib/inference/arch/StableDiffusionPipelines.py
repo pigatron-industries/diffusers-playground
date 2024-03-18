@@ -31,7 +31,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     INPAINT_CONTROL_MODEL = "lllyasviel/control_v11p_sd15_inpaint"
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdv1-5"
 
-    def __init__(self, cls, params:GenerationParameters, device):
+    def __init__(self, cls, params:GenerationParameters, device, dtype = None):
         print(f"creating pipeline {cls.__name__ if type(cls) is type else cls}")
         if(params.modelConfig is None):
             raise ValueError("Must provide modelConfig")
@@ -40,7 +40,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         self.lora_names = []
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
         self.createPipeline(params, cls)
-        super().__init__(params, inferencedevice)
+        super().__init__(params, inferencedevice, dtype)
 
 
     def createPipeline(self, params:GenerationParameters, cls):
@@ -240,9 +240,8 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
-        self.dtype = torch.float16
         self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=self.dtype)
-        super().__init__(cls, params, device)
+        super().__init__(cls, params, device, dtype = torch.float16)
 
 
     def getPipelineClass(self, params:GenerationParameters):
