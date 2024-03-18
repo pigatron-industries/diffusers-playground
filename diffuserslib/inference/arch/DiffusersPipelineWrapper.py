@@ -38,6 +38,7 @@ class SplitModelName:
 
 class DiffusersPipelineWrapper:
     def __init__(self, params:GenerationParameters, inferencedevice:str):
+        self.dtype = None
         self.initparams = params
         self.inferencedevice = inferencedevice
 
@@ -96,6 +97,8 @@ class DiffusersPipelineWrapper:
             pipeline_params['revision'] = modelConfig.revision
             if(modelConfig.revision == 'fp16'):
                 pipeline_params['torch_dtype'] = torch.float16
+        if(self.dtype is not None):
+            pipeline_params['torch_dtype'] = self.dtype
         if(modelConfig.vae is not None):
             pipeline_params['vae'] = AutoencoderKL.from_pretrained(modelConfig.vae, 
                                                         torch_dtype=pipeline_params['torch_dtype'] if 'torch_dtype' in pipeline_params else None, 
@@ -103,14 +106,20 @@ class DiffusersPipelineWrapper:
         return pipeline_params
     
     def addPipelineParamsControlNet(self, params:GenerationParameters, pipeline_params):
+        args = {}
+        if(self.dtype is not None):
+            args['torch_dtype'] = self.dtype
         controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
         controlnet = []
         for controlnetparam in controlnetparams:
-            controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model))
+            controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model), **args)
         pipeline_params['controlnet'] = controlnet
         return pipeline_params
     
     def addPipelineParamsT2IAdapter(self, params:GenerationParameters, pipeline_params):
+        args = {}
+        if(self.dtype is not None):
+            args['torch_dtype'] = self.dtype
         t2iadapterparams = params.getConditioningParamsByModelType(DiffusersModelType.t2iadapter)
         t2iadapter = []
         for t2iadapterparam in t2iadapterparams:
@@ -119,9 +128,13 @@ class DiffusersPipelineWrapper:
         return pipeline_params
     
     def addPipelineParamsIpAdapter(self, params:GenerationParameters, pipeline_params):
+        args = {}
+        if(self.dtype is not None):
+            args['torch_dtype'] = self.dtype
         pipeline_params['image_encoder'] = CLIPVisionModelWithProjection.from_pretrained(
                                                 "h94/IP-Adapter", 
-                                                subfolder="models/image_encoder"
+                                                subfolder="models/image_encoder",
+                                                **args
                                             )
         return pipeline_params
     
