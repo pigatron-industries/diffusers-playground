@@ -112,7 +112,7 @@ class DiffusersPipelineWrapper:
         controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
         controlnet = []
         for controlnetparam in controlnetparams:
-            controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model), **args)
+            controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model, **args))
         pipeline_params['controlnet'] = controlnet
         return pipeline_params
     
@@ -123,7 +123,7 @@ class DiffusersPipelineWrapper:
         t2iadapterparams = params.getConditioningParamsByModelType(DiffusersModelType.t2iadapter)
         t2iadapter = []
         for t2iadapterparam in t2iadapterparams:
-            t2iadapter.append(T2IAdapter.from_pretrained(t2iadapterparam.model))
+            t2iadapter.append(T2IAdapter.from_pretrained(t2iadapterparam.model), **args)
         pipeline_params['adapter'] = t2iadapter
         return pipeline_params
     
