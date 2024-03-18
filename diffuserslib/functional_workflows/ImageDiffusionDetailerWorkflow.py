@@ -10,7 +10,7 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        image_input = ImageSelectInputNode(name = "image")
+        image_input = ImageUploadInputNode(name = "image")
         initimage_scale_input = FloatUserInputNode(value = 0.2, name = "initimage_scale")
         canny_scale_input = FloatUserInputNode(value = 0.9, name = "canny_scale")
         ipadapter_scale_input = FloatUserInputNode(value = 0.6, name = "ipadapter_scale")

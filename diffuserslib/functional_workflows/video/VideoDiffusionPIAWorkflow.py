@@ -7,7 +7,7 @@ class VideoDiffusionPIAWorkflow(WorkflowBuilder):
         super().__init__("Video Diffusion - Personalized Image Animator", Video, workflow=True, subworkflow=True)
 
     def build(self):
-        image_input = ImageSelectInputNode(name = "image")
+        image_input = ImageUploadInputNode(name = "image")
         models_input = DiffusionModelUserInputNode(basemodels=["sd_1_5"])
         size_input = SizeUserInputNode(value = (512, 512))
         prompt_input = TextAreaInputNode(value = "", name="prompt")

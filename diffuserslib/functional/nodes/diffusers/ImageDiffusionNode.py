@@ -38,7 +38,7 @@ class ImageDiffusionNode(FunctionalNode):
         self.addParam("cfgscale", cfgscale, float)
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
-        self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
+        self.addParam("conditioning_inputs", conditioning_inputs, List[ConditioningInputType])
 
 
     def process(self, 

@@ -1,7 +1,8 @@
-from ....FunctionalNode import FunctionalNode
-from ....types.FunctionalTyping import *
-from .....inference.DiffusersPipelines import DiffusersPipelines
-from .....inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
+from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.nodes.diffusers.ConditioningInputNode import ConditioningInputFuncsType, ConditioningInputType
+from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
+from diffuserslib.inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
 from PIL import Image
 
 ModelsType = List[ModelParameters]
@@ -22,7 +23,7 @@ class VideoDiffusionAnimateDiffNode(FunctionalNode):
                  seed:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
                  frames:IntFuncType = 16,
-                #  conditioning_inputs:ConditioningInputFuncsType|None = None,
+                 conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
         self.addParam("size", size, SizeType)
@@ -35,7 +36,7 @@ class VideoDiffusionAnimateDiffNode(FunctionalNode):
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
         self.addParam("frames", frames, int)
-        # self.addParam("conditioning_inputs", conditioning_inputs, ConditioningInputType)
+        self.addParam("conditioning_inputs", conditioning_inputs, List[ConditioningInputType])
 
 
     def process(self, 
@@ -48,7 +49,8 @@ class VideoDiffusionAnimateDiffNode(FunctionalNode):
                 cfgscale:float, 
                 seed:int|None, 
                 scheduler:str,
-                frames:int) -> List[Image.Image]:
+                frames:int,
+                conditioning_inputs:List[ConditioningInputType]|None) -> List[Image.Image]:
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
@@ -66,7 +68,7 @@ class VideoDiffusionAnimateDiffNode(FunctionalNode):
             seed=seed,
             scheduler=scheduler,
             frames=frames,
-            # controlimages=conditioning_inputs if conditioning_inputs is not None else []
+            controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
         output, seed = DiffusersPipelines.pipelines.generate(params)

@@ -40,7 +40,7 @@ class LoraParameters:
 
 @dataclass(config=ModelConfig)
 class ControlImageParameters:
-    image:Image.Image|None = None
+    image:Image.Image|List[Image.Image]|None = None
     image64:str = ""
     type:str = ControlImageType.IMAGETYPE_INITIMAGE
     preprocessor:str|None = None

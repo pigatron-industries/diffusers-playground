@@ -26,7 +26,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         def create_conditioning_input():
             conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
             scale_input = FloatUserInputNode(value = 1.0, name = "scale")
-            image_input = ImageSelectInputNode(name = "image_input")
+            image_input = ImageUploadInputNode(name = "image_input")
             resize_type_input = EnumSelectUserInputNode(value = ResizeImageNode.ResizeType.EXTEND, enum = ResizeImageNode.ResizeType, name = "resize_type")
             resize_image = ResizeImageNode(image = image_input, size = size_input, type = resize_type_input, name = "resize_image")
             return ConditioningInputNode(image = resize_image, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")

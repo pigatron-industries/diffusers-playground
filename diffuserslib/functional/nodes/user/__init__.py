@@ -1,4 +1,4 @@
 from .UserInputNode import *
 from .ListUserInputNode import *
-from .ImageSelectInputNode import *
+from .FileUploadInputNode import *
 from .FileSelectInputNode import *
