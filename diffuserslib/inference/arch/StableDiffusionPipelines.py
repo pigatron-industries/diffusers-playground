@@ -6,7 +6,7 @@ from diffusers import ( # Pipelines
                         DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
                         StableDiffusionInpaintPipeline, StableDiffusionControlNetPipeline,
                         StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
-                        StableDiffusionAdapterPipeline, AnimateDiffPipeline, PIAPipeline,
+                        StableDiffusionAdapterPipeline, AnimateDiffPipeline, PIAPipeline, AnimateDiffVideoToVideoPipeline,
                         # Conditioning models
                         T2IAdapter, ControlNetModel, MotionAdapter,
                         # Schedulers
@@ -248,7 +248,11 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
         if(self.features.controlnet):
             return "pipeline_animatediff_controlnet"
         elif(self.features.img2img):
-            return "pipeline_animatediff_img2video"
+            initimageparams = params.getInitImage()
+            if(initimageparams is not None and isinstance(initimageparams.image, list)):
+                return AnimateDiffVideoToVideoPipeline
+            else:
+                return "pipeline_animatediff_img2video"
         else:
             return AnimateDiffPipeline
 

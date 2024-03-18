@@ -5,7 +5,7 @@ import cv2
 import tempfile
 
 
-class ImageUploadInputNode(FileUploadInputNode):
+class VideoUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a single image. The output is an image."""
 
 

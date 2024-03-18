@@ -26,7 +26,7 @@ class VideoDiffusionAnimateDiffConditioningWorkflow(WorkflowBuilder):
             frames_input = VideoUploadInputNode(name = "frames_input")
             # resize_type_input = EnumSelectUserInputNode(value = ResizeImageNode.ResizeType.EXTEND, enum = ResizeImageNode.ResizeType, name = "resize_type")
             # resize_image = ResizeImageNode(image = image_input, size = size_input, type = resize_type_input, name = "resize_image")
-            return FramesConditioningInputNode(image = frames_input, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
+            return FramesConditioningInputNode(frames = frames_input, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
 
         conditioning_inputs = ListUserInputNode(input_node_generator = create_conditioning_input, name = "conditioning_inputs")
         animatediff = VideoDiffusionAnimateDiffNode(models = models_input, 
