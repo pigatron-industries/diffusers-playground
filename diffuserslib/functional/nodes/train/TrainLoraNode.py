@@ -71,7 +71,7 @@ class TrainLoraNode(FunctionalNode):
         command = ["accelerate", "launch", "./workspace/sd-scripts/sdxl_train_network.py"]
         command.append(f'--network_module="networks.lora"')
         command.append(f'--pretrained_model_name_or_path={model[0].name}')
-        command.append(f"--train_data_dir={temp_train_dir}")
+        command.append(f"--train_data_dir={temp_data_dir}")
         command.append(f"--output_dir={temp_output_dir}")
         command.append(f"--resolution={resolution}")
         command.append(f"--train_batch_size={batch_size}")
