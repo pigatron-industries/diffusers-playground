@@ -99,6 +99,7 @@ class TrainLoraNode(FunctionalNode):
         temp_data_dir = os.path.join(temp_data_dir, f"{repeats}_{keyword} {classword}")
         os.makedirs(temp_data_dir, exist_ok=True)
         for file_pattern in train_files:
+            # TODO change * to *.png etc
             files = glob.glob(file_pattern)
             for file in files:
                 if os.path.isfile(file):
@@ -136,6 +137,8 @@ class TrainLoraNode(FunctionalNode):
                     latest_dir = dir_name
             except:
                 continue
+        if highest_steps == -1:
+            return None, None
         return latest_dir, highest_steps
     
 
