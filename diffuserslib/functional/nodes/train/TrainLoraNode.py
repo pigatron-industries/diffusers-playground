@@ -91,8 +91,10 @@ class TrainLoraNode(FunctionalNode):
         process = CommandProcess(command)
         process.runSync()
 
+        print("Copying output files to output dir...")
         self.copyOutputFiles(temp_output_dir, output_dir, resume_steps, keyword, classword)
         self.copyResumeDataToOutput(resume_steps, temp_output_dir, output_dir)
+        print("Done")
 
 
     
