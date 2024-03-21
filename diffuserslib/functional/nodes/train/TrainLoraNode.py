@@ -84,6 +84,7 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--seed={seed}")
         command.append(f"--lowram")
         command.append(f"--save_state")
+        command.append(f"--save_last_n_steps_state=2")
         if(resume_steps is not None):     
             command.append(f"--resume_from={temp_resume_dir}")
         
@@ -155,7 +156,7 @@ class TrainLoraNode(FunctionalNode):
 
     def getStepsFromName(self, name:str) -> int|None:
         """Extract number of steps from name in format at-step00001000-state or at-step00001000-state"""
-        match = re.search(r"[a-zA-Z](\d+)[a-zA-Z]", name)
+        match = re.search(r"[^0-9](\d+)[^0-9]", name)
         if match:
             return int(match.group(1))
         else:
