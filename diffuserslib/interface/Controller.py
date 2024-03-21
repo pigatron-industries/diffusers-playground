@@ -57,7 +57,7 @@ class Controller:
         for module in modules:
             vars = ModuleLoader.get_vars(module)
             for name, buildercls in vars.items():
-                if(issubclass(buildercls, WorkflowBuilder)):
+                if(inspect.isclass(buildercls) and issubclass(buildercls, WorkflowBuilder)):
                     builder = buildercls()
                     self.builders[name] = builder
                     if(builder.workflow and name not in self.builders_batch):

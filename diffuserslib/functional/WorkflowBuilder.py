@@ -3,7 +3,7 @@ from typing import Any
 
 
 class WorkflowBuilder:
-    def __init__(self, name:str="Workflow Name", type:type=Any, workflow:bool=True, subworkflow:bool=False, realtime:bool=False):
+    def __init__(self, name:str="Workflow Name", type:type|None=None, workflow:bool=True, subworkflow:bool=False, realtime:bool=False):
         self.name = name
         self.type = type
         self.workflow = workflow
