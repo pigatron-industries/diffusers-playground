@@ -101,7 +101,8 @@ class TrainLoraNode(FunctionalNode):
         for file_pattern in train_files:
             files = glob.glob(file_pattern)
             for file in files:
-                shutil.copy(file, temp_data_dir)
+                if os.path.isfile(file):
+                    shutil.copy(file, temp_data_dir)
         
     
     def copyResumeData(self, temp_resume_dir:str, output_dir:str) -> int|None:
