@@ -144,6 +144,7 @@ class TrainLoraNode(FunctionalNode):
     
 
     def copyOutputFiles(self, temp_output_dir:str, output_dir:str, resume_steps:int|None, keyword:str, classword:str):
+        os.makedirs(output_dir, exist_ok=True)
         output_files = glob.glob(os.path.join(temp_output_dir, "*.safetensors"))
         for file in output_files:
             steps = self.getStepsFromName(file)
