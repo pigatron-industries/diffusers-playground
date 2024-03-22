@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 
 class CommandProcess:
@@ -35,12 +36,16 @@ class CommandProcess:
 
     async def read_stream(self, stream, name):
         while True:
-            line = await stream.readline()
-            if not line:
-                break
-            print(f"{name}: {line.decode().strip()}")
-            if(name == "stderr"):
-                self.stderr += line.decode()
-            else:
-                self.stdout += line.decode()
+            try:
+                line = await stream.read(1)
+                if not line:
+                    break
+                sys.stdout.write(line.decode())
+                sys.stdout.flush()
+                if(name == "stderr"):
+                    self.stderr += line.decode()
+                else:
+                    self.stdout += line.decode()
+            except Exception as e:
+                pass
 

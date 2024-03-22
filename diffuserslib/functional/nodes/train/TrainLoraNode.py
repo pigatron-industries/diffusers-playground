@@ -1,3 +1,4 @@
+from matplotlib.pyplot import step
 from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsFuncType, ModelsType
@@ -6,6 +7,7 @@ import os
 import shutil
 import glob
 import re
+import yaml
 
 ListStringFuncType = List[str] | Callable[[], List[str]]
 
@@ -62,11 +64,7 @@ class TrainLoraNode(FunctionalNode):
         if(isinstance(train_files, str)):
             train_files = [train_files]
         self.copyTrainingData(temp_data_dir, keyword, classword, repeats, train_files)
-        resume_steps = self.copyResumeData(temp_resume_dir, output_dir)
-
-        # TODO: save input parameters to output dir
-        # TODO: resize input data?
-
+        resume_steps, temp_resume_dir = self.copyResumeData(temp_resume_dir, output_dir)
 
         command = ["accelerate", "launch", "./workspace/sd-scripts/sdxl_train_network.py"]
         command.append(f'--network_module="networks.lora"')
@@ -74,6 +72,7 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--train_data_dir={temp_data_dir}")
         command.append(f"--output_dir={temp_output_dir}")
         command.append(f"--resolution={resolution}")
+        command.append(f"--enable_bucket")
         command.append(f"--train_batch_size={batch_size}")
         command.append(f"--gradient_accumulation_steps={gradient_accumulation_steps}")
         command.append(f"--save_every_n_steps={save_steps}")
@@ -84,15 +83,20 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--seed={seed}")
         command.append(f"--lowram")
         command.append(f"--save_state")
-        command.append(f"--save_last_n_steps_state=2")
+        command.append(f"--save_last_n_steps_state=0")
         if(resume_steps is not None):     
-            command.append(f"--resume_from={temp_resume_dir}")
+            print (f"Resuming from {temp_resume_dir}, steps={resume_steps}")
+            command.append(f"--resume={temp_resume_dir}")
         
         process = CommandProcess(command)
         process.runSync()
 
         print("Copying output files to output dir...")
         self.copyOutputFiles(temp_output_dir, output_dir, resume_steps, keyword, classword)
+        self.saveParameters(output_dir=output_dir, model=model[0].name, keyword=keyword, classword=classword, train_files=train_files, 
+                            repeats=repeats, resolution=resolution, batch_size=batch_size, gradient_accumulation_steps=gradient_accumulation_steps, 
+                            save_steps=save_steps, train_steps=train_steps, learning_rate=learning_rate, learning_rate_schedule=learning_rate_schedule, 
+                            learning_rate_warmup_steps=learning_rate_warmup_steps, seed=seed)
         self.copyResumeDataToOutput(resume_steps, temp_output_dir, output_dir)
         print("Done")
 
@@ -109,13 +113,21 @@ class TrainLoraNode(FunctionalNode):
                     shutil.copy(file, temp_data_dir)
         
     
-    def copyResumeData(self, temp_resume_dir:str, output_dir:str) -> int|None:
+    def copyResumeData(self, temp_resume_dir:str, output_dir:str) -> tuple[int, str|None]:
         os.makedirs(temp_resume_dir, exist_ok=True)
         resume_dir_name, steps = self.findLatestSavedStateFolder(output_dir)
-        if resume_dir_name is not None:
+        if resume_dir_name is not None and steps is not None:
+            temp_resume_dir = os.path.join(temp_resume_dir, resume_dir_name)
             resume_dir = os.path.join(output_dir, resume_dir_name)
             shutil.copytree(resume_dir, temp_resume_dir)
-        return steps
+            return steps, temp_resume_dir
+        return 0, None
+    
+
+    def saveParameters(self, output_dir, **kwargs):
+        params_file = os.path.join(output_dir, "parameters.yml")
+        with open(params_file, "w") as f:
+            yaml.dump(kwargs, f)
 
 
     def copyResumeDataToOutput(self, resume_steps:int|None, temp_output_dir:str, output_dir:str):
