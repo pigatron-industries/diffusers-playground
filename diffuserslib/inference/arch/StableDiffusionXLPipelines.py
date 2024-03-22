@@ -106,6 +106,7 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
 
 
     def __init__(self, params:GenerationParameters, device):
+        self.dtype = None
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
 
