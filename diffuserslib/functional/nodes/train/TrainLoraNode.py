@@ -1,5 +1,5 @@
 from matplotlib.pyplot import step
-from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.FunctionalNode import FunctionalNode, WorkflowProgress
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsFuncType, ModelsType
 from diffuserslib.inference import DiffusersPipelines
@@ -81,7 +81,7 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--train_data_dir={temp_data_dir}")
         command.append(f"--output_dir={temp_output_dir}")
         command.append(f"--resolution={resolution}")
-        command.append(f"--enable_bucket")
+        # command.append(f"--enable_bucket")
         command.append(f"--train_batch_size={batch_size}")
         command.append(f"--gradient_accumulation_steps={gradient_accumulation_steps}")
         command.append(f"--save_every_n_steps={save_steps}")
@@ -101,7 +101,7 @@ class TrainLoraNode(FunctionalNode):
         process.runSync()
 
         print("Copying output files to output dir...")
-        self.copyOutputFiles(temp_output_dir, output_dir, resume_steps, keyword, classword)
+        self.copyOutputFiles(temp_output_dir, output_dir, resume_steps, loraname, keyword, classword)
         self.saveParameters(output_dir=output_dir, model=model[0].name, keyword=keyword, classword=classword, train_files=train_files, 
                             repeats=repeats, resolution=resolution, batch_size=batch_size, gradient_accumulation_steps=gradient_accumulation_steps, 
                             save_steps=save_steps, train_steps=train_steps, learning_rate=learning_rate, learning_rate_schedule=learning_rate_schedule, 
@@ -166,14 +166,14 @@ class TrainLoraNode(FunctionalNode):
         return latest_dir, highest_steps
     
 
-    def copyOutputFiles(self, temp_output_dir:str, output_dir:str, resume_steps:int|None, keyword:str, classword:str):
+    def copyOutputFiles(self, temp_output_dir:str, output_dir:str, resume_steps:int|None, name:str, keyword:str, classword:str):
         os.makedirs(output_dir, exist_ok=True)
         output_files = glob.glob(os.path.join(temp_output_dir, "*.safetensors"))
         for file in output_files:
             steps = self.getStepsFromName(file)
             if(steps is not None):
                 total_steps = resume_steps + steps if resume_steps is not None else steps
-                new_file_name = os.path.join(temp_output_dir, f"{keyword}_{classword}_{total_steps}.safetensors")
+                new_file_name = os.path.join(temp_output_dir, f"{name}_{keyword}_{classword}_{total_steps}.safetensors")
                 os.rename(file, new_file_name)
                 shutil.copy(new_file_name, output_dir)
 
@@ -185,3 +185,8 @@ class TrainLoraNode(FunctionalNode):
             return int(match.group(1))
         else:
             return None
+
+
+    def getProgress(self) -> WorkflowProgress|None:
+        # TODO
+        return WorkflowProgress(0, None)
