@@ -26,8 +26,8 @@ class NoWatermark:
 class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdxl"
 
-    def __init__(self, cls, params:GenerationParameters, device):
-        super().__init__(cls=cls, params=params, device=device)
+    def __init__(self, cls, params:GenerationParameters, device, dtype=None):
+        super().__init__(cls=cls, params=params, device=device, dtype=dtype)
         self.pipeline.watermark = NoWatermark()
         if(params.scheduler == "LCMScheduler"):
             self.pipeline.load_lora_weights(self.LCM_LORA_MODEL)
