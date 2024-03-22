@@ -102,7 +102,7 @@ class DiffusersModelList:
     def getBaseModel(self, base):
         return self.basemodels[base]
     
-    def getModel(self, modelid):
+    def getModel(self, modelid) -> DiffusersModel:
         if modelid in self.models:
             return self.models[modelid]
         else:

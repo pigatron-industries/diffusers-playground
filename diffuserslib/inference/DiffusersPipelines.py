@@ -191,7 +191,7 @@ class DiffusersPipelines:
         self.clip_model = CLIPModel.from_pretrained(model, torch_dtype=torch.float16)
 
 
-    def getModel(self, modelid:str):
+    def getModel(self, modelid:str) -> DiffusersModel:
         return self.presets.getModel(modelid)
 
 

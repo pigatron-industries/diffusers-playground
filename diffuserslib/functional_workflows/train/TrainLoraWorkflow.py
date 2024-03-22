@@ -1,4 +1,5 @@
 from cv2 import repeat
+from diffuserslib import GlobalConfig
 from diffuserslib.functional import *
 from diffuserslib.functional.nodes.train.TrainLoraNode import TrainLoraNode
 
@@ -10,6 +11,7 @@ class TrainLoraWorkflow(WorkflowBuilder):
 
     def build(self):
         model_input = DiffusionModelUserInputNode()
+        loraname_input = StringUserInputNode(value = "", name="loraname")
         keyword_input = StringUserInputNode(value = "", name="keyword")
         classword_input = StringUserInputNode(value = "", name="classword")
         repeats_input = IntUserInputNode(value = 10, name="repeats")
@@ -19,10 +21,10 @@ class TrainLoraWorkflow(WorkflowBuilder):
         seed_input = SeedUserInputNode(value = None, name="seed")
 
         train_files_input = StringUserInputNode(value = "", name="train_files")
-        output_dir_input = StringUserInputNode(value = "", name="output_dir")
-        
+        output_dir_input = ListSelectUserInputNode(value = "", options=GlobalConfig.loras_dirs, name="output_dir")
         
         train_lora = TrainLoraNode(model = model_input,
+                                   loraname = loraname_input,
                                    keyword = keyword_input,
                                    classword = classword_input,
                                    train_files = train_files_input,

@@ -2,6 +2,7 @@ from matplotlib.pyplot import step
 from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsFuncType, ModelsType
+from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.util import CommandProcess
 import os
 import shutil
@@ -15,6 +16,7 @@ ListStringFuncType = List[str] | Callable[[], List[str]]
 class TrainLoraNode(FunctionalNode):
     def __init__(self, 
                  model:ModelsFuncType,
+                 loraname:StringFuncType,
                  keyword:StringFuncType,
                  classword:StringFuncType,
                  train_files:StringFuncType,
@@ -33,6 +35,7 @@ class TrainLoraNode(FunctionalNode):
                  ):
         super().__init__(name)
         self.addParam("model", model, ModelsType)
+        self.addParam("loraname", loraname, str)
         self.addParam("keyword", keyword, str)
         self.addParam("classword", classword, str)
         self.addParam("train_files", train_files, List[str])
@@ -49,13 +52,19 @@ class TrainLoraNode(FunctionalNode):
         self.addParam("seed", seed, int)
 
 
-    def process(self, model:ModelsType, keyword:str, classword:str, train_files:List[str]|str, output_dir:str, repeats:int, resolution:int, 
+    def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_files:List[str]|str, output_dir:str, repeats:int, resolution:int, 
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
                 learning_rate_warmup_steps, seed):
+        if(DiffusersPipelines.pipelines is None):
+            raise Exception("DiffusersPipelines not initialized")
 
         temp_train_dir = "./train"
         os.makedirs(temp_train_dir, exist_ok=True)
         shutil.rmtree(temp_train_dir)
+
+        base_model = DiffusersPipelines.pipelines.getModel(model[0].name).base
+        output_dir = os.path.join(output_dir, base_model, loraname)
+        os.makedirs(output_dir, exist_ok=True)
 
         temp_data_dir = os.path.join(temp_train_dir, "data")
         temp_resume_dir = os.path.join(temp_train_dir, "resume")
@@ -113,7 +122,7 @@ class TrainLoraNode(FunctionalNode):
                     shutil.copy(file, temp_data_dir)
         
     
-    def copyResumeData(self, temp_resume_dir:str, output_dir:str) -> tuple[int, str|None]:
+    def copyResumeData(self, temp_resume_dir:str, output_dir:str) -> tuple[int|None, str|None]:
         os.makedirs(temp_resume_dir, exist_ok=True)
         resume_dir_name, steps = self.findLatestSavedStateFolder(output_dir)
         if resume_dir_name is not None and steps is not None:
@@ -121,7 +130,7 @@ class TrainLoraNode(FunctionalNode):
             resume_dir = os.path.join(output_dir, resume_dir_name)
             shutil.copytree(resume_dir, temp_resume_dir)
             return steps, temp_resume_dir
-        return 0, None
+        return None, None
     
 
     def saveParameters(self, output_dir, **kwargs):

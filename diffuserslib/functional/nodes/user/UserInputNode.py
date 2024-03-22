@@ -134,7 +134,7 @@ class TextAreaInputNode(UserInputNode):
 
 class ListSelectUserInputNode(UserInputNode):
     def __init__(self, value:str, options:List[str], name:str="list_select_user_input"):
-        self.value = str(value)
+        self.value = value
         self.options = options
         super().__init__(name)
 
@@ -142,10 +142,13 @@ class ListSelectUserInputNode(UserInputNode):
         return self.value
     
     def setValue(self, value):
-        self.value = value
+        try:
+            self.value = value
+        except:
+            pass
 
     def gui(self):
-        ui.select(options=self.options, value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+        ui.select(options=self.options, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
         return str(self.value)

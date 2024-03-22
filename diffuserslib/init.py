@@ -37,6 +37,8 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             configdata = yaml.safe_load(open(config, "r"))
             embeddings = configdata["folders"]["embeddings"]
             loras = configdata["folders"]["loras"]
+            GlobalConfig.embeddings_dirs.extend(embeddings)
+            GlobalConfig.loras_dirs.extend(loras)
             for embeddingdir in embeddings:
                 print("load embeddings from: ", embeddingdir)
                 DiffusersPipelines.pipelines.loadTextEmbeddings(embeddingdir)
