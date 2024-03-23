@@ -20,6 +20,8 @@ import numpy as np
 from compel import Compel
 from typing import List
 from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
+from huggingface_hub import hf_hub_download
+from safetensors.torch import load_file
 
 
 
@@ -241,7 +243,14 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
         self.dtype = torch.float16
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
-        self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=self.dtype)
+        # self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=self.dtype)
+        repo = "guoyww/animatediff-motion-adapter-v1-5-2"
+        ckpt = "diffusion_pytorch_model.fp16.safetensors"
+        if(params.steps in [1, 2, 4, 8]):
+            repo = "ByteDance/AnimateDiff-Lightning"
+            ckpt = f"animatediff_lightning_{params.steps}step_diffusers.safetensors"
+        self.adapter = MotionAdapter().to(device, self.dtype)
+        self.adapter.load_state_dict(load_file(hf_hub_download(repo, ckpt), device=device))
         super().__init__(cls, params, device, dtype = self.dtype)
 
 
