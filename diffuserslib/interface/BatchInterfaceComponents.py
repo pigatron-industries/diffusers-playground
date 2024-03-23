@@ -223,7 +223,7 @@ class BatchInterfaceComponents(InterfaceComponents):
     
 
     def workflow_generating(self, batchid, runid):
-        controls = self.rundata_controls[runid]
+        self.timer.activate()
         with ui.column():
             ui.label("Generating...").style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
             ui.linear_progress(show_value=False).bind_value_from(self, 'progress')
