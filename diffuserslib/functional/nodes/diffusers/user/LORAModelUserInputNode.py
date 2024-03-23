@@ -55,7 +55,7 @@ class LORAModelUserInputNode(UserInputNode):
         
         with ui.row().classes('w-full'):
             ui.label().classes('w-8')
-            ui.select(options=list(loras), value=selected_lora, label="Lora", on_change=lambda e: self.updateLora(i, e.value)).classes('grow') 
+            ui.select(options=sorted(list(loras)), value=selected_lora, label="Lora", on_change=lambda e: self.updateLora(i, e.value)).classes('grow') 
             ui.number(value=self.selected_weights[i], label="Weight", on_change=lambda e: self.updateWeight(i, e.value)).classes('small-number')
             ui.button(icon="remove", on_click = lambda e: self.removeInput(i)).props('dense').classes('align-middle')
 
