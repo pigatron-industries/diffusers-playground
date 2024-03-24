@@ -1,15 +1,10 @@
 from diffuserslib.functional.FunctionalNode import *
-from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.functional.types import Video, FramesFuncType, FloatFuncType
+from PIL import Image
 
 import tempfile
 import cv2
 import numpy as np
-
-
-class Video:
-    def __init__(self, frames:List[Image.Image], file:tempfile._TemporaryFileWrapper):
-        self.frames = frames
-        self.file = file
 
 
 class FramesToVideoNode(FunctionalNode):

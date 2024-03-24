@@ -17,16 +17,21 @@ class VideoUploadInputNode(FileUploadInputNode):
             temp_file_name = temp_file.name
 
             cap = cv2.VideoCapture(temp_file_name)
+            self.fps = cap.get(cv2.CAP_PROP_FPS)
             while(cap.isOpened()):
                 ret, frame = cap.read()
                 if not ret:
                     break
-                self.content.append(Image.fromarray(frame))
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.content.append(Image.fromarray(img))
             cap.release()
             self.gui.refresh()
 
 
     def previewContent(self):
         if(self.content is None):
-            return None
-        return ui.image(self.content[0]).style(f"max-width:128px; min-width:128px;")
+            return
+        ui.image(self.content[0]).style(f"max-width:128px; min-width:128px;")
+        with ui.column():
+            ui.label(f"frames: {len(self.content)}")
+            ui.label(f"fps: {self.fps}")
