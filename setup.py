@@ -4,24 +4,15 @@ def runcmd(cmd, shell=False):
     print(subprocess.run(cmd, stdout=subprocess.PIPE, shell=shell).stdout.decode('utf-8'))
 
 
-def setup(colab=False, clipInterrogator=False, diffuserScripts=False, rife=False, nafnet=False):
+def setup(colab=False, rife=False, kohya=False):
     runcmd(['mkdir -p workspace'], True)
     os.chdir("workspace")
-    runcmd(['mkdir -p models'], True)
     runcmd('pwd')
 
-    if(clipInterrogator):
-        runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/BLIP.git@lib#egg=blip'])
-        runcmd(['pip', 'install', '-e', 'git+https://github.com/pharmapsychotic/clip-interrogator.git#egg=clip-interrogator'])
-
-    if(diffuserScripts):
-        runcmd(['pip', 'install', '-e', 'git+https://github.com/huggingface/diffusers#egg=diffusers'])
-
     if(rife):
-        runcmd(['pip', 'install', '-e', 'git+https://github.com/hzwer/Practical-RIFE.git#egg=rife'])
-
-    if(nafnet):
-        runcmd(['pip', 'install', '-e', 'git+https://github.com/megvii-research/NAFNet#egg=nafnet'])
+        runcmd(['git', 'clone', 'https://github.com/hzwer/Practical-RIFE.git'])
+    if(kohya):
+        runcmd(['git', 'clone', 'https://github.com/kohya-ss/sd-scripts.git'])
 
     os.chdir("..")
     if(colab):
@@ -31,5 +22,5 @@ def setup(colab=False, clipInterrogator=False, diffuserScripts=False, rife=False
 
 
 if __name__ == "__main__":
-    setup(colab=False, clipInterrogator=True, diffuserScripts=True, rife=True, nafnet=True)
+    setup(colab=False, rife=True, kohya=True)
 

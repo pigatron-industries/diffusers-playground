@@ -24,16 +24,9 @@ scikit-image==0.19.3
 blendmodes
 lpips
 
-# web
-flask==2.1.3
-flask_classful
-werkzeug==2.1.2
-pyngrok
-
-# interrogator
-timm
-fairscale
-
 # esrgan
 lmdb
 opencv-python
+
+# ui
+nicegui
