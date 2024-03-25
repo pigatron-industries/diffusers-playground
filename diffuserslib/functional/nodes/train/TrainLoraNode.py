@@ -115,7 +115,7 @@ class TrainLoraNode(FunctionalNode):
 
     
     def copyTrainingData(self, temp_data_dir:str, keyword:str, classword:str, repeats:int, train_files:List[str]):
-        temp_data_dir = os.path.join(temp_data_dir, f"{repeats}_{keyword} {classword}")
+        temp_data_dir = os.path.join(temp_data_dir, f"{int(repeats)}_{keyword} {classword}")
         os.makedirs(temp_data_dir, exist_ok=True)
         for file_pattern in train_files:
             # TODO change * to *.png etc
