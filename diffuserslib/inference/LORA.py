@@ -31,8 +31,10 @@ class LORAs:
     def keys(self):
         return self.loras.keys()
     
-    def process_prompt_and_add_loras(self, prompt:str, pipeline: DiffusersPipelineWrapper):
-        prompt, loras, weights = self.process_prompt(prompt)
+    def process_prompt_and_add_loras(self, prompt:str, pipeline: DiffusersPipelineWrapper, loras:List[LORA], weights:List[float]):
+        prompt, prompt_loras, prompt_weights = self.process_prompt(prompt)
+        loras.extend(prompt_loras)
+        weights.extend(prompt_weights)
         self.add_loras_to_model(pipeline, loras, weights)
         return prompt
     

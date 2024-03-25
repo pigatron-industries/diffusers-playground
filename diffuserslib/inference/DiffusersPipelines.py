@@ -137,9 +137,9 @@ class DiffusersPipelines:
         return list(self.getBaseModelData(base).loras.keys())
 
 
-    def _addLORAsToPipeline(self, params:GenerationParameters):
+    def _getLORAs(self, params:GenerationParameters) -> Tuple[List[LORA], List[float]]:
         if(self.pipeline is None or self.pipeline.initparams.modelConfig is None):
-            return
+            return [], []
         base = self.pipeline.initparams.modelConfig.base
 
         loras = []
@@ -148,15 +148,16 @@ class DiffusersPipelines:
             if (base in self.baseModelData and loraparams.name in self.baseModelData[base].loras.loras):
                 loras.append(self.baseModelData[base].loras[loraparams.name])
                 weights.append(loraparams.weight)
-        self.pipeline.add_loras(loras, weights)
+        return loras, weights
 
 
-    def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
+    def processPrompt(self, params:GenerationParameters, pipeline:DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
         if (pipeline.initparams.modelConfig is not None and pipeline.initparams.modelConfig.base in self.baseModelData):
             baseData = self.baseModelData[pipeline.initparams.modelConfig.base]
-            prompt = baseData.textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
-            promtp = baseData.loras.process_prompt_and_add_loras(prompt, pipeline)
+            prompt = baseData.textembeddings.process_prompt_and_add_tokens(params.original_prompt, pipeline)
+            loras, weights = self._getLORAs(params)
+            prompt = baseData.loras.process_prompt_and_add_loras(params.prompt, pipeline, loras, weights)
         
         return prompt
 
@@ -239,7 +240,7 @@ class DiffusersPipelines:
     def generate(self, params:GenerationParameters) -> Tuple[Image.Image|ndarray, int]:
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
-        params.prompt = self.processPrompt(params.original_prompt, pipelineWrapper)
+        params.prompt = self.processPrompt(params, pipelineWrapper)
         image, seed = pipelineWrapper.inference(params)
         gc.collect()
         torch.mps.empty_cache()
