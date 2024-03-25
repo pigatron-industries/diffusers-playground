@@ -52,12 +52,12 @@ class TrainDataUserInputNode(UserInputNode):
 
     def updateTrainFiles(self, i, value):
         train_files = self.train_data[i]
-        train_files[i] = ([value], train_files[1])
+        self.train_data[i] = ([value], train_files[1])
 
         
     def updateRepeats(self, i, value):
         train_files = self.train_data[i]
-        train_files[i] = (train_files[0], value)
+        self.train_data[i] = (train_files[0], value)
 
 
     def process(self) -> TrainDataType:
