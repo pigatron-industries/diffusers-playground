@@ -224,7 +224,6 @@ class DiffusersPipelines:
         if(len(params.models) > 1):
             for modelparams in params.models[1:]:
                 self.mergeModel(modelparams.name, modelparams.weight, params)
-        self._addLORAsToPipeline(params)
         return self.pipeline
     
     def loadModelConfigs(self, params:GenerationParameters):
