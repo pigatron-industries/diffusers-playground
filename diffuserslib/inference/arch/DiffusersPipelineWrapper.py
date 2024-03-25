@@ -7,7 +7,6 @@ from PIL import Image
 from dataclasses import dataclass
 from diffusers import T2IAdapter, ControlNetModel, AutoencoderKL
 from transformers import CLIPVisionModelWithProjection
-from diffuserslib.inference.LORA import LORA
 import sys
 import random
 import torch
@@ -80,7 +79,7 @@ class DiffusersPipelineWrapper:
     def add_embeddings(self, token, embeddings):
         raise ValueError(f"add_embeddings not implemented for pipeline")
     
-    def add_loras(self, loras:List[LORA], weights:List[float]):
+    def add_loras(self, loras, weights:List[float]):
         raise ValueError(f"add_lora not implemented for pipeline")
     
 

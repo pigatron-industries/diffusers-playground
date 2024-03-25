@@ -110,13 +110,6 @@ class DiffusersPipelines:
         return list(self.getBaseModelData(base).textembeddings.embeddings.keys())
 
 
-    def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
-        """ expands embedding tokens into multiple tokens, for each vector in embedding """
-        if (pipeline.initparams.modelConfig.base in self.baseModelData):
-            prompt = self.baseModelData[pipeline.initparams.modelConfig.base].textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
-        return prompt
-
-
     #=============== LORA ==============
 
     def loadLORAs(self, directory):
@@ -152,10 +145,20 @@ class DiffusersPipelines:
         loras = []
         weights = []
         for loraparams in params.loras:
-            if (base in self.baseModelData and loraparams.name in self.baseModelData[base].loras):
+            if (base in self.baseModelData and loraparams.name in self.baseModelData[base].loras.loras):
                 loras.append(self.baseModelData[base].loras[loraparams.name])
                 weights.append(loraparams.weight)
         self.pipeline.add_loras(loras, weights)
+
+
+    def processPrompt(self, prompt: str, pipeline: DiffusersPipelineWrapper):
+        """ expands embedding tokens into multiple tokens, for each vector in embedding """
+        if (pipeline.initparams.modelConfig is not None and pipeline.initparams.modelConfig.base in self.baseModelData):
+            baseData = self.baseModelData[pipeline.initparams.modelConfig.base]
+            prompt = baseData.textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
+            promtp = baseData.loras.process_prompt_and_add_loras(prompt, pipeline)
+        
+        return prompt
 
 
     #=============== MODEL MERGING ==============
