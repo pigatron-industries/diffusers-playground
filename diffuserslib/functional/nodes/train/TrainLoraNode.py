@@ -9,8 +9,13 @@ import shutil
 import glob
 import re
 import yaml
+from dataclasses import dataclass
+
 
 ListStringFuncType = List[str] | Callable[[], List[str]]
+
+TrainDataType = List[Tuple[List[str], int]]
+TrainDataFuncType = TrainDataType | Callable[[], TrainDataType]
 
 
 class TrainLoraNode(FunctionalNode):
@@ -19,9 +24,8 @@ class TrainLoraNode(FunctionalNode):
                  loraname:StringFuncType,
                  keyword:StringFuncType,
                  classword:StringFuncType,
-                 train_files:StringFuncType,
+                 train_data:TrainDataFuncType,
                  output_dir:StringFuncType,
-                 repeats:IntFuncType = 10,
                  resolution:IntFuncType = 768,
                  batch_size:IntFuncType = 1,
                  gradient_accumulation_steps:IntFuncType = 1,
@@ -38,9 +42,8 @@ class TrainLoraNode(FunctionalNode):
         self.addParam("loraname", loraname, str)
         self.addParam("keyword", keyword, str)
         self.addParam("classword", classword, str)
-        self.addParam("train_files", train_files, List[str])
+        self.addParam("train_data", train_data, TrainDataType)
         self.addParam("output_dir", output_dir, str)
-        self.addParam("repeats", repeats, int)
         self.addParam("resolution", resolution, int)
         self.addParam("batch_size", batch_size, int)
         self.addParam("gradient_accumulation_steps", gradient_accumulation_steps, int)
@@ -52,7 +55,7 @@ class TrainLoraNode(FunctionalNode):
         self.addParam("seed", seed, int)
 
 
-    def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_files:List[str]|str, output_dir:str, repeats:int, resolution:int, 
+    def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_data:TrainDataType, output_dir:str, resolution:int, 
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
                 learning_rate_warmup_steps, seed):
         if(DiffusersPipelines.pipelines is None):
@@ -70,9 +73,9 @@ class TrainLoraNode(FunctionalNode):
         temp_resume_dir = os.path.join(temp_train_dir, "resume")
         temp_output_dir = os.path.join(temp_train_dir, "output")
 
-        if(isinstance(train_files, str)):
-            train_files = [train_files]
-        self.copyTrainingData(temp_data_dir, keyword, classword, repeats, train_files)
+        for train_repeat in train_data:
+            self.copyTrainingData(temp_data_dir, keyword, classword, train_repeat[1], train_repeat[0])
+
         resume_steps, temp_resume_dir = self.copyResumeData(temp_resume_dir, output_dir)
 
         command = ["accelerate", "launch", "./workspace/sd-scripts/sdxl_train_network.py"]
@@ -102,8 +105,8 @@ class TrainLoraNode(FunctionalNode):
 
         print("Copying output files to output dir...")
         self.copyOutputFiles(temp_output_dir, output_dir, resume_steps, loraname, keyword, classword)
-        self.saveParameters(output_dir=output_dir, model=model[0].name, keyword=keyword, classword=classword, train_files=train_files, 
-                            repeats=repeats, resolution=resolution, batch_size=batch_size, gradient_accumulation_steps=gradient_accumulation_steps, 
+        self.saveParameters(output_dir=output_dir, model=model[0].name, keyword=keyword, classword=classword, train_data=train_data, 
+                            resolution=resolution, batch_size=batch_size, gradient_accumulation_steps=gradient_accumulation_steps, 
                             save_steps=save_steps, train_steps=train_steps, learning_rate=learning_rate, learning_rate_schedule=learning_rate_schedule, 
                             learning_rate_warmup_steps=learning_rate_warmup_steps, seed=seed)
         self.copyResumeDataToOutput(resume_steps, temp_output_dir, output_dir)
