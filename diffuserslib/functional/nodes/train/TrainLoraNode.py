@@ -27,6 +27,7 @@ class TrainLoraNode(FunctionalNode):
                  train_data:TrainDataFuncType,
                  output_dir:StringFuncType,
                  resolution:IntFuncType = 768,
+                 enable_bucket:BoolFuncType = False,
                  batch_size:IntFuncType = 1,
                  gradient_accumulation_steps:IntFuncType = 1,
                  save_steps:IntFuncType = 100,
@@ -45,6 +46,7 @@ class TrainLoraNode(FunctionalNode):
         self.addParam("train_data", train_data, TrainDataType)
         self.addParam("output_dir", output_dir, str)
         self.addParam("resolution", resolution, int)
+        self.addParam("enable_bucket", enable_bucket, bool)
         self.addParam("batch_size", batch_size, int)
         self.addParam("gradient_accumulation_steps", gradient_accumulation_steps, int)
         self.addParam("save_steps", save_steps, int)
@@ -55,7 +57,7 @@ class TrainLoraNode(FunctionalNode):
         self.addParam("seed", seed, int)
 
 
-    def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_data:TrainDataType, output_dir:str, resolution:int, 
+    def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
                 learning_rate_warmup_steps, seed):
         if(DiffusersPipelines.pipelines is None):
@@ -84,7 +86,8 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--train_data_dir={temp_data_dir}")
         command.append(f"--output_dir={temp_output_dir}")
         command.append(f"--resolution={resolution}")
-        # command.append(f"--enable_bucket")
+        if(enable_bucket):
+            command.append(f"--enable_bucket")
         command.append(f"--train_batch_size={batch_size}")
         command.append(f"--gradient_accumulation_steps={gradient_accumulation_steps}")
         command.append(f"--save_every_n_steps={save_steps}")

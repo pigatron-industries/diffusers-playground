@@ -1,6 +1,9 @@
 from diffuserslib import GlobalConfig
 from diffuserslib.functional import *
+from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.train.TrainLoraNode import TrainLoraNode
+from diffuserslib.functional.nodes.diffusers.user.DiffusionModelUserInputNode import DiffusionModelUserInputNode
+from diffuserslib.functional.nodes.train import *
 
 
 class TrainLoraWorkflow(WorkflowBuilder):
@@ -14,6 +17,7 @@ class TrainLoraWorkflow(WorkflowBuilder):
         keyword_input = StringUserInputNode(value = "", name="keyword")
         classword_input = StringUserInputNode(value = "", name="classword")
         resolution_input = IntUserInputNode(value = 768, name="resolution")
+        bucket_input = BoolUserInputNode(value = False, name="enable_bucket")
         save_steps_input = IntUserInputNode(value = 100, name="save_steps")
         train_steps_input = IntUserInputNode(value = 1000, name="train_steps")
         seed_input = SeedUserInputNode(value = None, name="seed")
@@ -29,6 +33,7 @@ class TrainLoraWorkflow(WorkflowBuilder):
                                    train_data = train_data_input,
                                    output_dir = output_dir_input,
                                    resolution = resolution_input,
+                                   enable_bucket = bucket_input,
                                    batch_size = 1,
                                    gradient_accumulation_steps = 1,
                                    save_steps = save_steps_input,

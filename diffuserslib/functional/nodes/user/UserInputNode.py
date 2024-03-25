@@ -90,6 +90,7 @@ class BoolUserInputNode(UserInputNode):
         self.value = value
 
     def gui(self):
+        ui.label(self.node_name).classes('align-middle')
         ui.checkbox(value=self.value).bind_value(self, 'value')
 
     def process(self) -> bool:
