@@ -26,7 +26,7 @@ class AnimateFloatNode(FunctionalNode):
     
 
 
-class RampFloatNode(AnimateFloatNode):
+class AnimateFloatRampNode(AnimateFloatNode):
     def __init__(self, 
                  init_phase:FloatFuncType = 0.0,
                  dt:FloatFuncType = 0.01,
