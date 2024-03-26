@@ -1,6 +1,4 @@
-from turtle import onclick
-from diffuserslib.functional import WorkflowRunData
-from diffuserslib.functional.nodes.animated import Video
+from diffuserslib.functional.types import *
 
 from .Controller import Controller
 from .InterfaceComponents import InterfaceComponents
@@ -246,6 +244,9 @@ class BatchInterfaceComponents(InterfaceComponents):
         elif(isinstance(output, Video)):
             controls.output_width = 512  #TODO get video width
             controls.output_control = ui.video(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(output, Audio)):
+            output.write()
+            controls.output_control = ui.audio(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
         else:
             controls.output_width = 0
             controls.output_control = None

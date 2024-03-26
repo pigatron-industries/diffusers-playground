@@ -1,4 +1,4 @@
-from diffuserslib.functional import Video, FunctionalNode, WorkflowProgress
+from diffuserslib.functional import Video, Audio, FunctionalNode, WorkflowProgress
 from typing import Any, Dict, Self, List
 from dataclasses import dataclass, field
 from PIL import Image
@@ -141,6 +141,9 @@ class WorkflowRunner:
             elif(isinstance(rundata.output, Video)):
                 shutil.copyfile(rundata.output.file.name, f"{save_file}.mp4")
                 rundata.save_file = f"{save_file}.mp4"
+            elif(isinstance(rundata.output, Audio)):
+                shutil.copyfile(rundata.output.file.name, f"{save_file}.wav")
+                rundata.save_file = f"{save_file}.wav"
             else:
                 raise Exception("Output format not supported")
 
