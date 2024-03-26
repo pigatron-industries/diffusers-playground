@@ -9,7 +9,7 @@ class AudioGenerationBarkWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        prompt_input = StringUserInputNode(value = "Hello World!", name = "prompt")
+        prompt_input = TextAreaInputNode(value = "Hello World!", name = "prompt")
         audio = AudioGenerationBarkNode(prompt = prompt_input)
         return audio
     
