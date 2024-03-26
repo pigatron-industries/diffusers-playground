@@ -50,7 +50,7 @@ class LORAs:
         for lorastring in lorastrings:
             lorastringparts = lorastring[1:-1].split(':')  # remove < and > and split by :
             loraname = lorastringparts[1]
-            weight = lorastringparts[2] if len(lorastringparts) > 2 else 1
+            weight = float(lorastringparts[2]) if len(lorastringparts) > 2 else 1.0
             if('*' in loraname):
                 lora = self.randomize_wildcard_lora(loraname)
             else:
