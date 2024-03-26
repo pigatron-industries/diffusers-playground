@@ -2,24 +2,13 @@ from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 
 
-class LinearInterpolation:
-    def __init__(self, min_value:float, max_value:float):
-        self.min_value = min_value
-        self.max_value = max_value
-
-    def interpolate(self, phase:float) -> float:
-        return self.min_value + (self.max_value - self.min_value) * phase
-
-
 
 class AnimateFloatNode(FunctionalNode):
     def __init__(self, 
-                 interpolator:LinearInterpolation = LinearInterpolation(0.0, 1.0),
                  init_phase:FloatFuncType = 0.0,
                  dt:FloatFuncType = 0.01,
                  name:str = "animate_float"):
         super().__init__(name)
-        self.interpolator = interpolator
         self.addInitParam("init_phase", init_phase, float)
         self.addParam("dt", dt, float)
         self.reset()
@@ -33,5 +22,22 @@ class AnimateFloatNode(FunctionalNode):
         self.phase += dt
         if(self.phase > 1.0):
             self.phase -= 1.0
-        return self.interpolator.interpolate(self.phase)
+        return self.phase
     
+
+
+class RampFloatNode(AnimateFloatNode):
+    def __init__(self, 
+                 init_phase:FloatFuncType = 0.0,
+                 dt:FloatFuncType = 0.01,
+                 min_max:MinMaxFloatFuncType = (0.0, 1.0),
+                 name:str = "ramp_float"):
+        super().__init__(init_phase, dt, name)
+        self.addParam("min_max", min_max, MinMaxFloatType)
+
+    
+    def process(self, dt:float, min_max:MinMaxFloatType) -> float:
+        self.phase += dt
+        if(self.phase > 1.0):
+            self.phase -= 1.0
+        return min_max[0] + (min_max[1] - min_max[0]) * self.phase
