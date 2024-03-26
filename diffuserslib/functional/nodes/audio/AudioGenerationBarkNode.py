@@ -14,14 +14,12 @@ class AudioGenerationBarkNode(FunctionalNode):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("voice", voice, str)
+        self.processor = AutoProcessor.from_pretrained("suno/bark")
+        self.model = BarkModel.from_pretrained("suno/bark")
         
         
     def process(self, prompt:str, voice:str):
-        processor = AutoProcessor.from_pretrained("suno/bark")
-        model = BarkModel.from_pretrained("suno/bark")
-
-        inputs = processor(prompt, voice_preset=voice)
-        audio_array = model.generate(**inputs)
+        inputs = self.processor(prompt, voice_preset=voice)
+        audio_array = self.model.generate(**inputs)
         audio_array = audio_array.cpu().numpy().squeeze()
-
         return Audio(audio_array, model.generation_config.sample_rate)
