@@ -86,7 +86,8 @@ class RandomPromptProcessorNode(FunctionalNode):
     def randomiseFromDict(self, prompt):
         # randomise from dictionary of items defined outside of prompt _colour_
         out_prompt = prompt
-        tokenised_brackets = re.findall(r'_.*?_', out_prompt)
+        removed_angles = re.sub(r'<.*?>', '', out_prompt)
+        tokenised_brackets = re.findall(r'_.*?_', removed_angles)
         for token in tokenised_brackets:
             modifiername = re.sub(r'\[[^\]]*\]|_', '', token) #remove underscores and everything between square brackets
             options = re.findall(r'\[(.*?)\]', token) # get everything between square brackets
