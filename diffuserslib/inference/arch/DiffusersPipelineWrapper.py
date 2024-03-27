@@ -96,7 +96,7 @@ class DiffusersPipelineWrapper:
             pipeline_params['revision'] = modelConfig.revision
             if(modelConfig.revision == 'fp16'):
                 pipeline_params['torch_dtype'] = torch.float16
-        if(self.dtype is not None):
+        if(hasattr(self, 'dtype') and self.dtype is not None):
             pipeline_params['torch_dtype'] = self.dtype
         if(modelConfig.vae is not None):
             pipeline_params['vae'] = AutoencoderKL.from_pretrained(modelConfig.vae, 
