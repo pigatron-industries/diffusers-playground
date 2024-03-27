@@ -18,6 +18,6 @@ class AudioGenerationTortoiseNode(FunctionalNode):
     def process(self, prompt:str):
         if (self.tts is None):
             self.tts = TextToSpeech()
-        audio_array = self.tts.tts_with_preset(prompt, preset = 'fast')
+        audio_array = self.tts.tts_with_preset(prompt, preset = 'standard')
         audio_array = audio_array.cpu().numpy().squeeze()
         return Audio(audio_array, 24000)
