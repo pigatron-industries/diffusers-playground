@@ -13,11 +13,13 @@ ipywidgets
 invisible-watermark>=0.2.0
 compel
 peft
-
-# diffusers conversion script
 OmegaConf
 pytorch-lightning
 safetensors
+
+# tts
+torchaudio
+tortoise-tts
 
 # image tools
 scikit-image==0.19.3
