@@ -15,7 +15,7 @@ class AudioGenerationTortoiseNode(FunctionalNode):
         self.tts = None
         
         
-    def process(self, prompt:str, voice:str):
+    def process(self, prompt:str):
         if (self.tts is None):
             self.tts = TextToSpeech()
         audio_array = self.tts.tts_with_preset(prompt, preset = 'fast')
