@@ -114,6 +114,7 @@ class DiffusersPipelines:
 
     def loadLORAs(self, directory):
         for path, base in getPathsFiles(f"{directory}/*/"):
+            print(f"Loading LORAs for base {base} from {path}")
             baseModelData = self.getBaseModelData(base)
             for lora_path, lora_file in getPathsFiles(f"{path}/*") + getPathsFiles(f"{path}/**/*"):
                 if (lora_file.endswith('.bin') or lora_file.endswith('.safetensors')):
