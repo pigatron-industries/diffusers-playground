@@ -4,7 +4,8 @@ from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 
 from tortoise.api import TextToSpeech
-from tortoise.utils.audio import load_audio
+
+import librosa
 
 
 class AudioGenerationTortoiseNode(FunctionalNode):
@@ -24,7 +25,7 @@ class AudioGenerationTortoiseNode(FunctionalNode):
             self.tts = TextToSpeech(use_deepspeed=True, kv_cache=True, half=True)
 
         if (samples is not None and len(samples) > 0):
-            reference_clips = [load_audio(p, 22050) for p in samples]
+            reference_clips = [self.load_audio(sample) for sample in samples]
             conditioning_latents = self.tts.get_conditioning_latents(reference_clips)
         else:
             conditioning_latents = self.tts.get_random_conditioning_latents()
@@ -32,3 +33,7 @@ class AudioGenerationTortoiseNode(FunctionalNode):
         audio_array = self.tts.tts(text = prompt, conditioning_latents = conditioning_latents)
         audio_array = audio_array.cpu().numpy().squeeze()
         return Audio(audio_array, 24000)
+    
+
+    def load_audio(self, file_path:str):
+        return librosa.load(file_path, sr=22050, mono=True)
