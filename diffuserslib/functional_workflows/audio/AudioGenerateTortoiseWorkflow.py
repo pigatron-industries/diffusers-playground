@@ -9,7 +9,8 @@ class AudioGenerationTortoiseWorkflow(WorkflowBuilder):
 
 
     def build(self):
+        samples_input = FileSelectInputNode(filetype = "audio", name = "samples")
         prompt_input = TextAreaInputNode(value = "Hello World!", name = "prompt")
-        audio = AudioGenerationTortoiseNode(prompt = prompt_input)
+        audio = AudioGenerationTortoiseNode(prompt = prompt_input, samples = samples_input)
         return audio
     
