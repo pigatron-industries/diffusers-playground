@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Callable
 from scipy.io.wavfile import write as write_wav
 import tempfile
-import io
+
 
 
 class Audio:
@@ -15,3 +15,6 @@ class Audio:
             self.file = tempfile.NamedTemporaryFile(suffix = ".wav", delete = True)
             print(f"Writing audio to {self.file.name}")
             write_wav(self.file.name, self.sample_rate, self.audio_array)
+
+
+AudiosFuncType = List[Audio] | Callable[[], List[Audio]]
