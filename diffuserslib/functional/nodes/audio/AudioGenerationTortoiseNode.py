@@ -5,7 +5,7 @@ from diffuserslib.functional.types.FunctionalTyping import *
 from tortoise.api import TextToSpeech
 
 import librosa
-import numpy as np
+import torch
 
 
 class AudioGenerationTortoiseNode(FunctionalNode):
@@ -42,4 +42,4 @@ class AudioGenerationTortoiseNode(FunctionalNode):
             audio_array = librosa.resample(audio.audio_array, orig_sr = audio.sample_rate, target_sr = target_sample_rate)
         if(audio_array.ndim > 1):
             audio_array = audio_array.mean(axis=0)
-        return audio_array
+        return torch.FloatTensor(audio_array)
