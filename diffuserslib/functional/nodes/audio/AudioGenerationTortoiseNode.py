@@ -42,4 +42,4 @@ class AudioGenerationTortoiseNode(FunctionalNode):
             audio_array = librosa.resample(audio.audio_array, orig_sr = audio.sample_rate, target_sr = target_sample_rate)
         if(audio_array.ndim > 1):
             audio_array = np.mean(audio_array, axis=0)
-        return Audio(audio_array, target_sample_rate)
+        return audio_array
