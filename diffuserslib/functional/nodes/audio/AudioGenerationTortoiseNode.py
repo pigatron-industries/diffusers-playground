@@ -1,3 +1,4 @@
+from torch import cond
 from diffuserslib.functional.types import *
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
@@ -21,7 +22,13 @@ class AudioGenerationTortoiseNode(FunctionalNode):
     def process(self, prompt:str, samples:list[str]):
         if (self.tts is None):
             self.tts = TextToSpeech(use_deepspeed=True, kv_cache=True, half=True)
-        reference_clips = [load_audio(p, 22050) for p in samples]
-        audio_array = self.tts.tts_with_preset(prompt,voice_samples = reference_clips, preset = 'standard')
+
+        if (samples is not None and len(samples) > 0):
+            reference_clips = [load_audio(p, 22050) for p in samples]
+            conditioning_latents = self.tts.get_conditioning_latents(reference_clips)
+        else:
+            conditioning_latents = self.tts.get_random_conditioning_latents()
+        
+        audio_array = self.tts.tts(text = prompt, conditioning_latents = conditioning_latents)
         audio_array = audio_array.cpu().numpy().squeeze()
         return Audio(audio_array, 24000)
