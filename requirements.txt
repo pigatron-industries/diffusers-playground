@@ -4,7 +4,6 @@ torch>=2.1.0
 huggingface_hub
 diffusers
 transformers
-# xformers
 accelerate
 ftfy
 torchvision
@@ -20,6 +19,9 @@ safetensors
 # tts
 torchaudio
 tortoise-tts
+# fairseq # used by bark, requires python 3.9, see https://github.com/facebookresearch/fairseq/issues/5012
+git+https://github.com/liyaodev/fairseq.git # fork with python 3.11 support
+audiolm-pytorch
 
 # image tools
 scikit-image==0.19.3

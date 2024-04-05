@@ -17,4 +17,5 @@ class Audio:
             write_wav(self.file.name, self.sample_rate, self.audio_array)
 
 
+AudioFuncType = Audio | Callable[[], Audio]
 AudiosFuncType = List[Audio] | Callable[[], List[Audio]]

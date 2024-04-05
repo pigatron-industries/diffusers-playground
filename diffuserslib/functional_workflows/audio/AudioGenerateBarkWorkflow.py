@@ -9,7 +9,10 @@ class AudioGenerationBarkWorkflow(WorkflowBuilder):
 
 
     def build(self):
+        files_input = FileSelectInputNode(filetype = "audio", name = "samples")
         prompt_input = TextAreaInputNode(value = "Hello World!", name = "prompt")
-        audio = AudioGenerationBarkNode(prompt = prompt_input)
+
+        samples_input = LoadAudioFilesNode(files = files_input, name = "load_audio")
+        audio = AudioGenerationBarkNode(prompt = prompt_input, sample = samples_input, name = "audio_bark")
         return audio
     
