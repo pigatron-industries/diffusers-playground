@@ -13,7 +13,7 @@ class AudioGenerationTortoiseNode(FunctionalNode):
     def __init__(self, 
                  samples:AudiosFuncType,
                  prompt:StringFuncType = "",
-                 name:str="audio_bark"):
+                 name:str="ausio_tortoise"):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("samples", samples, List[Audio])
@@ -42,4 +42,5 @@ class AudioGenerationTortoiseNode(FunctionalNode):
             audio_array = librosa.resample(audio.audio_array, orig_sr = audio.sample_rate, target_sr = target_sample_rate)
         if(audio_array.ndim > 1):
             audio_array = audio_array.mean(axis=0)
-        return torch.FloatTensor(audio_array)
+        return torch.FloatTensor(audio_array).unsqueeze(0)
+    
