@@ -72,7 +72,7 @@ class DiffusersModelList:
         for key in filedata:
             modeldata = filedata[key]
             for basedata in modeldata:
-                self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'] if 'pipelines' in basedata else {})
+                basemodel = self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'] if 'pipelines' in basedata else {})
                 for modeldata in basedata['models']:
                     # print(model)
                     if (modeldata.get('autocast') != 'false'):
@@ -81,13 +81,13 @@ class DiffusersModelList:
                         autocast = False
                     self.addModel(modelid=modeldata['id'], base=basedata['base'], modeltype = key, revision=modeldata.get('revision'), 
                                   stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), preprocess=modeldata.get('preprocess'),
-                                  autocast=autocast, pipelinetypes = basedata['pipelines'].copy() if 'pipelines' in basedata else {}, data=modeldata)
+                                  autocast=autocast, pipelinetypes = basemodel.pipelinetypes, data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
             self.basemodels[base] = DiffusersBaseModel(pipelinetypes)
-        for pipelinetype in pipelinetypes:
-            self.basemodels[base].pipelinetypes[pipelinetype] = pipelinetypes[pipelinetype]
+        self.basemodels[base].pipelinetypes.update(pipelinetypes)
+        return self.basemodels[base]
 
     def addModel(self, modelid: str, base: str, modeltype: str, revision: str|None=None, stylephrase:str|None=None, vae=None, 
                  preprocess:str|None=None, autocast=True, location='hf', modelpath=None, pipelinetypes:Dict[str, str]|None=None, data=None):

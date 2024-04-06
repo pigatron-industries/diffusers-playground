@@ -14,6 +14,8 @@ import numpy as np
 from .CustomHubert import CustomHubert
 from .CustomTokenizer import CustomTokenizer
 
+import bark
+
 class AudioGenerationBarkNode(FunctionalNode):
 
     def __init__(self, 
@@ -35,8 +37,7 @@ class AudioGenerationBarkNode(FunctionalNode):
         if(sample is not None and len(sample) > 0):
             voice_preset = self.clone(sample[0])
         audio_array = self.generate(prompt, voice_preset)
-        audio_array = audio_array.detach().numpy().squeeze()
-        return Audio(audio_array, self.bark_model.generation_config.sample_rate)
+        return Audio(audio_array, bark.SAMPLE_RATE)
 
 
     def clone(self, sample:Audio):
@@ -74,11 +75,15 @@ class AudioGenerationBarkNode(FunctionalNode):
 
 
     def generate(self, prompt:str, voice_preset = None):
-        if (self.processor is None or self.bark_model is None):
-            self.processor = BarkProcessor.from_pretrained("suno/bark")
-            self.bark_model = BarkModel.from_pretrained("suno/bark")
-        inputs = self.processor(prompt, voice_preset = voice_preset)
-        audio_array = self.bark_model.generate(**inputs)
+        bark.preload_models()
+        audio_array = bark.generate_audio(text=prompt, history_prompt=voice_preset)
+        # Using Transformers:
+        # if (self.processor is None or self.bark_model is None):
+        #     self.processor = BarkProcessor.from_pretrained("suno/bark")
+        #     self.bark_model = BarkModel.from_pretrained("suno/bark")
+        # inputs = self.processor(prompt, voice_preset = voice_preset)
+        # audio_array = self.bark_model.generate(**inputs)
+        # audio_array = audio_array.detach().numpy().squeeze()s
         return audio_array
 
 
