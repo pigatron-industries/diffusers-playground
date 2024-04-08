@@ -13,7 +13,7 @@ LorasFuncType = LorasType | Callable[[], LorasType]
 class ImageDiffusionNode(FunctionalNode):
 
     SCHEDULERS = [
-        "DDIMScheduler", "DPMSolverMultistepScheduler", "EDMDPMSolverMultistepScheduler", "EulerDiscreteScheduler", "EulerAncestralDiscreteScheduler"
+        "DDIMScheduler", "DPMSolverMultistepScheduler", "DPMSolverSDEScheduler", "EDMDPMSolverMultistepScheduler", "EulerDiscreteScheduler", "EulerAncestralDiscreteScheduler"
     ]
 
     def __init__(self,
