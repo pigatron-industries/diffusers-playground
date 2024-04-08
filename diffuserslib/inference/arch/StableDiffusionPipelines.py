@@ -12,7 +12,7 @@ from diffusers import ( # Pipelines
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
-                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler)
+                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler, DPMSolverSDEScheduler)
 import torch
 import sys
 import numpy as np
