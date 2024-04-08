@@ -188,6 +188,7 @@ controlnet:
       - id: thibaud/controlnet-openpose-sdxl-1.0
         colourspace: L
       - id: monster-labs/control_v1p_sdxl_qrcode_monster
+      - id: destitech/controlnet-inpaint-dreamer-sdxl
 
 t2iadapter:
   - base: sd_1_5
