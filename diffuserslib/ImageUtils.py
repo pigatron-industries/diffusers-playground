@@ -99,17 +99,10 @@ def createMask(width, height, overlap, top=False, bottom=False, left=False, righ
 
 
 def applyColourCorrection(fromimage, toimage):
-    target = cv2.cvtColor(np.asarray(fromimage.copy()), cv2.COLOR_RGB2LAB)
-
-    outimage = Image.fromarray(cv2.cvtColor(exposure.match_histograms(
-        cv2.cvtColor(
-            np.asarray(toimage),
-            cv2.COLOR_RGB2LAB
-        ),
-        target,
-        channel_axis=2
-    ), cv2.COLOR_LAB2RGB).astype("uint8"))
-
+    target = cv2.cvtColor(np.asarray(toimage.copy()), cv2.COLOR_RGB2LAB)
+    source = cv2.cvtColor(np.asarray(fromimage.copy()), cv2.COLOR_RGB2LAB)
+    matched = exposure.match_histograms(target, source, channel_axis=2)
+    outimage = Image.fromarray(cv2.cvtColor(matched, cv2.COLOR_LAB2RGB).astype("uint8"))
     outimage = blendLayers(outimage, toimage, BlendType.LUMINOSITY)
     return outimage
 
