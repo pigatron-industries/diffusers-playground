@@ -641,6 +641,8 @@ class SDDialog(QDialog):
                                                                           model = control_model_dropdown.currentText(),
                                                                           image64 = images64[i], 
                                                                           condscale = self.control_scale_sliders[i].value()/100))
+            genParams.width = self.images[0].width()
+            genParams.height = self.images[0].height()
         else:
             genParams.width = self.images[0].width()
             genParams.height = self.images[0].height()
