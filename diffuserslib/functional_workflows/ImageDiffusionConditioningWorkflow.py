@@ -1,5 +1,11 @@
-from diffuserslib.functional import *
-
+from numpy import diff
+from diffuserslib.functional.WorkflowBuilder import *
+from diffuserslib.functional.nodes.diffusers.user import *
+from diffuserslib.functional.nodes.diffusers import *
+from diffuserslib.functional.nodes.user import *
+from diffuserslib.functional.nodes.process import ResizeImageNode
+from diffuserslib.functional.nodes.animated import FeedbackNode
+from PIL import Image
 
 class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
 
@@ -24,6 +30,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
 
         def create_conditioning_input():
+            print("Creating conditioning input")
             conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
             scale_input = FloatUserInputNode(value = 1.0, name = "scale")
             image_input = ImageUploadInputNode(name = "image_input")

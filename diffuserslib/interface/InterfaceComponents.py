@@ -83,7 +83,7 @@ class InterfaceComponents:
         else:
             ui.label().classes('w-8')
         if(isinstance(param.value, ListUserInputNode)):
-            param.value.ui(child_renderer=self.node_parameters) # type: ignore
+            param.value.gui(child_renderer=self.node_parameters) # type: ignore
         elif(isinstance(param.value, UserInputNode)):
             param.value.gui()
         else:

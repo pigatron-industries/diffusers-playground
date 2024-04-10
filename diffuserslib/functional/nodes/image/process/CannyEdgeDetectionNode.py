@@ -11,7 +11,7 @@ class CannyEdgeDetectionNode(FunctionalNode):
                  image:ImageFuncType, 
                  threshold_low:IntFuncType = 100,
                  threshold_high:IntFuncType = 200,
-                 name:str="resize_image"):
+                 name:str="canny_edge"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
         self.addParam("threshold_low", threshold_low, int)

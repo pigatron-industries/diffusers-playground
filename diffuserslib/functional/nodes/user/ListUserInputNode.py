@@ -21,7 +21,7 @@ class ListUserInputNode(UserInputNode):
 
 
     @ui.refreshable
-    def ui(self, child_renderer:Callable[[FunctionalNode], None]):
+    def gui(self, child_renderer:Callable[[FunctionalNode], None]):
         with ui.row():
             ui.button(icon="add", on_click = lambda e: self.addInput(0)).props('dense')
             ui.label(f"{self.node_name}")
