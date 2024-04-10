@@ -41,12 +41,12 @@ class ListUserInputNode(UserInputNode):
     def addInput(self, index:int):
         newvalue = self.input_node_generator()
         self.params["list"].value.insert(index, newvalue)
-        self.ui.refresh()
+        self.gui.refresh()
 
 
     def removeInput(self, index:int):
         self.params["list"].value.pop(index)
-        self.ui.refresh()
+        self.gui.refresh()
 
 
     def process(self, list:List[Any]) -> List[Any]:
