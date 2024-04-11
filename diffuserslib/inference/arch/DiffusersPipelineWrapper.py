@@ -26,6 +26,7 @@ class PipelineFeatures:
     inpaint = False
     ipadapter = False
     ipadapter_faceid = False
+    differential = False
 
 
 @dataclass
@@ -226,6 +227,8 @@ class DiffusersPipelineWrapper:
                 features.img2img = True
             elif(conditioningimage.type == ControlImageType.IMAGETYPE_MASKIMAGE):
                 features.inpaint = True
+            elif(conditioningimage.type == ControlImageType.IMAGETYPE_DIFFMASKIMAGE):
+                features.differential = True
             elif(conditioningimage.modelConfig is not None):
                 if(conditioningimage.modelConfig.modeltype == DiffusersModelType.ipadapter):
                     features.ipadapter = True

@@ -5,6 +5,7 @@ import inspect
 
 IMAGETYPE_INITIMAGE = "initimage"
 IMAGETYPE_MASKIMAGE = "maskimage"
+IMAGETYPE_DIFFMASKIMAGE = "diffmaskimage"
 IMAGETYPE_IPADAPTER = "ipadapter"
 IMAGETYPE_CONTROLIMAGE = "controlimage"
 

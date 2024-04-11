@@ -385,7 +385,7 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.buttonBox)
 
         if('image' in self.actionfields):
-            self.controlmodels = [IMAGETYPE_INITIMAGE]
+            self.controlmodels = [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE]
             self.control_model_dropdowns = []
             self.control_scale_sliders = []
             tabs = QTabWidget()
@@ -630,9 +630,9 @@ class SDDialog(QDialog):
             dialogParams.controlimages = []
             genParams.controlimages = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
-                if (control_model_dropdown.currentText() == IMAGETYPE_INITIMAGE):
-                    dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, condscale = self.control_scale_sliders[i].value()/100))
-                    genParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_INITIMAGE, image64 = images64[i], condscale = self.control_scale_sliders[i].value()/100))
+                if (control_model_dropdown.currentText() in [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE]):
+                    dialogParams.controlimages.append(ControlImageParameters(type = control_model_dropdown.currentText(), condscale = self.control_scale_sliders[i].value()/100))
+                    genParams.controlimages.append(ControlImageParameters(type = control_model_dropdown.currentText(), image64 = images64[i], condscale = self.control_scale_sliders[i].value()/100))
                 else:
                     dialogParams.controlimages.append(ControlImageParameters(type = IMAGETYPE_CONTROLIMAGE, 
                                                                                    model = control_model_dropdown.currentText(), 

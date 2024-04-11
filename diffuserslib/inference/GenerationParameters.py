@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 class ControlImageType:
     IMAGETYPE_INITIMAGE = "initimage"
     IMAGETYPE_MASKIMAGE = "maskimage"
+    IMAGETYPE_DIFFMASKIMAGE = "diffmaskimage"
     IMAGETYPE_IPADAPTER = "ipadapter"
     IMAGETYPE_IPADAPTER_FACEID = "ipadapter_faceid"
     IMAGETYPE_CONTROLIMAGE = "controlimage"

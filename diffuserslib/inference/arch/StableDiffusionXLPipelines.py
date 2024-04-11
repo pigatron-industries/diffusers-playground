@@ -118,6 +118,8 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
 
     def getPipelineClass(self, params:GenerationParameters):
         self.features = self.getPipelineFeatures(params)
+        if(self.features.differential):
+            return "pipeline_stable_diffusion_xl_differential_img2img"
         return self.PIPELINE_MAP[(self.features.img2img, self.features.controlnet, self.features.t2iadapter, self.features.inpaint)]  
 
 
