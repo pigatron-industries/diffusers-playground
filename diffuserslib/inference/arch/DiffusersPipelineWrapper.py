@@ -165,7 +165,9 @@ class DiffusersPipelineWrapper:
             inittensor = transforms.ToTensor()(initimageparams.image.convert("RGB"))
             inittensor = inittensor * 2 - 1
             inittensor = inittensor.unsqueeze(0).to(self.inferencedevice)
-            masktensor = transforms.ToTensor()(maskimageparams.image.convert("L"))
+            maskimage = maskimageparams.image.convert("L")
+            maskimage = Image.eval(maskimage, lambda x: 255 - x)
+            masktensor = transforms.ToTensor()(maskimage)
             masktensor = masktensor.to(self.inferencedevice)
             diffusers_params['image'] = inittensor.to(self.device)
             diffusers_params['original_image'] = inittensor.to(self.device)
