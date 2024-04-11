@@ -161,10 +161,15 @@ class DiffusersPipelineWrapper:
     def addInferenceParamsDifferential(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
         maskimageparams = params.getImage(ControlImageType.IMAGETYPE_DIFFMASKIMAGE)
-        if(initimageparams is not None and initimageparams.image is not None):
-            diffusers_params['original_image'] = initimageparams.image.convert("RGB")
-            map = maskimageparams.image.convert("L")
-            diffusers_params['map'] = transforms.ToTensor()(map)
+        if(initimageparams is not None and maskimageparams is not None):
+            inittensor = transforms.ToTensor()(initimageparams.image.convert("RGB"))
+            inittensor = inittensor * 2 - 1
+            inittensor = inittensor.unsqueeze(0).to(self.inferencedevice)
+            masktensor = transforms.ToTensor()(maskimageparams.image.convert("L"))
+            masktensor = masktensor.to(self.inferencedevice)
+            diffusers_params['image'] = inittensor
+            diffusers_params['original_image'] = inittensor
+            diffusers_params['map'] = masktensor
 
     def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
