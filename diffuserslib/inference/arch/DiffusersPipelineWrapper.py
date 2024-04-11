@@ -157,6 +157,13 @@ class DiffusersPipelineWrapper:
             diffusers_params['image'] = initimageparams.image.convert("RGB")
             diffusers_params['strength'] = initimageparams.condscale
 
+    def addInferenceParamsDifferential(self, params:GenerationParameters, diffusers_params):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getImage(ControlImageType.IMAGETYPE_DIFFMASKIMAGE)
+        if(initimageparams is not None and initimageparams.image is not None):
+            diffusers_params['original_image'] = initimageparams.image.convert("RGB")
+            diffusers_params['map'] = maskimageparams.image.convert("L")
+
     def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
         maskimageparams = params.getMaskImage()

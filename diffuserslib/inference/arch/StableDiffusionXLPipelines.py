@@ -142,6 +142,8 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
             self.addInferenceParamsTxt2Img(params, diffusers_params)
         if(self.features.img2img):
             self.addInferenceParamsImg2Img(params, diffusers_params)
+        if(self.features.differential):
+            self.addInferenceParamsDifferential(params, diffusers_params)
         if(self.features.controlnet):
             self.addInferenceParamsControlNet(params, diffusers_params)
         if(self.features.t2iadapter):

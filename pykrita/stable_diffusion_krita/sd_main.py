@@ -472,7 +472,7 @@ class SDDialog(QDialog):
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
-        self.controlmodels = [IMAGETYPE_INITIMAGE] + control_models
+        self.controlmodels = [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE] + control_models
         for control_model_dropdown in self.control_model_dropdowns:
             control_model_dropdown.clear()
             control_model_dropdown.addItems(self.controlmodels)
