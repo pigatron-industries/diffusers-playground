@@ -7,6 +7,7 @@ from PIL import Image
 from dataclasses import dataclass
 from diffusers import T2IAdapter, ControlNetModel, AutoencoderKL
 from transformers import CLIPVisionModelWithProjection
+from torchvision import transforms
 import sys
 import random
 import torch
@@ -162,7 +163,8 @@ class DiffusersPipelineWrapper:
         maskimageparams = params.getImage(ControlImageType.IMAGETYPE_DIFFMASKIMAGE)
         if(initimageparams is not None and initimageparams.image is not None):
             diffusers_params['original_image'] = initimageparams.image.convert("RGB")
-            diffusers_params['map'] = maskimageparams.image.convert("L")
+            map = maskimageparams.image.convert("L")
+            diffusers_params['map'] = transforms.ToTensor()(map)
 
     def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
