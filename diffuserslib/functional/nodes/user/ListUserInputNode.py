@@ -10,6 +10,7 @@ class ListUserInputNode(UserInputNode):
         self.input_node_generator = input_node_generator
         super().__init__(name)
         self.addParam("list", [], List[Any])
+        self.refresh = lambda: None
 
 
     def getValue(self) -> int:
@@ -21,7 +22,8 @@ class ListUserInputNode(UserInputNode):
 
 
     @ui.refreshable
-    def gui(self, child_renderer:Callable[[FunctionalNode], None]):
+    def gui(self, child_renderer:Callable[[FunctionalNode], None], refresh:Callable[[], None]):
+        self.refresh = refresh
         with ui.row():
             ui.button(icon="add", on_click = lambda e: self.addInput(0)).props('dense')
             ui.label(f"{self.node_name}")
@@ -41,12 +43,12 @@ class ListUserInputNode(UserInputNode):
     def addInput(self, index:int):
         newvalue = self.input_node_generator()
         self.params["list"].value.insert(index, newvalue)
-        self.gui.refresh()
+        self.refresh.refresh()
 
 
     def removeInput(self, index:int):
         self.params["list"].value.pop(index)
-        self.gui.refresh()
+        self.refresh.refresh()
 
 
     def process(self, list:List[Any]) -> List[Any]:
