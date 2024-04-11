@@ -167,9 +167,9 @@ class DiffusersPipelineWrapper:
             inittensor = inittensor.unsqueeze(0).to(self.inferencedevice)
             masktensor = transforms.ToTensor()(maskimageparams.image.convert("L"))
             masktensor = masktensor.to(self.inferencedevice)
-            diffusers_params['image'] = inittensor
-            diffusers_params['original_image'] = inittensor
-            diffusers_params['map'] = masktensor
+            diffusers_params['image'] = inittensor.to(self.device)
+            diffusers_params['original_image'] = inittensor.to(self.device)
+            diffusers_params['map'] = masktensor.to(self.device)
 
     def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
