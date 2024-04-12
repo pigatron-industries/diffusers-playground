@@ -33,7 +33,7 @@ class ConditioningModelUserInputNode(UserInputNode):
         options = [ControlImageType.IMAGETYPE_INITIMAGE, ControlImageType.IMAGETYPE_DIFFMASKIMAGE]+list(models.keys())
         if(self.model not in options):
             self.model = None
-        self.model_dropdown = ui.select(options=[ControlImageType.IMAGETYPE_INITIMAGE]+list(models.keys()), value=self.model, label="Model").bind_value(self, 'model').classes('grow')
+        self.model_dropdown = ui.select(options=options, value=self.model, label="Model").bind_value(self, 'model').classes('grow')
 
 
     def updateModels(self):
