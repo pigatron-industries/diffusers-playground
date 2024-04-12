@@ -10,6 +10,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
 
     def __init__(self):
         super().__init__("Image Diffusion - Conditioning", Image.Image, workflow=True, subworkflow=False)
+        self.i = 0
 
 
     def build(self):
@@ -28,9 +29,10 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
 
-        i = 0
         def create_conditioning_input():
             print("Creating conditioning input")
+            i = self.i
+            self.i += 1
             conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = f"model{i}")
             scale_input = FloatUserInputNode(value = 1.0, name = f"scale{i}")
             image_input = ImageUploadInputNode(name = f"image_input{i}")
