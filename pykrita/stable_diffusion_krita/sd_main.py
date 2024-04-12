@@ -16,6 +16,8 @@ from .sd_server import *
 from .sd_config import *
 from .sd_parameters import *
 
+image_input_types = [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE]
+
 # Stable Diffusion Plugin fpr Krita
 # (C) 2022, Nicolay Mausz
 # MIT License
@@ -385,7 +387,7 @@ class SDDialog(QDialog):
         formLayout.addWidget(self.buttonBox)
 
         if('image' in self.actionfields):
-            self.controlmodels = [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE]
+            self.controlmodels = image_input_types
             self.control_model_dropdowns = []
             self.control_scale_sliders = []
             tabs = QTabWidget()
@@ -472,7 +474,7 @@ class SDDialog(QDialog):
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
-        self.controlmodels = [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE] + control_models
+        self.controlmodels = image_input_types + control_models
         for control_model_dropdown in self.control_model_dropdowns:
             control_model_dropdown.clear()
             control_model_dropdown.addItems(self.controlmodels)
@@ -558,8 +560,8 @@ class SDDialog(QDialog):
         if('image' in self.actionfields):
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
                 if (i < len(params.controlimages)):
-                    if (params.controlimages[i].type == IMAGETYPE_INITIMAGE):
-                        control_model_dropdown.setCurrentText(IMAGETYPE_INITIMAGE)
+                    if (params.controlimages[i].type in image_input_types):
+                        control_model_dropdown.setCurrentText(params.controlimages[i].type)
                     else:
                         control_model_dropdown.setCurrentText(params.controlimages[i].model)
                     self.control_scale_sliders[i].setValue(int(params.controlimages[i].condscale*100))
@@ -630,7 +632,7 @@ class SDDialog(QDialog):
             dialogParams.controlimages = []
             genParams.controlimages = []
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
-                if (control_model_dropdown.currentText() in [IMAGETYPE_INITIMAGE, IMAGETYPE_DIFFMASKIMAGE]):
+                if (control_model_dropdown.currentText() in image_input_types):
                     dialogParams.controlimages.append(ControlImageParameters(type = control_model_dropdown.currentText(), condscale = self.control_scale_sliders[i].value()/100))
                     genParams.controlimages.append(ControlImageParameters(type = control_model_dropdown.currentText(), image64 = images64[i], condscale = self.control_scale_sliders[i].value()/100))
                 else:
