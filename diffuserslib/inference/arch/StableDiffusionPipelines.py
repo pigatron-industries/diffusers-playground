@@ -205,6 +205,7 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
             self.addInferenceParamsIpAdapter(params, diffusers_params)
         if(self.features.inpaint):
             self.addInferenceParamsInpaint(params, diffusers_params)
+        print(diffusers_params)
         output, seed = super().diffusers_inference(**diffusers_params)
         return output.images[0], seed
 

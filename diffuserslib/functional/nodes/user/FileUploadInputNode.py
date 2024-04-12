@@ -62,4 +62,7 @@ class ImageUploadInputNode(FileUploadInputNode):
     def previewContent(self):
         if(self.content is None):
             return None
-        return ui.image(self.content).style(f"max-width:128px; min-width:128px;")
+        with ui.column() as container:
+            ui.image(self.content).style(f"max-width:128px; min-width:128px;")
+            ui.label(f'{self.content.width} x {self.content.height} pixels')
+        return container

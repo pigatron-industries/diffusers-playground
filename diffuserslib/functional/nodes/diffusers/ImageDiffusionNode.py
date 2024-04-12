@@ -19,7 +19,7 @@ class ImageDiffusionNode(FunctionalNode):
     def __init__(self,
                  models:ModelsFuncType = [],
                  loras:LorasFuncType = [],
-                 size:SizeFuncType = (512, 512),
+                 size:SizeFuncType|None = None,
                  prompt:StringFuncType = "",
                  negprompt:StringFuncType = "",
                  steps:IntFuncType = 40,
@@ -60,11 +60,17 @@ class ImageDiffusionNode(FunctionalNode):
             for conditioning_input in conditioning_inputs:
                 if(conditioning_input.image is not None):
                     conditioningparams.append(conditioning_input)
+                    width = conditioning_input.image.width
+                    height = conditioning_input.image.height
+
+        if(size is not None):
+            width = size[0]
+            height = size[1]
         
         params = GenerationParameters(
             safetychecker=False,
-            width=size[0],
-            height=size[1],
+            width=width,
+            height=height,
             models=models,
             loras=loras,
             prompt=prompt,

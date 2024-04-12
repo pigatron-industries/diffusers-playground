@@ -1,5 +1,5 @@
 from diffuserslib.functional import *
-from diffuserslib.functional_workflows.ImageDiffusionConditioningWorkflow import ImageDiffusionConditioningWorkflow
+from diffuserslib.functional_workflows.image.ImageDiffusionConditioningWorkflow import ImageDiffusionConditioningWorkflow
 
 
 class VideoDiffusionConditioningWorkflow(WorkflowBuilder):
