@@ -4,6 +4,7 @@ from diffuserslib.functional.WorkflowBuilder import *
 from diffuserslib.functional.nodes.diffusers.user import *
 from diffuserslib.functional.nodes.diffusers import *
 from diffuserslib.functional.nodes.image.process import MLSDStraightLineDetectionNode
+from diffuserslib.functional.nodes.image.process import SemanticSegmentationNode
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.process import ResizeImageNode
 from diffuserslib.functional.nodes.animated import FeedbackNode
@@ -37,7 +38,10 @@ class ImageDiffusionRoomDecorWorkflow(WorkflowBuilder):
         initimage = ConditioningInputNode(image = image_resize, model = 'initimage', scale = 0.85)
         mlsd = MLSDStraightLineDetectionNode(image = image_resize, name = "mlsd")
         mlsd_resize = ResizeImageNode(image = mlsd, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
-        mlsd_conditioning = ConditioningInputNode(image = mlsd_resize, model = 'lllyasviel/control_v11p_sd15_mlsd', scale = 1.0)
+        mlsd_conditioning = ConditioningInputNode(image = mlsd_resize, model = 'lllyasviel/control_v11p_sd15_mlsd', scale = 0.85)
+        segmentation = SemanticSegmentationNode(image = image_resize, name = "segmentation")
+        segmentation_resize = ResizeImageNode(image = segmentation, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
+        segmentation_conditioning = ConditioningInputNode(image = segmentation_resize, model = 'lllyasviel/control_v11p_sd15_seg', scale = 0.85)
 
         diffusion = ImageDiffusionNode(models = model_input,
                                     loras = lora_input,
@@ -48,7 +52,7 @@ class ImageDiffusionRoomDecorWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
-                                    conditioning_inputs = [initimage, mlsd_conditioning])
+                                    conditioning_inputs = [initimage, mlsd_conditioning, segmentation_conditioning])
         
         feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = None, name = "feedback_image", display_name="Feedback Image")
         return diffusion, feedback_image

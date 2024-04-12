@@ -203,7 +203,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                         for node_name in rundata.params:
                             for paramname, paramvalue in rundata.params[node_name].items():
                                 with ui.row().classes('no-wrap'):
-                                    ui.label(f"{paramname}:").style("line-height: 1;")
+                                    ui.label(f"{node_name}.{paramname}:").style("line-height: 1;")
                                     if(isinstance(paramvalue, Image.Image)):
                                         ui.image(paramvalue).style("min-width:128px; min-height:128px;")
                                     else:
@@ -225,7 +225,7 @@ class BatchInterfaceComponents(InterfaceComponents):
         with ui.column():
             ui.label("Generating...").style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
             ui.linear_progress(show_value=False).bind_value_from(self, 'progress')
-            if (self.controller.workflow is not None):
+            if (self.controller.model.workflow is not None):
                 progress = self.controller.getProgress()
                 if(progress is not None and progress.run_progress is not None and progress.run_progress.output is not None):
                     output = progress.run_progress.output

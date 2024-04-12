@@ -49,16 +49,16 @@ class InterfaceComponents:
     def workflowSelect(self, workflow_list:Dict[str, str]):
         if(self.controller.model.workflow_name not in workflow_list):
             self.controller.model.workflow_name = None
-            self.controller.workflow = None
+            self.controller.model.workflow = None
         ui.select(workflow_list, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
 
 
     def workflow_parameters(self):
         self.input_nodes = []
-        if self.controller.workflow is not None:
+        if self.controller.model.workflow is not None:
             with ui.card_section().classes('w-full').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                 with ui.column():
-                    self.node_parameters(self.controller.workflow)
+                    self.node_parameters(self.controller.model.workflow)
 
 
     def node_parameters(self, node:FunctionalNode):

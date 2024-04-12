@@ -15,7 +15,9 @@ class Model:
     run_type:int = 1
     batch_size:int = 1
     workflow_name:str|None = None
-    
+    workflow:FunctionalNode|None = None
+    workflows_sub:Dict[str, FunctionalNode] = field(default_factory=dict)
+
     
 
 def str_to_class(str):
@@ -29,8 +31,6 @@ class Controller:
     builders_batch:Dict[str, str] = {}
     builders_realtime:Dict[str, str] = {}
     builders_sub:Dict[str, str] = {}
-    workflow:FunctionalNode|None = None
-    workflows_sub:Dict[str, FunctionalNode] = {}
     history_filename = ".history.yml"
 
     def __init__(self):
@@ -74,27 +74,27 @@ class Controller:
     
 
     def loadWorkflow(self, workflow_name):
-        if(self.workflow is not None and self.workflow.name == workflow_name):
+        if(self.model.workflow is not None and self.model.workflow.name == workflow_name):
             return
         print(f"Loading workflow instance: {workflow_name}")
-        self.workflows_sub = {}
+        self.model.workflows_sub = {}
         if workflow_name in self.builders:
             print(f"Loading workflow: {workflow_name}")
             self.model.workflow_name = workflow_name
             workflow_or_tuple = self.builders[workflow_name].build()
             if(isinstance(workflow_or_tuple, tuple)):
-                self.workflow = workflow_or_tuple[0]
+                self.model.workflow = workflow_or_tuple[0]
                 secondary_workflows = workflow_or_tuple[1:]
                 for secondary_workflow in secondary_workflows:
-                    self.workflows_sub[secondary_workflow.name] = secondary_workflow
+                    self.model.workflows_sub[secondary_workflow.name] = secondary_workflow
             else:
-                self.workflow = workflow_or_tuple
+                self.model.workflow = workflow_or_tuple
             self.loadWorkflowParamsFromHistory()
-            print(f"Loaded workflow: {self.workflow.name}")
-            self.workflow.printDebug()
+            print(f"Loaded workflow: {self.model.workflow.name}")
+            self.model.workflow.printDebug()
         else:
             self.model.workflow_name = None
-            self.workflow = None
+            self.model.workflow = None
 
 
     def getSelectableInputNodes(self, param:NodeParameter) -> Dict[str, str]:
@@ -103,7 +103,7 @@ class Controller:
             builder = self.builders[name]
             if(builder.type == param.type):
                 selectable_subworkflows[name] = builder.name
-        for name, workflow in self.workflows_sub.items():
+        for name, workflow in self.model.workflows_sub.items():
             if(workflow.type == param.type):
                 selectable_subworkflows[name] = workflow.name
         return selectable_subworkflows
@@ -113,15 +113,15 @@ class Controller:
         if(workflow_name in self.builders):
             param.value = self.builders[workflow_name].build()
             param.value.node_name = workflow_name
-        elif(workflow_name in self.workflows_sub):
-            param.value = self.workflows_sub[workflow_name]
+        elif(workflow_name in self.model.workflows_sub):
+            param.value = self.model.workflows_sub[workflow_name]
             param.value.node_name = workflow_name
 
 
     def runWorkflow(self):
-        if(self.workflow is not None and WorkflowRunner.workflowrunner is not None):
+        if(self.model.workflow is not None and WorkflowRunner.workflowrunner is not None):
             self.saveWorkflowParamsToHistory()
-            WorkflowRunner.workflowrunner.run(self.workflow, int(self.model.batch_size))
+            WorkflowRunner.workflowrunner.run(self.model.workflow, int(self.model.batch_size))
         else:
             print("No workflow loaded")
 
@@ -147,7 +147,7 @@ class Controller:
 
 
     def loadWorkflowParamsFromHistory(self):
-        if(self.workflow is not None and self.model.workflow_name is not None and self.model.workflow_name in self.workflow_history):
+        if(self.model.workflow is not None and self.model.workflow_name is not None and self.model.workflow_name in self.workflow_history):
             user_input_values = self.workflow_history[self.model.workflow_name]
 
             def visitor(param, parents):
@@ -158,11 +158,11 @@ class Controller:
                 if(paramstring+'.node' in user_input_values):
                     self.createInputNode(param, user_input_values[paramstring+'.node'])
             
-            self.workflow.visitParams(visitor)
+            self.model.workflow.visitParams(visitor)
 
 
     def saveWorkflowParamsToHistory(self):
-        if(self.workflow is not None):
+        if(self.model.workflow is not None):
             user_input_values = {}
 
             def visitor(param, parents):
@@ -172,7 +172,7 @@ class Controller:
                 if(param.value != param.initial_value and isinstance(param.value, FunctionalNode) and isinstance(param.initial_value, UserInputNode)):
                     user_input_values[paramstring+'.node'] = param.value.node_name
                     
-            self.workflow.visitParams(visitor)
+            self.model.workflow.visitParams(visitor)
             self.workflow_history[self.model.workflow_name] = user_input_values
             self.workflow_history['workflow'] = self.model.workflow_name
             self.workflow_history['run_type'] = self.model.run_type

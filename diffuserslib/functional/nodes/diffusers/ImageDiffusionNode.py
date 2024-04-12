@@ -82,6 +82,8 @@ class ImageDiffusionNode(FunctionalNode):
             controlimages=conditioningparams
         )
 
+        print(params)
+
         output, seed = DiffusersPipelines.pipelines.generate(params)
         # output = Image.new("RGB", (size[0], size[1]), (255, 255, 255))
         if(isinstance(output, Image.Image)):
