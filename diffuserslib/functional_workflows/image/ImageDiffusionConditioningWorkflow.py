@@ -28,14 +28,15 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
 
+        i = 0
         def create_conditioning_input():
             print("Creating conditioning input")
-            conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = "model")
-            scale_input = FloatUserInputNode(value = 1.0, name = "scale")
-            image_input = ImageUploadInputNode(name = "image_input")
-            resize_type_input = EnumSelectUserInputNode(value = ResizeImageNode.ResizeType.EXTEND, enum = ResizeImageNode.ResizeType, name = "resize_type")
-            resize_image = ResizeImageNode(image = image_input, size = size_input, type = resize_type_input, name = "resize_image")
-            return ConditioningInputNode(image = resize_image, model = conditioning_model_input, scale = scale_input, name = "conditioning_input")
+            conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = f"model{i}")
+            scale_input = FloatUserInputNode(value = 1.0, name = f"scale{i}")
+            image_input = ImageUploadInputNode(name = f"image_input{i}")
+            resize_type_input = EnumSelectUserInputNode(value = ResizeImageNode.ResizeType.STRETCH, enum = ResizeImageNode.ResizeType, name = f"resize_type{i}")
+            resize_image = ResizeImageNode(image = image_input, size = size_input, type = resize_type_input, name = f"resize_image{i}")
+            return ConditioningInputNode(image = resize_image, model = conditioning_model_input, scale = scale_input, name = f"conditioning_input{i}")
 
         conditioning_inputs = ListUserInputNode(input_node_generator = create_conditioning_input, name = "conditioning_inputs")
         diffusion = ImageDiffusionNode(models = model_input,
