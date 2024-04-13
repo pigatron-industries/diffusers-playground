@@ -474,10 +474,11 @@ class SDDialog(QDialog):
         # update items in model dropdown
         self.model.clear()
         self.model.addItems([""] + models)
-        self.controlmodels = image_input_types + control_models
-        for control_model_dropdown in self.control_model_dropdowns:
-            control_model_dropdown.clear()
-            control_model_dropdown.addItems(self.controlmodels)
+        if('image' in self.actionfields):
+            self.controlmodels = image_input_types + control_models
+            for control_model_dropdown in self.control_model_dropdowns:
+                control_model_dropdown.clear()
+                control_model_dropdown.addItems(self.controlmodels)
 
 
     def modelChanged(self, index):
