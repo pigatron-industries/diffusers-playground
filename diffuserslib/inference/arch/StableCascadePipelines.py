@@ -10,7 +10,7 @@ class StableCascadePipelineWrapper(DiffusersPipelineWrapper):
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(params, **kwargs)
+        self.createPipeline(params)
         super().__init__(params, inferencedevice)
 
 
