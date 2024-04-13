@@ -31,7 +31,7 @@ class View:
     def setInterfaceComponents(self):
         if(self.controller.model.run_type == 1):
             self.interface_components = BatchInterfaceComponents(self.controller)
-        elif(self.controller.model.run_type == 3):
+        elif(self.controller.model.run_type == 2):
             self.interface_components = RealtimeInterfaceComponents(self.controller)
         else:
             self.interface_components = InterfaceComponents(self.controller)
@@ -56,7 +56,7 @@ class View:
 
         with ui.column().classes("w-full h-full no-wrap gap-0"):
             with ui.row().classes("w-full p-2 place-content-between").style("background-color:#2b323b; border-bottom:1px solid #585b5f"):
-                ui.toggle({1: 'Batch', 2: 'Animate', 3: 'Realtime'}, on_change=self.onUpdateRunType).bind_value(self.controller.model, 'run_type').style('margin-top:1.3em; margin-right:5em; margin-bottom:0.1em;')
+                ui.toggle({1: 'Batch', 2: 'Realtime'}, on_change=self.onUpdateRunType).bind_value(self.controller.model, 'run_type').style('margin-top:1.3em; margin-right:5em; margin-bottom:0.1em;')
                 self.status() # type: ignore
                 with ui.row():
                     self.buttons() # type: ignore
@@ -81,8 +81,8 @@ class View:
 
 
     def settings(self):
-        if(self.controller.workflow is not None):
-            self.controller.workflow.printDebug()
+        if(self.controller.model.workflow is not None):
+            self.controller.model.workflow.printDebug()
         with ui.dialog(value=True) as settings_dialog, ui.card():
             self.interface_components.settings()
 

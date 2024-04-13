@@ -4,7 +4,7 @@ from diffuserslib.functional import *
 class VideoRifeInterpolationWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video - Rife Interpolation", Image.Image, workflow=True, subworkflow=False, realtime=False)
+        super().__init__("Video - Rife Interpolation", Video, workflow=True, subworkflow=False, realtime=False)
 
 
     def build(self):

@@ -9,6 +9,7 @@ class InterfaceComponents:
 
     def __init__(self, controller:Controller):
         self.controller = controller
+        self.workflow_select = None
 
 
     def loadWorkflow(self, workflow_name):
@@ -50,7 +51,17 @@ class InterfaceComponents:
         if(self.controller.model.workflow_name not in workflow_list):
             self.controller.model.workflow_name = None
             self.controller.model.workflow = None
-        ui.select(workflow_list, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
+        ui.toggle(self.controller.output_types, on_change=lambda e: self.setOutputType(e.value, workflow_list)).bind_value(self.controller.model, "output_type")
+        workflow_options = self.controller.filterWorkflowsByOutputType(workflow_list, self.controller.model.output_type)
+        if(self.controller.model.workflow_name not in workflow_options):
+            self.controller.model.workflow_name = None
+        self.workflow_select = ui.select(workflow_options, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
+
+
+    def setOutputType(self, output_type, workflow_list:Dict[str, str]):
+        if(self.workflow_select is not None):
+            workflow_options = self.controller.filterWorkflowsByOutputType(workflow_list, output_type)
+            self.workflow_select.set_options(workflow_options)
 
 
     def workflow_parameters(self):

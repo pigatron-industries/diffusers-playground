@@ -25,8 +25,8 @@ class RealtimeInterfaceComponents(InterfaceComponents):
 
     def runWorkflow(self):
         self.controller.saveWorkflowParamsToHistory()
-        if(self.controller.workflow is not None and not self.controller.workflow.inited):
-            self.controller.workflow.reset()
+        if(self.controller.model.workflow is not None and not self.controller.model.workflow.inited):
+            self.controller.model.workflow.reset()
         self.timer.activate()
         self.running = True
         self.status.refresh()
@@ -51,9 +51,9 @@ class RealtimeInterfaceComponents(InterfaceComponents):
 
 
     def updateWorkflowOutput(self):
-        if(self.controller.workflow is not None):
-            self.controller.workflow.flush()
-            output = self.controller.workflow()
+        if(self.controller.model.workflow is not None):
+            self.controller.model.workflow.flush()
+            output = self.controller.model.workflow()
             self.output = output
             if(isinstance(output, Image.Image)):
                 self.output_control.style(replace = f"max-width:{output.width}px; max-height:{output.height}px;")
@@ -64,8 +64,8 @@ class RealtimeInterfaceComponents(InterfaceComponents):
 
 
     def resetWorkflow(self):
-        if(self.controller.workflow is not None):
-            self.controller.workflow.reset()
+        if(self.controller.model.workflow is not None):
+            self.controller.model.workflow.reset()
             self.outputs.refresh()
             self.status.refresh()
 

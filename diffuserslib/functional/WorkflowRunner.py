@@ -88,6 +88,7 @@ class WorkflowRunner:
                     print(f"Error running workflow {self.batchcurrent.workflow.node_name}: {e}")
                     traceback.print_exc()
                     break
+                # TODO record outputs of each node instead of params
                 rundata.params = self.batchcurrent.workflow.getEvaluatedParamValues()
                 rundata.end_time = datetime.datetime.now()
                 rundata.duration = rundata.end_time - rundata.start_time

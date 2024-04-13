@@ -13,6 +13,7 @@ import glob
 @dataclass
 class Model:
     run_type:int = 1
+    output_type:str = "Image"
     batch_size:int = 1
     workflow_name:str|None = None
     workflow:FunctionalNode|None = None
@@ -27,10 +28,11 @@ def str_to_class(str):
 class Controller:
 
     model = Model()
-    builders:Dict[str, WorkflowBuilder] = {}
-    builders_batch:Dict[str, str] = {}
-    builders_realtime:Dict[str, str] = {}
-    builders_sub:Dict[str, str] = {}
+    builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
+    builders_batch:Dict[str, str] = {}       # [WorkflowClass Name, Workflow Display Name]
+    builders_realtime:Dict[str, str] = {}    # [WorkflowClass Name, Workflow Display Name]
+    builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
+    output_types = ["Image", "Video", "Audio", "Text", "Other"]
     history_filename = ".history.yml"
 
     def __init__(self):
@@ -40,11 +42,21 @@ class Controller:
             raise Exception("Workflow Runner not initialized")
         self.loadWorkflows()
         self.loadWorkflowParamsHistory()
-        if('run_type' in self.workflow_history):
-            self.model.run_type = self.workflow_history['run_type']
-        if('workflow' in self.workflow_history):
-            self.loadWorkflow(self.workflow_history['workflow'])
         self.loadSettings()
+
+
+    def filterWorkflowsByOutputType(self, workflows:Dict[str, str], typename:str) -> Dict[str, str]:
+        filtered_workflows:Dict[str, str] = {}
+        for name, display_name in workflows.items():
+            builder = self.builders[name]
+            if(name in self.builders):
+                if(builder.type is not None and builder.type.__name__ == typename):
+                    filtered_workflows[name] = display_name
+                elif(builder.type is not None and typename == "Other" and builder.type.__name__ not in self.output_types):
+                    filtered_workflows[name] = display_name
+                elif(builder.type is None and typename == "Other"):
+                    filtered_workflows[name] = display_name
+        return filtered_workflows
         
 
     def loadWorkflows(self):
@@ -174,9 +186,7 @@ class Controller:
                     
             self.model.workflow.visitParams(visitor)
             self.workflow_history[self.model.workflow_name] = user_input_values
-            self.workflow_history['workflow'] = self.model.workflow_name
-            self.workflow_history['run_type'] = self.model.run_type
-            self.saveWorkflowParamsHistory()
+            self.saveSettings()
 
 
     def stopWorkflow(self):
@@ -227,6 +237,9 @@ class Controller:
 
 
     def saveSettings(self):
+        self.workflow_history['workflow'] = self.model.workflow_name
+        self.workflow_history['run_type'] = self.model.run_type
+        self.workflow_history['output_type'] = self.model.output_type
         self.workflow_history['output_subdir'] = self.output_subdir
         self.saveWorkflowParamsHistory()
 
@@ -234,4 +247,10 @@ class Controller:
     def loadSettings(self):
         if('output_subdir' in self.workflow_history):
             self.output_subdir = self.workflow_history['output_subdir']
+        if('run_type' in self.workflow_history):
+            self.model.run_type = self.workflow_history['run_type']
+        if('output_type' in self.workflow_history):
+            self.model.output_type = self.workflow_history['output_type']
+        if(self.model.workflow is None and 'workflow' in self.workflow_history):
+            self.loadWorkflow(self.workflow_history['workflow'])
         
