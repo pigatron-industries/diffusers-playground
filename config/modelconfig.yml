@@ -4,7 +4,8 @@ generate:
     pipelines:
       generate: StableCascadeGeneratePipeline
     models:
-      - id: stabilityai/stable-cascade-prior
+      - id: stabilityai/stable-cascade
+        prior: stabilityai/stable-cascade-prior
         decoder: stabilityai/stable-cascade
   - base: svd_1_0
     pipelines:

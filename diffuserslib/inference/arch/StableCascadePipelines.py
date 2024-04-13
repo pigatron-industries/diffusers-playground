@@ -18,7 +18,7 @@ class StableCascadePipelineWrapper(DiffusersPipelineWrapper):
         if(params.modelConfig is None or params.modelConfig.data is None):
             raise ValueError("Must provide modelConfig")
         pipeline_params = self.createPipelineParams(params)
-        self.pipeline_prior = StableCascadePriorPipeline.from_pretrained(params.modelConfig.modelpath, **pipeline_params).to(self.device)
+        self.pipeline_prior = StableCascadePriorPipeline.from_pretrained(params.modelConfig.data['prior'], **pipeline_params).to(self.device)
         self.pipeline_decoder = StableCascadeDecoderPipeline.from_pretrained(params.modelConfig.data['decoder'], **pipeline_params).to(self.device)
 
 
