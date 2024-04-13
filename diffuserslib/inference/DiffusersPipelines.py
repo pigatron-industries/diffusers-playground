@@ -158,7 +158,8 @@ class DiffusersPipelines:
             baseData = self.baseModelData[pipeline.initparams.modelConfig.base]
             prompt = baseData.textembeddings.process_prompt_and_add_tokens(params.original_prompt, pipeline)
             loras, weights = self._getLORAs(params)
-            prompt = baseData.loras.process_prompt_and_add_loras(prompt, pipeline, loras, weights)
+            if (len(loras) > 0):
+                prompt = baseData.loras.process_prompt_and_add_loras(prompt, pipeline, loras, weights)
         
         return prompt
 
