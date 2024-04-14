@@ -1,8 +1,8 @@
 from email.mime import image
 from numpy import diff, size
 from diffuserslib.functional.WorkflowBuilder import *
-from diffuserslib.functional.nodes.diffusers.user import *
-from diffuserslib.functional.nodes.diffusers import *
+from diffuserslib.functional.nodes.image.diffusers.user import *
+from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.image.process import MLSDStraightLineDetectionNode
 from diffuserslib.functional.nodes.image.process import SemanticSegmentationNode
 from diffuserslib.functional.nodes.user import *

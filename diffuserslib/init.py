@@ -1,7 +1,7 @@
 from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.functional import WorkflowRunner
 from diffuserslib.GlobalConfig import GlobalConfig
-from diffuserslib.functional.nodes.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
+from diffuserslib.functional.nodes.image.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
 from typing import List
 import yaml
 import os

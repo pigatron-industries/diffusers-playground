@@ -1,10 +1,10 @@
 from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
 from diffuserslib.inference.GenerationParameters import ModelParameters
-from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsType
-from diffuserslib.functional.nodes.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
+from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ModelsType
+from diffuserslib.functional.nodes.image.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-from ...user.UserInputNode import UserInputNode
+from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
 from nicegui import ui
 
 

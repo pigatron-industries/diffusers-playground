@@ -1,8 +1,8 @@
-from ...FunctionalNode import FunctionalNode
-from ...types.FunctionalTyping import *
+from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
+from diffuserslib.inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
-from ....inference.DiffusersPipelines import DiffusersPipelines
-from ....inference.GenerationParameters import GenerationParameters, ModelParameters, LoraParameters
 from PIL import Image
 
 ModelsType = List[ModelParameters]

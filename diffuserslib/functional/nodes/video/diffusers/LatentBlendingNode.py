@@ -1,9 +1,9 @@
-from ....FunctionalNode import FunctionalNode
-from ....types.FunctionalTyping import *
-from ..ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
-from ..ImageDiffusionNode import ModelsFuncType, LorasFuncType, ModelsType, LorasType
-from .....inference.DiffusersPipelines import DiffusersPipelines
-from .....inference.GenerationParameters import GenerationParameters
+from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.functional.nodes.image.diffusers.ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
+from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ModelsFuncType, LorasFuncType, ModelsType, LorasType
+from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
+from diffuserslib.inference.GenerationParameters import GenerationParameters
 from PIL import Image
 from .latentblending.blending_engine import BlendingEngine
 import random

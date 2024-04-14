@@ -14,7 +14,7 @@ import os
 @dataclass
 class WorkflowRunData:
     timestamp:int
-    params:Dict[str,Dict[str,Any]]|None = None
+    params:Dict[str,Any]|None = None
     output: Any|None = None
     save_file:str|None = None
     error:Exception|None = None
@@ -89,7 +89,7 @@ class WorkflowRunner:
                     traceback.print_exc()
                     break
                 # TODO record outputs of each node instead of params
-                rundata.params = self.batchcurrent.workflow.getEvaluatedParamValues()
+                rundata.params = self.batchcurrent.workflow.getNodeOutputs()
                 rundata.end_time = datetime.datetime.now()
                 rundata.duration = rundata.end_time - rundata.start_time
                 print(rundata.duration)

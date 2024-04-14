@@ -2,7 +2,7 @@ from diffuserslib import GlobalConfig
 from diffuserslib.functional import *
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.train.TrainLoraNode import TrainLoraNode
-from diffuserslib.functional.nodes.diffusers.user.DiffusionModelUserInputNode import DiffusionModelUserInputNode
+from diffuserslib.functional.nodes.image.diffusers.user.DiffusionModelUserInputNode import DiffusionModelUserInputNode
 from diffuserslib.functional.nodes.train import *
 
 

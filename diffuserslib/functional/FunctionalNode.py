@@ -193,8 +193,17 @@ class FunctionalNode(DeepCopyObject):
         return paramnodevalues
     
 
+    def getNodeOutputs(self) -> Dict[str, Any]:
+        nodes = self.getNodes()
+        nodeoutputs = {}
+        for node in nodes:
+            if(node.output is not None):
+                nodeoutputs[node.node_name] = node.output
+        return nodeoutputs
+    
+
     def getNodes(self) -> List[Self]:
-        nodes = [self]
+        nodes = []
         for param in self.params.values():
             if(isinstance(param.value, List)):
                 for listvalue in param.value:
@@ -202,6 +211,7 @@ class FunctionalNode(DeepCopyObject):
                         nodes.extend(listvalue.getNodes())
             if(isinstance(param.value, FunctionalNode)):
                 nodes.extend(param.value.getNodes())
+        nodes.append(self)
         return nodes
     
 

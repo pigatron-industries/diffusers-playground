@@ -1,7 +1,7 @@
 from matplotlib.pyplot import step
 from diffuserslib.functional.FunctionalNode import FunctionalNode, WorkflowProgress
 from diffuserslib.functional.types.FunctionalTyping import *
-from diffuserslib.functional.nodes.diffusers.ImageDiffusionNode import ModelsFuncType, ModelsType
+from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ModelsFuncType, ModelsType
 from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.util.CommandProcess import CommandProcess
 import os

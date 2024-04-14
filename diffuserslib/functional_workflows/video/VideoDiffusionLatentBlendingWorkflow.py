@@ -1,5 +1,4 @@
 from diffuserslib.functional import *
-from diffuserslib.functional_workflows.image.ImageDiffusionConditioningWorkflow import ImageDiffusionConditioningWorkflow
 
 
 class VideoDiffusionLatentBlendingWorkflow(WorkflowBuilder):

@@ -200,14 +200,13 @@ class BatchInterfaceComponents(InterfaceComponents):
                 with ui.column():
                     ui.label(f"Duration: {rundata.duration}")
                     if rundata.params is not None:
-                        for node_name in rundata.params:
-                            for paramname, paramvalue in rundata.params[node_name].items():
-                                with ui.row().classes('no-wrap'):
-                                    ui.label(f"{node_name}.{paramname}:").style("line-height: 1;")
-                                    if(isinstance(paramvalue, Image.Image)):
-                                        ui.image(paramvalue).style("min-width:128px; min-height:128px;")
-                                    else:
-                                        ui.label(str(paramvalue)).style("line-height: 1;")
+                        for node_name, node_output in rundata.params.items():
+                            with ui.row().classes('no-wrap'):
+                                ui.label(f"{node_name}:").style("line-height: 1;")
+                                if(isinstance(node_output, Image.Image)):
+                                    ui.image(node_output).style("min-width:128px; min-height:128px;")
+                                else:
+                                    ui.label(str(node_output)).style("line-height: 1;")
 
                 with ui.column().classes('ml-auto'):
                     with ui.row().classes('ml-auto'):
