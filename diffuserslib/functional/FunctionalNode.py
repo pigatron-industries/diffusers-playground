@@ -180,28 +180,6 @@ class FunctionalNode(DeepCopyObject):
         return paramvalues
     
 
-    def getEvaluatedParamValues(self) -> Dict[str,Dict[str, Any]]:
-        nodes = self.getNodes()
-        paramnodevalues = {}
-        for node in nodes:
-            paramvalues = {}
-            for paramname, param in node.params.items():
-                if(isinstance(param.initial_value, FunctionalNode)): # ignore "hard coded" values
-                    paramvalues[paramname] = param.evaluated
-            if(paramvalues):
-                paramnodevalues[node.node_name] = paramvalues
-        return paramnodevalues
-    
-
-    def getNodeOutputs(self) -> Dict[str, Any]:
-        nodes = self.getNodes()
-        nodeoutputs = {}
-        for node in nodes:
-            if(node.output is not None):
-                nodeoutputs[node.node_name] = node.output
-        return nodeoutputs
-    
-
     def getNodes(self) -> List[Self]:
         nodes = []
         for param in self.params.values():
@@ -215,13 +193,22 @@ class FunctionalNode(DeepCopyObject):
         return nodes
     
 
+    def getNodeOutputs(self) -> Dict[str, Any]:
+        node_outputs = {}
+        def visitor(node, parents):
+            nodestring = '.'.join([parent.node_name for parent in parents])
+            node_outputs[nodestring] = node.output
+        self.visitNodes(visitor)
+        return node_outputs
+    
+
     def visitNodes(self, visitor, parents=[]):
-        visitor(self, parents)
         for paramname, param in self.params.items():
             if(isinstance(param.value, FunctionalNode)):
-                param.value.visitNodes(visitor, [param]+parents)
+                param.value.visitNodes(visitor, parents+[self])
             elif(isinstance(param.initial_value, FunctionalNode)):
-                param.initial_value.visitNodes(visitor, [param]+parents)
+                param.initial_value.visitNodes(visitor, parents+[self])
+        visitor(self, parents+[self])
     
 
     def visitParams(self, visitor, parents=[]):
