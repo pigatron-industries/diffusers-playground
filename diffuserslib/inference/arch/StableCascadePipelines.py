@@ -31,7 +31,7 @@ class StableCascadePipelineWrapper(DiffusersPipelineWrapper):
     def diffusers_inference(self, prompt, negative_prompt, width, height, seed, guidance_scale=4.0, **kwargs):
         generator, seed = self.createGenerator(seed)
         prior_output = self.pipeline_prior(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, width=width, height=height)
-        image = self.pipeline_decoder(image_embeddings=prior_output.image_embeddings.half(), prompt=prompt, negative_prompt=negative_prompt, guidance_scale=0.0, output_type="pil", **kwargs).images[0]
+        image = self.pipeline_decoder(image_embeddings=prior_output.image_embeddings, prompt=prompt, negative_prompt=negative_prompt, guidance_scale=0.0, output_type="pil", **kwargs).images[0]
         return image, seed
 
 
