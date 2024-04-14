@@ -35,7 +35,8 @@ class LORAs:
         prompt, prompt_loras, prompt_weights = self.process_prompt(prompt)
         loras.extend(prompt_loras)
         weights.extend(prompt_weights)
-        self.add_loras_to_model(pipeline, loras, weights)
+        if(len(loras) > 0):
+            self.add_loras_to_model(pipeline, loras, weights)
         return prompt
     
 
