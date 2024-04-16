@@ -159,6 +159,7 @@ class DiffusersPipelines:
             prompt = baseData.textembeddings.process_prompt_and_add_tokens(params.original_prompt, pipeline)
             loras, weights = self._getLORAs(params)
             prompt = baseData.loras.process_prompt_and_add_loras(prompt, pipeline, loras, weights)
+            params.prompt = prompt
         return prompt
 
 
@@ -239,7 +240,7 @@ class DiffusersPipelines:
     def generate(self, params:GenerationParameters) -> Tuple[Image.Image|ndarray, int]:
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
-        params.prompt = self.processPrompt(params, pipelineWrapper)
+        self.processPrompt(params, pipelineWrapper)
         image, seed = pipelineWrapper.inference(params)
         gc.collect()
         torch.mps.empty_cache()

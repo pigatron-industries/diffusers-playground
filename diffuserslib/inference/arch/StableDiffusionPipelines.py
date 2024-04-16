@@ -92,21 +92,22 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
     
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
+        compel = Compel(tokenizer=self.pipeline.tokenizer, text_encoder=self.pipeline.text_encoder)
+        conditioning = compel(prompt)
+        negative_conditioning = compel(negative_prompt)
+        return self.diffusers_inference_embeds(conditioning, negative_conditioning, seed, scheduler=scheduler, tiling=tiling, **kwargs)
+    
+
+    def diffusers_inference_embeds(self, prompt_embeds, negative_prompt_embeds, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
-
-        compel = Compel(tokenizer=self.pipeline.tokenizer, text_encoder=self.pipeline.text_encoder)
-        conditioning = compel(prompt)
-        negative_conditioning = compel(negative_prompt)
-        # [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
-
         if(self.initparams.modelConfig.autocast):
             with torch.autocast(self.inferencedevice):
-                output = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs)
+                output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)
         else:
-            output = self.pipeline(prompt_embeds=conditioning, negative_prompt_embeds=negative_conditioning, generator=generator, **kwargs)
+            output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)
         return output, seed
     
 
@@ -190,7 +191,7 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
         return pipeline_params
 
 
-    def inference(self, params:GenerationParameters):
+    def createInferenceParams(self, params:GenerationParameters):
         diffusers_params = {}
         self.addInferenceParamsCommon(params, diffusers_params)
         if(not self.features.img2img):
@@ -206,6 +207,11 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
         if(self.features.inpaint):
             self.addInferenceParamsInpaint(params, diffusers_params)
         print(diffusers_params)
+        return diffusers_params
+
+
+    def inference(self, params:GenerationParameters):
+        diffusers_params = self.createInferenceParams(params)
         output, seed = super().diffusers_inference(**diffusers_params)
         return output.images[0], seed
 

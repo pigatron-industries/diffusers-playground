@@ -64,7 +64,15 @@ class LatentBlendingNode(FunctionalNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
-        params = GenerationParameters(
+        params1 = GenerationParameters(
+            prompt=prompt1,
+            safetychecker=False,
+            models=models,
+            loras=loras,
+            controlimages=conditioning_inputs if conditioning_inputs is not None else []
+        )
+        params2 = GenerationParameters(
+            prompt=prompt2,
             safetychecker=False,
             models=models,
             loras=loras,
@@ -76,9 +84,9 @@ class LatentBlendingNode(FunctionalNode):
         if(seed2 is None):
             seed2 = random.randint(0, self.MAX_SEED)
 
-        pipelineWrapper = DiffusersPipelines.pipelines.createPipeline(params)
-        prompt1 = DiffusersPipelines.pipelines.processPrompt(prompt1, pipelineWrapper)
-        prompt2 = DiffusersPipelines.pipelines.processPrompt(prompt2, pipelineWrapper)
+        pipelineWrapper = DiffusersPipelines.pipelines.createPipeline(params1)
+        prompt1 = DiffusersPipelines.pipelines.processPrompt(params1, pipelineWrapper)
+        prompt2 = DiffusersPipelines.pipelines.processPrompt(params2, pipelineWrapper)
 
         be = BlendingEngine(pipelineWrapper.pipeline)
         be.set_prompt1(prompt1)
