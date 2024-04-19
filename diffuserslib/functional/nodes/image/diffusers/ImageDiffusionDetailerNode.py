@@ -10,19 +10,18 @@ from PIL import Image
 class ImageDiffusionDetailerNode(FunctionalNode):
 
     def __init__(self,
+                 image:ImageFuncType,
                  models:ModelsFuncType = [],
                  loras:LorasFuncType = [],
-                 size:SizeFuncType|None = None,
                  prompt:StringFuncType = "",
                  negprompt:StringFuncType = "",
                  steps:IntFuncType = 40,
                  cfgscale:FloatFuncType = 7.0,
                  seed:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
-                 conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
         super().__init__(name)
-        self.addParam("size", size, SizeType)
+        self.addParam("image", image, Image.Image)
         self.addParam("models", models, ModelsType)
         self.addParam("loras", loras, LorasType)
         self.addParam("prompt", prompt, str)
@@ -31,11 +30,10 @@ class ImageDiffusionDetailerNode(FunctionalNode):
         self.addParam("cfgscale", cfgscale, float)
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
-        self.addParam("conditioning_inputs", conditioning_inputs, List[ConditioningInputType])
 
 
     def process(self, 
-                size:SizeType, 
+                image:Image.Image,
                 models:ModelsType, 
                 loras:LorasType,
                 prompt:str, 
@@ -43,27 +41,12 @@ class ImageDiffusionDetailerNode(FunctionalNode):
                 steps:int, 
                 cfgscale:float, 
                 seed:int|None, 
-                scheduler:str,
-                conditioning_inputs:List[ConditioningInputType]|None) -> Image.Image:
+                scheduler:str) -> Image.Image:
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
-        conditioningparams = []
-        if(conditioning_inputs is not None):
-            for conditioning_input in conditioning_inputs:
-                if(conditioning_input.image is not None):
-                    conditioningparams.append(conditioning_input)
-                    width = conditioning_input.image.width
-                    height = conditioning_input.image.height
-
-        if(size is not None):
-            width = size[0]
-            height = size[1]
-        
         params = GenerationParameters(
             safetychecker=False,
-            width=width,
-            height=height,
             models=models,
             loras=loras,
             prompt=prompt,
@@ -71,8 +54,7 @@ class ImageDiffusionDetailerNode(FunctionalNode):
             steps=steps,
             cfgscale=cfgscale,
             seed=seed,
-            scheduler=scheduler,
-            controlimages=conditioningparams
+            scheduler=scheduler
         )
 
         print(params)
