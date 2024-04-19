@@ -206,8 +206,12 @@ class FunctionalNode(DeepCopyObject):
         for paramname, param in self.params.items():
             if(isinstance(param.value, FunctionalNode)):
                 param.value.visitNodes(visitor, parents+[self])
-            elif(isinstance(param.initial_value, FunctionalNode)):
-                param.initial_value.visitNodes(visitor, parents+[self])
+            # elif(isinstance(param.initial_value, FunctionalNode)):
+            #     param.initial_value.visitNodes(visitor, parents+[self])
+            elif(isinstance(param.value, List)):
+                for i, listvalue in enumerate(param.value):
+                    if(isinstance(listvalue, FunctionalNode)):
+                        listvalue.visitNodes(visitor, parents+[self])
         visitor(self, parents+[self])
     
 
