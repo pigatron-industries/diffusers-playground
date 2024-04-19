@@ -153,3 +153,22 @@ class DataclassEncoder(json.JSONEncoder):
         if isinstance(obj, (ModelParameters, ControlImageParameters, GenerationParameters)):
             return asdict(obj)
         return super().default(obj)
+    
+
+@dataclass
+class ClipboardContent:
+    contenttype:str = ""
+    content:str = ""
+
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__, indent=2)
+
+    @classmethod
+    def fromJson(cls, jsonbytes:bytes):
+        dict = json.loads(jsonbytes)
+        return cls.from_dict(dict)
+
+    @classmethod
+    def from_dict(cls, dict:dict):
+        params = cls(**dict)
+        return params

@@ -31,10 +31,12 @@ class SDDocker(DockWidget):
         mainWidget.layout().addLayout(h_layout2)
 
         btnPreprocess = QPushButton("Preprocess", mainWidget)
-        btnInstructPix2Pix = QPushButton("Instruct Pix 2 Pix", mainWidget)
+        btnCopy = QPushButton("Copy", mainWidget)
+        btnPaste = QPushButton("Paste", mainWidget)
         h_layout3 = QHBoxLayout()
         h_layout3.addWidget(btnPreprocess) 
-        h_layout3.addWidget(btnInstructPix2Pix)
+        h_layout3.addWidget(btnCopy)
+        h_layout3.addWidget(btnPaste)
         mainWidget.layout().addLayout(h_layout3)
 
         btnConfig = QPushButton("", mainWidget)
@@ -52,7 +54,8 @@ class SDDocker(DockWidget):
         btnUpscale.clicked.connect(sd_main.Upscale)
         btnTiledImg2Img.clicked.connect(sd_main.TiledImageToImage)
         btnPreprocess.clicked.connect(sd_main.Preprocess)
-        btnInstructPix2Pix.clicked.connect(sd_main.InstructPixToPix)
+        btnCopy.clicked.connect(sd_main.Copy)
+        btnPaste.clicked.connect(sd_main.Paste)
 
         btnConfig.clicked.connect(sd_main.Config)
         btnSelection.clicked.connect(sd_main.expandSelection)

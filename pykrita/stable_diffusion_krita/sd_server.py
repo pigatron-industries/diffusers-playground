@@ -9,12 +9,44 @@ import time
 import json
 
 
+def serverClipboardCopy(image:str):
+    try:
+        config = SDConfig()
+        body = ClipboardContent(contenttype="image", content=base64EncodeImage(image)).toJson().encode("utf-8")
+        endpoint = config.url.strip("/") + "/api/clipboard"
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        print(endpoint)
+        request = urllib.request.Request(endpoint, body, headers, method="POST")
+        with urllib.request.urlopen(request) as f:
+            response = f.read()
+        print(response)
+    except Exception as e:
+        error_message = traceback.format_exc() 
+        errorMessage("Server Error","Endpoint: "+endpoint+", Reason: "+error_message)
+
+
+def serverClipboardPaste():
+    config = SDConfig()
+    endpoint = config.url.strip("/") + "/api/clipboard"
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }    
+    request = urllib.request.Request(endpoint, None, headers, method="GET")
+    with urllib.request.urlopen(request) as f:
+        response = f.read()
+    data = json.loads(response)
+    content = ClipboardContent.from_dict(data)
+    return base64ToQImage(content.content)
+
+
 def getServerDataAsync(action, params):
     config = SDConfig()
     reqData = params.toJson().encode("utf-8")
-    endpoint=config.url
-    endpoint=endpoint.strip("/")
-    endpoint+="/api/"
+    endpoint=config.url.strip("/") + "/api/"
     asyncEndpoint = endpoint+"async"
     headers = {
         "Content-Type": "application/json",

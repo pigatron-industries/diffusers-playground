@@ -802,16 +802,6 @@ def showImageResultDialog(imagedata,params):
     if dlg.exec():
         print("HQ Update here")
 
- 
- # convert image from server result into QImage
-def base64ToQImage(data):
-  #   data=data.split(",")[1] # get rid of data:image/png,
-     image64 = data.encode('ascii')
-     imagen = QtGui.QImage()
-     bytearr = QtCore.QByteArray.fromBase64( image64 )
-     imagen.loadFromData( bytearr, 'PNG' )      
-     return imagen
-
 
 def getModels(modeltype, modelbase) -> List[str]:
     print("getModels", modeltype, modelbase)
@@ -953,16 +943,6 @@ def Preprocess():
         showImageResultDialog(images, params)
 
 
-def InstructPixToPix():
-    images = getLayerSelections()
-    dlg = SDDialog("instructpix2pix", images)
-    dlg.resize(900,200)
-    if dlg.exec():
-        params = dlg.saveParams()
-        images = runSD(params)
-        showImageResultDialog(images, params)
-
-
 def Inpaint():    
     images = getLayerSelections()
     imageWithTransparency = images[0]
@@ -988,6 +968,28 @@ def Inpaint():
         params = dlg.saveParams()
         images = runSD(params)
         showImageResultDialog(images, params)
+
+
+def Copy():
+    images = getLayerSelections()
+    serverClipboardCopy(images[0])
+    
+
+def Paste():
+    
+    image = serverClipboardPaste()
+    if (image):
+        doc = getDocument()
+        selection = getSelection()
+        layer = doc.createNode("paste", "paintLayer")
+        doc.rootNode().addChildNode(layer, None)
+
+        ptr = image.bits()
+        ptr.setsize(image.byteCount())
+        if(selection is None):
+            layer.setPixelData(QByteArray(ptr.asstring()),0,0,image.width(),image.height())
+        else:
+            layer.setPixelData(QByteArray(ptr.asstring()),selection.x(),selection.y(),image.width(),image.height())
 
 
 # config dialog

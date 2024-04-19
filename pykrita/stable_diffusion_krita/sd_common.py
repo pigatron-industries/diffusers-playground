@@ -1,4 +1,4 @@
-from krita import Krita, Document, Node, QMessageBox # type: ignore
+from krita import Krita, Document, Node, QMessageBox, QtCore, QtGui # type: ignore
 from PyQt5.Qt import QByteArray, QBuffer, QImage, QPushButton # type: ignore
 from typing import List
 
@@ -45,12 +45,11 @@ def getLayers() -> "Node|None":
 
 def getSelection():
     doc = getDocument()
-    if (doc==None): 
-        return
+    if (doc is None): 
+        return None
     selection = doc.selection()
-    if (selection==None):  
-        return doc
-        # errorMessage("Please make a selection", "Operation runs on a selection only. Please use rectangle select tool.")
+    if (selection is None):  
+        return None
     return selection
 
 
@@ -87,3 +86,13 @@ def base64EncodeImages(images):
     for image in images:
         images64.append(base64EncodeImage(image))
     return images64
+
+
+ # convert image from server result into QImage
+def base64ToQImage(data):
+  #   data=data.split(",")[1] # get rid of data:image/png,
+     image64 = data.encode('ascii')
+     imagen = QtGui.QImage()
+     bytearr = QtCore.QByteArray.fromBase64( image64 )
+     imagen.loadFromData( bytearr, 'PNG' )      
+     return imagen
