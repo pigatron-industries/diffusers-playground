@@ -13,8 +13,8 @@ class MaskDilationNode(FunctionalNode):
                  name:str="mask_dilation"):
         super().__init__(name)
         self.addParam("mask", mask, Image.Image)
-        self.addParam("maskDilation", dilation, int)
-        self.addParam("maskFeather", feather, int)
+        self.addParam("dilation", dilation, int)
+        self.addParam("feather", feather, int)
         
         
     def process(self, mask:Image.Image, dilation:int, feather:int) -> Image.Image:
