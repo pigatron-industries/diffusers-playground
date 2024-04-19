@@ -207,14 +207,16 @@ class BatchInterfaceComponents(InterfaceComponents):
                         controls.label_saved.set_visibility(rundata.save_file is not None)
                     with ui.row():
                         ui.label(f"Duration: {rundata.duration}")
-                        if rundata.params is not None:
-                            for node_name, node_output in rundata.params.items():
-                                with ui.row().classes('no-wrap'):
-                                    ui.label(f"{node_name}:").style("line-height: 1;")
-                                    if(isinstance(node_output, Image.Image)):
-                                        ui.image(node_output).style("min-width:128px; min-height:128px;")
-                                    else:
-                                        ui.label(str(node_output)).style("line-height: 1;")
+                    # TODO add this info to a dialog
+                    # with ui.row():
+                    #     if rundata.params is not None:
+                    #         for node_name, node_output in rundata.params.items():
+                    #             with ui.row().classes('no-wrap'):
+                    #                 ui.label(f"{node_name}:").style("line-height: 1;")
+                    #                 if(isinstance(node_output, Image.Image)):
+                    #                     ui.image(node_output).style("min-width:128px; min-height:128px;")
+                    #                 else:
+                    #                     ui.label(str(node_output)).style("line-height: 1;")
 
             else:
                 controls.label_saved = None
