@@ -9,7 +9,7 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
     def build(self):
         image_input = ImageUploadInputNode()
         inpaint_scale_input = FloatUserInputNode(value = 1.0, name = "inpaint_scale")
-        models_input = DiffusionModelUserInputNode()
+        models_input = DiffusionModelUserInputNode(modeltype = "inpaint")
         loras_input = LORAModelUserInputNode(diffusion_model_input = models_input, name = "lora")
         prompt_input = TextAreaInputNode(value = "", name="prompt")
         negprompt_input = StringUserInputNode(value = "", name="negprompt")

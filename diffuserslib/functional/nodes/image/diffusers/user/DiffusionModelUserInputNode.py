@@ -12,8 +12,10 @@ class DiffusionModelUserInputNode(UserInputNode):
     DEFAULT_BASEMODELS = ["sd_1_5", "sd_2_1", "sdxl_1_0", "sc_1_0"]
 
     def __init__(self, name:str="diffusion_model_user_input",
-                 basemodels:List[str] = DEFAULT_BASEMODELS):
+                 basemodels:List[str] = DEFAULT_BASEMODELS,
+                 modeltype:str="generate"):
         self.basemodels = basemodels
+        self.modeltype = modeltype
         self.basemodel = None
         self.model = None
         self.update_listeners = []
@@ -41,7 +43,7 @@ class DiffusionModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         with ui.column().classes('grow'):
-            models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel)
+            models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase(self.modeltype, self.basemodel)
             with ui.row().classes('w-full'):
                 self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label="Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
                 ui.button(icon="settings", on_click=lambda e: self.modelSettings()).classes('align-middle').props('dense')
