@@ -8,6 +8,8 @@ from diffuserslib.processing.ProcessingPipelineFactory import ProcessingPipeline
 from diffuserslib import ImageTools
 from diffuserslib.processing.processors.transformers import *
 from diffuserslib.processing.processors.filters import *
+from diffuserslib.ImageUtils import base64DecodeImage
+from .Clipboard import ClipboardContent, Clipboard
 from typing import List
 from PIL import Image
 import sys
@@ -36,6 +38,18 @@ class RestApi:
     
 
     @staticmethod
+    @app.post("/api/clipboard")
+    def writeClipboard(clipboard:ClipboardContent):
+        Clipboard.write(clipboard)
+
+
+    @staticmethod
+    @app.get("/api/clipboard")
+    def readClipboard():
+        return Clipboard.read()
+    
+
+    @staticmethod
     @app.get("/api/models")
     def models(type:str, base:str|None = None):
         if(DiffusersPipelines.pipelines is None):
@@ -55,6 +69,7 @@ class RestApi:
             raise Exception("Pipelines not initialized")
         loranames = DiffusersPipelines.pipelines.getLORAList(model)
         return loranames
+    
     
     @staticmethod
     @app.get("/api/async")

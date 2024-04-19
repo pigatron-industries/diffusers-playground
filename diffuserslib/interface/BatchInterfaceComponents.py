@@ -92,11 +92,11 @@ class BatchInterfaceComponents(InterfaceComponents):
         self.status.refresh()
 
 
-    async def saveOutput(self, key):
-        result = await run.io_bound(self.controller.saveOutput, key)
-        filename = self.controller.getWorkflowRunData()[key].save_file
+    async def saveOutput(self, runid):
+        result = await run.io_bound(self.controller.saveOutput, runid)
+        filename = self.controller.getWorkflowRunData()[runid].save_file
         if (filename is not None):
-            self.rundata_controls[key].showLabelSaved(filename)
+            self.rundata_controls[runid].showLabelSaved(filename)
 
 
     def removeOutput(self, batchid, runid):
@@ -198,23 +198,24 @@ class BatchInterfaceComponents(InterfaceComponents):
                 
             if(rundata.output is not None):
                 with ui.column():
-                    ui.label(f"Duration: {rundata.duration}")
-                    if rundata.params is not None:
-                        for node_name, node_output in rundata.params.items():
-                            with ui.row().classes('no-wrap'):
-                                ui.label(f"{node_name}:").style("line-height: 1;")
-                                if(isinstance(node_output, Image.Image)):
-                                    ui.image(node_output).style("min-width:128px; min-height:128px;")
-                                else:
-                                    ui.label(str(node_output)).style("line-height: 1;")
-
-                with ui.column().classes('ml-auto'):
                     with ui.row().classes('ml-auto'):
                         ui.button('Save', on_click=lambda e: self.saveOutput(runid))
+                        ui.button('Copy', on_click=lambda e: self.controller.copyOutput(runid))
                         ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))
-                    with ui.row():
+                    with ui.row().classes('ml-auto'):
                         controls.label_saved = ui.label(f"Saved to {rundata.save_file}")
                         controls.label_saved.set_visibility(rundata.save_file is not None)
+                    with ui.row():
+                        ui.label(f"Duration: {rundata.duration}")
+                        if rundata.params is not None:
+                            for node_name, node_output in rundata.params.items():
+                                with ui.row().classes('no-wrap'):
+                                    ui.label(f"{node_name}:").style("line-height: 1;")
+                                    if(isinstance(node_output, Image.Image)):
+                                        ui.image(node_output).style("min-width:128px; min-height:128px;")
+                                    else:
+                                        ui.label(str(node_output)).style("line-height: 1;")
+
             else:
                 controls.label_saved = None
     

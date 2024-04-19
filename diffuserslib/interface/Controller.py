@@ -1,14 +1,14 @@
-from diffuserslib.functional import *
+from diffuserslib.functional import FunctionalNode, WorkflowBuilder, WorkflowRunner, NodeParameter, BatchProgressData, WorkflowBatchData, UserInputNode
+from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.util import ModuleLoader
-from typing import List, get_type_hints
-from dataclasses import dataclass
+from typing import Dict
+from dataclasses import dataclass, field
+from .Clipboard import Clipboard
 import inspect
-import copy
-import importlib
-import importlib.util
+import yaml
 import sys
 import os
-import glob
+
 
 @dataclass
 class Model:
@@ -234,6 +234,12 @@ class Controller:
     def saveOutput(self, key):
         self.workflowrunner.save(key, self.output_subdir)
         self.saveSettings()
+
+
+    def copyOutput(self, runid):
+        content = self.workflowrunner.rundata[runid].output
+        if(content is not None):
+            Clipboard.writeObject(content)
 
 
     def saveSettings(self):

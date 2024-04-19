@@ -1,7 +1,7 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.interface.Clipboard import Clipboard
 from .UserInputNode import UserInputNode
-from diffuserslib.util import FileDialog
 from nicegui import ui, events
 from PIL import Image
 
@@ -35,10 +35,15 @@ class FileUploadInputNode(UserInputNode):
             else:
                 self.previewContent()
             ui.button(icon='folder', on_click=dialog.open).props('dense')
+            ui.button(icon='content_paste', on_click=self.paste).props('dense')
 
 
     def previewContent(self):
         pass
+
+
+    def paste(self):
+        raise NotImplementedError("Clipboard paste not implemented")
 
     
     def handleUpload(self, e: events.UploadEventArguments):
@@ -66,3 +71,9 @@ class ImageUploadInputNode(FileUploadInputNode):
             ui.image(self.content).style(f"max-width:128px; min-width:128px;")
             ui.label(f'{self.content.width} x {self.content.height} pixels')
         return container
+    
+    def paste(self):
+        content = Clipboard.readObject()
+        if(content is not None):
+            self.content = content
+        self.gui.refresh()
