@@ -20,7 +20,7 @@ class ClipboardContent:
 
 
 class Clipboard:
-    content:List[ClipboardContent]
+    content:List[ClipboardContent] = []
 
     @staticmethod
     def write(content:ClipboardContent):
