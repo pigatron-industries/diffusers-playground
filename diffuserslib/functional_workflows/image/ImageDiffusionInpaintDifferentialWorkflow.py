@@ -37,7 +37,7 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
                                     scheduler = scheduler_input,
                                     conditioning_inputs = [ init_condition, mask_condition ])
         
-        mask_dilate = MaskDilationNode(mask = maskimage, dilation = 21, feather = 3, name = "mask_dilate")
+        mask_dilate = MaskDilationNode(mask = maskimage, dilation = 10, name = "mask_dilate")
         image_composite = ImageCompositeNode(foreground = image_diffusion, background = image_input, mask = mask_dilate, name = "composite")
 
         # ======= DIFFERENTIAL PASS =======
@@ -48,7 +48,8 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
 
         # Differential pass conditioning images
         diffinit_condition = ConditioningInputNode(image = image_composite, model = "initimage", scale = diff_scale_input, name = "differential_init_condition")
-        diffmask_condition = ConditioningInputNode(image = mask_dilate, model = "diffmaskimage", name = "mask_condition")
+        diffmask_dilate = MaskDilationNode(mask = maskimage, dilation = 20, name = "mask_dilate")
+        diffmask_condition = ConditioningInputNode(image = diffmask_dilate, model = "diffmaskimage", name = "mask_condition")
 
         # Differential pass diffusion
         differential_diffusion = ImageDiffusionNode(models = generate_model_input,
