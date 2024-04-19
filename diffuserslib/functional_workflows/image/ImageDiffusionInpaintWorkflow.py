@@ -26,7 +26,7 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
 
         # Inpaint diffusion
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
-        generate_model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(generate_model_input.basemodel)))
+        inpaint_model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(inpaint_model_input.basemodel)))
         image_diffusion = ImageDiffusionNode(models = inpaint_model_input,
                                     loras = loras_input,
                                     prompt = prompt_processor,
