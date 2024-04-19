@@ -22,7 +22,7 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
         # Inpaint conditioning images
         init_condition = ConditioningInputNode(image = image_input, model = "initimage", scale = inpaint_scale_input, name = "init_condition")
         maskimage = ImageAlphaToMaskNode(image = image_input, smooth = False, name = "maskimage")
-        mask_condition = ConditioningInputNode(image = maskimage, model = "maskimage", name = "mask_condition")
+        mask_condition = ConditioningInputNode(image = maskimage, model = "maskimage", name = "inpaint_mask_condition")
 
         # Inpaint diffusion
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
@@ -35,9 +35,9 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
-                                    conditioning_inputs = [ init_condition, mask_condition ])
+                                    conditioning_inputs = [ init_condition, mask_condition ], name="inpaint_diffusion")
         
-        mask_dilate = MaskDilationNode(mask = maskimage, dilation = 10, name = "mask_dilate")
+        mask_dilate = MaskDilationNode(mask = maskimage, dilation = 10, name = "inpaint_mask_dilate")
         image_composite = ImageCompositeNode(foreground = image_diffusion, background = image_input, mask = mask_dilate, name = "composite")
 
         # ======= DIFFERENTIAL PASS =======
@@ -49,8 +49,8 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
 
         # Differential pass conditioning images
         diffinit_condition = ConditioningInputNode(image = image_composite, model = "initimage", scale = diff_scale_input, name = "differential_init_condition")
-        diffmask_dilate = MaskDilationNode(mask = maskimage, dilation = dilation_input, name = "mask_dilate")
-        diffmask_condition = ConditioningInputNode(image = diffmask_dilate, model = "diffmaskimage", name = "mask_condition")
+        diffmask_dilate = MaskDilationNode(mask = maskimage, dilation = dilation_input, name = "differential_mask_dilate")
+        diffmask_condition = ConditioningInputNode(image = diffmask_dilate, model = "diffmaskimage", name = "differential_mask_condition")
 
         # Differential pass diffusion
         differential_diffusion = ImageDiffusionNode(models = generate_model_input,
@@ -61,6 +61,6 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
                             cfgscale = cfgscale_input,
                             seed = seed_input,
                             scheduler = scheduler_input,
-                            conditioning_inputs = [ diffinit_condition, diffmask_condition ])
+                            conditioning_inputs = [ diffinit_condition, diffmask_condition ], name="differential_diffusion")
         
         return differential_diffusion
