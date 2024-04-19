@@ -4,13 +4,13 @@ from diffuserslib.functional import *
 class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Image Diffusion - Inpaint", Image.Image, workflow=True, subworkflow=False)
+        super().__init__("Image Diffusion - Inpaint Differential", Image.Image, workflow=True, subworkflow=False)
 
     def build(self):
         # Inpaint inputs
         image_input = ImageUploadInputNode()
         inpaint_scale_input = FloatUserInputNode(value = 1.0, name = "inpaint_scale")
-        inpaint_model_input = DiffusionModelUserInputNode(modeltype = "inpaint")
+        inpaint_model_input = DiffusionModelUserInputNode(modeltype = "inpaint", name="inpaint_model")
         loras_input = LORAModelUserInputNode(diffusion_model_input = inpaint_model_input, name = "lora")
         prompt_input = TextAreaInputNode(value = "", name="prompt")
         negprompt_input = StringUserInputNode(value = "", name="negprompt")
@@ -41,10 +41,9 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
         image_composite = ImageCompositeNode(foreground = image_diffusion, background = image_input, mask = mask_dilate, name = "composite")
 
         # ======= DIFFERENTIAL PASS =======
-        # TODO make this optional (sdxl only)
 
         # Differential pass inputs
-        generate_model_input = DiffusionModelUserInputNode(modeltype = "generate")
+        generate_model_input = DiffusionModelUserInputNode(modeltype = "generate", name="differential_model")
         diff_scale_input = FloatUserInputNode(value = 0.2, name = "differential_scale")
 
         # Differential pass conditioning images

@@ -43,9 +43,10 @@ class DiffusionModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         with ui.column().classes('grow'):
+            ui.label(f"{self.node_name}")
             models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase(self.modeltype, self.basemodel)
             with ui.row().classes('w-full'):
-                self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label="Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
+                self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label=f"Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
                 ui.button(icon="settings", on_click=lambda e: self.modelSettings()).classes('align-middle').props('dense')
             self.model_dropdown = ui.select(options=sorted(list(models.keys())), label="Model").bind_value(self, 'model').classes('w-full')
 
