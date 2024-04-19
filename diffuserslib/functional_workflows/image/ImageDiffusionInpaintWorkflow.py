@@ -18,9 +18,9 @@ class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
 
-        init_condition = ConditioningInputNode(image = image_input, model = 'initimage', scale = inpaint_scale_input)
+        init_condition = ConditioningInputNode(image = image_input, model = "initimage", scale = inpaint_scale_input, name = "init_condition")
         maskimage = ImageAlphaToMaskNode(image = image_input, smooth = False, name = "maskimage")
-        mask_condition = ConditioningInputNode(image = maskimage, model = 'mask_condition')
+        mask_condition = ConditioningInputNode(image = maskimage, model = "maskimage", name = "mask_condition")
 
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
         models_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(models_input.basemodel)))
