@@ -80,7 +80,8 @@ class DiffusersModelList:
                     else:
                         autocast = False
                     self.addModel(modelid=modeldata['id'], base=basedata['base'], modeltype = key, revision=modeldata.get('revision'), 
-                                  stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), preprocess=modeldata.get('preprocess'),
+                                  stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), preprocess=modeldata.get('preprocess'), 
+                                  location=modeldata.get('location', 'hf'), 
                                   autocast=autocast, pipelinetypes = basemodel.pipelinetypes, data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
