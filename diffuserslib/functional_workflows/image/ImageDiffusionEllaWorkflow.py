@@ -5,10 +5,10 @@ from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import Ima
 from diffuserslib.functional.nodes.image.diffusers.ella.ImageDiffusionEllaNode import ImageDiffusionEllaNode
 
 
-class ImageDiffusionWorkflow(WorkflowBuilder):
+class ImageDiffusionEllaWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Image Diffusion", Image.Image, workflow=True, subworkflow=True)
+        super().__init__("Image Diffusion - Ella", Image.Image, workflow=True, subworkflow=True)
 
     def build(self):
         models_input = DiffusionModelUserInputNode(basemodels = ["sd_1_5"])
