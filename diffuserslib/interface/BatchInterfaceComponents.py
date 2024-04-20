@@ -197,29 +197,36 @@ class BatchInterfaceComponents(InterfaceComponents):
                 self.workflow_output_control(runid, output)
                 
             if(rundata.output is not None):
-                with ui.column():
-                    with ui.row().classes('ml-auto'):
+                with ui.column().classes('w-full'):
+                    with ui.row().style("margin-left:auto;"):
+                        ui.button('Params', on_click=lambda e: self.showParams(runid))
                         ui.button('Save', on_click=lambda e: self.saveOutput(runid))
                         ui.button('Copy', on_click=lambda e: self.controller.copyOutput(runid))
                         ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))
-                    with ui.row().classes('ml-auto'):
+                    with ui.row().style("margin-left:auto;"):
                         controls.label_saved = ui.label(f"Saved to {rundata.save_file}")
                         controls.label_saved.set_visibility(rundata.save_file is not None)
-                    with ui.row():
+                    with ui.row().style("margin-left:auto;"):
                         ui.label(f"Duration: {rundata.duration}")
-                    # TODO add this info to a dialog
-                    # with ui.row():
-                    #     if rundata.params is not None:
-                    #         for node_name, node_output in rundata.params.items():
-                    #             with ui.row().classes('no-wrap'):
-                    #                 ui.label(f"{node_name}:").style("line-height: 1;")
-                    #                 if(isinstance(node_output, Image.Image)):
-                    #                     ui.image(node_output).style("min-width:128px; min-height:128px;")
-                    #                 else:
-                    #                     ui.label(str(node_output)).style("line-height: 1;")
-
             else:
                 controls.label_saved = None
+
+
+    def showParams(self, runid):
+        rundata = self.controller.getWorkflowRunData()[runid]
+        with ui.dialog(value=True), ui.card().style('height: 100%; max-width: 1000px;'):
+            with ui.column():
+                ui.label(f"Run {runid}")
+                with ui.row():
+                    ui.label(f"Duration: {rundata.duration}")
+                if rundata.params is not None:
+                    for node_name, node_output in rundata.params.items():
+                        with ui.row().classes('no-wrap'):
+                            ui.label(f"{node_name}:").style("line-height: 1;")
+                            if(isinstance(node_output, Image.Image)):
+                                ui.image(node_output).style("min-width:128px; min-height:128px;")
+                            else:
+                                ui.label(str(node_output)).style("line-height: 1;")
     
 
     def workflow_generating(self, batchid, runid):
