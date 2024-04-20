@@ -146,6 +146,7 @@ class DiffusersPipelineWrapper:
         diffusers_params['seed'] = params.seed
         diffusers_params['guidance_scale'] = params.cfgscale
         diffusers_params['scheduler'] = params.scheduler
+        diffusers_params['clip_skip'] = params.clipskip
 
     def addInferenceParamsTxt2Img(self, params:GenerationParameters, diffusers_params):
         diffusers_params['width'] = params.width

@@ -25,6 +25,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", 
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
+        clipskip_input = IntUserInputNode(value = None, name = "clipskip")
         
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
@@ -50,6 +51,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
+                                    clipskip = clipskip_input,
                                     conditioning_inputs = conditioning_inputs)
         
         feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = None, name = "feedback_image", display_name="Feedback Image")

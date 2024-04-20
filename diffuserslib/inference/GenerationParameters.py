@@ -74,6 +74,7 @@ class GenerationParameters:
     models:List[ModelParameters] = field(default_factory=list)
     loras:List[LoraParameters] = field(default_factory=list)
     tiling:bool = False
+    clipskip:int|None = None
     controlimages:List[ControlImageParameters] = field(default_factory=list)
     # runtime
     modelConfig:DiffusersModel|None = None
