@@ -184,8 +184,8 @@ controlnet:
       - id: thibaud/controlnet-sd21-scribble-diffusers
   - base: sdxl_1_0
     models:
-      - id: diffusers/controlnet-canny-sdxl-1.0-small
-      - id: diffusers/controlnet-depth-sdxl-1.0-small
+      - id: diffusers/controlnet-canny-sdxl-1.0
+      - id: diffusers/controlnet-depth-sdxl-1.0
       - id: thibaud/controlnet-openpose-sdxl-1.0
         colourspace: L
       - id: monster-labs/control_v1p_sdxl_qrcode_monster
