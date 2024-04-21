@@ -48,7 +48,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
         conditioningparams = []
         if(conditioning_inputs is not None):
             for conditioning_input in conditioning_inputs:
-                if(conditioning_input.image is not None and isinstance(conditioning_input.image, Image.Image)):
+                if(conditioning_input.image is not None and isinstance(conditioning_input.image, Image.Image) and conditioning_input.condscale > 0):
                     conditioningparams.append(conditioning_input)
                     width = conditioning_input.image.width
                     height = conditioning_input.image.height
