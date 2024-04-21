@@ -73,7 +73,7 @@ class ImageUploadInputNode(FileUploadInputNode):
         return container
     
     def paste(self):
-        content = Clipboard.readObject()
-        if(content is not None):
-            self.content = content
+        clip = Clipboard.read()
+        if(clip is not None):
+            self.content = clip.content
         self.gui.refresh()
