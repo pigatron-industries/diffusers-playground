@@ -1,6 +1,7 @@
 from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
+from diffuserslib.functional.nodes.image.process import *
 
 
 #TODO this is a work in progress
@@ -14,8 +15,12 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
     def build(self):
         image_input = ImageUploadInputNode(name = "image")
         initimage_scale_input = FloatUserInputNode(value = 0.2, name = "initimage_scale")
-        # canny_scale_input = FloatUserInputNode(value = 0.9, name = "canny_scale")
-        # ipadapter_scale_input = FloatUserInputNode(value = 0.6, name = "ipadapter_scale")
+
+        canny_scale_input = FloatUserInputNode(value = 0.9, name = "canny_scale")
+        canny_model_input = ListSelectUserInputNode(options = [], value = "", name = "canny_model")
+
+        ipadapter_scale_input = FloatUserInputNode(value = 0, name = "ipadapter_scale")
+        ipadapter_model_input = ListSelectUserInputNode(options = [], value = "", name = "ipadapter_model")
 
         model_input = DiffusionModelUserInputNode(name = "model")
         lora_input = LORAModelUserInputNode(diffusion_model_input = model_input, name = "lora")
@@ -28,18 +33,25 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
                                                 options = ImageDiffusionNode.SCHEDULERS)
         
         # preprocessing
-        # canny_image_input = CannyEdgeDetectionNode(image = tiled_input, name = "canny_image")
-        # initimage_input = tiled_input
-        # ipadapter_input = tiled_input
+        canny_image = CannyEdgeDetectionNode(image = image_input, name = "canny_image")
 
-        # conditioning
-        conditioning_inputs = [
-            ConditioningInputNode(image = image_input, model = "initimage", scale = initimage_scale_input, name = "initimage_input"),
-            # ConditioningInputNode(image = canny_image_input, model = "canny", scale = canny_scale_input, name = "canny_input"),
-            # ConditioningInputNode(image = ipadapter_input, model = "ipadapter", scale = ipadapter_scale_input, name = "ipadapter_input")
-        ]
+        # conditioning inputs
+        initimage_condition = ConditioningInputNode(image = image_input, model = "initimage", scale = initimage_scale_input, name = "initimage_condition")
+        cannyimage_condition = ConditioningInputNode(image = canny_image, model = canny_model_input, scale = canny_scale_input, name = "canny_condition")
+        ipadapter_condition = ConditioningInputNode(image = image_input, model = ipadapter_model_input, scale = ipadapter_scale_input, name = "ipadapter_condition")
+
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
-        model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
+
+        # On model update
+        def modelUpdate():
+            assert DiffusersPipelines.pipelines is not None, "DiffusersPipelines is not initialized"
+            basemodel = model_input.basemodel
+            prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(basemodel))
+            controlnet_models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("controlnet", basemodel)
+            canny_model_input.setOptions([model for model in controlnet_models if "canny" in model])
+            ipadapter_models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("ipadapter", basemodel)
+            ipadapter_model_input.setOptions([model for model in ipadapter_models])
+        model_input.addUpdateListener(modelUpdate)
 
         diffusion = ImageDiffusionTiledNode(models = model_input,
                                     loras = lora_input,
@@ -48,6 +60,6 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
-                                    conditioning_inputs = conditioning_inputs)
+                                    conditioning_inputs = [initimage_condition, cannyimage_condition, ipadapter_condition])
         
         return diffusion

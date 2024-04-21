@@ -216,7 +216,7 @@ class DiffusersPipelineWrapper:
         images = []
         scales = []
         for controlnetparam in controlnetparams:
-            if(controlnetparam.image is not None):
+            if(controlnetparam.image is not None and controlnetparam.condscale > 0):
                 images.append(controlnetparam.image.convert("RGB"))
                 scales.append(controlnetparam.condscale)
         diffusers_params['control_image' if self.features.img2img else 'image'] = images

@@ -148,6 +148,13 @@ class ListSelectUserInputNode(UserInputNode):
         except:
             pass
 
+    def setOptions(self, options:List[str]):
+        self.options = sorted(options)
+        if(len(self.options) > 0):
+            self.value = self.options[0]
+        self.gui.refresh()
+
+    @ui.refreshable
     def gui(self):
         ui.select(options=self.options, label=self.node_name).bind_value(self, 'value').classes('grow')
 
