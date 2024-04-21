@@ -60,15 +60,20 @@ class FileUploadInputNode(UserInputNode):
 class ImageUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a single image. The output is an image."""
 
+    def __init__(self, name:str="image_input"):
+        self.preview = None
+        super().__init__(name)
+
     def handleUpload(self, e: events.UploadEventArguments):
         self.content = Image.open(e.content)
+        self.preview = self.content.copy().thumbnail((128, 128))
         self.gui.refresh()
 
     def previewContent(self):
-        if(self.content is None):
+        if(self.content is None or self.preview is None):
             return None
         with ui.column() as container:
-            ui.image(self.content).style(f"max-width:128px; min-width:128px;")
+            ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
             ui.label(f'{self.content.width} x {self.content.height} pixels')
         return container
     
@@ -76,4 +81,5 @@ class ImageUploadInputNode(FileUploadInputNode):
         clip = Clipboard.read()
         if(clip is not None):
             self.content = clip.content
+            self.preview = clip.preview
         self.gui.refresh()

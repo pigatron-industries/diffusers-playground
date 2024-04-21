@@ -17,6 +17,7 @@ class ClipboardContentType:
 class ClipboardContent:
     contenttype:str = ""
     content:Any = None
+    preview:Any = None
 
 
 @dataclass(config=ModelConfig)
@@ -68,11 +69,12 @@ class Clipboard:
     def writeDTO(dto:ClipboardContentDTO):
         if(dto.contenttype == ClipboardContentType.IMAGE):
             content = base64DecodeImage(dto.content)
+            preview = content.copy().thumbnail((128, 128))
         elif(dto.contenttype == ClipboardContentType.STRING):
             content = dto.content
         else:
             raise Exception("Unsupported content type")
-        Clipboard.write(ClipboardContent(contenttype=dto.contenttype, content=content))
+        Clipboard.write(ClipboardContent(contenttype=dto.contenttype, content=content, preview=preview))
 
 
     @staticmethod
