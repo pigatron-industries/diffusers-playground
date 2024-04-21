@@ -66,7 +66,8 @@ class ImageUploadInputNode(FileUploadInputNode):
 
     def handleUpload(self, e: events.UploadEventArguments):
         self.content = Image.open(e.content)
-        self.preview = self.content.copy().thumbnail((128, 128))
+        self.preview = self.content.copy()
+        self.preview.thumbnail((128, 128))
         self.gui.refresh()
 
     def previewContent(self):

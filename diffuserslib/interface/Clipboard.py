@@ -67,9 +67,12 @@ class Clipboard:
 
     @staticmethod
     def writeDTO(dto:ClipboardContentDTO):
+        preview = None
+        content = None
         if(dto.contenttype == ClipboardContentType.IMAGE):
             content = base64DecodeImage(dto.content)
-            preview = content.copy().thumbnail((128, 128))
+            preview = content.copy()
+            preview.thumbnail((128, 128))
         elif(dto.contenttype == ClipboardContentType.STRING):
             content = dto.content
         else:
