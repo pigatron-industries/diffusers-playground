@@ -37,7 +37,7 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
 
         # conditioning inputs
         initimage_condition = ConditioningInputNode(image = image_input, model = "initimage", scale = initimage_scale_input, name = "initimage_condition")
-        cannyimage_condition = ConditioningInputNode(image = canny_image, model = canny_model_input, scale = canny_scale_input, name = "canny_condition")
+        cannyimage_condition = ConditioningInputNode(image = canny_image, model = canny_model_input, type="controlnet", scale = canny_scale_input, name = "canny_condition")
         ipadapter_condition = ConditioningInputNode(image = image_input, model = ipadapter_model_input, scale = ipadapter_scale_input, name = "ipadapter_condition")
 
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
