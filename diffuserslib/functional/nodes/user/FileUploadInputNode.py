@@ -42,7 +42,7 @@ class FileUploadInputNode(UserInputNode):
         pass
 
 
-    def paste(self):
+    async def paste(self):
         raise NotImplementedError("Clipboard paste not implemented")
 
     
@@ -72,7 +72,7 @@ class ImageUploadInputNode(FileUploadInputNode):
             ui.label(f'{self.content.width} x {self.content.height} pixels')
         return container
     
-    def paste(self):
+    async def paste(self):
         content = Clipboard.readObject()
         if(content is not None):
             self.content = content
