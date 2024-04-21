@@ -53,7 +53,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
                     width = conditioning_input.image.width
                     height = conditioning_input.image.height
 
-        params = GenerationParameters(safetychecker=False, models=models, controlimages=conditioning_inputs, **kwargs)       
+        params = GenerationParameters(safetychecker=False, models=models, controlimages=conditioningparams, **kwargs)       
         tilewidth = self.calcTileSize(width, 1152, tileoverlap)
         tileheight = self.calcTileSize(height, 1152, tileoverlap)
         outimage, seed = tiledGeneration(pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
