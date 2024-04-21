@@ -28,6 +28,6 @@ class ConditioningInputNode(FunctionalNode):
                 model: str,
                 type: str,
                 scale: float = 1.0) -> ConditioningInputType:
-        conditioning_input = ConditioningInputType(image = image, type = model, model = model, type = type, condscale = scale)
+        conditioning_input = ConditioningInputType(image = image, model = model, type = type, condscale = scale)
         return conditioning_input
     
