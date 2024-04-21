@@ -192,7 +192,7 @@ class DiffusersPipelineWrapper:
         images = []
         scales = []
         for ipadapterparam in ipadapterparams:
-            if(ipadapterparam.image is not None):
+            if(ipadapterparam.image is not None and ipadapterparam.condscale > 0):
                 images.append(ipadapterparam.image.convert("RGB"))
                 scales.append(ipadapterparam.condscale)
         diffusers_params['ip_adapter_image'] = images
