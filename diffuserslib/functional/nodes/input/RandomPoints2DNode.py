@@ -36,20 +36,27 @@ class RandomPoints2DEdgePowerNode(FunctionalNode):
     def __init__(self, 
                  name:str = "random_points_2d_edge_power",
                  num_points:IntFuncType = 20,
-                 power:FloatFuncType = 1.0):
+                 power_x:FloatFuncType = 1.0,
+                 power_y:FloatFuncType = 1.0):
         super().__init__(name)
         self.addParam("num_points", num_points, int)
-        self.addParam("power", power, float)
+        self.addParam("power_x", power_x, float)
+        self.addParam("power_y", power_y, float)
 
 
-    def process(self, num_points:int, power:float) -> List[Vector]:
+    def process(self, num_points:int, power_x:float, power_y:float) -> List[Vector]:
         vectors:List[Vector] = []
-
-        points = np.random.power(a=power, size=(num_points, 2))
-        for i in itertools.product(*[range(s) for s in (num_points, 2)]):
-            if (np.random.random() < 0.5):
-                points[i] = 1 - points[i]
-
-        for point in points:
-            vectors.append(Vector(*point))
+        xs = np.random.power(a=power_x, size=num_points)
+        ys = np.random.power(a=power_y, size=num_points)
+        for i in range(num_points):
+            x = self.randomizeSide(xs[i])
+            y = self.randomizeSide(ys[i])
+            vectors.append(Vector(x, y))
         return vectors
+
+
+    def randomizeSide(self, num):
+        if (np.random.random() < 0.5):
+            return 0.5 + num*0.5
+        else:
+            return 0.5 - num*0.5
