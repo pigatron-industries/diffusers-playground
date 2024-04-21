@@ -115,7 +115,8 @@ class DiffusersPipelineWrapper:
         for controlnetparam in controlnetparams:
             if(controlnetparam.condscale > 0):
                 controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model, **args))
-        pipeline_params['controlnet'] = controlnet
+        if(len(controlnet) > 1):
+            pipeline_params['controlnet'] = controlnet
         return pipeline_params
     
     def addPipelineParamsT2IAdapter(self, params:GenerationParameters, pipeline_params):
