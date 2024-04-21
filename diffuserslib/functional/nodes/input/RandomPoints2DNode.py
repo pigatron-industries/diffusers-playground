@@ -37,20 +37,24 @@ class RandomPoints2DEdgePowerNode(FunctionalNode):
                  name:str = "random_points_2d_edge_power",
                  num_points:IntFuncType = 20,
                  power_x:FloatFuncType = 1.0,
-                 power_y:FloatFuncType = 1.0):
+                 power_y:FloatFuncType = 1.0,
+                 mirror_x:BoolFuncType = False,
+                 mirror_y:BoolFuncType = False):
         super().__init__(name)
         self.addParam("num_points", num_points, int)
         self.addParam("power_x", power_x, float)
         self.addParam("power_y", power_y, float)
+        self.addParam("mirror_x", mirror_x, bool)
+        self.addParam("mirror_y", mirror_y, bool)
 
 
-    def process(self, num_points:int, power_x:float, power_y:float) -> List[Vector]:
+    def process(self, num_points:int, power_x:float, power_y:float, mirror_x:bool, mirror_y:bool) -> List[Vector]:
         vectors:List[Vector] = []
         xs = np.random.power(a=power_x, size=num_points)
         ys = np.random.power(a=power_y, size=num_points)
         for i in range(num_points):
-            x = self.randomizeSide(xs[i])
-            y = self.randomizeSide(ys[i])
+            x = self.randomizeSide(xs[i]) if mirror_x else xs[i]
+            y = self.randomizeSide(ys[i]) if mirror_y else ys[i]
             vectors.append(Vector(x, y))
         return vectors
 
