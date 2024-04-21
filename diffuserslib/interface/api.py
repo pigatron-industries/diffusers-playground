@@ -3,7 +3,7 @@ from nicegui import app
 from threading import Thread
 from diffuserslib.inference import GenerationParameters, DiffusersPipelines, TiledGenerationParameters, UpscaleGenerationParameters
 from diffuserslib.ImageUtils import base64EncodeImage, alphaToMask
-from diffuserslib.inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledImageToImage, tiledInpaint, compositedInpaint
+from diffuserslib.inference.DiffusersUtils import tiledProcessorCentred, tiledImageToImageMultipass, tiledGeneration, tiledInpaint, compositedInpaint
 from diffuserslib.processing.ProcessingPipelineFactory import ProcessingPipelineBuilder
 from diffuserslib import ImageTools
 from diffuserslib.processing.processors.transformers import *
@@ -184,10 +184,10 @@ class RestApi:
             for i in range(0, params.batch):
                 RestApi.updateProgress(f"Running", params.batch, i)
                 if (params.tilemethod=="singlepass"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledImageToImage, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
                                                                overlap=params.tileoverlap, alignmentx=params.tilealignmentx, alignmenty=params.tilealignmenty)
                 elif (params.tilemethod=="multipass"):
-                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledImageToImage, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
+                    outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
                                                                     overlap=params.tileoverlap, passes=2, strengthMult=0.5)
                 elif (params.tilemethod=="inpaint"):
                     outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledInpaint, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
