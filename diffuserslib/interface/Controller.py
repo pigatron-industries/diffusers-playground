@@ -110,6 +110,8 @@ class Controller:
 
 
     def getSelectableInputNodes(self, param:NodeParameter) -> Dict[str, str]:
+        print("Getting selectable input nodes")
+        print(param)
         selectable_subworkflows = {}
         for name in self.builders_sub:
             builder = self.builders[name]

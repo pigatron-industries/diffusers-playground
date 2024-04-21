@@ -14,7 +14,7 @@ class RandomVoronoiWorkflow(WorkflowBuilder):
         line_probability_input = FloatUserInputNode(value = 1.0, name = "line_probability")
         draw_options = BoolListUserInputNode(value = [True, True, True], labels=["bounded", "unbounded", "points"], name = "draw_options")
 
-        random_points = RandomPoints2DNode(num_points = num_points_input)
+        random_points = RandomPoints2DNode()
         new_image = NewImageNode(size = size_user_input, background_colour = (0, 0, 0))
         voronoi = DrawVoronoiNode(image = new_image, points = random_points, radius = radius_input, 
                                 line_probability = line_probability_input, draw_options = draw_options)

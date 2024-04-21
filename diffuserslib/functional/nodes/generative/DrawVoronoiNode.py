@@ -24,7 +24,7 @@ class DrawVoronoiNode(FunctionalNode):
                  name:str = "draw_voronoi"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
-        self.addParam("points", points, Points2DType)
+        self.addParam("points", points, List[Vector])
         self.addParam("outline_colour", outline_colour, ColourType)
         self.addParam("point_colour", point_colour, ColourType)
         self.addParam("draw_options", draw_options, DrawOptionsType)

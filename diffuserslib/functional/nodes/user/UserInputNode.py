@@ -15,7 +15,7 @@ class UserInputNode(FunctionalNode):
     def setValue(self, value):
         raise Exception("Not implemented")
     def gui(self):
-        raise Exception("Not implemented")
+        ui.label(self.node_name).classes('align-middle')
 
 
 class IntUserInputNode(UserInputNode):
