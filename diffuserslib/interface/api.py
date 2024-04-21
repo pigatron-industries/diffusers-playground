@@ -1,4 +1,3 @@
-from matplotlib.backend_tools import ToolSetCursor
 from nicegui import app
 from threading import Thread
 from diffuserslib.inference import GenerationParameters, DiffusersPipelines, TiledGenerationParameters, UpscaleGenerationParameters
@@ -8,8 +7,7 @@ from diffuserslib.processing.ProcessingPipelineFactory import ProcessingPipeline
 from diffuserslib import ImageTools
 from diffuserslib.processing.processors.transformers import *
 from diffuserslib.processing.processors.filters import *
-from diffuserslib.ImageUtils import base64DecodeImage
-from .Clipboard import ClipboardContent, Clipboard
+from .Clipboard import ClipboardContentDTO, Clipboard
 from typing import List
 from PIL import Image
 import sys
@@ -39,14 +37,14 @@ class RestApi:
 
     @staticmethod
     @app.post("/api/clipboard")
-    def writeClipboard(clipboard:ClipboardContent):
-        Clipboard.write(clipboard)
+    def writeClipboard(clipboard:ClipboardContentDTO):
+        Clipboard.writeDTO(clipboard)
 
 
     @staticmethod
     @app.get("/api/clipboard")
     def readClipboard():
-        return Clipboard.read()
+        return Clipboard.readDTO()
     
 
     @staticmethod

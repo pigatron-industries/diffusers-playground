@@ -16,6 +16,12 @@ class ClipboardContentType:
 @dataclass(config=ModelConfig)
 class ClipboardContent:
     contenttype:str = ""
+    content:Any = None
+
+
+@dataclass(config=ModelConfig)
+class ClipboardContentDTO:
+    contenttype:str = ""
     content:str = ""
 
 
@@ -43,21 +49,40 @@ class Clipboard:
     @staticmethod
     def writeObject(object:Any):
         if (isinstance(object, str)):
-            Clipboard.write(ClipboardContent(contenttype=ClipboardContentType.STRING, content=object))
+            contenttype=ClipboardContentType.STRING
         elif (isinstance(object, Image.Image)):
-            Clipboard.write(ClipboardContent(contenttype=ClipboardContentType.IMAGE, content=base64EncodeImage(object)))
+            contenttype=ClipboardContentType.IMAGE
         else:
             raise Exception("Unsupported object type")
+        Clipboard.write(ClipboardContent(contenttype=contenttype, content=object))
         
 
     @staticmethod
     def readObject():
         content = Clipboard.read()
-        if (content == None):
-            return None
-        if (content.contenttype == ClipboardContentType.STRING):
+        if (content is not None):
             return content.content
-        elif (content.contenttype == ClipboardContentType.IMAGE):
-            return base64DecodeImage(content.content)
+
+
+    @staticmethod
+    def writeDTO(dto:ClipboardContentDTO):
+        if(dto.contenttype == ClipboardContentType.IMAGE):
+            content = base64DecodeImage(dto.content)
+        elif(dto.contenttype == ClipboardContentType.STRING):
+            content = dto.content
         else:
-            return None
+            raise Exception("Unsupported content type")
+        Clipboard.write(ClipboardContent(contenttype=dto.contenttype, content=content))
+
+
+    @staticmethod
+    def readDTO():
+        content = Clipboard.read()
+        if (content is not None):
+            if(content.contenttype == ClipboardContentType.IMAGE):
+                dtocontent = base64EncodeImage(content.content)
+            elif(content.contenttype == ClipboardContentType.STRING):
+                dtocontent = content.content
+            else:
+                raise Exception("Unsupported content type")
+            return ClipboardContentDTO(contenttype=content.contenttype, content=dtocontent)
