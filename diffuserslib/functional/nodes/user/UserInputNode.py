@@ -200,7 +200,11 @@ class SizeUserInputNode(UserInputNode):
 
     def gui(self):
         ui.number(value=self.width, label="Width").bind_value(self, 'width')
+        ui.button(icon = "swap_horiz", on_click=self.swap).props('dense').classes('align-middle')
         ui.number(value=self.height, label="Height").bind_value(self, 'height')
+
+    def swap(self):
+        self.width, self.height = self.height, self.width
 
     def process(self) -> SizeType:
         return (int(self.width), int(self.height))
