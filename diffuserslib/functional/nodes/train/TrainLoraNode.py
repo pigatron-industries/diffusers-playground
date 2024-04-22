@@ -29,6 +29,8 @@ class TrainLoraNode(FunctionalNode):
                  resolution:IntFuncType = 768,
                  enable_bucket:BoolFuncType = False,
                  batch_size:IntFuncType = 1,
+                 network_dim:IntFuncType = 4,
+                 network_alpha:IntFuncType = 1,
                  gradient_accumulation_steps:IntFuncType = 1,
                  save_steps:IntFuncType = 100,
                  train_steps:IntFuncType = 1000,
@@ -48,6 +50,8 @@ class TrainLoraNode(FunctionalNode):
         self.addParam("resolution", resolution, int)
         self.addParam("enable_bucket", enable_bucket, bool)
         self.addParam("batch_size", batch_size, int)
+        self.addParam("network_dim", network_dim, int)
+        self.addParam("network_alpha", network_alpha, int)
         self.addParam("gradient_accumulation_steps", gradient_accumulation_steps, int)
         self.addParam("save_steps", save_steps, int)
         self.addParam("train_steps", train_steps, int)
@@ -59,7 +63,7 @@ class TrainLoraNode(FunctionalNode):
 
     def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
-                learning_rate_warmup_steps, seed):
+                learning_rate_warmup_steps:int, seed:int, network_dim:int, network_alpha:int):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialized")
 
@@ -96,6 +100,8 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--lr_scheduler={learning_rate_schedule}")
         command.append(f"--lr_warmup_steps={learning_rate_warmup_steps}")
         command.append(f"--seed={seed}")
+        command.append(f"--network_dim={network_dim}")
+        command.append(f"--network_alpha={network_alpha}")
         command.append(f"--lowram")
         command.append(f"--save_state")
         command.append(f"--save_last_n_steps_state=0")
