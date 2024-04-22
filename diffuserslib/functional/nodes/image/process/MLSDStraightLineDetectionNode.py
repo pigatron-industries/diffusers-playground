@@ -11,10 +11,12 @@ class MLSDStraightLineDetectionNode(FunctionalNode):
                  name:str="mlsd_staight_line"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
-        self.mlsd = MLSDdetector.from_pretrained('lllyasviel/ControlNet')
+        self.model = None
         
         
     def process(self, image:Image.Image) -> Image.Image:
-        outimage = self.mlsd(image)
+        if self.model is None:
+            self.model = MLSDdetector.from_pretrained('lllyasviel/ControlNet')
+        outimage = self.model(image)
         return outimage
     

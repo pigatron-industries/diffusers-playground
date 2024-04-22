@@ -32,7 +32,7 @@ class FramesToVideoNode(FunctionalNode):
 
         out.release()
         print(temp_file.name)
-        return Video(frames, temp_file)
+        return Video(frames, fps, temp_file)
     
 
     # TODO don't regenerate the video every time getProgress is called

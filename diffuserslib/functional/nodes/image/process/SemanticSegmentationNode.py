@@ -14,10 +14,13 @@ class SemanticSegmentationNode(FunctionalNode):
                  name:str="mlsd_staight_line"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
-        self.model:UperNetForSemanticSegmentation = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-swin-large") # type: ignore
+        self.model = None
         
 
     def process(self, image) -> Image.Image:
+        if self.model is None:
+            self.model = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-swin-large") # type: ignore
+
         processor = AutoImageProcessor.from_pretrained("openmmlab/upernet-swin-large")
         pixel_values = processor(image, return_tensors="pt").pixel_values
 

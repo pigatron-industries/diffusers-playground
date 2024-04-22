@@ -8,8 +8,8 @@ class FrameAggregatorNode(FunctionalNode):
                  num_frames:IntFuncType,
                  name:str = "frame_aggregator"):
         super().__init__(name)
-        self.addInitParam("num_frames", num_frames, int)
         self.addParam("frame", frame, Image.Image)
+        self.addInitParam("num_frames", num_frames, int)
         self.args = {}
         self.frames = []
 

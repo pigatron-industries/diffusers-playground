@@ -1,7 +1,7 @@
 from diffuserslib.functional import *
 
 
-class ImageGenerationWorkflow(WorkflowBuilder):
+class ImageGenerationGenericWorkflow(WorkflowBuilder):
 
     def __init__(self):
         super().__init__("Image Generation - Generic", Image.Image, workflow=True, subworkflow=False)

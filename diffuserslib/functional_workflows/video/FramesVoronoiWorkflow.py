@@ -1,5 +1,5 @@
 from diffuserslib.functional import *
-from diffuserslib.functional_workflows.realtime.RealtimeVoronoiWorkflow import RealtimeVoronoiWorkflow
+from diffuserslib.functional_workflows.image.realtime.RealtimeVoronoiWorkflow import RealtimeVoronoiWorkflow
 
 class FramesVoronoiWorkflow(WorkflowBuilder):
 

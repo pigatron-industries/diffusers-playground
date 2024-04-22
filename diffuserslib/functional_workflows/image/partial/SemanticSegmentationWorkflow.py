@@ -4,10 +4,10 @@ from diffuserslib.functional.nodes.user import ImageUploadInputNode
 from PIL import Image
 
 
-class MLSDEdgedetectionWorkflow(WorkflowBuilder):
+class SemanticSegmentationWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Image - Semantic Segmentation", Image.Image, workflow=False, subworkflow=True, realtime=False)
+        super().__init__("Image Process - Semantic Segmentation", Image.Image, workflow=False, subworkflow=True, realtime=False)
 
 
     def build(self):

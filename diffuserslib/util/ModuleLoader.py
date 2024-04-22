@@ -12,11 +12,16 @@ class ModuleLoader:
 
     @staticmethod
     def load_from_directory(path, recursive = True):
-        files = glob.glob(path + '/*.py')
+        filelist = []
         if(recursive):
-            files.extend(glob.glob(path + '/**/*.py'))
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    if file.endswith('.py'):
+                        filelist.append(os.path.join(root, file))
+        else:
+            filelist = glob.glob(path + '/*.py')
         modules = []
-        for file in files:
+        for file in filelist:
             modules.append(ModuleLoader.load_from_file(file))
         return modules
             
@@ -26,7 +31,6 @@ class ModuleLoader:
         spec = importlib.util.spec_from_file_location("module", path)
         if (spec is not None and spec.loader is not None):              
             module = importlib.util.module_from_spec(spec)
-            # sys.modules["module"] = module
             spec.loader.exec_module(module)
             return module
     
