@@ -103,7 +103,7 @@ class ImageDiffusionEllaNode(FunctionalNode):
         del diffusers_params['prompt']
         negative_prompt_embeds = self.t5_encoder(negprompt, max_length=128).to(DiffusersPipelines.pipelines.device, torch.float32)
         diffusers_params['negative_prompt_embeds'] = negative_prompt_embeds
-        del diffusers_params['neg_prompt']
+        del diffusers_params['negative_prompt']
         output, seed = pipelineWrapper.diffusers_inference_embeds(**diffusers_params)
 
         if(isinstance(output, Image.Image)):
