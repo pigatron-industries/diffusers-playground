@@ -18,6 +18,8 @@ class TrainLoraWorkflow(WorkflowBuilder):
         classword_input = StringUserInputNode(value = "", name="classword")
         resolution_input = IntUserInputNode(value = 768, name="resolution")
         bucket_input = BoolUserInputNode(value = False, name="enable_bucket")
+        network_dim_input = IntUserInputNode(value = 4, name="network_dim")
+        network_alpha_input = IntUserInputNode(value = 1, name="network_alpha")
         save_steps_input = IntUserInputNode(value = 100, name="save_steps")
         train_steps_input = IntUserInputNode(value = 1000, name="train_steps")
         seed_input = SeedUserInputNode(value = None, name="seed")
@@ -42,6 +44,8 @@ class TrainLoraWorkflow(WorkflowBuilder):
                                    learning_rate_schedule = "constant",
                                    learning_rate_warmup_steps = 0,
                                    seed = seed_input,
+                                   network_dim = network_dim_input,   
+                                   network_alpha = network_alpha_input,
                                    name = "train_lora")
         
         return train_lora
