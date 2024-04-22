@@ -106,8 +106,8 @@ class ImageDiffusionEllaNode(FunctionalNode):
         del diffusers_params['negative_prompt']
         output, seed = pipelineWrapper.diffusers_inference_embeds(**diffusers_params)
 
-        if(isinstance(output, Image.Image)):
-            return output
+        if(isinstance(output.images[0], Image.Image)):
+            return output.images[0]
         else:
             raise Exception("Output is not an image")
         
