@@ -3,6 +3,7 @@ from diffuserslib.functional import Video, Audio, FunctionalNode, WorkflowProgre
 from typing import Any, Dict, Self, List
 from dataclasses import dataclass, field
 from PIL import Image
+from PIL.Image import Resampling
 import time
 import datetime
 import yaml
@@ -127,7 +128,7 @@ class WorkflowRunner:
     def createPreview(self, output:Any):
         if(isinstance(output, Image.Image)):
             preview = output.copy()
-            preview.thumbnail((256,256))
+            preview.thumbnail((256,256), resample=Resampling.LANCZOS)
             return preview
         else:
             return None
