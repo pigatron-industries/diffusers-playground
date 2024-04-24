@@ -35,8 +35,7 @@ class LORAs:
         prompt, prompt_loras, prompt_weights = self.process_prompt(prompt)
         loras.extend(prompt_loras)
         weights.extend(prompt_weights)
-        if(len(loras) > 0):
-            self.add_loras_to_model(pipeline, loras, weights)
+        pipeline.add_loras(loras, weights)
         return prompt
     
 
@@ -75,8 +74,3 @@ class LORAs:
         else:
             raise ValueError(f"Could not find any lora token matching wildcard {loraname}")
 
-
-    def add_loras_to_model(self, pipeline: DiffusersPipelineWrapper, loras: List[LORA], weights: List[float]):
-        pipeline.add_loras(loras, weights)
-
-        
