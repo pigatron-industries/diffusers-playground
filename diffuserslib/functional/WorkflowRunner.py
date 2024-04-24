@@ -1,3 +1,4 @@
+from sympy import preview
 from diffuserslib.functional import Video, Audio, FunctionalNode, WorkflowProgress
 from typing import Any, Dict, Self, List
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ class WorkflowRunData:
     timestamp:int
     params:Dict[str,Any]|None = None
     output: Any|None = None
+    preview: Any|None = None
     save_file:str|None = None
     error:Exception|None = None
     start_time:datetime.datetime|None = None
@@ -88,7 +90,7 @@ class WorkflowRunner:
                     print(f"Error running workflow {self.batchcurrent.workflow.node_name}: {e}")
                     traceback.print_exc()
                     break
-                # TODO record outputs of each node instead of params
+                rundata.preview = self.createPreview(rundata.output)
                 rundata.params = self.batchcurrent.workflow.getNodeOutputs()
                 rundata.end_time = datetime.datetime.now()
                 rundata.duration = rundata.end_time - rundata.start_time
@@ -122,6 +124,14 @@ class WorkflowRunner:
                 # Cancel next batch
                 self.batchqueue.pop(0)
 
+    def createPreview(self, output:Any):
+        if(isinstance(output, Image.Image)):
+            preview = output.copy()
+            preview.thumbnail((256,256))
+            return preview
+        else:
+            return None
+        
 
     def save(self, timestamp:int, output_subdir:str|None = None):
         output_filename = f"output_{timestamp}"

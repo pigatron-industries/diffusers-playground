@@ -193,8 +193,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                 self.workflow_generating(batchid, runid)
             else:
                 controls.waiting_output = False
-                output = self.controller.getWorkflowRunData()[runid].output
-                self.workflow_output_control(runid, output)
+                self.workflow_output_preview(runid)
                 
             if(rundata.output is not None):
                 with ui.column().classes('w-full'):
@@ -238,29 +237,38 @@ class BatchInterfaceComponents(InterfaceComponents):
                 progress = self.controller.getProgress()
                 if(progress is not None and progress.run_progress is not None and progress.run_progress.output is not None):
                     output = progress.run_progress.output
-                    self.workflow_output_control(runid, output)
+                    self.workflow_output_preview(runid)
 
 
-    def workflow_output_control(self, runid, output):
+    def workflow_output_preview(self, runid):
         controls = self.rundata_controls[runid]
-        if(isinstance(output, Image.Image)):
-            controls.output_width = output.width
-            controls.output_control = ui.image(output).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
-            image = output[-1]
+        rundata = self.controller.getWorkflowRunData()[runid]
+        if(isinstance(rundata.output, Image.Image)):
+            image = rundata.preview if rundata.preview is not None else rundata.output
+            controls.output_width = image.width
+            controls.output_control = ui.image(image).on('click', lambda e: self.workflow_output_dialog(runid)).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(rundata.output, List) and len(rundata.output) > 0 and isinstance(rundata.output[-1], Image.Image)):
+            image = rundata.output[-1]
             controls.output_width = image.width
             controls.output_control = ui.image(image).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(output, Video)):
+        elif(isinstance(rundata.output, Video)):
             controls.output_width = 512  #TODO get video width
-            controls.output_control = ui.video(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(output, Audio)):
-            output.write()
-            controls.output_control = ui.audio(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+            controls.output_control = ui.video(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(rundata.output, Audio)):
+            rundata.output.write()
+            controls.output_control = ui.audio(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
         else:
             controls.output_width = 0
             controls.output_control = None
             ui.label("Output format not supported").style("color: #ff0000;")
-        
+
+
+    def workflow_output_dialog(self, runid):
+        rundata = self.controller.getWorkflowRunData()[runid]
+        with ui.dialog(value=True):
+            if(isinstance(rundata.output, Image.Image)):
+                ui.image(rundata.output).style(f"min-width:{rundata.output.width}px; min-height:{rundata.output.height}px;")
+
 
     def workflow_generating_update(self, batchid, runid):
         output_control = self.rundata_controls[runid].output_control
