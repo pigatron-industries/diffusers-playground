@@ -9,7 +9,6 @@ class RandomVoronoiWorkflow(WorkflowBuilder):
 
     def build(self):
         size_user_input = SizeUserInputNode(value = (512, 512), name = "size")
-        num_points_input = IntUserInputNode(value = 20, name = "num_points")
         radius_input = IntUserInputNode(value = 2, name = "radius")
         line_probability_input = FloatUserInputNode(value = 1.0, name = "line_probability")
         draw_options = BoolListUserInputNode(value = [True, True, True], labels=["bounded", "unbounded", "points"], name = "draw_options")
