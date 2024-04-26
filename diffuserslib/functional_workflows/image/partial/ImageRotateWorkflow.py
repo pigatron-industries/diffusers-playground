@@ -1,10 +1,10 @@
 from diffuserslib.functional import *
 
 
-class ImageRotateFeedbackWorkflow(WorkflowBuilder):
+class ImageRotateWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Image Transform - Rotation Feedback", Image.Image, workflow=False, subworkflow=True, realtime=False)
+        super().__init__("Image Transform - Rotation", Image.Image, workflow=False, subworkflow=True, realtime=False)
 
 
     def build(self):

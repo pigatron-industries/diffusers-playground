@@ -2,39 +2,14 @@ from diffuserslib.functional.types import *
 
 from .Controller import Controller
 from .InterfaceComponents import InterfaceComponents
+from .BatchRunDataControls import BatchRunDataControls
 from nicegui import ui, run
 from nicegui.element import Element
-from nicegui.elements.label import Label
 from typing import Dict, List
 from dataclasses import dataclass
 from PIL import Image
 
 
-default_output_width = 256
-
-
-@dataclass
-class RunDataControls:
-    rundata_container:Element|None
-    output_control:Element|None = None
-    output_width:int = 0
-    label_saved:Label|None = None
-    waiting_output:bool = False
-    expanded:bool = False
-
-    def showLabelSaved(self, filename:str):
-        if(self.label_saved is not None):
-            self.label_saved.set_text(f"Saved to {filename}")
-            self.label_saved.set_visibility(True)
-
-    def toggleExpanded(self):
-        self.expanded = not self.expanded
-        if(self.output_control is not None):
-            if(self.expanded):
-                self.output_control.style(replace= f"max-width:{self.output_width}px; min-width:{self.output_width}px;")
-            else:
-                self.output_control.style(replace = f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-            
 
 @dataclass
 class BatchDataControls:
@@ -45,7 +20,7 @@ class BatchInterfaceComponents(InterfaceComponents):
 
     def __init__(self, controller:Controller):
         super().__init__(controller)
-        self.rundata_controls:Dict[int, RunDataControls] = {}
+        self.rundata_controls:Dict[int, BatchRunDataControls] = {}
         self.batchdata_controls:Dict[int, BatchDataControls] = {}
         self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
         self.progress = 0
@@ -66,17 +41,7 @@ class BatchInterfaceComponents(InterfaceComponents):
                 for runid, rundata in batchdata.rundata.items():
                     if(runid in self.rundata_controls):
                         # Update existing output controls
-                        rundata_container = self.rundata_controls[runid].rundata_container
-                        output_control = self.rundata_controls[runid].output_control
-                        if(self.rundata_controls[runid].waiting_output == True and rundata_container is not None):
-                            if(rundata.output is not None or rundata.error is not None or output_control is None):
-                                # run finished, errored, or haven't created control yet, completely remove and re-add output controls
-                                rundata_container.clear()
-                                with rundata_container:
-                                    self.workflow_output_rundata(batchid, runid)
-                            else:
-                                # just update progress
-                                self.workflow_generating_update(batchid, runid)
+                        self.rundata_controls[runid].update()
                     elif(batchdata_container is not None):
                         # Add new output controls
                         with batchdata_container:
@@ -177,106 +142,5 @@ class BatchInterfaceComponents(InterfaceComponents):
     def workflow_output_rundata_container(self, batchid, runid):
         rundata_container = ui.card_section().classes('w-full').style("background-color:#2b323b; border-radius:8px;")
         with rundata_container:
-            self.rundata_controls[runid] = RunDataControls(rundata_container)
-            self.workflow_output_rundata(batchid=batchid, runid=runid)
+            self.rundata_controls[runid] = BatchRunDataControls(self.controller.getWorkflowRunData()[runid], runid, batchid, rundata_container, self.controller)
 
-
-    def workflow_output_rundata(self, batchid, runid):
-        controls = self.rundata_controls[runid]
-        rundata = self.controller.getWorkflowRunData()[runid]
-        with ui.row().classes('w-full no-wrap'):
-            if(rundata.error is not None):
-                controls.waiting_output = False
-                controls.output_control = ui.label(f"Error: {rundata.error}").style("color: #ff0000;")
-            elif(rundata.output is None):
-                controls.waiting_output = True
-                self.workflow_generating(batchid, runid)
-            else:
-                controls.waiting_output = False
-                self.workflow_output_preview(runid)
-                
-            if(rundata.output is not None):
-                with ui.column().classes('w-full'):
-                    with ui.row().style("margin-left:auto;"):
-                        ui.button('Params', on_click=lambda e: self.showParams(runid))
-                        ui.button('Save', on_click=lambda e: self.saveOutput(runid))
-                        ui.button('Copy', on_click=lambda e: self.controller.copyOutput(runid))
-                        ui.button('Remove', on_click=lambda e: self.removeOutput(batchid, runid))
-                    with ui.row().style("margin-left:auto;"):
-                        controls.label_saved = ui.label(f"Saved to {rundata.save_file}")
-                        controls.label_saved.set_visibility(rundata.save_file is not None)
-                    with ui.row().style("margin-left:auto;"):
-                        ui.label(f"Duration: {rundata.duration}")
-            else:
-                controls.label_saved = None
-
-
-    def showParams(self, runid):
-        rundata = self.controller.getWorkflowRunData()[runid]
-        with ui.dialog(value=True), ui.card().style('height: 100%; max-width: 1000px;'):
-            with ui.column():
-                ui.label(f"Run {runid}")
-                with ui.row():
-                    ui.label(f"Duration: {rundata.duration}")
-                if rundata.params is not None:
-                    for node_name, node_output in rundata.params.items():
-                        with ui.row().classes('no-wrap'):
-                            ui.label(f"{node_name}:").style("line-height: 1;")
-                            if(isinstance(node_output, Image.Image)):
-                                ui.image(node_output).style("min-width:128px; min-height:128px;")
-                            else:
-                                ui.label(str(node_output)).style("line-height: 1;")
-    
-
-    def workflow_generating(self, batchid, runid):
-        self.timer.activate()
-        with ui.column():
-            ui.label("Generating...").style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-            ui.linear_progress(show_value=False).bind_value_from(self, 'progress')
-            if (self.controller.model.workflow is not None):
-                progress = self.controller.getProgress()
-                if(progress is not None and progress.run_progress is not None and progress.run_progress.output is not None):
-                    output = progress.run_progress.output
-                    self.workflow_output_preview(runid)
-
-
-    def workflow_output_preview(self, runid):
-        controls = self.rundata_controls[runid]
-        rundata = self.controller.getWorkflowRunData()[runid]
-        if(isinstance(rundata.output, Image.Image)):
-            image = rundata.preview if rundata.preview is not None else rundata.output
-            controls.output_width = image.width
-            controls.output_control = ui.image(image).on('click', lambda e: self.workflow_output_dialog(runid)).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(rundata.output, List) and len(rundata.output) > 0 and isinstance(rundata.output[-1], Image.Image)):
-            image = rundata.output[-1]
-            controls.output_width = image.width
-            controls.output_control = ui.image(image).on('click', lambda e: self.rundata_controls[runid].toggleExpanded()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(rundata.output, Video)):
-            controls.output_width = 512  #TODO get video width
-            controls.output_control = ui.video(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(rundata.output, Audio)):
-            rundata.output.write()
-            controls.output_control = ui.audio(rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        else:
-            controls.output_width = 0
-            controls.output_control = None
-            ui.label("Output format not supported").style("color: #ff0000;")
-
-
-    def workflow_output_dialog(self, runid):
-        rundata = self.controller.getWorkflowRunData()[runid]
-        with ui.dialog(value=True):
-            if(isinstance(rundata.output, Image.Image)):
-                ui.image(rundata.output).style(f"min-width:{rundata.output.width}px; min-height:{rundata.output.height}px;")
-
-
-    def workflow_generating_update(self, batchid, runid):
-        output_control = self.rundata_controls[runid].output_control
-        progress = self.controller.getProgress()
-        if(progress is not None and progress.run_progress is not None and output_control is not None):
-            output = progress.run_progress.output
-            self.progress = progress.run_progress.progress
-            if(isinstance(output, Image.Image) and isinstance(output_control, ui.image)):
-                output_control.set_source(output) # type: ignore
-            elif(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
-                output_control.set_source(output[-1]) # type: ignore
