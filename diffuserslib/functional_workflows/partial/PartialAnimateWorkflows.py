@@ -1,6 +1,6 @@
 from diffuserslib.functional import *
 from diffuserslib.functional.nodes.animated.AnimateFloatNode import *
-from diffuserslib.functional.nodes.user import FloatTupleInputNode
+from diffuserslib.functional.nodes.user import FloatTupleInputNode, FloatUserInputNode
 
 
 class AnimateFloatWorkflow(WorkflowBuilder):

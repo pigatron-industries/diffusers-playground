@@ -1,4 +1,4 @@
-from ...FunctionalNode import FunctionalNode
+from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.types import Vector, VectorsFuncType
 from PIL import ImageDraw, Image

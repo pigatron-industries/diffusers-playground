@@ -5,8 +5,8 @@ from diffuserslib.functional.nodes.image.diffusers.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.image.process import MLSDStraightLineDetectionNode
 from diffuserslib.functional.nodes.image.process import SemanticSegmentationNode
+from diffuserslib.functional.nodes.image.transform import ResizeImageNode
 from diffuserslib.functional.nodes.user import *
-from diffuserslib.functional.nodes.process import ResizeImageNode
 from diffuserslib.functional.nodes.animated import FeedbackNode
 from PIL import Image
 

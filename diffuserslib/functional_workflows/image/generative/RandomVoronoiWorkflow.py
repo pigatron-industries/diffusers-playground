@@ -1,4 +1,7 @@
-from diffuserslib.functional import *
+from diffuserslib.functional.WorkflowBuilder import *
+from diffuserslib.functional.nodes.user import *
+from diffuserslib.functional.nodes.image.generative import *
+from diffuserslib.functional.nodes.input.RandomPoints2DNode import RandomPoints2DNode
 
 
 class RandomVoronoiWorkflow(WorkflowBuilder):

@@ -1,7 +1,6 @@
 from diffuserslib.functional import WorkflowBuilder
 from diffuserslib.functional.nodes.user import *
-from diffuserslib.functional.nodes.image.diffusers.user import *
-from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ImageDiffusionNode
+from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.image.diffusers.ella.ImageDiffusionEllaNode import ImageDiffusionEllaNode
 
 

@@ -1,4 +1,7 @@
-from diffuserslib.functional import *
+from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
+from diffuserslib.functional.nodes.user import *
+from diffuserslib.functional.nodes.image.diffusers import *
+from diffuserslib.functional.nodes.image.process import *
 
 
 class ImageDiffusionWorkflow(WorkflowBuilder):

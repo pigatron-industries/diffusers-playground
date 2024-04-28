@@ -1,4 +1,6 @@
-from diffuserslib.functional import *
+from diffuserslib.functional.nodes.user import *
+from diffuserslib.functional.nodes.image.generative import *
+from diffuserslib.functional.WorkflowBuilder import *
 
 
 class LogarithmicSpiralWorkflow(WorkflowBuilder):

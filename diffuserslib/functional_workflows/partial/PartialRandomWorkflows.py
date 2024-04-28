@@ -1,4 +1,6 @@
-from diffuserslib.functional import *
+from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
+from diffuserslib.functional.nodes.user import *
+from diffuserslib.functional.nodes.input import *
 
 
 class RandomIntWorkflow(WorkflowBuilder):
