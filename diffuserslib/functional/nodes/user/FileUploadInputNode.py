@@ -10,9 +10,11 @@ from PIL import Image
 class FileUploadInputNode(UserInputNode):
     """A node that allows the user to upload a single file. Subclass this to handle different file types."""
 
-    def __init__(self, name:str="file_input"):
+    def __init__(self, mandatory:bool = True, display:str = "Select File", name:str="file_input"):
         self.filename = None
         self.content = None
+        self.mandatory = mandatory
+        self.display = display
         super().__init__(name)
 
     def getValue(self) -> str|None:
@@ -31,7 +33,7 @@ class FileUploadInputNode(UserInputNode):
             ui.upload(on_upload=self.handleUpload)
         with ui.row().style("padding-top: 1.4em;"):
             if(self.content is None):
-                ui.label('Select file')
+                ui.label(self.display)
             else:
                 self.previewContent()
             ui.button(icon='folder', on_click=dialog.open).props('dense')
@@ -50,8 +52,8 @@ class FileUploadInputNode(UserInputNode):
         raise NotImplementedError("File upload not implemented")
 
     
-    def process(self) -> Image.Image:
-        if(self.content is None):
+    def process(self) -> Image.Image|None:
+        if(self.content is None and self.mandatory):
             raise Exception("File not selected")
         return self.content
 
@@ -60,9 +62,9 @@ class FileUploadInputNode(UserInputNode):
 class ImageUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a single image. The output is an image."""
 
-    def __init__(self, name:str="image_input"):
+    def __init__(self, mandatory:bool = True, display:str = "Select File", name:str="image_input"):
         self.preview = None
-        super().__init__(name)
+        super().__init__(mandatory, display, name)
 
     def handleUpload(self, e: events.UploadEventArguments):
         self.content = Image.open(e.content)
