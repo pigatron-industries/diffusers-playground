@@ -6,6 +6,7 @@ from typing import List
 import yaml
 import os
 import numpy as np
+from diffuserslib.functional.types import Video, Audio, Vector
 from PIL import Image
 
 
@@ -55,10 +56,19 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
 
 
 # Initialise yaml representers for yml dumps
-def ndarray_representer(dumper: yaml.Dumper, array: np.ndarray) -> yaml.Node:
+def ndarray_representer(dumper: yaml.SafeDumper, array: np.ndarray) -> yaml.Node:
     return dumper.represent_list(array.tolist())
-def image_representer(dumper: yaml.Dumper, data: Image.Image) -> yaml.Node:
+def image_representer(dumper: yaml.SafeDumper, data: Image.Image) -> yaml.Node:
     return dumper.represent_str("[image]")
+def video_representer(dumper: yaml.SafeDumper, data: Video) -> yaml.Node:
+    return dumper.represent_str("[video]")
+def audio_representer(dumper: yaml.SafeDumper, data: Audio) -> yaml.Node:
+    return dumper.represent_str("[audio]")
+def vector_representer(dumper: yaml.SafeDumper, data: Vector) -> yaml.Node:
+    return dumper.represent_list(data.coordinates)
 
-yaml.add_representer(np.ndarray, ndarray_representer)
-yaml.add_representer(Image.Image, image_representer)
+yaml.SafeDumper.add_representer(np.ndarray, ndarray_representer)
+yaml.SafeDumper.add_representer(Image.Image, image_representer)
+yaml.SafeDumper.add_representer(Video, video_representer)
+yaml.SafeDumper.add_representer(Audio, audio_representer)
+yaml.SafeDumper.add_representer(Vector, vector_representer)
