@@ -95,20 +95,25 @@ class BatchRunDataControls:
 
 
     def workflow_output_preview(self):
-        if(isinstance(self.rundata.output, Image.Image)):
-            image = self.rundata.preview if self.rundata.preview is not None else self.rundata.output
-            self.output_width = image.width
-            self.output_control = ui.image(image).on('click', lambda e: self.workflow_output_dialog()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(self.rundata.output, List) and len(self.rundata.output) > 0 and isinstance(self.rundata.output[-1], Image.Image)):
-            image = self.rundata.output[-1]
+        output = self.rundata.output
+        if(self.rundata.preview is not None):
+            output = self.rundata.preview
+        elif(output is None and self.rundata.progress is not None):
+            output = self.rundata.progress.output
+
+        if(isinstance(output, Image.Image)):
+            self.output_width = output.width
+            self.output_control = ui.image(output).on('click', lambda e: self.workflow_output_dialog()).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
+            image = output[-1]
             self.output_width = image.width
             self.output_control = ui.image(image).style(f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(self.rundata.output, Video)):
+        elif(isinstance(output, Video)):
             self.output_width = 512  #TODO get video width
-            self.output_control = ui.video(self.rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
-        elif(isinstance(self.rundata.output, Audio)):
-            self.rundata.output.write()
-            self.output_control = ui.audio(self.rundata.output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+            self.output_control = ui.video(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(output, Audio)):
+            output.write()
+            self.output_control = ui.audio(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
         else:
             self.output_width = 0
             self.output_control = None

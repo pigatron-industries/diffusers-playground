@@ -24,6 +24,7 @@ class WorkflowRunData:
     start_time:datetime.datetime|None = None
     end_time:datetime.datetime|None = None
     duration:datetime.timedelta|None = None
+    progress:WorkflowProgress|None = None
 
 
 @dataclass
@@ -52,6 +53,7 @@ class WorkflowRunner:
         self.batchrundata:Dict[int, WorkflowBatchData] = {}
         self.batchqueue:List[WorkflowBatchData] = []
         self.batchcurrent:WorkflowBatchData|None = None
+        self.rundatacurrent:WorkflowRunData|None = None
         self.progress:BatchProgressData = BatchProgressData(0,0)
         self.stopping = False
         self.running = False
@@ -81,6 +83,7 @@ class WorkflowRunner:
                 print(f"Running workflow {self.batchcurrent.workflow.node_name} batch {i+1} of {self.batchcurrent.batch_size}")
                 rundata = WorkflowRunData(int(time.time_ns()/1000))
                 rundata.start_time = datetime.datetime.now()
+                self.rundatacurrent = rundata
                 self.batchcurrent.rundata[rundata.timestamp] = rundata
                 self.rundata[rundata.timestamp] = rundata
                 try:
@@ -109,6 +112,8 @@ class WorkflowRunner:
     def getProgress(self):
         if(self.batchcurrent is not None):
             self.progress.run_progress = self.batchcurrent.workflow.getProgress()
+            if(self.rundatacurrent):
+                self.rundatacurrent.progress = self.progress.run_progress
         else:
             self.progress.run_progress = None
         return self.progress

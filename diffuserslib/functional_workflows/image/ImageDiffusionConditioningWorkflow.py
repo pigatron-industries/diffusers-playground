@@ -54,5 +54,6 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     clipskip = clipskip_input,
                                     conditioning_inputs = conditioning_inputs)
         
-        feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = None, name = "feedback_image", display_name="Feedback Image")
+        feedback_init_image = ImageUploadInputNode(name = "feedback_init_image")
+        feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = feedback_init_image, name = "feedback_image", display_name="Feedback Image")
         return diffusion, feedback_image
