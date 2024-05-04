@@ -160,7 +160,7 @@ class DiffusersPipelines:
             loras, weights = self._getLORAs(params)
             prompt = baseData.loras.process_prompt_and_add_loras(prompt, pipeline, loras, weights)
             params.prompt = prompt
-        return prompt
+        return params.prompt
 
 
     #=============== MODEL MERGING ==============
