@@ -6,6 +6,7 @@ from ..ImageUtils import base64DecodeImage
 from ..models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 import json, inspect
 from pydantic import BaseModel, ConfigDict
+import yaml
 
 
 class ControlImageType:
@@ -32,11 +33,19 @@ class ModelParameters:
     name:str
     weight:float = 1.0
 
+def modelparameters_representer(dumper: yaml.SafeDumper, data: ModelParameters) -> yaml.Node:
+    return dumper.represent_dict(data.__dict__)
+yaml.SafeDumper.add_representer(ModelParameters, modelparameters_representer)
+
 
 @dataclass
 class LoraParameters:
     name:str
     weight:float = 1.0
+
+def loraparameters_representer(dumper: yaml.SafeDumper, data: LoraParameters) -> yaml.Node:
+    return dumper.represent_dict(data.__dict__)
+yaml.SafeDumper.add_representer(LoraParameters, loraparameters_representer)
 
 
 @dataclass(config=ModelConfig)
@@ -53,6 +62,11 @@ class ControlImageParameters:
     def __post_init__(self):
         if(self.image64 is not None and self.image64 != ""):
             self.image = base64DecodeImage(self.image64)
+
+
+def controlimageparameters_representer(dumper: yaml.SafeDumper, data: ControlImageParameters) -> yaml.Node:
+    return dumper.represent_dict(data.__dict__)
+yaml.SafeDumper.add_representer(ControlImageParameters, controlimageparameters_representer)
 
 
 @dataclass(config=ModelConfig)
