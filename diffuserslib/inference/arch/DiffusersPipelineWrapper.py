@@ -82,7 +82,8 @@ class DiffusersPipelineWrapper:
         raise ValueError(f"add_embeddings not implemented for pipeline")
     
     def add_loras(self, loras, weights:List[float]):
-        raise ValueError(f"add_lora not implemented for pipeline")
+        if(len(loras) > 0):
+            raise ValueError(f"add_lora not implemented for pipeline")
     
 
 
