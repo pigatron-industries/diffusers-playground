@@ -7,7 +7,7 @@ import yaml
 import os
 import numpy as np
 from diffuserslib.functional.types import Video, Audio, Vector
-from PIL import Image
+from PIL import Image, PngImagePlugin
 
 
 def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]=["modelconfig.yml"], promptmods:List[str]=[]):
@@ -69,6 +69,7 @@ def vector_representer(dumper: yaml.SafeDumper, data: Vector) -> yaml.Node:
 
 yaml.SafeDumper.add_representer(np.ndarray, ndarray_representer)
 yaml.SafeDumper.add_representer(Image.Image, image_representer)
+yaml.SafeDumper.add_representer(PngImagePlugin.PngImageFile, image_representer)
 yaml.SafeDumper.add_representer(Video, video_representer)
 yaml.SafeDumper.add_representer(Audio, audio_representer)
 yaml.SafeDumper.add_representer(Vector, vector_representer)
