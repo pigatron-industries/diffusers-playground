@@ -164,6 +164,13 @@ class GenerationParameters:
         raise Exception("Control image index out of range")
 
 
+def generationparameters_representer(dumper: yaml.SafeDumper, data: GenerationParameters) -> yaml.Node:
+    dict = data.__dict__.copy()
+    del dict['modelConfig']
+    return dumper.represent_dict(dict)
+yaml.SafeDumper.add_representer(GenerationParameters, generationparameters_representer)
+
+
 @dataclass(config=ModelConfig)
 class TiledGenerationParameters(GenerationParameters):
     tilemethod:str = "singlepass"
