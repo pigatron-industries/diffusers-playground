@@ -15,6 +15,7 @@ peft
 OmegaConf
 pytorch-lightning
 safetensors
+torch==2.3.0
 
 # tts
 torchaudio
