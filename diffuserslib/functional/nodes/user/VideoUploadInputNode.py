@@ -14,18 +14,23 @@ class VideoUploadInputNode(FileUploadInputNode):
         with tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True) as temp_file:
             temp_file.write(e.content.read())
             temp_file.seek(0)
-            temp_file_name = temp_file.name
-
-            cap = cv2.VideoCapture(temp_file_name)
-            self.fps = cap.get(cv2.CAP_PROP_FPS)
-            while(cap.isOpened()):
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                self.content.append(Image.fromarray(img))
-            cap.release()
+            self.content, self.fps = VideoUploadInputNode.loadVideoFrames(temp_file.name)
             self.gui.refresh()
+
+
+    @staticmethod
+    def loadVideoFrames(file_name:str):
+        frames = []
+        cap = cv2.VideoCapture(file_name)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            if not ret:
+                break
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(img))
+        cap.release()
+        return frames, fps
 
 
     def previewContent(self):

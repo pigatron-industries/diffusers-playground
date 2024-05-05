@@ -1,6 +1,5 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-from diffuserslib.interface.Clipboard import Clipboard
 from .UserInputNode import UserInputNode
 from nicegui import ui, events, run
 from PIL import Image
@@ -52,37 +51,7 @@ class FileUploadInputNode(UserInputNode):
         raise NotImplementedError("File upload not implemented")
 
     
-    def process(self) -> Image.Image|None:
+    def process(self) -> Any|None:
         if(self.content is None and self.mandatory):
             raise Exception("File not selected")
         return self.content
-
-
-
-class ImageUploadInputNode(FileUploadInputNode):
-    """A node that allows the user to upload a single image. The output is an image."""
-
-    def __init__(self, mandatory:bool = True, display:str = "Select File", name:str="image_input"):
-        self.preview = None
-        super().__init__(mandatory, display, name)
-
-    def handleUpload(self, e: events.UploadEventArguments):
-        self.content = Image.open(e.content)
-        self.preview = self.content.copy()
-        self.preview.thumbnail((128, 128))
-        self.gui.refresh()
-
-    def previewContent(self):
-        if(self.content is None or self.preview is None):
-            return None
-        with ui.column() as container:
-            ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
-            ui.label(f'{self.content.width} x {self.content.height} pixels')
-        return container
-    
-    def paste(self):
-        clip = Clipboard.read()
-        if(clip is not None):
-            self.content = clip.content
-            self.preview = clip.preview
-        self.gui.refresh()
