@@ -54,6 +54,11 @@ class DiffusersModel:
         }
     
 
+def diffusersmodel_representer(dumper: yaml.SafeDumper, data: DiffusersModel) -> yaml.Node:
+    return dumper.represent_list(data.modelid)
+yaml.SafeDumper.add_representer(DiffusersModel, diffusersmodel_representer)
+    
+
 @dataclass
 class DiffusersConditioningModel:
     modelid: str
