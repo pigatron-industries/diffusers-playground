@@ -24,10 +24,11 @@ class MusicGenNode(FunctionalNode):
 
         if (prompt is not None and len(prompt) > 0):
             inputs = self.processor(text = prompt, return_tensors="pt", padding=True)
+            inputs['guidance_scale'] = 3
         else:
             inputs = self.model.get_unconditional_inputs(num_samples=1)
         
-        audio_values = self.model.generate(**inputs, do_sample=True, guidance_scale=3, max_new_tokens=256)
+        audio_values = self.model.generate(**inputs, do_sample=True, max_new_tokens=256)
 
         sampling_rate = self.model.config.audio_encoder.sampling_rate
         audio_array = audio_values[0, 0].numpy()
