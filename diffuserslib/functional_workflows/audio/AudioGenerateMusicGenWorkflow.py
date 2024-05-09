@@ -12,6 +12,7 @@ class AudioGenerationMusicGenWorkflow(WorkflowBuilder):
     def build(self):
         # files_input = FileSelectInputNode(filetype = "audio", name = "samples")
         prompt_input = TextAreaInputNode(value = "Hello World!", name = "prompt")
-        audio = MusicGenNode(prompt = prompt_input)
+        duration_input = FloatUserInputNode(value = 10.0, name = "duration")
+        audio = MusicGenNode(prompt = prompt_input, duration = duration_input)
         return audio
     

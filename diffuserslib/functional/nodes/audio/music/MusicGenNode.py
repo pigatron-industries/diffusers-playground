@@ -8,14 +8,16 @@ class MusicGenNode(FunctionalNode):
 
     def __init__(self, 
                  prompt:StringFuncType = "",
-                 name:str="musicgen"):
+                 name:str="musicgen",
+                 duration:FloatFuncType = 10.0):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
+        self.addParam("duration", duration, float)
         self.model = None
         self.processor = None
         
         
-    def process(self, prompt:str):
+    def process(self, prompt:str, duration:float):
         if (self.model is None):
             self.model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-medium")
             self.processor = AutoProcessor.from_pretrained("facebook/musicgen-medium")
@@ -28,7 +30,8 @@ class MusicGenNode(FunctionalNode):
         else:
             inputs = self.model.get_unconditional_inputs(num_samples=1)
         
-        audio_values = self.model.generate(**inputs, do_sample=True, max_new_tokens=512)
+        inputs['max_new_tokens'] = int(duration * 51.2)
+        audio_values = self.model.generate(**inputs, do_sample=True)
 
         sampling_rate = self.model.config.audio_encoder.sampling_rate
         audio_array = audio_values[0, 0].numpy()
