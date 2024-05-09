@@ -1,19 +1,19 @@
 from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
 from ..GenerationParameters import GenerationParameters, ControlImageType
+from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
-                        DiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
+                        StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
                         StableDiffusionXLControlNetPipeline, StableDiffusionXLAdapterPipeline, StableDiffusionXLControlNetImg2ImgPipeline,
                         StableDiffusionXLControlNetInpaintPipeline,
                         # Conditioning models
-                        T2IAdapter, ControlNetModel,
+                        T2IAdapter, ControlNetModel, MotionAdapter, AnimateDiffSDXLPipeline, 
                         # Schedulers
                         DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler, DPMSolverSDEScheduler)
-from transformers import CLIPVisionModelWithProjection
 from compel import Compel, ReturnedEmbeddingsType
 import torch
 
@@ -154,3 +154,68 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
             self.addInferenceParamsInpaint(params, diffusers_params)
         output, seed = super().diffusers_inference(**diffusers_params)
         return output.images[0], seed
+
+
+
+class StableDiffusionXLAnimateDiffPipelineWrapper(StableDiffusionXLPipelineWrapper):
+    def __init__(self, params:GenerationParameters, device):
+        self.dtype = torch.float16
+        self.features = self.getPipelineFeatures(params)
+        cls = self.getPipelineClass(params)
+        self.adapter = MotionAdapter.from_pretrained("vladmandic/animatediff-sdxl", torch_dtype=self.dtype)
+        super().__init__(cls, params, device, dtype = self.dtype)
+
+
+    def getPipelineClass(self, params:GenerationParameters):
+        return AnimateDiffSDXLPipeline
+
+
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        pipeline_params['motion_adapter'] = self.adapter
+        pipeline_params['torch_dtype'] = torch.float16
+        self.addPipelineParamsCommon(params, pipeline_params)
+        if(self.features.controlnet):
+            self.addPipelineParamsControlNet(params, pipeline_params)
+        return pipeline_params
+
+
+    def inference(self, params:GenerationParameters):
+        diffusers_params = {}
+        diffusers_params['prompt'] = params.prompt
+        diffusers_params['negative_prompt'] = params.negprompt
+        diffusers_params['seed'] = params.seed
+        diffusers_params['guidance_scale'] = params.cfgscale
+        diffusers_params['num_inference_steps'] = params.steps
+        diffusers_params['scheduler'] = params.scheduler
+        diffusers_params['width'] = params.width
+        diffusers_params['height'] = params.height
+        diffusers_params['num_frames'] = params.frames
+        if(self.features.controlnet):
+            self.addInferenceParamsControlNet(params, diffusers_params)
+        if(self.features.img2img):
+            initimageparams = params.getInitImage()
+            if(initimageparams is not None):
+                diffusers_params['strength'] = initimageparams.condscale
+                if(isinstance(initimageparams.image, list)):
+                    diffusers_params['video'] = initimageparams.image
+                else:
+                    diffusers_params['image'] = initimageparams.image
+            diffusers_params['latent_interpolation_method'] = "slerp"  # "slerp" or "lerp"
+        if(self.features.ipadapter):
+            self.addInferenceParamsIpAdapter(params, diffusers_params)
+        output, seed = super().diffusers_inference(**diffusers_params)
+        return output.frames[0], seed
+    
+
+    def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
+        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
+        videos = []
+        scales = []
+        for controlnetparam in controlnetparams:
+            if(controlnetparam.image is not None):
+                video = controlnetparam.image
+                videos.append(video)
+                scales.append(controlnetparam.condscale)
+        diffusers_params['conditioning_frames'] = videos
+        diffusers_params['controlnet_conditioning_scale'] = scales

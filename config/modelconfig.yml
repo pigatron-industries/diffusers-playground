@@ -16,6 +16,7 @@ generate:
   - base: sdxl_1_0
     pipelines:
       generate: StableDiffusionXLGeneratePipeline
+      animatediff: StableDiffusionXLAnimateDiffPipeline
     models:
       - id: stabilityai/stable-diffusion-xl-base-1.0
       - id: stabilityai/stable-diffusion-xl-refiner-1.0
@@ -245,3 +246,6 @@ animatediff:
       - id: guoyww/animatediff-motion-lora-tilt-down
       - id: guoyww/animatediff-motion-lora-rolling-clockwise
       - id: guoyww/animatediff-motion-lora-rolling-anticlockwise
+  - base: sdxl_1_0
+    models:
+      - id: vladmandic/animatediff-sdxl

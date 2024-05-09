@@ -271,14 +271,6 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
                 return "pipeline_animatediff_img2video"
         else:
             return AnimateDiffPipeline
-        
-
-    def loadScheduler(self, schedulerClass):
-        if (isinstance(schedulerClass, str)):
-            schedulerClass = str_to_class(schedulerClass)
-        self.pipeline.scheduler = schedulerClass.from_config(self.pipeline.scheduler.config, 
-                                                             timestep_spacing="trailing", beta_schedule="linear")
-        return schedulerClass
 
 
     def createPipelineParams(self, params:GenerationParameters):
