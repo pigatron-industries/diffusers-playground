@@ -28,7 +28,7 @@ class MusicGenNode(FunctionalNode):
         else:
             inputs = self.model.get_unconditional_inputs(num_samples=1)
         
-        audio_values = self.model.generate(**inputs, do_sample=True, max_new_tokens=256)
+        audio_values = self.model.generate(**inputs, do_sample=True, max_new_tokens=512)
 
         sampling_rate = self.model.config.audio_encoder.sampling_rate
         audio_array = audio_values[0, 0].numpy()
