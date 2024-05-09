@@ -17,8 +17,8 @@ class MusicGenNode(FunctionalNode):
         
     def process(self, prompt:str):
         if (self.model is None):
-            self.model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-large")
-            self.processor = AutoProcessor.from_pretrained("facebook/musicgen-large")
+            self.model = MusicgenForConditionalGeneration.from_pretrained("facebook/musicgen-medium")
+            self.processor = AutoProcessor.from_pretrained("facebook/musicgen-medium")
         assert self.model is not None, "Model is not initialized"
         assert self.processor is not None, "Processor is not initialized"
 
