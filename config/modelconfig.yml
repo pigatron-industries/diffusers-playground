@@ -248,4 +248,4 @@ animatediff:
       - id: guoyww/animatediff-motion-lora-rolling-anticlockwise
   - base: sdxl_1_0
     models:
-      - id: vladmandic/animatediff-sdxl
+      - id: guoyww/animatediff-motion-adapter-sdxl-beta

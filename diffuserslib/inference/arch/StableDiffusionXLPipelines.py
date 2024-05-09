@@ -162,7 +162,7 @@ class StableDiffusionXLAnimateDiffPipelineWrapper(StableDiffusionXLPipelineWrapp
         self.dtype = torch.float16
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
-        self.adapter = MotionAdapter.from_pretrained("vladmandic/animatediff-sdxl", torch_dtype=self.dtype)
+        self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-sdxl-beta", torch_dtype=self.dtype)
         super().__init__(cls, params, device, dtype = self.dtype)
 
 
