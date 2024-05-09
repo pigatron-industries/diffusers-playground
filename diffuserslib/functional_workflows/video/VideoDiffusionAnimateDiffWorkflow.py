@@ -12,7 +12,7 @@ class VideoDiffusionAnimateDiffWorkflow(WorkflowBuilder):
         super().__init__("Video Diffusion - AnimateDiff", Video, workflow=True, subworkflow=False)
 
     def build(self):
-        models_input = DiffusionModelUserInputNode(basemodels=["sd_1_5"])
+        models_input = DiffusionModelUserInputNode(basemodels=["sd_1_5", "sdxl_1_0"])
         size_input = SizeUserInputNode(value = (512, 512))
         prompt_input = TextAreaInputNode(value = "", name="prompt")
         negprompt_input = StringUserInputNode(value = "", name="negprompt")
