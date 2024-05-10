@@ -165,6 +165,6 @@ class WorkflowRunner:
                 raise Exception("Output format not supported")
 
             file = open(f"{save_file}.yaml", "w")
-            yaml.safe_dump(rundata.params, file, width=float("inf"))
+            yaml.dump(rundata.params, file, width=float("inf"))
             print(rundata.params)
             print(f"Saved output to {save_file}")
