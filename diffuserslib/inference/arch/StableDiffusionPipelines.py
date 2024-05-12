@@ -9,7 +9,7 @@ from diffusers import ( # Pipelines
                         # Conditioning models
                         T2IAdapter, ControlNetModel, MotionAdapter,
                         # Schedulers
-                        DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler,
+                        DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, DPMSolverSinglestepScheduler, HeunDiscreteScheduler,
                         KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
                         KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
                         ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler, DPMSolverSDEScheduler)
