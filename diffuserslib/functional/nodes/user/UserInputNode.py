@@ -7,13 +7,25 @@ import random
 
 class UserInputNode(FunctionalNode):
     """ represents input from the user """
+
     def __init__(self, name:str="user_input"):
         super().__init__(name)
+        self.update_listeners = []
         self.deepcopy_excluded_modules = ["nicegui"]
+
+    def addUpdateListener(self, listener:Callable[[], None]):
+        self.update_listeners.append(listener)
+
+    def fireUpdate(self):
+        for listener in self.update_listeners:
+            listener()
+
     def getValue(self):
         raise Exception("Not implemented")
+    
     def setValue(self, value):
         raise Exception("Not implemented")
+    
     def gui(self):
         ui.label(self.node_name).classes('align-middle')
 
@@ -161,6 +173,41 @@ class ListSelectUserInputNode(UserInputNode):
     def process(self) -> str:
         return str(self.value)
     
+
+class DictSelectUserInputNode(UserInputNode):
+    def __init__(self, value:Any, options:Dict[str, Any], name:str="dict_select_user_input"):
+        self.value = value
+        self.options = sorted(options.keys())
+        self.selected = self.options[0]
+        self.dict = options
+        super().__init__(name)
+
+    def getValue(self) -> str|None:
+        return self.selected
+    
+    def setValue(self, value):
+        try:
+            self.selected = value
+        except:
+            pass
+
+    def getSelectedOption(self) -> Any:
+        return self.dict[self.selected]
+
+    def setOptions(self, options:Dict[str, Any]):
+        self.options = sorted(options.keys())
+        self.dict = options
+        if(len(self.options) > 0):
+            self.value = self.options[0]
+        self.gui.refresh()
+
+    @ui.refreshable
+    def gui(self):
+        ui.select(options=self.options, label=self.node_name, on_change=self.fireUpdate).bind_value(self, 'selected').classes('grow')
+
+    def process(self) -> Any:
+        return self.dict[self.selected]
+
 
 class EnumSelectUserInputNode(UserInputNode):
     def __init__(self, value:Any, enum:type[Enum], name:str="enum_select_user_input"):

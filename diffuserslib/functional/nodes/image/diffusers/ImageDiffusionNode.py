@@ -26,6 +26,7 @@ class ImageDiffusionNode(FunctionalNode):
                  cfgscale:FloatFuncType = 7.0,
                  seed:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
+                 sigmas:FloatsFuncType|None = None,
                  clipskip:IntFuncType|None = None,
                  conditioning_inputs:ConditioningInputFuncsType|None = None,
                  name:str = "image_diffusion"):
@@ -39,6 +40,7 @@ class ImageDiffusionNode(FunctionalNode):
         self.addParam("cfgscale", cfgscale, float)
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
+        self.addParam("sigmas", sigmas, List[float])
         self.addParam("clipskip", clipskip, int)
         self.addParam("conditioning_inputs", conditioning_inputs, List[ConditioningInputType])
 
@@ -53,6 +55,7 @@ class ImageDiffusionNode(FunctionalNode):
                 cfgscale:float, 
                 seed:int|None, 
                 scheduler:str,
+                sigmas:List[float]|None,
                 clipskip:int|None,
                 conditioning_inputs:List[ConditioningInputType]|None) -> Image.Image:
         if(DiffusersPipelines.pipelines is None):
@@ -82,6 +85,7 @@ class ImageDiffusionNode(FunctionalNode):
             cfgscale=cfgscale,
             seed=seed,
             scheduler=scheduler,
+            sigmas=sigmas,
             clipskip=clipskip,
             controlimages=conditioningparams
         )

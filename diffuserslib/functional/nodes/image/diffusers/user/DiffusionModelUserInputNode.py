@@ -18,13 +18,8 @@ class DiffusionModelUserInputNode(UserInputNode):
         self.modeltype = modeltype
         self.basemodel = None
         self.model = None
-        self.update_listeners = []
         self.selected_modifier = None
         super().__init__(name)
-
-
-    def addUpdateListener(self, listener:Callable[[], None]):
-        self.update_listeners.append(listener)
 
 
     def getValue(self) -> Tuple[str|None, str|None]:
@@ -34,8 +29,7 @@ class DiffusionModelUserInputNode(UserInputNode):
     def setValue(self, value:Tuple[str|None, str|None]):
         self.basemodel = value[0]
         self.model = value[1]
-        for listener in self.update_listeners:
-            listener()
+        self.fireUpdate()
 
 
     @ui.refreshable
@@ -132,8 +126,7 @@ class DiffusionModelUserInputNode(UserInputNode):
             self.model = None
             self.model_dropdown.options = list(models.keys())
             self.gui.refresh()
-            for listener in self.update_listeners:
-                listener()
+            self.fireUpdate()
 
 
     def process(self) -> ModelsType:

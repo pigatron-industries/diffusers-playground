@@ -4,6 +4,7 @@ from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.transform import ResizeImageNode
 from diffuserslib.functional.nodes.animated import FeedbackNode
+from diffusers.schedulers import AysSchedules
 from PIL import Image
 
 class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
@@ -26,6 +27,14 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
         clipskip_input = IntUserInputNode(value = None, name = "clipskip")
+
+        sigmas_options = {
+            "None": None,
+            "StableDiffusion-AYS-10Step-Sigmas": AysSchedules["StableDiffusionSigmas"],
+            "StableDiffusionXL-AYS-10Step-Sigmas": AysSchedules["StableDiffusionXLSigmas"],
+        }
+        sigmas_input = DictSelectUserInputNode(options = sigmas_options, value = None, name = "sigmas")
+        sigmas_input.addUpdateListener(lambda: steps_input.setValue(len(sigmas_input.getSelectedOption())-1) if sigmas_input.getSelectedOption() is not None else None)
         
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
@@ -51,6 +60,7 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
+                                    sigmas = sigmas_input,
                                     clipskip = clipskip_input,
                                     conditioning_inputs = conditioning_inputs)
         

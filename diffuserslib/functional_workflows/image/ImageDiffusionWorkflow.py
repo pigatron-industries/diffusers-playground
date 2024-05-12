@@ -2,6 +2,7 @@ from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.image.process import *
+from diffusers.schedulers import AysSchedules
 
 
 class ImageDiffusionWorkflow(WorkflowBuilder):
@@ -20,7 +21,17 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
 
+        sigmas_options = {
+            "None": None,
+            "StableDiffusion-AYS-10Step-Sigmas": AysSchedules["StableDiffusionSigmas"],
+            "StableDiffusionXL-AYS-10Step-Sigmas": AysSchedules["StableDiffusionXLSigmas"],
+        }
+        sigmas_input = DictSelectUserInputNode(options = sigmas_options, value = None, name = "sigmas")
+        sigmas_input.addUpdateListener(lambda: steps_input.setValue(len(sigmas_input.getSelectedOption())-1) if sigmas_input.getSelectedOption() is not None else None)
+
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
+        models_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(models_input.basemodel)))
+
         image_diffusion = ImageDiffusionNode(models = models_input, 
                                             loras = lora_input,
                                             size = size_input, 
@@ -29,7 +40,6 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
                                             seed = seed_input,
                                             steps = steps_input,
                                             cfgscale = cfgscale_input,
-                                            scheduler = scheduler_input)
-        
-        models_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(models_input.basemodel)))
+                                            scheduler = scheduler_input,
+                                            sigmas = sigmas_input)
         return image_diffusion

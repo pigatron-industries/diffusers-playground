@@ -33,9 +33,9 @@ class ModelParameters:
     name:str
     weight:float = 1.0
 
-def modelparameters_representer(dumper: yaml.SafeDumper, data: ModelParameters) -> yaml.Node:
+def modelparameters_representer(dumper: yaml.Dumper, data: ModelParameters) -> yaml.Node:
     return dumper.represent_dict(data.__dict__)
-yaml.SafeDumper.add_representer(ModelParameters, modelparameters_representer)
+yaml.add_representer(ModelParameters, modelparameters_representer)
 
 
 @dataclass
@@ -43,9 +43,9 @@ class LoraParameters:
     name:str
     weight:float = 1.0
 
-def loraparameters_representer(dumper: yaml.SafeDumper, data: LoraParameters) -> yaml.Node:
+def loraparameters_representer(dumper: yaml.Dumper, data: LoraParameters) -> yaml.Node:
     return dumper.represent_dict(data.__dict__)
-yaml.SafeDumper.add_representer(LoraParameters, loraparameters_representer)
+yaml.add_representer(LoraParameters, loraparameters_representer)
 
 
 @dataclass(config=ModelConfig)
@@ -64,9 +64,9 @@ class ControlImageParameters:
             self.image = base64DecodeImage(self.image64)
 
 
-def controlimageparameters_representer(dumper: yaml.SafeDumper, data: ControlImageParameters) -> yaml.Node:
+def controlimageparameters_representer(dumper: yaml.Dumper, data: ControlImageParameters) -> yaml.Node:
     return dumper.represent_dict(data.__dict__)
-yaml.SafeDumper.add_representer(ControlImageParameters, controlimageparameters_representer)
+yaml.add_representer(ControlImageParameters, controlimageparameters_representer)
 
 
 @dataclass(config=ModelConfig)
@@ -85,6 +85,7 @@ class GenerationParameters:
     frames:int = 16
     seed:int|None = None
     scheduler:str = "DPMSolverMultistepScheduler"
+    sigmas:List[float]|None = None
     models:List[ModelParameters] = field(default_factory=list)
     loras:List[LoraParameters] = field(default_factory=list)
     tiling:bool = False
@@ -164,11 +165,11 @@ class GenerationParameters:
         raise Exception("Control image index out of range")
 
 
-def generationparameters_representer(dumper: yaml.SafeDumper, data: GenerationParameters) -> yaml.Node:
+def generationparameters_representer(dumper: yaml.Dumper, data: GenerationParameters) -> yaml.Node:
     dict = data.__dict__.copy()
     del dict['modelConfig']
     return dumper.represent_dict(dict)
-yaml.SafeDumper.add_representer(GenerationParameters, generationparameters_representer)
+yaml.add_representer(GenerationParameters, generationparameters_representer)
 
 
 @dataclass(config=ModelConfig)
