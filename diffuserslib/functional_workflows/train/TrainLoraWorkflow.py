@@ -22,6 +22,7 @@ class TrainLoraWorkflow(WorkflowBuilder):
         network_alpha_input = IntUserInputNode(value = 1, name="network_alpha")
         save_steps_input = IntUserInputNode(value = 100, name="save_steps")
         train_steps_input = IntUserInputNode(value = 1000, name="train_steps")
+        learning_rate_input = FloatUserInputNode(value = 0.0001, format='%.5f', name="learning_rate")
         seed_input = SeedUserInputNode(value = None, name="seed")
 
         train_data_input = TrainDataUserInputNode(name="train_data")
@@ -40,7 +41,7 @@ class TrainLoraWorkflow(WorkflowBuilder):
                                    gradient_accumulation_steps = 1,
                                    save_steps = save_steps_input,
                                    train_steps = train_steps_input,
-                                   learning_rate = 0.0001,
+                                   learning_rate = learning_rate_input,
                                    learning_rate_schedule = "constant",
                                    learning_rate_warmup_steps = 0,
                                    seed = seed_input,
