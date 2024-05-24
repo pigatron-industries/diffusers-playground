@@ -86,4 +86,5 @@ class ImageDiffusionTiledNode(FunctionalNode):
 
 
     def getProgress(self) -> WorkflowProgress|None:
-        return WorkflowProgress(self.slices_done/self.total_slices, self.finished_slice)
+        if(self.total_slices > 0):
+            return WorkflowProgress(self.slices_done/self.total_slices, self.finished_slice)
