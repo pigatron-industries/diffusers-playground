@@ -71,7 +71,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
             tilesize = (tilewidth, tileheight)
 
         masktile = conditioning_inputs_tile[0] #TODO allow multiple mask tiles
-        outimage, seed = tiledGeneration(pipelines=DiffusersPipelines.pipelines, params=params, masktile=masktile, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
+        outimage, seed = tiledGeneration(pipelines=DiffusersPipelines.pipelines, params=params, masktile=masktile, tilewidth=tilesize[0], tileheight=tilesize[1], overlap=tileoverlap)
 
         if(isinstance(outimage, Image.Image)):
             return outimage
