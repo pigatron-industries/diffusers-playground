@@ -1,4 +1,4 @@
-from diffuserslib.functional.FunctionalNode import FunctionalNode
+from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
 from diffuserslib.inference.GenerationParameters import GenerationParameters
@@ -38,6 +38,8 @@ class ImageDiffusionTiledNode(FunctionalNode):
         self.addParam("conditioning_inputs_tile", conditioning_inputs_tile, List[ConditioningInputType])
         self.addParam("tilesize", tilesize, Tuple[int, int])
         self.addParam("tileoverlap", tileoverlap, int)
+        self.total_slices = 0
+        self.slices_done = 0
 
 
     def process(self, 
@@ -47,6 +49,8 @@ class ImageDiffusionTiledNode(FunctionalNode):
                 tilesize:Tuple[int, int]|None,
                 tileoverlap:int,
                 **kwargs) -> Image.Image:
+        self.total_slices = 0
+        self.slices_done = 0
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         if(len(conditioning_inputs) == 0):
@@ -73,3 +77,13 @@ class ImageDiffusionTiledNode(FunctionalNode):
             return outimage
         else:
             raise Exception("Output is not an image")
+        
+
+    def callback(self, status:str, totalslices:int, slicesdone:int, finished_slice:Image.Image|None = None):
+        self.total_slices = totalslices
+        self.slices_done = slicesdone
+        self.finished_slice = finished_slice
+
+
+    def getProgress(self) -> WorkflowProgress|None:
+        return WorkflowProgress(self.slices_done/self.total_slices, self.finished_slice)

@@ -192,6 +192,6 @@ def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640,
 
             if(callback is not None):
                 slicesdone = slicesdone + 1
-                callback("Running", totalslices, slicesdone)
+                callback("Running", totalslices, slicesdone, finished_slice)
 
     return merged_image

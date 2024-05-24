@@ -32,6 +32,7 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", 
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
+        tileoverlap_input = IntUserInputNode(value = 128, name = "tile_overlap")
         
 
         # preprocessing
@@ -43,8 +44,8 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
         ipadapter_condition = ConditioningInputNode(image = image_input, model = ipadapter_model_input, type=ControlImageType.IMAGETYPE_CONTROLIMAGE, scale = ipadapter_scale_input, name = "ipadapter_condition")
 
         # tile conditioning inputs
-        tilesize_calc = TileSizeCalculatorNode(image = image_input, overlap = 128, name = "tile_size")
-        tilemask_image = TileMaskNode(size = tilesize_calc, border = 128, name = "tile_mask")
+        tilesize_calc = TileSizeCalculatorNode(image = image_input, overlap = tileoverlap_input, name = "tile_size")
+        tilemask_image = TileMaskNode(size = tilesize_calc, border = 256, name = "tile_mask")
         mask_condition = ConditioningInputNode(image = tilemask_image, model = ControlImageType.IMAGETYPE_DIFFMASKIMAGE, scale = 1.0, name = "diffmask_condition")
 
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
@@ -67,6 +68,8 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
+                                    tileoverlap = tileoverlap_input,
+                                    tilesize = tilesize_calc,
                                     conditioning_inputs = [initimage_condition, cannyimage_condition, ipadapter_condition],
                                     conditioning_inputs_tile = [mask_condition]
                                     )
