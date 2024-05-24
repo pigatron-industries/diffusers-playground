@@ -120,7 +120,8 @@ def cv2ToPil(cv2_image):
     return Image.fromarray(cv2_image, "RGBA")
 
 
-def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640, tileheight=640, overlap=128, reduceEdges = False, scale=1, callback=None):
+def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640, tileheight=640, overlap=128, 
+                        reduceEdges = False, scale=1, merge_to_new = True, callback=None):
     xslices = math.ceil((initimage.width-overlap) / (tilewidth-overlap))
     yslices = math.ceil((initimage.height-overlap) / (tileheight-overlap))
     totalslices = xslices * yslices
@@ -153,7 +154,7 @@ def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640,
                 if(right):
                     xright = initimage.width
 
-            if(overlap >= 0 and scale == 1): 
+            if(overlap >= 0 and scale == 1 and not merge_to_new): 
                 # if possible take slice from merged image to include overlapped portions
                 image_slice = merged_image.crop((xleft, ytop, xright, ybottom))
             else:

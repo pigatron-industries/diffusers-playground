@@ -45,7 +45,7 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
 
         # tile conditioning inputs
         tilesize_calc = TileSizeCalculatorNode(image = image_input, overlap = tileoverlap_input, name = "tile_size")
-        tilemask_image = TileMaskNode(size = tilesize_calc, border = 256, name = "tile_mask")
+        tilemask_image = TileMaskNode(size = tilesize_calc, border = 0, gradient = 256, name = "tile_mask")
         mask_condition = ConditioningInputNode(image = tilemask_image, model = ControlImageType.IMAGETYPE_DIFFMASKIMAGE, scale = 1.0, name = "diffmask_condition")
 
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
