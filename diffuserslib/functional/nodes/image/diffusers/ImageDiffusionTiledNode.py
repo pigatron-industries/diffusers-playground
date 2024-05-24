@@ -36,7 +36,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
         self.addParam("scheduler", scheduler, str)
         self.addParam("conditioning_inputs", conditioning_inputs, List[ConditioningInputType])
         self.addParam("conditioning_inputs_tile", conditioning_inputs_tile, List[ConditioningInputType])
-        self.addParam("tilewidth", tilesize, Tuple[int, int])
+        self.addParam("tilesize", tilesize, Tuple[int, int])
         self.addParam("tileoverlap", tileoverlap, int)
 
 
