@@ -40,6 +40,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
         self.addParam("tileoverlap", tileoverlap, int)
         self.total_slices = 0
         self.slices_done = 0
+        self.finished_slice = None
 
 
     def process(self, 
@@ -51,6 +52,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
                 **kwargs) -> Image.Image:
         self.total_slices = 0
         self.slices_done = 0
+        self.finished_slice = None
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         if(len(conditioning_inputs) == 0):
@@ -88,3 +90,5 @@ class ImageDiffusionTiledNode(FunctionalNode):
     def getProgress(self) -> WorkflowProgress|None:
         if(self.total_slices > 0):
             return WorkflowProgress(self.slices_done/self.total_slices, self.finished_slice)
+        else:
+            return WorkflowProgress(0, None)
