@@ -1,4 +1,5 @@
 from .NewImageNode import *
+from .TileMaskNode import *
 from .DrawVoronoiNode import *
 from .DrawCheckerboardNode import *
 from .DrawGeometricSpiralNode import *

@@ -41,10 +41,11 @@ class FunctionalNode(DeepCopyObject):
         self.stopping = False
 
 
-    def __call__(self) -> Any:
+    def __call__(self, **kwargs) -> Any:
         if(self.output is not None):
             return self.output
         args = self.evaluateParams()
+        args.update(kwargs)
         self.output = self.process(**args)
         return self.output
     

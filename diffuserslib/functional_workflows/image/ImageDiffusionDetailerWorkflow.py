@@ -1,6 +1,7 @@
 from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
+from diffuserslib.functional.nodes.image.generative import *
 from diffuserslib.functional.nodes.image.process import *
 
 
@@ -32,13 +33,19 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
         
+
         # preprocessing
         canny_image = CannyEdgeDetectionNode(image = image_input, name = "canny_image")
 
         # conditioning inputs
-        initimage_condition = ConditioningInputNode(image = image_input, model = "initimage", scale = initimage_scale_input, name = "initimage_condition")
+        initimage_condition = ConditioningInputNode(image = image_input, model = ControlImageType.IMAGETYPE_INITIMAGE, scale = initimage_scale_input, name = "initimage_condition")
         cannyimage_condition = ConditioningInputNode(image = canny_image, model = canny_model_input, type=ControlImageType.IMAGETYPE_CONTROLIMAGE, scale = canny_scale_input, name = "canny_condition")
         ipadapter_condition = ConditioningInputNode(image = image_input, model = ipadapter_model_input, type=ControlImageType.IMAGETYPE_CONTROLIMAGE, scale = ipadapter_scale_input, name = "ipadapter_condition")
+
+        # tile conditioning inputs
+        tilesize_calc = TileSizeCalculatorNode(image = image_input, overlap = 128, name = "tile_size")
+        tilemask_image = TileMaskNode(size = tilesize_calc, border = 128, name = "tile_mask")
+        mask_condition = ConditioningInputNode(image = tilemask_image, model = ControlImageType.IMAGETYPE_DIFFMASKIMAGE, scale = 1.0, name = "diffmask_condition")
 
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
 
@@ -60,6 +67,8 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
                                     cfgscale = cfgscale_input,
                                     seed = seed_input,
                                     scheduler = scheduler_input,
-                                    conditioning_inputs = [initimage_condition, cannyimage_condition, ipadapter_condition])
+                                    conditioning_inputs = [initimage_condition, cannyimage_condition, ipadapter_condition],
+                                    conditioning_inputs_tile = [mask_condition]
+                                    )
         
         return diffusion

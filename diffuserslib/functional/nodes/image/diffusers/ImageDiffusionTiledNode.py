@@ -5,6 +5,7 @@ from diffuserslib.inference.GenerationParameters import GenerationParameters
 from diffuserslib.inference.DiffusersUtils import tiledProcessorCentred, tiledGeneration
 from .ImageDiffusionNode import ModelsFuncType, LorasFuncType, ModelsType, LorasType
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
+from .TileSizeCalculatorNode import TileSizeCalculatorNode
 from PIL import Image
 
 
@@ -20,6 +21,8 @@ class ImageDiffusionTiledNode(FunctionalNode):
                  seed:IntFuncType|None = None,
                  scheduler:StringFuncType = "DPMSolverMultistepScheduler",
                  conditioning_inputs:ConditioningInputFuncsType = [],
+                 conditioning_inputs_tile:ConditioningInputFuncsType = [],
+                 tilesize:SizeFuncType|None = None,
                  tileoverlap:IntFuncType = 128,
                  name:str = "image_diffusion"):
         super().__init__(name)
@@ -32,12 +35,16 @@ class ImageDiffusionTiledNode(FunctionalNode):
         self.addParam("seed", seed, int)
         self.addParam("scheduler", scheduler, str)
         self.addParam("conditioning_inputs", conditioning_inputs, List[ConditioningInputType])
+        self.addParam("conditioning_inputs_tile", conditioning_inputs_tile, List[ConditioningInputType])
+        self.addParam("tilewidth", tilesize, Tuple[int, int])
         self.addParam("tileoverlap", tileoverlap, int)
 
 
     def process(self, 
                 models:ModelsType, 
                 conditioning_inputs:List[ConditioningInputType],
+                conditioning_inputs_tile:List[ConditioningInputType],
+                tilesize:Tuple[int, int]|None,
                 tileoverlap:int,
                 **kwargs) -> Image.Image:
         if(DiffusersPipelines.pipelines is None):
@@ -53,25 +60,16 @@ class ImageDiffusionTiledNode(FunctionalNode):
                     width = conditioning_input.image.width
                     height = conditioning_input.image.height
 
-        params = GenerationParameters(safetychecker=False, models=models, controlimages=conditioningparams, **kwargs)       
-        tilewidth = self.calcTileSize(width, 1152, tileoverlap)
-        tileheight = self.calcTileSize(height, 1152, tileoverlap)
-        outimage, seed = tiledGeneration(pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
+        params = GenerationParameters(safetychecker=False, models=models, controlimages=conditioningparams, **kwargs)
+        if(tilesize is None):    
+            tilewidth = TileSizeCalculatorNode.calcTileSize(width, 1152, tileoverlap)
+            tileheight = TileSizeCalculatorNode.calcTileSize(height, 1152, tileoverlap)
+            tilesize = (tilewidth, tileheight)
+
+        masktile = conditioning_inputs_tile[0] #TODO allow multiple mask tiles
+        outimage, seed = tiledGeneration(pipelines=DiffusersPipelines.pipelines, params=params, masktile=masktile, tilewidth=tilewidth, tileheight=tileheight, overlap=tileoverlap)
 
         if(isinstance(outimage, Image.Image)):
             return outimage
         else:
             raise Exception("Output is not an image")
-        
-
-    def calcTileSize(self, total_length:int, max_tile_length:int, tile_overlap:int, restrict:str|None = None) -> int:
-        if restrict is not None and restrict == "even":
-            n = 2
-        else:
-            n = 1
-        while True:
-            tile_length = (total_length + (n - 1) * tile_overlap) // n
-            if tile_length <= max_tile_length:
-                tile_length = (tile_length + 7) // 8 * 8  # Round up to the nearest multiple of 8
-                return tile_length
-            n += 2 if restrict is not None else 1

@@ -76,26 +76,31 @@ def compositeImages(foreground:Image.Image, background:Image.Image, mask:Image.I
     return Image.composite(foreground, background, feathered_mask)
 
 
-# create alpha mask with gradient at overlap
-def createMask(width, height, overlap, top=False, bottom=False, left=False, right=False):
-    alpha = Image.new('L', (width, height), color=0xFF)
-    alpha_gradient = ImageDraw.Draw(alpha)
+# create alpha mask with gradient at border
+def createMask(width:int, height:int, border:int, top=False, bottom=False, left=False, right=False):
+    mask = Image.new('L', (width, height), color=0xFF)
+    draw = ImageDraw.Draw(mask)
     a = 0
     i = 0
     shape = ((0,0), (width, height))
-    while i < overlap:
-        alpha_gradient.rectangle(shape, fill = a)
+    while i < border:
+        draw.rectangle(shape, fill = a)
         i += 1
-        a = int(256/overlap)*i
+        a = int(256/border)*i
         x1 = 0 if left else i
         y1 = 0 if top else i
         x2 = width if right else width-i
         y2 = height if bottom else height-i
         shape = ((x1, y1), (x2, y2))
-
-    mask = Image.new('RGBA', (width, height), color=0)
-    mask.putalpha(alpha)
     return mask
+
+
+# convert mask to alpha channel
+def createAlphaMask(width:int, height:int, border:int, top=False, bottom=False, left=False, right=False):
+    mask = createMask(width, height, border, top, bottom, left, right)
+    alpha = Image.new('RGBA', (width, height), color=0)
+    alpha.putalpha(mask)
+    return alpha
 
 
 def applyColourCorrection(fromimage, toimage):
@@ -173,7 +178,7 @@ def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640,
             
             # merge image tile back into output image
             if(overlap >= 0):
-                mask = createMask(tilewidth*scale, tileheight*scale, overlap/2, top, bottom, left, right)
+                mask = createAlphaMask(tilewidth*scale, tileheight*scale, overlap//2, top, bottom, left, right)
                 imageout_slice = imageout_slice.convert("RGBA")
                 if(imageout_slice.width != mask.width or imageout_slice.height != mask.height):
                     imageout_slice = ImageOps.expand(imageout_slice, border=(0, 0, mask.width-imageout_slice.width, mask.height-imageout_slice.height), fill=(0, 0, 0, 0))
