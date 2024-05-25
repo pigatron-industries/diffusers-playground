@@ -2,11 +2,10 @@ from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.types import Vector, VectorsFuncType
 from PIL import ImageDraw, Image
-from typing import List, Tuple, Callable, Dict, Any
+from typing import List, Tuple, Callable
 from scipy.spatial import Voronoi
 import math
 import numpy as np
-import itertools
 
 DrawOptionsType = Tuple[bool, bool, bool]
 DrawOptionsFuncType = DrawOptionsType | Callable[[], DrawOptionsType]

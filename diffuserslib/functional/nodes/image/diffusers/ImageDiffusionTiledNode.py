@@ -1,12 +1,15 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines
-from diffuserslib.inference.GenerationParameters import GenerationParameters
-from diffuserslib.inference.DiffusersUtils import tiledProcessorCentred, tiledGeneration
+from diffuserslib.inference.DiffusersPipelines import DiffusersPipelines, MAX_SEED
+from diffuserslib.inference.GenerationParameters import GenerationParameters, ControlImageType, ControlImageParameters
+from diffuserslib.inference.DiffusersUtils import tiledImageProcessor
 from .ImageDiffusionNode import ModelsFuncType, LorasFuncType, ModelsType, LorasType
 from .ConditioningInputNode import ConditioningInputType, ConditioningInputFuncsType
 from .TileSizeCalculatorNode import TileSizeCalculatorNode
 from PIL import Image
+import random
+import copy
+from imgcat import imgcat
 
 
 class ImageDiffusionTiledNode(FunctionalNode):
@@ -53,8 +56,6 @@ class ImageDiffusionTiledNode(FunctionalNode):
         self.total_slices = 0
         self.slices_done = 0
         self.finished_slice = None
-        if(DiffusersPipelines.pipelines is None):
-            raise Exception("DiffusersPipelines is not initialized")
         if(len(conditioning_inputs) == 0):
             raise Exception("No conditioning inputs provided")
         
@@ -72,14 +73,47 @@ class ImageDiffusionTiledNode(FunctionalNode):
             tileheight = TileSizeCalculatorNode.calcTileSize(height, 1152, tileoverlap)
             tilesize = (tilewidth, tileheight)
 
-        masktile = conditioning_inputs_tile[0] #TODO allow multiple mask tiles
-        outimage, seed = tiledGeneration(pipelines=DiffusersPipelines.pipelines, params=params, masktile=masktile, tilewidth=tilesize[0], tileheight=tilesize[1], overlap=tileoverlap)
+        print(f"ImageDiffusionTiledNode: tilesize = {tilewidth}, {tileheight}, overlap = {tileoverlap}")
+
+        masktile = conditioning_inputs_tile[0] #TODO allow multiple 'mask' tiles
+        print("ImageDiffusionTiledNode: Using mask tile:")
+        imgcat(masktile)
+
+        outimage, seed = self.tiledGeneration(params=params, masktile=masktile, tilewidth=tilesize[0], tileheight=tilesize[1], overlap=tileoverlap)
 
         if(isinstance(outimage, Image.Image)):
             return outimage
         else:
             raise Exception("Output is not an image")
         
+
+    def tiledGeneration(self, params:GenerationParameters, tilewidth=768, tileheight=768, overlap=128, masktile:ControlImageParameters|None=None, callback=None):
+        initimageparams = params.getInitImage()
+        if initimageparams is None:
+            raise Exception("tiledImageToImage requires initimage to be set in params")
+        controlimages = [ controlimageparams.image for controlimageparams in params.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE) ]
+        if(params.seed is None):
+            params.seed = random.randint(0, MAX_SEED)
+        
+        def imageToImageFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
+            assert(DiffusersPipelines.pipelines is not None)
+            tileparams = copy.deepcopy(params)
+            tileparams.generationtype = "generate"
+            tileparams.setInitImage(initimagetile)
+            print("ImageDiffusionTiledNode: Tile init image:")
+            imgcat(initimagetile)
+            if masktile is not None:
+                tileparams.controlimages.append(masktile)
+            for i in range(len(controlimagetiles)):
+                tileparams.setControlImage(i, controlimagetiles[i])
+            image, _ = DiffusersPipelines.pipelines.generate(tileparams)
+            print("ImageDiffusionTiledNode: Tile output image:")
+            return image
+        
+        return tiledImageProcessor(processor=imageToImageFunc, initimage=initimageparams.image, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
+
+
+
 
     def callback(self, status:str, totalslices:int, slicesdone:int, finished_slice:Image.Image|None = None):
         self.total_slices = totalslices
