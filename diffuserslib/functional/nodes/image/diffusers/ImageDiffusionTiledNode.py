@@ -77,7 +77,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
 
         masktile = conditioning_inputs_tile[0] #TODO allow multiple 'mask' tiles
         print("ImageDiffusionTiledNode: Using mask tile:")
-        imgcat(masktile)
+        imgcat(masktile.image)
 
         outimage, seed = self.tiledGeneration(params=params, masktile=masktile, tilewidth=tilesize[0], tileheight=tilesize[1], overlap=tileoverlap)
 
@@ -108,6 +108,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
                 tileparams.setControlImage(i, controlimagetiles[i])
             image, _ = DiffusersPipelines.pipelines.generate(tileparams)
             print("ImageDiffusionTiledNode: Tile output image:")
+            imgcat(image)
             return image
         
         return tiledImageProcessor(processor=imageToImageFunc, initimage=initimageparams.image, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
