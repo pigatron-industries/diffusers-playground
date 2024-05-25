@@ -73,7 +73,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
             tileheight = TileSizeCalculatorNode.calcTileSize(height, 1152, tileoverlap)
             tilesize = (tilewidth, tileheight)
 
-        print(f"ImageDiffusionTiledNode: tilesize = {tilewidth}, {tileheight}, overlap = {tileoverlap}")
+        print(f"ImageDiffusionTiledNode: tilesize = {tilesize}, overlap = {tileoverlap}")
 
         masktile = conditioning_inputs_tile[0] #TODO allow multiple 'mask' tiles
         print("ImageDiffusionTiledNode: Using mask tile:")
