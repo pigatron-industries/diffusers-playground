@@ -7,8 +7,6 @@ from .GenerationParameters import GenerationParameters, ControlImageType
 from huggingface_hub import login
 from typing import List
 
-from IPython.display import display
-
 
 def loginHuggingFace(token):
     login(token=token)
