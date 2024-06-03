@@ -75,9 +75,10 @@ class ImageDiffusionTiledNode(FunctionalNode):
 
         print(f"ImageDiffusionTiledNode: tilesize = {tilesize}, overlap = {tileoverlap}")
 
-        masktile = conditioning_inputs_tile[0] #TODO allow multiple 'mask' tiles
+        masktile = conditioning_inputs_tile[0] if len(conditioning_inputs_tile) > 0 else None
         print("ImageDiffusionTiledNode: Using mask tile:")
-        imgcat(masktile.image)
+        if(masktile is not None):
+            imgcat(masktile.image)
 
         outimage, seed = self.tiledGeneration(params=params, masktile=masktile, tilewidth=tilesize[0], tileheight=tilesize[1], overlap=tileoverlap)
 
