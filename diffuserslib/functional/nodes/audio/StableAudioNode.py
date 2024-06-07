@@ -21,6 +21,8 @@ class StableAudioNode(FunctionalNode):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("duration", duration, float)
+        self.addParam("steps", steps, float)
+        self.addParam("cfg_scale", cfg_scale, float)
         self.model = None
         self.model_config = None
         
