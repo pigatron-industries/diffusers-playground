@@ -13,7 +13,7 @@ class AudioGenerationStableAudioWorkflow(WorkflowBuilder):
         # files_input = FileSelectInputNode(filetype = "audio", name = "samples")
         prompt_input = TextAreaInputNode(value = "Hello World!", name = "prompt")
         duration_input = FloatUserInputNode(value = 10.0, name = "duration")
-        steps_input = FloatUserInputNode(value = 100, name = "steps")
+        steps_input = IntUserInputNode(value = 100, name = "steps")
         cfg_scale_input = FloatUserInputNode(value = 7, name = "cfg_scale")
         audio = StableAudioNode(prompt = prompt_input, duration = duration_input, steps = steps_input, cfg_scale = cfg_scale_input)
         return audio

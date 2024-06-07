@@ -16,18 +16,18 @@ class StableAudioNode(FunctionalNode):
                  prompt:StringFuncType = "",
                  duration:FloatFuncType = 10.0,
                  steps:FloatFuncType = 100,
-                 cfg_scale:FloatFuncType = 7,
+                 cfg_scale:IntFuncType = 7,
                  name:str="stableaudio"):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("duration", duration, float)
-        self.addParam("steps", steps, float)
+        self.addParam("steps", steps, int)
         self.addParam("cfg_scale", cfg_scale, float)
         self.model = None
         self.model_config = None
         
         
-    def process(self, prompt:str, duration:float, steps:float, cfg_scale:float):
+    def process(self, prompt:str, duration:float, steps:int, cfg_scale:float):
         if (self.model is None):
             self.model, self.model_config = get_pretrained_model("stabilityai/stable-audio-open-1.0")
             self.model.to(GlobalConfig.device)
