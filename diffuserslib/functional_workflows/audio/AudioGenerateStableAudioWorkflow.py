@@ -15,6 +15,8 @@ class AudioGenerationStableAudioWorkflow(WorkflowBuilder):
         duration_input = FloatUserInputNode(value = 10.0, name = "duration")
         steps_input = IntUserInputNode(value = 100, name = "steps")
         cfg_scale_input = FloatUserInputNode(value = 7, name = "cfg_scale")
-        audio = StableAudioNode(prompt = prompt_input, duration = duration_input, steps = steps_input, cfg_scale = cfg_scale_input)
+        seed_input = SeedUserInputNode(value = None, name = "seed")
+
+        audio = StableAudioNode(prompt = prompt_input, duration = duration_input, steps = steps_input, cfg_scale = cfg_scale_input, seed = seed_input)
         return audio
     

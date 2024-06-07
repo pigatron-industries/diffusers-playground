@@ -17,17 +17,19 @@ class StableAudioNode(FunctionalNode):
                  duration:FloatFuncType = 10.0,
                  steps:FloatFuncType = 100,
                  cfg_scale:IntFuncType = 7,
+                 seed:IntFuncType = 0,
                  name:str="stableaudio"):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("duration", duration, float)
         self.addParam("steps", steps, int)
         self.addParam("cfg_scale", cfg_scale, float)
+        self.addParam("seed", seed, int)
         self.model = None
         self.model_config = None
         
         
-    def process(self, prompt:str, duration:float, steps:int, cfg_scale:float):
+    def process(self, prompt:str, duration:float, steps:int, cfg_scale:float, seed:int):
         if (self.model is None):
             self.model, self.model_config = get_pretrained_model("stabilityai/stable-audio-open-1.0")
             self.model.to(GlobalConfig.device)
@@ -43,15 +45,16 @@ class StableAudioNode(FunctionalNode):
         }]
 
         output = generate_diffusion_cond(
-            model=self.model,
-            steps=steps,
-            cfg_scale=cfg_scale,
-            conditioning=conditioning,
-            sample_size=sample_size,
+            model = self.model,
+            seed = seed,
+            steps = steps,
+            cfg_scale = cfg_scale,
+            conditioning = conditioning,
+            sample_size = sample_size,
             sigma_min = 0.3,
             sigma_max = 500,
             sampler_type = "dpmpp-3m-sde",
-            device=GlobalConfig.device
+            device = GlobalConfig.device
         )
 
         output = rearrange(output, 'b d n -> d (b n)')
