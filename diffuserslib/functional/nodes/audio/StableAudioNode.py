@@ -15,6 +15,8 @@ class StableAudioNode(FunctionalNode):
     def __init__(self, 
                  prompt:StringFuncType = "",
                  duration:FloatFuncType = 10.0,
+                 steps:FloatFuncType = 100,
+                 cfg_scale:FloatFuncType = 7,
                  name:str="stableaudio"):
         super().__init__(name)
         self.addParam("prompt", prompt, str)
@@ -23,7 +25,7 @@ class StableAudioNode(FunctionalNode):
         self.model_config = None
         
         
-    def process(self, prompt:str, duration:float):
+    def process(self, prompt:str, duration:float, steps:float, cfg_scale:float):
         if (self.model is None):
             self.model, self.model_config = get_pretrained_model("stabilityai/stable-audio-open-1.0")
             self.model.to(GlobalConfig.device)
@@ -40,8 +42,8 @@ class StableAudioNode(FunctionalNode):
 
         output = generate_diffusion_cond(
             model=self.model,
-            steps=100,
-            cfg_scale=7,
+            steps=steps,
+            cfg_scale=cfg_scale,
             conditioning=conditioning,
             sample_size=sample_size,
             sigma_min = 0.3,
@@ -52,4 +54,5 @@ class StableAudioNode(FunctionalNode):
 
         output = rearrange(output, 'b d n -> d (b n)')
         audio_array = output.to(torch.float32).div(torch.max(torch.abs(output))).clamp(-1, 1).cpu().numpy()
+        audio_array = np.transpose(audio_array, (1, 0))
         return Audio(audio_array, sample_rate)

@@ -1,11 +1,11 @@
 from typing import List, Callable
 from scipy.io.wavfile import write as write_wav
 import tempfile
-
+import numpy as np
 
 
 class Audio:
-    def __init__(self, audio_array, sample_rate:float):
+    def __init__(self, audio_array:np.ndarray, sample_rate:float):
         self.audio_array = audio_array
         self.sample_rate = sample_rate
         self.file = None
