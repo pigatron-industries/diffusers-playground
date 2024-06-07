@@ -17,6 +17,10 @@ pytorch-lightning
 safetensors
 torch==2.3.0
 
+# utils
+einops
+imgcat
+
 # tts
 torchaudio
 tortoise-tts
@@ -33,6 +37,9 @@ lpips
 # esrgan
 lmdb
 opencv-python
+
+# audio tools
+stable_audio_tools
 
 # ui
 nicegui
