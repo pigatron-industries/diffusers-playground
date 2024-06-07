@@ -8,6 +8,7 @@ import os
 import numpy as np
 from diffuserslib.functional.types import Video, Audio, Vector
 from PIL import Image, PngImagePlugin
+import huggingface_hub
 
 
 def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]=["modelconfig.yml"], promptmods:List[str]=[]):
@@ -19,6 +20,8 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
             configdata = yaml.safe_load(open(config, "r"))
             device = configdata["device"]
             safety_checker = configdata["safety"]
+            if("hf_token" in configdata):
+                huggingface_hub.login(configdata["hf_token"])
             folders = configdata["folders"]
             if ("models" in folders):
                 models = folders["models"]

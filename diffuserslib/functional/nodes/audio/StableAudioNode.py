@@ -25,7 +25,6 @@ class StableAudioNode(FunctionalNode):
         
     def process(self, prompt:str, duration:float):
         if (self.model is None):
-            ###huggingface_hub.login("")
             self.model, self.model_config = get_pretrained_model("stabilityai/stable-audio-open-1.0")
             self.model.to(GlobalConfig.device)
         assert self.model is not None, "Model is not initialized"
