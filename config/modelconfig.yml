@@ -1,5 +1,10 @@
 
 generate:
+  - base: sd_3_0
+    pipelines:
+      generate: StableDiffusion3GeneratePipeline
+    models:
+      - id: stabilityai/stable-diffusion-3-medium-diffusers
   - base: sc_1_0
     pipelines:
       generate: StableCascadeGeneratePipeline
