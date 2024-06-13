@@ -5,6 +5,11 @@ generate:
       generate: StableDiffusion3GeneratePipeline
     models:
       - id: stabilityai/stable-diffusion-3-medium-diffusers
+  - base: pixart_sigma
+    pipelines:
+      generate: PixArtSigmaGeneratePipeline
+    models:
+      - id: PixArt-alpha/PixArt-Sigma-XL-2-1024-MS
   - base: sc_1_0
     pipelines:
       generate: StableCascadeGeneratePipeline
