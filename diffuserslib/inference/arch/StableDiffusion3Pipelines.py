@@ -8,10 +8,7 @@ from diffusers import ( # Pipelines
                         # Conditioning models
                         T2IAdapter, ControlNetModel,
                         # Schedulers
-                        DDIMScheduler, DDPMScheduler, DPMSolverMultistepScheduler, DPMSolverSinglestepScheduler, HeunDiscreteScheduler,
-                        KDPM2DiscreteScheduler, KarrasVeScheduler, LMSDiscreteScheduler, EulerDiscreteScheduler,
-                        KDPM2AncestralDiscreteScheduler, EulerAncestralDiscreteScheduler,
-                        ScoreSdeVeScheduler, IPNDMScheduler, UniPCMultistepScheduler, LCMScheduler, DPMSolverSDEScheduler)
+                        FlowMatchEulerDiscreteScheduler)
 import torch
 
 
@@ -23,8 +20,8 @@ class StableDiffusion3PipelineWrapper(StableDiffusionPipelineWrapper):
 
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
         generator, seed = self.createGenerator(seed)
-        if(scheduler is not None):
-            self.loadScheduler(scheduler)
+        # if(scheduler is not None):
+        #     self.loadScheduler(scheduler)
         self.pipeline.vae.enable_tiling(tiling)
 
         output = self.pipeline(prompt = prompt,
