@@ -143,7 +143,8 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         for i, lora in enumerate(loras):
             lora_weights.append(weights[i])
             lora_names.append(lora.name.split('.', 1)[0])
-        self.pipeline.set_adapters(lora_names, lora_weights)
+        if hasattr(self.pipeline, 'set_adapters'):
+            self.pipeline.set_adapters(lora_names, lora_weights)
 
 
 
