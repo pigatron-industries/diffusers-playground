@@ -4,5 +4,6 @@ from .StableDiffusionXLPipelines import *
 from .StableDiffusion3Pipelines import *
 from .StableCascadePipelines import *
 from .StableVideoDiffusionPipelines import *
+from .PixartSigmaPipelines import *
 from .DeepFloydPipelines import *
 from .KandinskyPipelines import *
