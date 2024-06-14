@@ -30,7 +30,7 @@ class PixartSigmaPipelineWrapper(DiffusersPipelineWrapper):
     
     def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, **kwargs):
         generator, seed = self.createGenerator(seed)
-        image = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=False).images[0]
+        image = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True).images[0]
         return image, seed
 
 
