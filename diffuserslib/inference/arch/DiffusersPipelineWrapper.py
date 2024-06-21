@@ -69,9 +69,9 @@ class DiffusersPipelineWrapper:
 
 
     def mergeModel(self, mergePipeline, weight):
-        for moduleName in self.pipeline.pipeline.config.keys():
-            module1 = getattr(self.pipeline.pipeline, moduleName)
-            module2 = getattr(mergePipeline.pipeline, moduleName)
+        for moduleName in self.pipeline.config.keys():
+            module1 = getattr(self.pipeline, moduleName)
+            module2 = getattr(mergePipeline, moduleName)
             if hasattr(module1, "state_dict") and hasattr(module2, "state_dict"):
                 print(f"Merging state_dict of {moduleName}")
                 updateStateDictFunc = getattr(module1, "load_state_dict")
