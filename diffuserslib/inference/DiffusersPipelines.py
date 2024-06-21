@@ -191,7 +191,7 @@ class DiffusersPipelines:
         if (self.pipeline is not None):
             del self.pipeline
 
-        pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.generationtype]+"Wrapper")
+        pipelineWrapperClass = str_to_class(params.modelConfig[0].pipelinetypes[params.generationtype]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
         self.pipeline = pipelineWrapper
         return self.pipeline
