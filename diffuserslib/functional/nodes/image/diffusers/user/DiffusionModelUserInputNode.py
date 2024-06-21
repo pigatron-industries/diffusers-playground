@@ -168,7 +168,8 @@ class DiffusionModelUserInputNode(UserInputNode):
         if(len(self.selected_models) == 0):
             raise Exception("Model not selected")
         modelparams:List[ModelParameters] = []
-        for selected_model in self.selected_models:
+        for i, selected_model in enumerate(self.selected_models):
+            weight = self.selected_weights[i]
             if selected_model[0] != "":
-                modelparams.append(ModelParameters(selected_model, 1.0))
+                modelparams.append(ModelParameters(selected_model, weight))
         return modelparams

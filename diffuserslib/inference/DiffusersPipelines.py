@@ -183,10 +183,6 @@ class DiffusersPipelines:
                     if key not in theta_0:
                         theta_0[key] = theta_1[key]
                 updateStateDictFunc(theta_0)
-        if(isinstance(self.pipeline.params.modelConfig.modelid, list)):
-            self.pipeline.params.modelConfig.modelid.append(modelid)
-        else:
-            self.pipeline.params.modelConfig.modelid = [self.pipeline.params.modelConfig.modelid, modelid]
 
     #===============  ==============
 
