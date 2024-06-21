@@ -27,7 +27,7 @@ class DiffusersBaseModel:
 
 @dataclass
 class DiffusersModel:
-    modelid: Union[str, List[str]]
+    modelid: str
     base: str
     modeltype: str
     modelpath: str

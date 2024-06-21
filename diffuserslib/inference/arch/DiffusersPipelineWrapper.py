@@ -2,10 +2,10 @@ from ..GenerationParameters import GenerationParameters, ControlImageType
 from ...models.DiffusersModelPresets import DiffusersModel, DiffusersModelType
 from ...StringUtils import mergeDicts
 from ...ImageUtils import pilToCv2
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 from PIL import Image
 from dataclasses import dataclass
-from diffusers import T2IAdapter, ControlNetModel, AutoencoderKL
+from diffusers import DiffusionPipeline, T2IAdapter, ControlNetModel, AutoencoderKL
 from transformers import CLIPVisionModelWithProjection
 from torchvision import transforms
 import sys
@@ -42,6 +42,53 @@ class DiffusersPipelineWrapper:
         self.dtype = dtype
         self.initparams = params
         self.inferencedevice = inferencedevice
+
+
+    def createPipeline(self, params:GenerationParameters, cls):
+        if(params.modelConfig is None):
+            raise ValueError("Must provide modelConfig")
+        pipeline_params = self.createPipelineParams(params)
+        if(type(cls) is str):
+            pipeline_params['custom_pipeline'] = cls
+            cls = DiffusionPipeline
+
+        for i, modelConfig in enumerate(params.modelConfig):
+            if (modelConfig.modelpath.endswith('.safetensors') or modelConfig.modelpath.endswith('.ckpt')):
+                pipeline = cls.from_single_file(modelConfig.modelpath, load_safety_checker=self.safety_checker, **pipeline_params).to(self.device)
+            else:
+                pipeline = cls.from_pretrained(modelConfig.modelpath, **pipeline_params).to(self.device)
+            if(i == 0):
+                self.pipeline = pipeline
+            else:
+                self.mergeModel(pipeline, params.models[i].weight)
+            
+        
+        self.pipeline.enable_attention_slicing()
+        # pipeline.enable_model_cpu_offload()
+        # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
+
+
+    def mergeModel(self, mergePipeline, weight):
+        for moduleName in self.pipeline.pipeline.config.keys():
+            module1 = getattr(self.pipeline.pipeline, moduleName)
+            module2 = getattr(mergePipeline.pipeline, moduleName)
+            if hasattr(module1, "state_dict") and hasattr(module2, "state_dict"):
+                print(f"Merging state_dict of {moduleName}")
+                updateStateDictFunc = getattr(module1, "load_state_dict")
+                theta_0 = getattr(module1, "state_dict")()
+                theta_1 = getattr(module2, "state_dict")()
+                for key in theta_0.keys():
+                    if key in theta_1:
+                        theta_0[key] = (1 - weight) * theta_0[key] + weight * theta_1[key]
+                for key in theta_1.keys():
+                    if key not in theta_0:
+                        theta_0[key] = theta_1[key]
+                updateStateDictFunc(theta_0)
+
+
+    def createPipelineParams(self, params:GenerationParameters) -> Dict:
+        raise NotImplementedError("createPipelineParams not implemented for pipeline")
+
 
     def inference(self, params:GenerationParameters) -> Tuple[Image.Image, int]: # type: ignore
         pass

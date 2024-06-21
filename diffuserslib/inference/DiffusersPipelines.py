@@ -162,28 +162,6 @@ class DiffusersPipelines:
             params.prompt = prompt
         return params.prompt
 
-
-    #=============== MODEL MERGING ==============
-
-    def mergeModel(self, modelid:str, weight:float, params:GenerationParameters):
-        print(f"Merging model {modelid}, weight: {weight}")
-        mergePipeline = self.pipeline.__class__(device=self.device, params=params)
-        for moduleName in self.pipeline.pipeline.config.keys():
-            module1 = getattr(self.pipeline.pipeline, moduleName)
-            module2 = getattr(mergePipeline.pipeline, moduleName)
-            if hasattr(module1, "state_dict") and hasattr(module2, "state_dict"):
-                print(f"Merging state_dict of {moduleName}")
-                updateStateDictFunc = getattr(module1, "load_state_dict")
-                theta_0 = getattr(module1, "state_dict")()
-                theta_1 = getattr(module2, "state_dict")()
-                for key in theta_0.keys():
-                    if key in theta_1:
-                        theta_0[key] = (1 - weight) * theta_0[key] + weight * theta_1[key]
-                for key in theta_1.keys():
-                    if key not in theta_0:
-                        theta_0[key] = theta_1[key]
-                updateStateDictFunc(theta_0)
-
     #===============  ==============
 
     def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
@@ -216,14 +194,13 @@ class DiffusersPipelines:
         pipelineWrapperClass = str_to_class(params.modelConfig.pipelinetypes[params.generationtype]+"Wrapper")
         pipelineWrapper = pipelineWrapperClass(device=self.device, params=params)
         self.pipeline = pipelineWrapper
-        
-        if(len(params.models) > 1):
-            for modelparams in params.models[1:]:
-                self.mergeModel(modelparams.name, modelparams.weight, params)
         return self.pipeline
     
+
     def loadModelConfigs(self, params:GenerationParameters):
-        params.modelConfig = self.getModel(params.models[0].name)
+        params.modelConfig = []
+        for model in params.models:
+            params.modelConfig.append(self.getModel(model.name))
         for controlimage in params.controlimages:
             if (controlimage.model is not None):
                 controlimage.modelConfig = self.getModel(controlimage.model)

@@ -92,7 +92,7 @@ class GenerationParameters:
     clipskip:int|None = None
     controlimages:List[ControlImageParameters] = field(default_factory=list)
     # runtime
-    modelConfig:DiffusersModel|None = None
+    modelConfig:List[DiffusersModel] = field(default_factory=list)
 
     @classmethod
     def from_json(cls, jsonbytes:bytes):

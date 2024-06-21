@@ -44,26 +44,6 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         super().__init__(params, inferencedevice, dtype)
 
 
-    def createPipeline(self, params:GenerationParameters, cls):
-        if(params.modelConfig is None):
-            raise ValueError("Must provide modelConfig")
-        pipeline_params = self.createPipelineParams(params)
-        if(type(cls) is str):
-            pipeline_params['custom_pipeline'] = cls
-            cls = DiffusionPipeline
-        if (params.modelConfig.modelpath.endswith('.safetensors') or params.modelConfig.modelpath.endswith('.ckpt')):
-            self.pipeline = cls.from_single_file(params.modelConfig.modelpath, load_safety_checker=self.safety_checker, **pipeline_params).to(self.device)
-        else:
-            # CLIP skip implementation, but breaks lora loading
-            # text_encoder = CLIPTextModel.from_pretrained(preset.modelpath, subfolder="text_encoder", num_hidden_layers=11)
-            # self.pipeline = cls.from_pretrained(preset.modelpath, text_encoder=text_encoder, **args).to(self.device)
-            self.pipeline = cls.from_pretrained(params.modelConfig.modelpath, **pipeline_params).to(self.device)
-            
-        self.pipeline.enable_attention_slicing()
-        # pipeline.enable_model_cpu_offload()
-        # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
-
-
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
