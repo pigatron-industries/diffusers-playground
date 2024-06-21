@@ -154,8 +154,9 @@ class DiffusersPipelines:
 
     def processPrompt(self, params:GenerationParameters, pipeline:DiffusersPipelineWrapper):
         """ expands embedding tokens into multiple tokens, for each vector in embedding """
-        if (pipeline.initparams.modelConfig is not None and pipeline.initparams.modelConfig.base in self.baseModelData):
-            baseData = self.baseModelData[pipeline.initparams.modelConfig.base]
+        modelConfig = pipeline.initparams.modelConfig[0]
+        if (modelConfig is not None and modelConfig.base in self.baseModelData):
+            baseData = self.baseModelData[modelConfig.base]
             prompt = baseData.textembeddings.process_prompt_and_add_tokens(params.original_prompt, pipeline)
             loras, weights = self._getLORAs(params)
             prompt = baseData.loras.process_prompt_and_add_loras(prompt, pipeline, loras, weights)
