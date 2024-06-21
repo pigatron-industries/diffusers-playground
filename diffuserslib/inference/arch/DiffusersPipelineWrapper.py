@@ -139,7 +139,7 @@ class DiffusersPipelineWrapper:
     def addPipelineParamsCommon(self, params:GenerationParameters, pipeline_params):
         if (params.modelConfig is None):
             raise ValueError("Must provide modelConfig")
-        modelConfig = params.modelConfig
+        modelConfig = params.modelConfig[0]
         if (not params.safetychecker):
             pipeline_params['safety_checker'] = None
         if(modelConfig.revision is not None):
