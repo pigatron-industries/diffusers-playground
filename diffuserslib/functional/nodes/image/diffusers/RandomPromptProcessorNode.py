@@ -103,8 +103,11 @@ class RandomPromptProcessorNode(FunctionalNode):
                     delimiter = delimiterMatch.group(1) + ' '
             else:
                 num = 1
-            items = self.randomItemsFromDict(modifiername, num)
-            out_prompt = out_prompt.replace(token, delimiter.join(items), 1)
+            try:
+                items = self.randomItemsFromDict(modifiername, num)
+                out_prompt = out_prompt.replace(token, delimiter.join(items), 1)
+            except KeyError:
+                print(f"KeyError: {modifiername} not found in modifier_dict, ignoring.")
         return out_prompt
 
     def randomCombo(self, wordlist):
