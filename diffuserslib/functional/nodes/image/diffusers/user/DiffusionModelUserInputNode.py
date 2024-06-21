@@ -17,18 +17,26 @@ class DiffusionModelUserInputNode(UserInputNode):
         self.basemodels = basemodels
         self.modeltype = modeltype
         self.basemodel = None
-        self.model = None
+        self.selected_models:List[str] = [""]
+        self.selected_weights:List[float] = [1.0]
         self.selected_modifier = None
         super().__init__(name)
 
 
-    def getValue(self) -> Tuple[str|None, str|None]:
-        return (self.basemodel, self.model)
+    def getValue(self) -> Tuple[str|None, List[Tuple[str, float]]]:
+        return (self.basemodel, list(zip(self.selected_models, self.selected_weights)))
     
 
-    def setValue(self, value:Tuple[str|None, str|None]):
+    def setValue(self, value:Tuple[str|None, List[Tuple[str, float]]]):
         self.basemodel = value[0]
-        self.model = value[1]
+        models = value[1]
+        try:
+            if models is not None:
+                self.selected_models = [v[0] for v in models]
+                self.selected_weights = [v[1] for v in models]
+        except:
+            self.selected_models = [""]
+            self.selected_weights = [1.0]
         self.fireUpdate()
 
 
@@ -37,12 +45,52 @@ class DiffusionModelUserInputNode(UserInputNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialised")  
         with ui.column().classes('grow'):
-            ui.label(f"{self.node_name}")
-            models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase(self.modeltype, self.basemodel)
+            ui.label(f"Models")
             with ui.row().classes('w-full'):
                 self.basemodel_dropdown = ui.select(options=self.basemodels, value=self.basemodel, label=f"Base Model", on_change=lambda e: self.updateModels()).bind_value(self, 'basemodel').classes('grow')  
                 ui.button(icon="settings", on_click=lambda e: self.modelSettings()).classes('align-middle').props('dense')
-            self.model_dropdown = ui.select(options=sorted(list(models.keys())), label="Model").bind_value(self, 'model').classes('w-full')
+            for i in range(len(self.selected_models)):
+                self.modelGui(i)
+        with ui.row().classes('w-full'):
+            ui.label().classes('w-8')
+            ui.button(icon="add", on_click = lambda e: self.addInput(0)).props('dense').classes('align-middle')
+
+
+    def modelGui(self, i):
+        if(DiffusersPipelines.pipelines is None):
+            raise Exception("DiffusersPipelines not initialised")  
+        models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase(self.modeltype, self.basemodel)
+        selected_model = self.selected_models[i]
+        if selected_model not in models:
+            selected_model = None
+        with ui.row().classes('w-full'):
+            ui.select(options=sorted(list(models)), value=selected_model, label="Model", on_change=lambda e: self.updateModel(i, e.value)).classes('grow') 
+            ui.number(value=self.selected_weights[i], label="Weight", on_change=lambda e: self.updateWeight(i, e.value)).classes('small-number')
+            ui.button(icon="remove", on_click = lambda e: self.removeInput(i)).props('dense').classes('align-middle')
+
+
+    def addInput(self, i):
+        self.selected_models.append("")
+        self.selected_weights.append(1.0)
+        self.gui.refresh()
+
+
+    def removeInput(self, i):
+        self.selected_models.pop(i)
+        self.selected_weights.pop(i)
+        self.gui.refresh()
+
+
+    def updateModel(self, i, value):
+        self.selected_models[i] = value
+
+
+    def updateWeight(self, i, value):
+        self.selected_weights[i] = value
+
+
+    def updateModels(self):
+        self.gui.refresh()
 
 
     def modelSettings(self):
@@ -114,25 +162,13 @@ class DiffusionModelUserInputNode(UserInputNode):
         self.selected_modifier = modifier
         self.modifiersList.refresh()
         self.modifierEditor.refresh()
-        
-
-
-    def updateModels(self):
-        print("updateModels")
-        if(DiffusersPipelines.pipelines is None):
-            raise Exception("DiffusersPipelines not initialised")  
-        if(self.basemodel is not None):
-            models = DiffusersPipelines.pipelines.presets.getModelsByTypeAndBase("generate", self.basemodel)
-            self.model = None
-            self.model_dropdown.options = list(models.keys())
-            self.gui.refresh()
-            self.fireUpdate()
 
 
     def process(self) -> ModelsType:
-        if(self.model is None):
+        if(len(self.selected_models) == 0):
             raise Exception("Model not selected")
-
         modelparams:List[ModelParameters] = []
-        modelparams.append(ModelParameters(self.model, 1.0))
+        for selected_model in self.selected_models:
+            if selected_model[0] != "":
+                modelparams.append(ModelParameters(selected_model, 1.0))
         return modelparams

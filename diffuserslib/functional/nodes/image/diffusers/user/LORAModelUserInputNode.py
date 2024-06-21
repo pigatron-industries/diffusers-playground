@@ -11,8 +11,8 @@ from nicegui import ui
 class LORAModelUserInputNode(UserInputNode):
 
     def __init__(self, diffusion_model_input:DiffusionModelUserInputNode, name:str="lora_model_user_input"):
-        self.selected_loras = [""]
-        self.selected_weights = [1.0]
+        self.selected_loras = []
+        self.selected_weights = []
         self.diffusion_model_input = diffusion_model_input
         diffusion_model_input.addUpdateListener(self.updateModels)
         super().__init__(name)
@@ -27,21 +27,19 @@ class LORAModelUserInputNode(UserInputNode):
             if value is not None:
                 self.selected_loras = [v[0] for v in value]
                 self.selected_weights = [v[1] for v in value]
-            else:
-                self.lora = None
-                self.weight = 1.0
         except:
-            self.lora = None
-            self.weight = 1.0
+            self.selected_loras = []
+            self.selected_weights = []
 
 
     @ui.refreshable
     def gui(self):
+        ui.label(f"LORAs")
+        for i in range(len(self.selected_loras)):
+            self.loraModelGui(i)
         with ui.row().classes('w-full'):
             ui.label().classes('w-8')
             ui.button(icon="add", on_click = lambda e: self.addInput(0)).props('dense').classes('align-middle')
-        for i in range(len(self.selected_loras)):
-            self.loraModelGui(i)
 
 
     def loraModelGui(self, i):
