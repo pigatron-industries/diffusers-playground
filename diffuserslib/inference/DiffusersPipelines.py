@@ -166,7 +166,7 @@ class DiffusersPipelines:
     #=============== MODEL MERGING ==============
 
     def mergeModel(self, modelid:str, weight:float, params:GenerationParameters):
-        print(f"Merging model {modelid}")
+        print(f"Merging model {modelid}, weight: {weight}")
         mergePipeline = self.pipeline.__class__(device=self.device, params=params)
         for moduleName in self.pipeline.pipeline.config.keys():
             module1 = getattr(self.pipeline.pipeline, moduleName)
