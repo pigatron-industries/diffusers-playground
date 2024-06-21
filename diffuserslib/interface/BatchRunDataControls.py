@@ -132,11 +132,11 @@ class BatchRunDataControls:
 
 
     def workflow_output_dialog(self):
-        with ui.dialog(value=True):
+        with ui.dialog(value=True) as dialog:
             with ui.scroll_area().style("height:100%; max-width:100%; max-height:100%;"):
                 with ui.column().style("margin-left:auto; margin-right:auto;"):
                     if(isinstance(self.rundata.output, Image.Image)):
-                        ui.image(self.rundata.output).style(f"min-width:{self.rundata.output.width}px; min-height:{self.rundata.output.height}px; max-width:{self.rundata.output.width}; max-height:{self.rundata.output.height}px;")
+                        ui.image(self.rundata.output).on('click', dialog.close).style(f"min-width:{self.rundata.output.width}px; min-height:{self.rundata.output.height}px; max-width:{self.rundata.output.width}; max-height:{self.rundata.output.height}px;")
 
 
     def workflow_params_dialog(self):
