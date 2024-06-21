@@ -20,6 +20,7 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
         steps_input = IntUserInputNode(value = 20, name = "steps")
         cfgscale_input = FloatUserInputNode(value = 7.0, name = "cfgscale")
         scheduler_input = ListSelectUserInputNode(value = "DPMSolverMultistepScheduler", options = ImageDiffusionNode.SCHEDULERS, name="scheduler")
+        clipskip_input = IntUserInputNode(value = None, name = "clipskip")
 
         sigmas_options = {
             "None": None,
@@ -41,5 +42,6 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
                                             steps = steps_input,
                                             cfgscale = cfgscale_input,
                                             scheduler = scheduler_input,
+                                            clipskip = clipskip_input,
                                             sigmas = sigmas_input)
         return image_diffusion
