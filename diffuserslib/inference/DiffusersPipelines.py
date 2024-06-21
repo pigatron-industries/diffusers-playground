@@ -139,9 +139,9 @@ class DiffusersPipelines:
 
 
     def _getLORAs(self, params:GenerationParameters) -> Tuple[List[LORA], List[float]]:
-        if(self.pipeline is None or self.pipeline.initparams.modelConfig is None):
+        if(self.pipeline is None or len(self.pipeline.initparams.modelConfig) == 0):
             return [], []
-        base = self.pipeline.initparams.modelConfig.base
+        base = self.pipeline.initparams.modelConfig[0].base
 
         loras = []
         weights = []
