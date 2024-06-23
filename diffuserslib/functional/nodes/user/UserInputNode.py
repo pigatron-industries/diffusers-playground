@@ -21,10 +21,10 @@ class UserInputNode(FunctionalNode):
             listener()
 
     def getValue(self):
-        raise Exception("Not implemented")
+        raise Exception(f"{self.__class__.__name__} getValue() method is not implemented")
     
     def setValue(self, value):
-        raise Exception("Not implemented")
+        raise Exception(f"{self.__class__.__name__} setValue() method is not implemented")
     
     def gui(self):
         ui.label(self.node_name).classes('align-middle')
