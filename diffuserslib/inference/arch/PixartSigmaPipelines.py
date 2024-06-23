@@ -11,22 +11,17 @@ class PixartSigmaPipelineWrapper(DiffusersPipelineWrapper):
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(params.modelConfig, cls, **kwargs)
+        self.createPipeline(params, cls, **kwargs)
         super().__init__(params, inferencedevice)
 
-    def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
-        args = self.createPipelineArgs(preset, **kwargs)
+    def createPipeline(self, params:GenerationParameters, cls, **kwargs):
+        args = self.createPipelineParams(params, **kwargs)
         self.pipeline = PixArtSigmaPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
 
-    def createPipelineArgs(self, preset:DiffusersModel, **kwargs):
-        args = {}
-        if (not self.safety_checker):
-            args['safety_checker'] = None
-        if(preset.revision is not None):
-            args['variant'] = preset.revision
-            if(preset.revision == 'fp16'):
-                args['torch_dtype'] = torch.float16
-        return mergeDicts(args, kwargs)
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        self.addPipelineParamsCommon(params, pipeline_params)
+        return pipeline_params
     
     def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, **kwargs):
         generator, seed = self.createGenerator(seed)
