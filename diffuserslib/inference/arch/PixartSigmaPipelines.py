@@ -14,10 +14,6 @@ class PixartSigmaPipelineWrapper(DiffusersPipelineWrapper):
         self.createPipeline(params, cls, **kwargs)
         super().__init__(params, inferencedevice)
 
-    def createPipeline(self, params:GenerationParameters, cls, **kwargs):
-        args = self.createPipelineParams(params, **kwargs)
-        self.pipeline = PixArtSigmaPipeline.from_pretrained(preset.modelpath, **args).to(self.device)
-
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
