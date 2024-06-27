@@ -64,7 +64,7 @@ class DiffusionModelUserInputNode(UserInputNode):
         if selected_model not in models:
             selected_model = None
         with ui.row().classes('w-full'):
-            ui.select(options=sorted(list(models)), value=selected_model, label="Model", on_change=lambda e: self.updateModel(i, e.value)).classes('grow') 
+            ui.select(options=sorted(list(models)), with_input=True, value=selected_model, label="Model", on_change=lambda e: self.updateModel(i, e.value)).classes('grow') 
             ui.number(value=self.selected_weights[i], label="Weight", on_change=lambda e: self.updateWeight(i, e.value)).classes('small-number')
             ui.button(icon="remove", on_click = lambda e: self.removeInput(i)).props('dense').classes('align-middle')
 

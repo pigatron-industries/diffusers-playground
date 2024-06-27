@@ -168,7 +168,7 @@ class ListSelectUserInputNode(UserInputNode):
 
     @ui.refreshable
     def gui(self):
-        ui.select(options=self.options, label=self.node_name).bind_value(self, 'value').classes('grow')
+        ui.select(options=self.options, with_input=True, label=self.node_name).bind_value(self, 'value').classes('grow')
 
     def process(self) -> str:
         return str(self.value)
