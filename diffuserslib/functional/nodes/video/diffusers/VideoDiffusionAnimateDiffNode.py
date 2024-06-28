@@ -54,6 +54,12 @@ class VideoDiffusionAnimateDiffNode(FunctionalNode):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines is not initialized")
         
+        if(conditioning_inputs is not None):
+            for conditioning_input in conditioning_inputs:
+                if isinstance(conditioning_input.image, list):
+                    if len(conditioning_input.image) > frames:
+                        conditioning_input.image = conditioning_input.image[:frames]
+        
         params = GenerationParameters(
             generationtype="animatediff",
             safetychecker=False,

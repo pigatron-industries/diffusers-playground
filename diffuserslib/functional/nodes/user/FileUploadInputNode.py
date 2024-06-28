@@ -9,7 +9,7 @@ from PIL import Image
 class FileUploadInputNode(UserInputNode):
     """A node that allows the user to upload a single file. Subclass this to handle different file types."""
 
-    def __init__(self, mandatory:bool = True, display:str = "Select File", name:str="file_input"):
+    def __init__(self, mandatory:bool = True, display:str = "Select file", name:str="file_input"):
         self.filename = None
         self.content = None
         self.mandatory = mandatory

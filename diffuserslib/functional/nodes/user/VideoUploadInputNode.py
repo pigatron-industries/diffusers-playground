@@ -8,6 +8,11 @@ import tempfile
 class VideoUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a single image. The output is an image."""
 
+    def __init__(self, mandatory:bool = True, display:str = "Select video file", name:str="video_input"):
+        self.content = None
+        self.fps = None
+        super().__init__(mandatory, display, name)
+        
 
     def handleUpload(self, e: events.UploadEventArguments):
         self.content = []
