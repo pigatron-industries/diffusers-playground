@@ -27,8 +27,6 @@ class ControlNetProcessorNode(FunctionalNode):
         if image is None:
             return None
         outimage = self.model(image, to_pil=True)
-        print(image)
-        print(outimage)
         assert isinstance(outimage, Image.Image)
         return outimage
     
