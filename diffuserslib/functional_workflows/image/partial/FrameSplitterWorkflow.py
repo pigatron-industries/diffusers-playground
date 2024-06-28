@@ -1,4 +1,8 @@
-from diffuserslib.functional import *
+from diffuserslib.functional.FunctionalNode import *
+from diffuserslib.functional.WorkflowBuilder import *
+from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.functional.nodes.animated.VideoFrameSplitterNode import *
+from diffuserslib.functional.nodes.user.VideoUploadInputNode import *
 
 
 class FrameSplitterWorkflow(WorkflowBuilder):
@@ -9,6 +13,6 @@ class FrameSplitterWorkflow(WorkflowBuilder):
 
     def build(self):
         video_input = VideoUploadInputNode(name = "video")
-        frame = FrameSplitterNode(frames = video_input)
+        frame = VideoFrameSplitterNode(video = video_input)
         return frame
     

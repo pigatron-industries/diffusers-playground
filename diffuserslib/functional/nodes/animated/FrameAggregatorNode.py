@@ -1,13 +1,13 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-from .FrameSplitterNode import FrameSplitterNode
+from .VideoFrameSplitterNode import VideoFrameSplitterNode
 
 
 class FrameAggregatorNode(FunctionalNode):
     def __init__(self, 
                  frame:ImageFuncType,
                  num_frames:IntFuncType|None = None,
-                 frame_splitter:FrameSplitterNode|None = None,
+                 frame_splitter:VideoFrameSplitterNode|None = None,
                  name:str = "frame_aggregator"):
         super().__init__(name)
         self.addParam("frame", frame, Image.Image)
@@ -19,7 +19,7 @@ class FrameAggregatorNode(FunctionalNode):
 
     def init(self, num_frames:int|None):
         if self.frame_splitter is not None:
-            self.num_frames = len(self.frame_splitter.frames)
+            self.num_frames = self.frame_splitter.framecount
         elif num_frames is not None:
             self.num_frames = num_frames
         else:

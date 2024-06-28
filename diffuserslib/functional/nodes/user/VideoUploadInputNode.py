@@ -1,4 +1,5 @@
 from .FileUploadInputNode import FileUploadInputNode
+from diffuserslib.functional.types.Video import Video
 from nicegui import ui, events
 from PIL import Image
 import cv2
@@ -6,21 +7,29 @@ import tempfile
 
 
 class VideoUploadInputNode(FileUploadInputNode):
-    """A node that allows the user to upload a single image. The output is an image."""
+    """A node that allows the user to upload a video. The output is a video."""
 
     def __init__(self, mandatory:bool = True, display:str = "Select video file", name:str="video_input"):
-        self.content = None
-        self.fps = None
+        self.content:Video|None = None
+        self.preview:Image.Image|None = None
+        self.framecount = 0
         super().__init__(mandatory, display, name)
         
 
     def handleUpload(self, e: events.UploadEventArguments):
-        self.content = []
-        with tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True) as temp_file:
-            temp_file.write(e.content.read())
-            temp_file.seek(0)
-            self.content, self.fps = VideoUploadInputNode.loadVideoFrames(temp_file.name)
-            self.gui.refresh()
+        temp_file = tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True)
+        temp_file.write(e.content.read())
+        temp_file.seek(0)
+        cap = cv2.VideoCapture(temp_file.name)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        ret, frame = cap.read()
+        if not ret:
+            raise ValueError("Could not read video file")
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        self.preview = Image.fromarray(img)
+        self.framecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.content = Video(frame_rate = fps, file = temp_file)
+        self.gui.refresh()
 
 
     @staticmethod
@@ -39,9 +48,17 @@ class VideoUploadInputNode(FileUploadInputNode):
 
 
     def previewContent(self):
-        if(self.content is None):
+        if(self.preview is None or self.content is None):
             return
-        ui.image(self.content[0]).style(f"max-width:128px; min-width:128px;")
+        ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
         with ui.column():
-            ui.label(f"frames: {len(self.content)}")
-            ui.label(f"fps: {self.fps}")
+            ui.label(f"frames: {self.framecount}")
+            ui.label(f"fps: {self.content.frame_rate}")
+
+
+    def __deepcopy__(self, memo):
+        new_node = VideoUploadInputNode(self.mandatory, self.display, self.name)
+        new_node.content = self.content
+        new_node.preview = self.preview
+        new_node.framecount = self.framecount
+        return new_node

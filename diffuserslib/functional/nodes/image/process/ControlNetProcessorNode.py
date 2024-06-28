@@ -21,10 +21,14 @@ class ControlNetProcessorNode(FunctionalNode):
         self.model = None
         
         
-    def process(self, image:Image.Image, processor:str) -> Image.Image:
+    def process(self, image:Image.Image, processor:str) -> Image.Image|None:
         if self.model is None:
             self.model = Processor(processor)
+        if image is None:
+            return None
         outimage = self.model(image, to_pil=True)
+        print(image)
+        print(outimage)
         assert isinstance(outimage, Image.Image)
         return outimage
     

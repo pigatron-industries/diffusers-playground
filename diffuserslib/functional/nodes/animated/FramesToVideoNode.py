@@ -26,13 +26,15 @@ class FramesToVideoNode(FunctionalNode):
         out = cv2.VideoWriter(temp_file.name, fourcc, fps, (width, height))
 
         for frame in frames:
+            if(frame is None):
+                break
             np_array = np.array(frame)
             cv2_image = cv2.cvtColor(np_array, cv2.COLOR_RGB2BGR)
             out.write(cv2_image)
 
         out.release()
         print(temp_file.name)
-        return Video(frames, fps, temp_file)
+        return Video(frames = frames, frame_rate = fps, file = temp_file)
     
 
     # TODO don't regenerate the video every time getProgress is called
