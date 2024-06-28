@@ -1,8 +1,9 @@
 from .Controller import Controller
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes import UserInputNode, ListUserInputNode
-from nicegui import ui
+from nicegui import ui, run
 from typing import Dict, List
+
 
 
 class InterfaceComponents:
@@ -16,6 +17,10 @@ class InterfaceComponents:
         print("loading workflow")
         self.controller.loadWorkflow(workflow_name)
         self.controls.refresh()
+
+
+    async def runSubWorkflow(self, workflow):
+        pass
 
 
     def toggleParamFunctional(self, param:NodeParameter):
@@ -100,6 +105,8 @@ class InterfaceComponents:
         else:
             with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                 with ui.column():
-                    selected_node = param.value.node_name if param.value.node_name != "empty" else None
-                    ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
+                    with ui.row():
+                        selected_node = param.value.node_name if param.value.node_name != "empty" else None
+                        ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
+                        ui.button(text='run', on_click=lambda e: self.runSubWorkflow(param.value)).classes('align-middle').props('dense')
                     self.node_parameters(param.value)

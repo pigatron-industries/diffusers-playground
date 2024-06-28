@@ -33,7 +33,7 @@ class FileSelectInputNode(UserInputNode):
         dialog = FileDialog(self.fileSelected, self.extensions[self.filetype])
         with ui.row().style("padding-top: 1.4em;"):
             if(len(self.filenames) == 0):
-                ui.label('Select a file')
+                ui.label(f'Select {self.filetype} file')
             elif(len(self.filenames) == 1):
                 ui.label(self.filenames[0])
             else:

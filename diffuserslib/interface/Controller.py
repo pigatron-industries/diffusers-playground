@@ -137,6 +137,14 @@ class Controller:
         else:
             print("No workflow loaded")
 
+    
+    def runSubWorkflow(self, workflow):
+        if(WorkflowRunner.workflowrunner is not None):
+            self.saveWorkflowParamsToHistory()
+            WorkflowRunner.workflowrunner.run(workflow, 1)
+        else:
+            print("No workflow loaded")
+
 
     def getProgress(self) -> BatchProgressData|None:
         if(WorkflowRunner.workflowrunner is not None):

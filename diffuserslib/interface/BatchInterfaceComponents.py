@@ -31,6 +31,11 @@ class BatchInterfaceComponents(InterfaceComponents):
         result = await run.io_bound(self.controller.runWorkflow)
 
 
+    async def runSubWorkflow(self, workflow):
+        self.timer.activate()
+        result = await run.io_bound(self.controller.runSubWorkflow, workflow)
+
+
     def updateWorkflowProgress(self):
         if(not self.controller.workflowrunner.running):
             self.timer.deactivate()
