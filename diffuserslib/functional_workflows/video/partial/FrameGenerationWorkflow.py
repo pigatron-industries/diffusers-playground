@@ -9,7 +9,7 @@ from diffuserslib.functional.nodes.user import *
 class VideoGenerationGenericWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Frame Generation", Video, workflow=False, subworkflow=True)
+        super().__init__("Frame Generation", List[Image.Image], workflow=False, subworkflow=True)
 
 
     def build(self):
