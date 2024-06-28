@@ -16,8 +16,8 @@ class ControlNetProcessorNode(FunctionalNode):
                  processor:StringFuncType,
                  name:str="controlnet_processor"):
         super().__init__(name)
-        self.addParam("image", image, Image.Image)
         self.addParam("processor", processor, str)
+        self.addParam("image", image, Image.Image)
         self.model = None
         
         
