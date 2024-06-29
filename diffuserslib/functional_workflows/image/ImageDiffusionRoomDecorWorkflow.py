@@ -3,7 +3,7 @@ from numpy import diff, size
 from diffuserslib.functional.WorkflowBuilder import *
 from diffuserslib.functional.nodes.image.diffusers.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
-from diffuserslib.functional.nodes.image.process import MLSDStraightLineDetectionNode
+from diffuserslib.functional.nodes.image.process import ControlNetProcessorNode
 from diffuserslib.functional.nodes.image.process import SemanticSegmentationNode
 from diffuserslib.functional.nodes.image.transform import ResizeImageNode
 from diffuserslib.functional.nodes.user import *
@@ -36,7 +36,7 @@ class ImageDiffusionRoomDecorWorkflow(WorkflowBuilder):
         # image conditioning
         image_resize = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
         initimage = ConditioningInputNode(image = image_resize, model = 'initimage', scale = 0.85)
-        mlsd = MLSDStraightLineDetectionNode(image = image_resize, name = "mlsd")
+        mlsd = ControlNetProcessorNode(image = image_resize, processor = "mlsd", name = "mlsd")
         mlsd_resize = ResizeImageNode(image = mlsd, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
         mlsd_conditioning = ConditioningInputNode(image = mlsd_resize, model = 'lllyasviel/control_v11p_sd15_mlsd', scale = 0.85)
         segmentation = SemanticSegmentationNode(image = image_resize, name = "segmentation")

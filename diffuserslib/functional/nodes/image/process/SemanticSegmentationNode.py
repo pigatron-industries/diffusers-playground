@@ -11,7 +11,7 @@ class SemanticSegmentationNode(FunctionalNode):
 
     def __init__(self, 
                  image:ImageFuncType, 
-                 name:str="mlsd_staight_line"):
+                 name:str="semantic_segmentation"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
         self.model = None
