@@ -17,7 +17,7 @@ class DrawVoronoiNode(FunctionalNode):
                  points: VectorsFuncType,
                  outline_colour: ColourFuncType = "white", 
                  point_colour: ColourFuncType = "white",
-                 draw_options: DrawOptionsFuncType = (True, True),  # (bounded lines, unbounded lines, points)
+                 draw_options: DrawOptionsFuncType = (True, True),  # (bounded lines, unbounded lines)
                  line_probability: FloatFuncType = 1.0,
                  radius: IntFuncType = 2,
                  width: IntFuncType = 1,
