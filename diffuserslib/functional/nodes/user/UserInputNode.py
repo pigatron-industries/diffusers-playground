@@ -317,10 +317,11 @@ class BoolListUserInputNode(UserInputNode):
         return self.value
     
     def setValue(self, value:List[bool]):
-        self.value = value
+        if(len(value) == len(self.labels)):
+            self.value = value
 
     def gui(self):
-        for i in range(len(self.value)):
+        for i in range(len(self.labels)):
             self.checkbox(i)
 
     def checkbox(self, index:int):

@@ -14,7 +14,7 @@ class RealtimeVoronoiWorkflow(WorkflowBuilder):
         num_points_input = IntUserInputNode(value = 20, name = "num_points")
         radius_input = IntUserInputNode(value = 2, name = "radius")
         line_probability_input = FloatUserInputNode(value = 1.0, name = "line_probability")
-        draw_options = BoolListUserInputNode(value = [True, True, True], labels=["bounded", "unbounded", "points"], name = "draw_options")
+        draw_options = BoolListUserInputNode(value = [True, True], labels=["bounded", "unbounded"], name = "draw_options")
 
         random_bodies = RandomMovingBodies2DNode(num_bodies = num_points_input)
         bouncing_points = BouncingPoints2DNode(init_bodies = random_bodies, dt = time_delta_user_input)

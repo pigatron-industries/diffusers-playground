@@ -7,7 +7,7 @@ from scipy.spatial import Voronoi
 import math
 import numpy as np
 
-DrawOptionsType = Tuple[bool, bool, bool]
+DrawOptionsType = Tuple[bool, bool]
 DrawOptionsFuncType = DrawOptionsType | Callable[[], DrawOptionsType]
 
 
@@ -20,6 +20,7 @@ class DrawVoronoiNode(FunctionalNode):
                  draw_options: DrawOptionsFuncType = (True, True, True),  # (bounded lines, unbounded lines, points)
                  line_probability: FloatFuncType = 1.0,
                  radius: IntFuncType = 2,
+                 width: IntFuncType = 1,
                  name:str = "draw_voronoi"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
@@ -28,6 +29,7 @@ class DrawVoronoiNode(FunctionalNode):
         self.addParam("point_colour", point_colour, ColourType)
         self.addParam("draw_options", draw_options, DrawOptionsType)
         self.addParam("radius", radius, int)
+        self.addParam("width", width, int)
         self.addParam("line_probability", line_probability, float)
 
 
@@ -37,8 +39,9 @@ class DrawVoronoiNode(FunctionalNode):
                 point_colour: ColourType,
                 draw_options: DrawOptionsType,
                 line_probability: float = 1,
-                radius: float = 2) -> Image.Image:
-        drawBoundedLines, drawUnboundedLines, drawPoints = draw_options
+                radius: int = 2,
+                width: int = 1) -> Image.Image:
+        drawBoundedLines, drawUnboundedLines = draw_options
         points_array = np.array([vector.coordinates for vector in points]) * image.size
         image = image.copy()
 
@@ -47,9 +50,9 @@ class DrawVoronoiNode(FunctionalNode):
 
         for line in lines:
             if (np.random.random() < line_probability):
-                draw.line(line, fill=outline_colour, width=1)
+                draw.line(line, fill=outline_colour, width=width)
 
-        if (drawPoints):
+        if (radius > 0):
             for point in points_array:
                 draw.ellipse((point[0]-radius, point[1]-radius, point[0]+radius, point[1]+radius), fill=point_colour)
             
