@@ -1,5 +1,6 @@
 from diffuserslib.functional.FunctionalNode import FunctionalNode
 from diffuserslib.functional.types.FunctionalTyping import *
+from diffuserslib.functional.types.ColourPalette import *
 from diffuserslib.functional.types import Vector, VectorsFuncType
 from PIL import ImageDraw, Image
 from typing import List, Tuple, Callable
@@ -17,6 +18,7 @@ class DrawVoronoiNode(FunctionalNode):
                  points: VectorsFuncType,
                  outline_colour: ColourFuncType = "white", 
                  point_colour: ColourFuncType = "white",
+                 fill_palette: ColourPaletteFuncType|None = None,
                  draw_options: DrawOptionsFuncType = (True, True),  # (bounded lines, unbounded lines)
                  line_probability: FloatFuncType = 1.0,
                  radius: IntFuncType = 2,
@@ -27,6 +29,7 @@ class DrawVoronoiNode(FunctionalNode):
         self.addParam("points", points, List[Vector])
         self.addParam("outline_colour", outline_colour, ColourType)
         self.addParam("point_colour", point_colour, ColourType)
+        self.addParam("fill_palette", fill_palette, ColourPalette)
         self.addParam("draw_options", draw_options, DrawOptionsType)
         self.addParam("radius", radius, int)
         self.addParam("width", width, int)
@@ -37,6 +40,7 @@ class DrawVoronoiNode(FunctionalNode):
                 points: List[Vector],
                 outline_colour: ColourType, 
                 point_colour: ColourType,
+                fill_palette: ColourPalette|None,
                 draw_options: DrawOptionsType,
                 line_probability: float = 1,
                 radius: int = 2,
@@ -51,6 +55,10 @@ class DrawVoronoiNode(FunctionalNode):
         for line in lines:
             if (np.random.random() < line_probability):
                 draw.line(line, fill=outline_colour, width=width)
+
+        if(fill_palette is not None):
+            for point in points_array:
+                ImageDraw.floodfill(image, point, fill_palette.getRandomColour())
 
         if (radius > 0):
             for point in points_array:
