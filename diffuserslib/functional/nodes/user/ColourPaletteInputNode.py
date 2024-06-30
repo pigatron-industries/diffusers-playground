@@ -6,6 +6,7 @@ from typing import Dict
 
 class ColourPaletteInputNode(UserInputNode):
     def __init__(self, mandatory:bool=False, name:str="colour_palette_user_input"):
+        # TODO add multi select palette
         self.palette_type = "gradient"
         self.colours = ["#000000", "#ffffff"]
         self.buttons = []
@@ -59,7 +60,6 @@ class ColourPaletteInputNode(UserInputNode):
 
 
     def process(self) -> ColourPalette|None:
-        print(self.enabled)
         if(self.enabled):
             colours = [tuple(int(colour[i:i+2], 16) for i in (1, 3, 5)) for colour in self.colours]
             value = ColourPalette.fromGradient(colours[0], colours[1], 256)

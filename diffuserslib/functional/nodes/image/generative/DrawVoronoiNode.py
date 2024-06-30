@@ -16,7 +16,7 @@ class DrawVoronoiNode(FunctionalNode):
     def __init__(self, 
                  image: ImageFuncType,
                  points: VectorsFuncType,
-                 outline_colour: ColourFuncType = "white", 
+                 line_colour: ColourFuncType = "white", 
                  point_colour: ColourFuncType = "white",
                  fill_palette: ColourPaletteFuncType|None = None,
                  draw_options: DrawOptionsFuncType = (True, True),  # (bounded lines, unbounded lines)
@@ -27,7 +27,7 @@ class DrawVoronoiNode(FunctionalNode):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
         self.addParam("points", points, List[Vector])
-        self.addParam("outline_colour", outline_colour, ColourType)
+        self.addParam("line_colour", line_colour, ColourType)
         self.addParam("point_colour", point_colour, ColourType)
         self.addParam("fill_palette", fill_palette, ColourPalette)
         self.addParam("draw_options", draw_options, DrawOptionsType)
@@ -38,13 +38,14 @@ class DrawVoronoiNode(FunctionalNode):
 
     def process(self, image: Image.Image,
                 points: List[Vector],
-                outline_colour: ColourType, 
+                line_colour: ColourType, 
                 point_colour: ColourType,
                 fill_palette: ColourPalette|None,
                 draw_options: DrawOptionsType,
                 line_probability: float = 1,
                 radius: int = 2,
                 width: int = 1) -> Image.Image:
+        print("draw_voronoi")
         drawBoundedLines, drawUnboundedLines = draw_options
         points_array = np.array([vector.coordinates for vector in points]) * image.size
         image = image.copy()
@@ -52,13 +53,19 @@ class DrawVoronoiNode(FunctionalNode):
         lines = self.getLines(points_array, boundedLines=drawBoundedLines, unboundedLines=drawUnboundedLines)
         draw = ImageDraw.Draw(image)
 
+        # draw lines in white first to contrast with black background
         for line in lines:
             if (np.random.random() < line_probability):
-                draw.line(line, fill=outline_colour, width=width)
+                draw.line(line, fill=(255, 255, 255), width=1)
 
         if(fill_palette is not None):
             for point in points_array:
                 ImageDraw.floodfill(image, point, fill_palette.getRandomColour())
+
+        # re-draw lines in specified colour
+        for line in lines:
+            if (np.random.random() < line_probability):
+                draw.line(line, fill=line_colour, width=width)
 
         if (radius > 0):
             for point in points_array:
