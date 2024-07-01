@@ -2,6 +2,7 @@ from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.image.process import *
+from diffuserslib.functional.nodes.image.transform import *
 
 
 class ImageGenerationGenericWorkflow(WorkflowBuilder):
