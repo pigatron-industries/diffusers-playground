@@ -145,6 +145,24 @@ class TextAreaInputNode(UserInputNode):
         return str(self.value)
     
 
+class TextAreaLinesInputNode(UserInputNode):
+    def __init__(self, value:str="", name:str="text_area_user_input"):
+        self.value = str(value)
+        super().__init__(name)
+
+    def getValue(self) -> str|None:
+        return self.value
+    
+    def setValue(self, value):
+        self.value = value
+
+    def gui(self):
+        ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
+
+    def process(self) -> List[str]:
+        return self.value.split('\n')
+    
+
 class ListSelectUserInputNode(UserInputNode):
     def __init__(self, value:str, options:List[str], name:str="list_select_user_input"):
         self.value = value

@@ -14,6 +14,8 @@ BoolsFuncType = List[bool] | Callable[[], List[bool]]
 
 SizeType = Tuple[int, int]
 SizeFuncType = SizeType | Callable[[], SizeType]
+FloatTupleType = Tuple[float, float]
+FloatTupleFuncType = FloatTupleType | Callable[[], FloatTupleType]
 
 MinMaxIntType = Tuple[int, int]
 MinMaxIntFuncType = MinMaxIntType | Callable[[], MinMaxIntType]

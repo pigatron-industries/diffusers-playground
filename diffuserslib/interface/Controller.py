@@ -32,7 +32,7 @@ class Controller:
     builders_batch:Dict[str, str] = {}       # [WorkflowClass Name, Workflow Display Name]
     builders_realtime:Dict[str, str] = {}    # [WorkflowClass Name, Workflow Display Name]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
-    output_types = ["Image", "Video", "Audio", "Text", "Other"]
+    output_types = ["Image", "Video", "Audio", "str", "Other"]
     history_filename = ".history.yml"
 
     def __init__(self):

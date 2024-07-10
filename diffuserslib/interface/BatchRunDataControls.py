@@ -114,6 +114,8 @@ class BatchRunDataControls:
         elif(isinstance(output, Audio)):
             output.write()
             self.output_control = ui.audio(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
+        elif(isinstance(output, str)):
+            self.output_control = ui.label(output).classes('w-full')
         else:
             self.output_width = 0
             self.output_control = None

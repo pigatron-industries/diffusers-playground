@@ -6,9 +6,9 @@ from typing import Dict
 
 class LindenmayerSystemNode(FunctionalNode):
     def __init__(self, 
-                 rules:List[str],
-                 axiom:str,
-                 iterations:int,
+                 rules:ListFuncType,
+                 axiom:StringFuncType,
+                 iterations:IntFuncType,
                  name:str = "lsystem"):
         super().__init__(name)
         self.addParam("rules", rules, List[str])
@@ -25,14 +25,14 @@ class LindenmayerSystemNode(FunctionalNode):
         system_rules = {}
         for rule in rules:
             key, value = rule.split("->")
-            system_rules[key] = value
+            system_rules[key.strip()] = value.strip()
 
         derived = [axiom]
         for _ in range(iterations):
             seq = derived[-1]
             new_seq = [self.rule(system_rules, char) for char in seq]
             derived.append("".join(new_seq))
-        return axiom
+        return derived[-1]
     
 
     def rule(self, system_rules:Dict[str, str], char:str) -> str:

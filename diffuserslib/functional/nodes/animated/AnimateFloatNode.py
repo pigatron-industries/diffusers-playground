@@ -1,6 +1,6 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-
+import math
 
 
 class AnimateFloatNode(FunctionalNode):
@@ -41,3 +41,20 @@ class AnimateFloatRampNode(AnimateFloatNode):
         if(self.phase > 1.0):
             self.phase -= 1.0
         return min_max[0] + (min_max[1] - min_max[0]) * self.phase
+    
+
+class AnimateFloatSineNode(AnimateFloatNode):
+    def __init__(self, 
+                 init_phase:FloatFuncType = 0.0,
+                 dt:FloatFuncType = 0.01,
+                 min_max:MinMaxFloatFuncType = (0.0, 1.0),
+                 name:str = "sine_float"):
+        super().__init__(init_phase, dt, name)
+        self.addParam("min_max", min_max, MinMaxFloatType)
+
+
+    def process(self, dt:float, min_max:MinMaxFloatType) -> float:
+        self.phase += dt
+        if(self.phase > 1.0):
+            self.phase -= 1.0
+        return math.sin(2 * math.pi * self.phase) * (min_max[1] - min_max[0]) / 2 + (min_max[1] + min_max[0]) / 2
