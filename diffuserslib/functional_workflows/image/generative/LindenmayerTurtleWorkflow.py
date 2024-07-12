@@ -18,7 +18,7 @@ class LindenmayerTurtleWorkflow(WorkflowBuilder):
         rules_input = TextAreaLinesInputNode(value = "F->F+F-F", name = "rules")
         init_position_input = FloatTupleInputNode(value = (0.5, 0.5), labels=("X", "Y"), name = "init_position")
         init_heading_input = FloatUserInputNode(value = 270, name = "init_heading")
-        init_line_length_input = IntUserInputNode(value = 10, name = "init_line_length")
+        init_line_length_input = FloatUserInputNode(value = 10, name = "init_line_length")
         init_turning_angle_input = FloatUserInputNode(value = 90, name = "init_turning_angle")
         line_length_factor_input = FloatUserInputNode(value = 1.0, name = "line_length_factor")
 

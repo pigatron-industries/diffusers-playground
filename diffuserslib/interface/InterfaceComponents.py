@@ -3,6 +3,7 @@ from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes import UserInputNode, ListUserInputNode
 from nicegui import ui, run
 from typing import Dict, List
+from .LocalFilePicker import LocalFilePicker
 
 
 
@@ -51,6 +52,19 @@ class InterfaceComponents:
     def outputs(self):
         pass
 
+
+    async def saveWorkflowParamsToFile(self):
+        result = await self.workflow_dialog
+        if(result is not None and len(result) > 0):
+            self.controller.saveWorkflowParamsToFile(result[0])
+
+
+    async def loadWorkflowParamsFromFile(self):
+        result = await self.workflow_dialog
+        if(result is not None and len(result) > 0):
+            self.controller.loadWorkflowParamsFromFile(result[0])
+            self.controls.refresh()
+
     
     def workflowSelect(self, workflow_list:Dict[str, str]):
         if(self.controller.model.workflow_name not in workflow_list):
@@ -60,7 +74,12 @@ class InterfaceComponents:
         workflow_options = self.controller.filterWorkflowsByOutputType(workflow_list, self.controller.model.output_type)
         if(self.controller.model.workflow_name not in workflow_options):
             self.controller.model.workflow_name = None
-        self.workflow_select = ui.select(workflow_options, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
+        with ui.row().classes('w-full no-wrap'):
+            self.workflow_select = ui.select(workflow_options, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
+            self.workflow_dialog = LocalFilePicker('./workflows')
+            with ui.dropdown_button(icon='save', auto_close=True).classes('align-middle').props('dense'):
+                ui.item('Save', on_click=lambda e: self.saveWorkflowParamsToFile())
+                ui.item('Load', on_click=lambda e: self.loadWorkflowParamsFromFile())
 
 
     def setOutputType(self, output_type, workflow_list:Dict[str, str]):

@@ -54,7 +54,7 @@ class TurtleNode(FunctionalNode):
                  init_position:FloatTupleFuncType = (0.5, 0.5),
                  init_heading:FloatFuncType = 270,
                  init_turning_angle:FloatFuncType = 90,
-                 init_line_length:IntFuncType = 10,
+                 init_line_length:FloatFuncType = 10,
                  line_length_factor:FloatFuncType = 1.0):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
@@ -63,19 +63,17 @@ class TurtleNode(FunctionalNode):
         self.addParam("init_position", init_position, float)
         self.addParam("init_heading", init_heading, float)
         self.addParam("init_turning_angle", init_turning_angle, float)
-        self.addParam("init_line_length", init_line_length, int)
+        self.addParam("init_line_length", init_line_length, float)
         self.addParam("line_length_factor", line_length_factor, float)
 
 
     def process(self, image:Image.Image, instructions:str, colour:ColourType,
                 init_position:Tuple[float, float], init_heading:float,
-                init_turning_angle:float, init_line_length:int, line_length_factor:float) -> Image.Image: 
+                init_turning_angle:float, init_line_length:float, line_length_factor:float) -> Image.Image: 
         line_length = float(init_line_length)
         turning_angle = init_turning_angle
         draw = ImageDraw.Draw(image)
         turtle = Turtle(draw, (int(image.width*init_position[0]), int(image.height*(1-init_position[1]))), init_heading)
-
-        print(instructions)
 
         for instruction in instructions:
             if instruction == "F":

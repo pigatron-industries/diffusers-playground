@@ -4,6 +4,7 @@ from diffuserslib.util import ModuleLoader
 from typing import Dict
 from dataclasses import dataclass, field
 from .Clipboard import Clipboard
+from .LocalFilePicker import LocalFilePicker
 import inspect
 import yaml
 import sys
@@ -41,7 +42,7 @@ class Controller:
         else:
             raise Exception("Workflow Runner not initialized")
         self.loadWorkflows()
-        self.loadWorkflowParamsHistory()
+        self.loadWorkflowParamsHistoryFile()
         self.loadSettings()
 
 
@@ -151,7 +152,7 @@ class Controller:
             return WorkflowRunner.workflowrunner.getProgress()
 
 
-    def loadWorkflowParamsHistory(self):
+    def loadWorkflowParamsHistoryFile(self):
         if os.path.exists(self.history_filename):
             file = open(self.history_filename, "r")
             self.workflow_history = yaml.full_load(file)
@@ -161,9 +162,39 @@ class Controller:
             self.workflow_history = {}
 
     
-    def saveWorkflowParamsHistory(self):
+    def saveWorkflowParamsHistoryFile(self):
         file = open(self.history_filename, "w")
         yaml.dump(self.workflow_history, file)
+
+
+    def loadWorkflowParamsFromFile(self, filepath):
+        if os.path.exists(filepath):
+            file = open(filepath, "r")
+            workflow_params = yaml.full_load(file)
+            print('loadWorkflowParamsFromFile')
+            print(workflow_params)
+            workflow_name = workflow_params['workflow']
+            self.workflow_history['workflow'] = workflow_name
+            self.workflow_history['run_type'] = workflow_params['run_type']
+            self.workflow_history['output_type'] = workflow_params['output_type']
+            self.workflow_history[workflow_name] = workflow_params['params']
+            self.model.run_type = self.workflow_history['run_type']
+            self.model.output_type = self.workflow_history['output_type']
+            self.loadWorkflow(self.workflow_history['workflow'])
+
+
+    def saveWorkflowParamsToFile(self, filepath):
+        self.saveWorkflowParamsToHistory()
+        if(self.model.workflow_name in self.workflow_history):
+            print(filepath)
+            file = open(filepath, "w")
+            workflow_params = {}
+            workflow_name = self.model.workflow_name
+            workflow_params['workflow'] = workflow_name
+            workflow_params['run_type'] = self.workflow_history['run_type']
+            workflow_params['output_type'] = self.workflow_history['output_type']
+            workflow_params['params'] = self.workflow_history[workflow_name]
+            yaml.dump(workflow_params, file)
 
 
     def loadWorkflowParamsFromHistory(self):
@@ -255,7 +286,7 @@ class Controller:
         self.workflow_history['run_type'] = self.model.run_type
         self.workflow_history['output_type'] = self.model.output_type
         self.workflow_history['output_subdir'] = self.output_subdir
-        self.saveWorkflowParamsHistory()
+        self.saveWorkflowParamsHistoryFile()
 
 
     def loadSettings(self):
