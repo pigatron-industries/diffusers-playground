@@ -1,0 +1,25 @@
+output_type: Image
+params:
+  image.size.value: !!python/tuple
+  - 512.0
+  - 512.0
+  init_heading.value: 270.0
+  init_line_length.value: 9.0
+  init_position.value: !!python/tuple
+  - 0.37
+  - 0.0
+  init_turning_angle.dt.dt.value: 0.01
+  init_turning_angle.dt.min_max.value: !!python/tuple
+  - -0.01
+  - 0.02
+  init_turning_angle.dt.node: AnimateFloatSineWorkflow
+  init_turning_angle.min_max.value: !!python/tuple
+  - 20.0
+  - 30.0
+  init_turning_angle.node: AnimateFloatSineWorkflow
+  instructions.axiom.value: F
+  instructions.iterations.value: 4.0
+  instructions.rules.value: F -> FF+[+F-F-F]-[-F+F+F]
+  line_length_factor.value: 1.0
+run_type: 2
+workflow: LindenmayerTurtleWorkflow
