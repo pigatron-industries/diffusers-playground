@@ -68,4 +68,6 @@ class ImageUploadInputNode(FileUploadInputNode):
         if(clip is not None):
             self.clearContent()
             self.addContent(clip.content)
+            self.content = self.content_temp
+            self.content_temp = []
         self.gui.refresh()
