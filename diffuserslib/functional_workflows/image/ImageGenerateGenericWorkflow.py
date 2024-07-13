@@ -2,7 +2,7 @@ from diffuserslib.functional.WorkflowBuilder import WorkflowBuilder
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.diffusers import *
 from diffuserslib.functional.nodes.image.process import *
-from diffuserslib.functional.nodes.image.transform import *
+from diffuserslib.functional.nodes.image.transform.NoOpImageNode import *
 
 
 class ImageGenerationGenericWorkflow(WorkflowBuilder):
@@ -13,5 +13,5 @@ class ImageGenerationGenericWorkflow(WorkflowBuilder):
 
     def build(self):
         image_input = ImageUploadInputNode(name = "image_output")
-        resize_image = ResizeImageNode(image = image_input, size = (512, 512), type = ResizeImageNode.ResizeType.STRETCH, name = "resize_image")
-        return resize_image
+        placeholder_image = NoOpImageNode(image = image_input, name = "placeholder")
+        return placeholder_image
