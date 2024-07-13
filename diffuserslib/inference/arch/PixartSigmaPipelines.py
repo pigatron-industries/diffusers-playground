@@ -32,59 +32,12 @@ class PixartSigmaGeneratePipelineWrapper(PixartSigmaPipelineWrapper):
         (False,     False):    PixArtSigmaPipeline
     }
 
+
     def __init__(self, params:GenerationParameters, device):
         cls = self.getPipelineClass(params)
         super().__init__(params=params, device=device, cls=cls)
 
+
     def getPipelineClass(self, params:GenerationParameters):
-        self.is_img2img = False
-        self.is_inpaint = False
-        for conditioningimage in params.controlimages:
-            if(conditioningimage.type == ControlImageType.IMAGETYPE_INITIMAGE):
-                self.is_img2img = True
-            if(conditioningimage.type == ControlImageType.IMAGETYPE_MASKIMAGE):
-                self.is_inpaint = True
-        return self.PIPELINE_MAP[(self.is_img2img, self.is_inpaint)]
-
-
-    def addCommonParams(self, params:GenerationParameters, diffusers_params):
-        diffusers_params['prompt'] = params.prompt
-        diffusers_params['negative_prompt'] = params.negprompt
-        diffusers_params['seed'] = params.seed
-        diffusers_params['guidance_scale'] = params.cfgscale
-        diffusers_params['scheduler'] = params.scheduler
-    
-    def addImg2ImgParams(self, params:GenerationParameters, diffusers_params):
-        initimage = params.getInitImage()
-        if(initimage is not None and initimage.image is not None):
-            diffusers_params['image'] = initimage.image.convert("RGB")
-            diffusers_params['strength'] = params.strength
-
-    def addTxt2ImgParams(self, params:GenerationParameters, diffusers_params):
-        diffusers_params['width'] = params.width
-        diffusers_params['height'] = params.height
-        diffusers_params['num_inference_steps'] = params.steps
-
-    def addInpaintParams(self, params:GenerationParameters, diffusers_params):
-        initimageparams = params.getInitImage()
-        maskimageparams = params.getMaskImage()
-        if(initimageparams is None or maskimageparams is None or initimageparams.image is None or maskimageparams.image is None):
-            raise ValueError("Must provide both initimage and maskimage")
-        diffusers_params['image'] = initimageparams.image.convert("RGB")
-        diffusers_params['mask_image'] = maskimageparams.image.convert("RGB")
-        diffusers_params['num_inference_steps'] = params.steps
-        diffusers_params['strength'] = params.strength
-        diffusers_params['width'] = initimageparams.image.width
-        diffusers_params['height'] = initimageparams.image.height
-    
-    def inference(self, params:GenerationParameters):
-        diffusers_params = {}
-        self.addCommonParams(params, diffusers_params)
-        if(not self.is_img2img):
-            self.addTxt2ImgParams(params, diffusers_params)
-        if(self.is_img2img):
-            self.addImg2ImgParams(params, diffusers_params)
-        if(self.is_inpaint):
-            self.addInpaintParams(params, diffusers_params)
-        return super().diffusers_inference(**diffusers_params)
-
+        self.features = self.getPipelineFeatures(params)
+        return self.PIPELINE_MAP[(self.features.img2img, self.features.inpaint)]

@@ -72,23 +72,3 @@ class StableDiffusion3GeneratePipelineWrapper(StableDiffusion3PipelineWrapper):
             self.addPipelineParamsIpAdapter(params, pipeline_params)
         return pipeline_params
 
-
-    def inference(self, params:GenerationParameters):
-        diffusers_params = {}
-        self.addInferenceParamsCommon(params, diffusers_params)
-        if(not self.features.img2img):
-            self.addInferenceParamsTxt2Img(params, diffusers_params)
-        if(self.features.img2img):
-            self.addInferenceParamsImg2Img(params, diffusers_params)
-        if(self.features.differential):
-            self.addInferenceParamsDifferential(params, diffusers_params)
-        if(self.features.controlnet):
-            self.addInferenceParamsControlNet(params, diffusers_params)
-        if(self.features.t2iadapter):
-            self.addInferenceParamsT2IAdapter(params, diffusers_params)
-        if(self.features.ipadapter):
-            self.addInferenceParamsIpAdapter(params, diffusers_params)
-        if(self.features.inpaint):
-            self.addInferenceParamsInpaint(params, diffusers_params)
-        output, seed = super().diffusers_inference(**diffusers_params)
-        return output.images[0], seed

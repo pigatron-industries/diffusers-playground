@@ -42,6 +42,7 @@ class DiffusersPipelineWrapper:
         self.dtype = dtype
         self.initparams = params
         self.inferencedevice = inferencedevice
+        self.features = self.getPipelineFeatures(params)
 
 
     def createPipeline(self, params:GenerationParameters, cls):
@@ -90,8 +91,30 @@ class DiffusersPipelineWrapper:
         raise NotImplementedError("createPipelineParams not implemented for pipeline")
 
 
-    def inference(self, params:GenerationParameters) -> Tuple[Image.Image, int]: # type: ignore
-        pass
+    def inference(self, params:GenerationParameters) -> Tuple[Image.Image, int]:
+        diffusers_params = {}
+        self.addInferenceParamsCommon(params, diffusers_params)
+        if(not self.features.img2img):
+            self.addInferenceParamsTxt2Img(params, diffusers_params)
+        if(self.features.img2img):
+            self.addInferenceParamsImg2Img(params, diffusers_params)
+        if(self.features.differential):
+            self.addInferenceParamsDifferential(params, diffusers_params)
+        if(self.features.controlnet):
+            self.addInferenceParamsControlNet(params, diffusers_params)
+        if(self.features.t2iadapter):
+            self.addInferenceParamsT2IAdapter(params, diffusers_params)
+        if(self.features.ipadapter):
+            self.addInferenceParamsIpAdapter(params, diffusers_params)
+        if(self.features.inpaint):
+            self.addInferenceParamsInpaint(params, diffusers_params)
+        output, seed = self.diffusers_inference(**diffusers_params)
+        return output.images[0], seed
+    
+
+    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, **kwargs):
+        raise NotImplementedError("diffusers_inference not implemented for pipeline")
+
 
     def createGenerator(self, seed=None):
         if(seed is None):
