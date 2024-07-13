@@ -42,7 +42,7 @@ class RandomImageUploadWorkflow(WorkflowBuilder):
         super().__init__("Image Upload - Random", Image.Image, workflow=False, subworkflow=True)
 
     def build(self):
-        images = ImageUploadInputNode()
+        images = ImageUploadInputNode(multiple = True)
         random_image = ListRandomNode(items = images)
         return random_image
 
@@ -53,6 +53,6 @@ class BatchImageUploadWorkflow(WorkflowBuilder):
         super().__init__("Image Upload - Batch", Image.Image, workflow=False, subworkflow=True)
 
     def build(self):
-        images = ImageUploadInputNode()
+        images = ImageUploadInputNode(multiple = True)
         image = ListCycleNode(items = images)
         return image

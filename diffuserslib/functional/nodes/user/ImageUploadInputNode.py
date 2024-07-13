@@ -10,7 +10,7 @@ import tempfile
 class ImageUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a single image. The output is an image."""
 
-    def __init__(self, mandatory:bool = True, multiple:bool=True, display:str = "Select image file", name:str="image_input"):
+    def __init__(self, mandatory:bool = True, multiple:bool = False, display:str = "Select image file", name:str="image_input"):
         self.preview = None
         self.content_temp = []
         super().__init__(mandatory, multiple, display, name)
