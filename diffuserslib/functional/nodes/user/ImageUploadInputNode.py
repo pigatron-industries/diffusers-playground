@@ -17,7 +17,6 @@ class ImageUploadInputNode(FileUploadInputNode):
 
 
     def handleUpload(self, e: events.UploadEventArguments):
-        print("Uploading file")
         if(e.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))):
             self.addContent(Image.open(e.content))
         elif (e.name.lower().endswith(('.mp4', '.avi', '.mov'))):
@@ -45,10 +44,8 @@ class ImageUploadInputNode(FileUploadInputNode):
 
 
     def addContent(self, image:Image.Image):
-        print("Adding image content")
         if(self.multiple):
             self.content_temp.append(image)
-            print(f"Added image {len(self.content_temp)}")
         else:
             self.content_temp = [image]
             self.content = [image]
