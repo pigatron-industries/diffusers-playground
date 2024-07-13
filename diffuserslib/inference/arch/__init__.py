@@ -7,3 +7,4 @@ from .StableVideoDiffusionPipelines import *
 from .PixartSigmaPipelines import *
 from .DeepFloydPipelines import *
 from .KandinskyPipelines import *
+from .AuraFlowPipelines import *

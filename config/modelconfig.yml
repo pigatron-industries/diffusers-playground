@@ -1,5 +1,10 @@
 
 generate:
+  - base: auraflow
+    pipelines:
+      generate: AuraFlowGeneratePipeline
+    models:
+      - id: fal/AuraFlow
   - base: sd_3_0
     pipelines:
       generate: StableDiffusion3GeneratePipeline

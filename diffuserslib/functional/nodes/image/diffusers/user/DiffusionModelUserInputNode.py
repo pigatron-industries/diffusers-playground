@@ -9,7 +9,7 @@ from nicegui import ui
 
 
 class DiffusionModelUserInputNode(UserInputNode):
-    DEFAULT_BASEMODELS = ["sd_1_5", "sd_2_1", "sdxl_1_0", "sc_1_0", "pixart_sigma", "sd_3_0"]
+    DEFAULT_BASEMODELS = ["sd_1_5", "sd_2_1", "sdxl_1_0", "sc_1_0", "pixart_sigma", "sd_3_0", "auraflow"]
 
     def __init__(self, name:str="diffusion_model_user_input",
                  basemodels:List[str] = DEFAULT_BASEMODELS,
