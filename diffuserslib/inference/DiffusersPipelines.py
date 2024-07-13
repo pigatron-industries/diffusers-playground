@@ -157,10 +157,19 @@ class DiffusersPipelines:
         modelConfig = pipeline.initparams.modelConfig[0]
         if (modelConfig is not None and modelConfig.base in self.baseModelData):
             baseData = self.baseModelData[modelConfig.base]
-            prompt = baseData.textembeddings.process_prompt_and_add_tokens(params.original_prompt, pipeline)
+            prompt = params.original_prompt
+            negprompt = params.original_negprompt
+            if(modelConfig.data is not None):
+                if("template" in modelConfig.data):
+                    prompt = modelConfig.data["template"].format(prompt)
+                if("negtemplate" in modelConfig.data):
+                    negprompt = modelConfig.data["negtemplate"].format(negprompt)
+
+            prompt = baseData.textembeddings.process_prompt_and_add_tokens(prompt, pipeline)
             loras, weights = self._getLORAs(params)
             prompt = baseData.loras.process_prompt_and_add_loras(prompt, pipeline, loras, weights)
             params.prompt = prompt
+            params.negprompt = negprompt
         return params.prompt
 
     #===============  ==============

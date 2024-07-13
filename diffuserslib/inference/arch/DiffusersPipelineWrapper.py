@@ -160,8 +160,6 @@ class DiffusersPipelineWrapper:
     ### Functions for adding pipeline and inference parameters - TODO: move to common diffusers functions mixin
 
     def addPipelineParamsCommon(self, params:GenerationParameters, pipeline_params):
-        if (params.modelConfig is None):
-            raise ValueError("Must provide modelConfig")
         modelConfig = params.modelConfig[0]
         if (not params.safetychecker):
             pipeline_params['safety_checker'] = None

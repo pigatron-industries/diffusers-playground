@@ -115,6 +115,7 @@ class GenerationParameters:
 
     def __post_init__(self):
         self.original_prompt:str = self.prompt
+        self.original_negprompt:str = self.negprompt
 
     def getImage(self, type:str) -> ControlImageParameters|None:
         for controlimage in self.controlimages:

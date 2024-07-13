@@ -38,6 +38,14 @@ generate:
       - id: playgroundai/playground-v2.5-1024px-aesthetic
       - id: RunDiffusion/Juggernaut-XL-v5
       - id: RunDiffusion/Juggernaut-X-v10
+      - id: kitty7779/ponyDiffusionV6XL
+        vae: stabilityai/sdxl-vae
+        template: "score_9, score_8_up, score_8, {}"
+        negtemplate: "score_6, score_5, score_4, {}"
+      - id: GraydientPlatformAPI/ponyrealism21-xl
+        vae: stabilityai/sdxl-vae
+        template: "score_9, score_8_up, score_8, {}"
+        negtemplate: "score_6, score_5, score_4, {}"
   - base: kandinsky_2_1
     pipelines:
       generate: KandinskyGeneratePipeline

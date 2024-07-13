@@ -1,6 +1,7 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters
 from diffusers.pipelines.aura_flow.pipeline_aura_flow import AuraFlowPipeline
+import torch
 
 
 class AuraFlowPipelineWrapper(DiffusersPipelineWrapper):
@@ -14,6 +15,7 @@ class AuraFlowPipelineWrapper(DiffusersPipelineWrapper):
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
+        pipeline_params['torch_dtype'] = torch.float16
         return pipeline_params
     
     def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, clip_skip=None, **kwargs):
