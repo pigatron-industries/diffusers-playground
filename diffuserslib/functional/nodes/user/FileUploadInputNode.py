@@ -9,29 +9,30 @@ from PIL import Image
 class FileUploadInputNode(UserInputNode):
     """A node that allows the user to upload a single file. Subclass this to handle different file types."""
 
-    def __init__(self, mandatory:bool = True, display:str = "Select file", name:str="file_input"):
+    def __init__(self, mandatory:bool = True, multiple:bool=False, display:str = "Select file", name:str="file_input"):
         self.filename = None
-        self.content = None
+        self.content = []
         self.mandatory = mandatory
         self.display = display
+        self.multiple = multiple
         super().__init__(name)
 
     def getValue(self) -> str|None:
         return self.filename
     
-    def setValue(self, value:str):
+    def setValue(self, value:str|None):
         if(value is None):
             self.filename = None
-            self.content = None
+            self.content = []
         else:
             self.filename = value
 
     @ui.refreshable
     def gui(self):
         with ui.dialog() as dialog:
-            ui.upload(on_upload=self.handleUpload)
+            ui.upload(on_upload=self.handleUpload, on_multi_upload=self.handleMultiUpload, multiple=self.multiple)
         with ui.row().style("padding-top: 1.4em;"):
-            if(self.content is None):
+            if(len(self.content) == 0):
                 ui.label(self.display)
             else:
                 self.previewContent()
@@ -49,9 +50,16 @@ class FileUploadInputNode(UserInputNode):
     
     def handleUpload(self, e: events.UploadEventArguments):
         raise NotImplementedError("File upload not implemented")
+    
+
+    def handleMultiUpload(self, e: events.UploadEventArguments):
+        pass
 
     
     def process(self) -> Any|None:
-        if(self.content is None and self.mandatory):
+        if(len(self.content) == 0 and self.mandatory):
             raise Exception("File not selected")
-        return self.content
+        if(self.multiple):
+            return self.content
+        else:
+            return self.content[0]

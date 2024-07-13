@@ -2,6 +2,7 @@ from .FileUploadInputNode import FileUploadInputNode
 from diffuserslib.functional.types.Video import Video
 from nicegui import ui, events
 from PIL import Image
+from typing import List
 import cv2
 import tempfile
 
@@ -9,11 +10,11 @@ import tempfile
 class VideoUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a video. The output is a video."""
 
-    def __init__(self, mandatory:bool = True, display:str = "Select video file", name:str="video_input"):
-        self.content:Video|None = None
+    def __init__(self, mandatory:bool = True, multiple:bool=False, display:str = "Select video file", name:str="video_input"):
+        self.content:List[Video] = []
         self.preview:Image.Image|None = None
         self.framecount = 0
-        super().__init__(mandatory, display, name)
+        super().__init__(mandatory, multiple, display, name)
         
 
     def handleUpload(self, e: events.UploadEventArguments):
@@ -28,7 +29,7 @@ class VideoUploadInputNode(FileUploadInputNode):
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.preview = Image.fromarray(img)
         self.framecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.content = Video(frame_rate = fps, file = temp_file)
+        self.content = [Video(frame_rate = fps, file = temp_file)]
         self.gui.refresh()
 
 
@@ -48,16 +49,16 @@ class VideoUploadInputNode(FileUploadInputNode):
 
 
     def previewContent(self):
-        if(self.preview is None or self.content is None):
+        if(self.preview is None or len(self.content) == 0):
             return
         ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
         with ui.column():
             ui.label(f"frames: {self.framecount}")
-            ui.label(f"fps: {self.content.frame_rate}")
+            ui.label(f"fps: {self.content[0].frame_rate}")
 
 
     def __deepcopy__(self, memo):
-        new_node = VideoUploadInputNode(self.mandatory, self.display, self.name)
+        new_node = VideoUploadInputNode(self.mandatory, self.multiple, self.display, self.name)
         new_node.content = self.content
         new_node.preview = self.preview
         new_node.framecount = self.framecount

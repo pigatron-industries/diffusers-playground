@@ -10,43 +10,65 @@ import tempfile
 class ImageUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a single image. The output is an image."""
 
-    def __init__(self, mandatory:bool = True, display:str = "Select image file", name:str="image_input"):
+    def __init__(self, mandatory:bool = True, multiple:bool=True, display:str = "Select image file", name:str="image_input"):
         self.preview = None
-        super().__init__(mandatory, display, name)
+        self.content_temp = []
+        super().__init__(mandatory, multiple, display, name)
+
 
     def handleUpload(self, e: events.UploadEventArguments):
+        print("Uploading file")
         if(e.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))):
-            image = Image.open(e.content)
-            self.setContent(image)
+            self.addContent(Image.open(e.content))
         elif (e.name.lower().endswith(('.mp4', '.avi', '.mov'))):
             with tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True) as temp_file:
                 temp_file.write(e.content.read())
                 temp_file.seek(0)
                 frames, _ = VideoUploadInputNode.loadVideoFrames(temp_file.name)
-                self.setContent(frames[-1])
+                self.addContent(frames[-1])
         else:
             raise Exception("Invalid file type")
         self.gui.refresh()
 
 
-    def setContent(self, content:Image.Image):
-        self.content = content
-        self.preview = content.copy()
+    def handleMultiUpload(self, e: events.UploadEventArguments):
+        self.content = self.content_temp
+        self.content_temp = []
+        self.gui.refresh()
+
+
+    def clearContent(self):
+        self.content = []
+        self.content_temp = []
+        self.preview = None
+        self.gui.refresh()
+
+
+    def addContent(self, image:Image.Image):
+        print("Adding image content")
+        if(self.multiple):
+            self.content_temp.append(image)
+            print(f"Added image {len(self.content_temp)}")
+        else:
+            self.content_temp = [image]
+            self.content = [image]
+        self.preview = self.content_temp[0].copy()
         self.preview.thumbnail((128, 128))
         self.gui.refresh()
 
 
     def previewContent(self):
-        if(self.content is None or self.preview is None):
+        if(len(self.content) == 0 or self.preview is None):
             return None
         with ui.column() as container:
             ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
-            ui.label(f'{self.content.width} x {self.content.height} pixels')
+            ui.label(f'{len(self.content)} images - {self.content[0].width} x {self.content[0].height} pixels')
         return container
     
+
     def paste(self):
         clip = Clipboard.read()
         if(clip is not None):
-            self.content = clip.content
-            self.preview = clip.preview
+            self.clearContent()
+            self.addContent(clip.content)
         self.gui.refresh()

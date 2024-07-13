@@ -88,7 +88,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
                 output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)
         else:
             output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)
-        return output, seed
+        return output.images[0], seed
     
 
     def add_embeddings(self, token, embeddings):
@@ -194,7 +194,7 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
     def inference(self, params:GenerationParameters):
         diffusers_params = self.createInferenceParams(params)
         output, seed = super().diffusers_inference(**diffusers_params)
-        return output.images[0], seed
+        return output, seed
 
 
 def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:
@@ -223,7 +223,7 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
         initimage = initimageparams.image.convert("RGB")
         output, seed = super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
                                  num_inference_steps=params.steps, scheduler=params.scheduler)
-        return output.images[0], seed
+        return output, seed
     
 
 class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):

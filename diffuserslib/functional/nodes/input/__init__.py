@@ -4,3 +4,5 @@ from .RandomIntNode import *
 from .RandomFloatNode import *
 from .RandomItemNode import *
 from .RandomImageNode import *
+from .ListRandomNode import *
+from .ListCycleNode import *

@@ -13,7 +13,7 @@ class MLSDEdgeDetectionWorkflow(WorkflowBuilder):
 
     def build(self):
         processor_input = ListSelectUserInputNode(name = "processor", value="canny", options = ControlNetProcessorNode.PROCESSORS)
-        image_input = ImageUploadInputNode(name = "image")
+        image_input = ImageUploadInputNode(name = "image", multiple=False)
         controlnet_processor = ControlNetProcessorNode(image = image_input, processor = processor_input, name = "controlnet_processor")
         return controlnet_processor
     
