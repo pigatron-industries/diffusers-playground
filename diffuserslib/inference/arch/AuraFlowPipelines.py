@@ -16,7 +16,7 @@ class AuraFlowPipelineWrapper(DiffusersPipelineWrapper):
         self.addPipelineParamsCommon(params, pipeline_params)
         return pipeline_params
     
-    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, **kwargs):
+    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, clip_skip=None, **kwargs):
         generator, seed = self.createGenerator(seed)
         output = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
         return output, seed
