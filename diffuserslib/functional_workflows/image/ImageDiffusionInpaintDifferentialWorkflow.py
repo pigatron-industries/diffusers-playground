@@ -5,9 +5,13 @@ from diffuserslib.functional.nodes.image.process import *
 
 
 class ImageDiffusionInpaintWorkflow(WorkflowBuilder):
+    """
+    Inpaint masked areas of an image using an inpaint model, then a differential model to blend better with the original.
+    This is done because the SDXL inpaint models don't match colours well with the original image.
+    """
 
     def __init__(self):
-        super().__init__("Image Diffusion - Inpaint Differential", Image.Image, workflow=True, subworkflow=False)
+        super().__init__("Image Diffusion - Inpaint - Differential", Image.Image, workflow=True, subworkflow=False)
 
     def build(self):
         # Inpaint inputs
