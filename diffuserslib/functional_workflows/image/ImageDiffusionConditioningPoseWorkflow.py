@@ -10,7 +10,7 @@ from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.animated import FeedbackNode
 from PIL import Image
 
-class ImageDiffusionConditioningRoomDecorWorkflow(WorkflowBuilder):
+class ImageDiffusionConditioningPoseWorkflow(WorkflowBuilder):
 
     """
     Image diffusion with a set of fixed conditioning models for keeping human pose and depth map of original image.
