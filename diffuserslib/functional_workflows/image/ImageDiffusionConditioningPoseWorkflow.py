@@ -35,20 +35,24 @@ class ImageDiffusionConditioningPoseWorkflow(WorkflowBuilder):
                                                 name = "scheduler",
                                                 options = ImageDiffusionNode.SCHEDULERS)
         
+        initimage_scale_input = FloatUserInputNode(value = 0.85, name = "initimage_scale")
+        pose_scale_input = FloatUserInputNode(value = 0.85, name = "pose_scale")
+        depth_scale_input = FloatUserInputNode(value = 0.85, name = "depth_scale")
+        
         prompt_processor = RandomPromptProcessorNode(prompt = prompt_input, name = "prompt_processor")
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
 
         # image conditioning
         image_resize = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
-        initimage = ConditioningInputNode(image = image_resize, model = 'initimage', scale = 0.85)
+        initimage = ConditioningInputNode(image = image_resize, model = 'initimage', scale = initimage_scale_input)
 
         pose = ControlNetProcessorNode(image = image_resize, processor = "openpose", name = "pose")
         pose_resize = ResizeImageNode(image = pose, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
-        pose_conditioning = ConditioningInputNode(image = pose_resize, model = 'xinsir/controlnet-openpose-sdxl-1.0', scale = 0.85)  # TODO select correct model for base
+        pose_conditioning = ConditioningInputNode(image = pose_resize, model = 'xinsir/controlnet-openpose-sdxl-1.0', scale = pose_scale_input)  # TODO select correct model for base
 
         depth = ControlNetProcessorNode(image = image_resize, processor = "depth_zoe", name = "depth")
         depth_resize = ResizeImageNode(image = depth, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
-        depth_conditioning = ConditioningInputNode(image = depth_resize, model = 'diffusers/controlnet-depth-sdxl-1.0', scale = 0.85)   # TODO select correct model for base
+        depth_conditioning = ConditioningInputNode(image = depth_resize, model = 'diffusers/controlnet-depth-sdxl-1.0', scale = depth_scale_input)   # TODO select correct model for base
 
         diffusion = ImageDiffusionNode(models = model_input,
                                     loras = lora_input,
