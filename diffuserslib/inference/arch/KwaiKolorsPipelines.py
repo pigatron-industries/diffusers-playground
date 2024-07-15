@@ -25,7 +25,7 @@ class KwaiKolorsPipelineWrapper(DiffusersPipelineWrapper):
         return output, seed
 
 
-class AuraFlowGeneratePipelineWrapper(KwaiKolorsPipelineWrapper):
+class KwaiKolorsGeneratePipelineWrapper(KwaiKolorsPipelineWrapper):
 
     PIPELINE_MAP = {
         #img2im,    inpaint
