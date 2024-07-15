@@ -8,3 +8,4 @@ from .PixartSigmaPipelines import *
 from .DeepFloydPipelines import *
 from .KandinskyPipelines import *
 from .AuraFlowPipelines import *
+from .KwaiKolorsPipelines import *

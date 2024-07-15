@@ -1,5 +1,10 @@
 
 generate:
+  - base: kwai_kolors
+    pipelines:
+      generate: KwaiKolorsGeneratePipeline
+    models:
+      - id: Kwai-Kolors/Kolors-diffusers
   - base: auraflow
     pipelines:
       generate: AuraFlowGeneratePipeline
