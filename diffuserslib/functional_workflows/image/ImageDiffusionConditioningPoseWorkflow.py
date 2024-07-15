@@ -43,7 +43,7 @@ class ImageDiffusionConditioningPoseWorkflow(WorkflowBuilder):
         model_input.addUpdateListener(lambda: prompt_processor.setWildcardDict(DiffusersPipelines.pipelines.getEmbeddingTokens(model_input.basemodel)))
 
         # image conditioning
-        image_resize = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
+        image_resize = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.FIT)
         initimage = ConditioningInputNode(image = image_resize, model = 'initimage', scale = initimage_scale_input)
 
         pose = ControlNetProcessorNode(image = image_resize, processor = "openpose", name = "pose")
