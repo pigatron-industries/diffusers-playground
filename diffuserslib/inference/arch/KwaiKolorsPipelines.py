@@ -17,6 +17,7 @@ class KwaiKolorsPipelineWrapper(DiffusersPipelineWrapper):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
         pipeline_params['torch_dtype'] = torch.float16
+        pipeline_params['variant'] = 'fp16'
         return pipeline_params
     
     def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, clip_skip=None, **kwargs):
