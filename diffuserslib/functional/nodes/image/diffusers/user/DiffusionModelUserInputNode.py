@@ -83,6 +83,7 @@ class DiffusionModelUserInputNode(UserInputNode):
 
     def updateModel(self, i, value):
         self.selected_models[i] = value
+        self.fireUpdate()
 
 
     def updateWeight(self, i, value):
@@ -90,6 +91,7 @@ class DiffusionModelUserInputNode(UserInputNode):
 
 
     def updateModels(self):
+        self.fireUpdate()
         self.gui.refresh()
 
 
