@@ -106,7 +106,7 @@ class TrainEmbeddingNode(FunctionalNode):
         command.append(f"--save_last_n_steps_state=0")
 
         # embedding specific:
-        command.append(f"--token_string={keyword}")
+        command.append(f'--token_string="{keyword}"')
         command.append(f'--init_word="{initword}"')
         command.append(f"--num_vectors_per_token={num_vectors_per_token}")
         if(template_type == "object"):
