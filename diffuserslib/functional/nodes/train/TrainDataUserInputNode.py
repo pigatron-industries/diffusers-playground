@@ -6,8 +6,9 @@ from nicegui import ui
 
 class TrainDataUserInputNode(UserInputNode):
 
-    def __init__(self, name:str="train_data_input"):
+    def __init__(self, name:str="train_data_input", repeats:bool=False):
         self.train_data:TrainDataType = [([""], 1)]
+        self.repeats = repeats
         super().__init__(name)
 
 
@@ -36,7 +37,8 @@ class TrainDataUserInputNode(UserInputNode):
         with ui.row().classes('w-full'):
             ui.label().classes('w-8')
             ui.input(value=train_files[0][0], label="Train Files", on_change=lambda e: self.updateTrainFiles(i, e.value)).classes('grow')
-            ui.number(value=train_files[1], label="Repeats", on_change=lambda e: self.updateRepeats(i, e.value)).classes('small-number')
+            if(self.repeats):
+                ui.number(value=train_files[1], label="Repeats", on_change=lambda e: self.updateRepeats(i, e.value)).classes('small-number')
             ui.button(icon="remove", on_click = lambda e: self.removeInput(i)).props('dense').classes('align-middle')
 
 

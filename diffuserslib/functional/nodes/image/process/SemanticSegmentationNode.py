@@ -1,7 +1,6 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib import pilToCv2
-from controlnet_aux import MLSDdetector
 from transformers import AutoImageProcessor, UperNetForSemanticSegmentation
 import torch
 import numpy as np
@@ -17,9 +16,11 @@ class SemanticSegmentationNode(FunctionalNode):
         self.model = None
         
 
-    def process(self, image) -> Image.Image:
+    def process(self, image:Image.Image) -> Image.Image:
         if self.model is None:
             self.model = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-swin-large") # type: ignore
+
+        image = image.convert("RGB")
 
         processor = AutoImageProcessor.from_pretrained("openmmlab/upernet-swin-large")
         pixel_values = processor(image, return_tensors="pt").pixel_values

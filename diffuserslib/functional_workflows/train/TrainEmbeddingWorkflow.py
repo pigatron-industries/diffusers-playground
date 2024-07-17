@@ -1,38 +1,38 @@
 from diffuserslib import GlobalConfig
 from diffuserslib.functional import *
 from diffuserslib.functional.nodes.user import *
-from diffuserslib.functional.nodes.train.TrainLoraNode import TrainLoraNode
+from diffuserslib.functional.nodes.train.TrainEmbeddingNode import TrainEmbeddingNode
 from diffuserslib.functional.nodes.image.diffusers.user.DiffusionModelUserInputNode import DiffusionModelUserInputNode
 from diffuserslib.functional.nodes.train import *
 
 
-class TrainLoraWorkflow(WorkflowBuilder):
+class TrainEmbeddingWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Train Lora", None, workflow=True, subworkflow=False)
+        super().__init__("Train Embedding", None, workflow=True, subworkflow=False)
 
     def build(self):
         model_input = DiffusionModelUserInputNode()
-        loraname_input = StringUserInputNode(value = "", name="loraname")
+        embeddingname_input = StringUserInputNode(value = "", name="embeddingname")
         keyword_input = StringUserInputNode(value = "", name="keyword")
-        classword_input = StringUserInputNode(value = "", name="classword")
+        initword_input = StringUserInputNode(value = "", name="initword")
+        num_vectors_per_token = IntUserInputNode(value = 1, name="num_vectors_per_token")
+        template_type_input = ListSelectUserInputNode(value = "object", options=["object", "style"], name="template_type")
         resolution_input = IntUserInputNode(value = 768, name="resolution")
         bucket_input = BoolUserInputNode(value = False, name="enable_bucket")
-        network_dim_input = IntUserInputNode(value = 4, name="network_dim")
-        network_alpha_input = IntUserInputNode(value = 1, name="network_alpha")
         save_steps_input = IntUserInputNode(value = 100, name="save_steps")
         train_steps_input = IntUserInputNode(value = 1000, name="train_steps")
-        learning_rate_input = FloatUserInputNode(value = 0.0001, format='%.5f', name="learning_rate")
+        learning_rate_input = FloatUserInputNode(value = 5.0e-04, format='%.5f', name="learning_rate")
         seed_input = SeedUserInputNode(value = None, name="seed")
 
-        train_data_input = TrainDataUserInputNode(name="train_data", repeats=True)
+        train_data_input = TrainDataUserInputNode(name="train_data")
 
         output_dir_input = ListSelectUserInputNode(value = "", options=GlobalConfig.loras_dirs, name="output_dir")
         
-        train_lora = TrainLoraNode(model = model_input,
-                                   loraname = loraname_input,
+        train_lora = TrainEmbeddingNode(model = model_input,
+                                   embeddingname = embeddingname_input,
                                    keyword = keyword_input,
-                                   classword = classword_input,
+                                   initword = initword_input,
                                    train_data = train_data_input,
                                    output_dir = output_dir_input,
                                    resolution = resolution_input,
@@ -45,9 +45,9 @@ class TrainLoraWorkflow(WorkflowBuilder):
                                    learning_rate_schedule = "constant",
                                    learning_rate_warmup_steps = 0,
                                    seed = seed_input,
-                                   network_dim = network_dim_input,   
-                                   network_alpha = network_alpha_input,
-                                   name = "train_lora")
+                                   num_vectors_per_token=num_vectors_per_token,
+                                   template_type=template_type_input,
+                                   name = "train_embedding")
         
         return train_lora
     
