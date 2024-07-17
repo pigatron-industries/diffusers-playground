@@ -61,8 +61,8 @@ class TrainEmbeddingNode(FunctionalNode):
         self.addParam("learning_rate", learning_rate, float)
         self.addParam("learning_rate_schedule", learning_rate_schedule, str)
         self.addParam("learning_rate_warmup_steps", learning_rate_warmup_steps, int)
-        self.addParam("save_state", save_state, bool)
         self.addParam("seed", seed, int)
+        self.addParam("save_state", save_state, bool)
 
 
     def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, initword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
@@ -192,14 +192,14 @@ class TrainEmbeddingNode(FunctionalNode):
 
     def copyOutputFiles(self, temp_output_dir:str, output_dir:str, resume_steps:int|None, name:str, keyword:str):
         os.makedirs(output_dir, exist_ok=True)
-        output_files = glob.glob(os.path.join(temp_output_dir, "*.safetensors"))
+        output_files = glob.glob(os.path.join(temp_output_dir, "*.pt"))
         for file in output_files:
             steps = self.getStepsFromName(file)
             if(steps is not None):
                 total_steps = resume_steps + steps if resume_steps is not None else steps
                 keyword = keyword.replace("<", "")
                 keyword = keyword.replace(">", "")
-                new_file_name = os.path.join(temp_output_dir, f"{name}_<{keyword}_{total_steps}>.safetensors")
+                new_file_name = os.path.join(temp_output_dir, f"{name}_<{keyword}_{total_steps}>.pt")
                 os.rename(file, new_file_name)
                 shutil.copy(new_file_name, output_dir)
 
