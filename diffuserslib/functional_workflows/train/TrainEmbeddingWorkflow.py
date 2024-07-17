@@ -25,6 +25,7 @@ class TrainEmbeddingWorkflow(WorkflowBuilder):
         train_steps_input = IntUserInputNode(value = 1000, name="train_steps")
         learning_rate_input = FloatUserInputNode(value = 5.0e-04, format='%.5f', name="learning_rate")
         seed_input = SeedUserInputNode(value = None, name="seed")
+        save_state_input = BoolUserInputNode(name="save_state")
 
         train_data_input = TrainDataUserInputNode(name="train_data", repeats=True)
 
@@ -49,6 +50,7 @@ class TrainEmbeddingWorkflow(WorkflowBuilder):
                                    seed = seed_input,
                                    num_vectors_per_token=num_vectors_per_token,
                                    template_type=template_type_input,
+                                   save_state = save_state_input,
                                    name = "train_embedding")
         
         return train_lora

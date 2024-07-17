@@ -39,6 +39,7 @@ class TrainEmbeddingNode(FunctionalNode):
                  seed:IntFuncType = 0,
                  num_vectors_per_token:IntFuncType = 1,
                  template_type:StringFuncType = "object",
+                 save_state:BoolFuncType = False,
                  name:str = "train_lora",
                  ):
         super().__init__(name)
@@ -60,12 +61,13 @@ class TrainEmbeddingNode(FunctionalNode):
         self.addParam("learning_rate", learning_rate, float)
         self.addParam("learning_rate_schedule", learning_rate_schedule, str)
         self.addParam("learning_rate_warmup_steps", learning_rate_warmup_steps, int)
+        self.addParam("save_state", save_state, bool)
         self.addParam("seed", seed, int)
 
 
     def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, initword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
-                learning_rate_warmup_steps:int, seed:int, num_vectors_per_token:int, template_type:str):
+                learning_rate_warmup_steps:int, seed:int, num_vectors_per_token:int, template_type:str, save_state:bool):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialized")
 
@@ -102,8 +104,9 @@ class TrainEmbeddingNode(FunctionalNode):
         command.append(f"--lr_warmup_steps={learning_rate_warmup_steps}")
         command.append(f"--seed={seed}")
         command.append(f"--lowram")
-        command.append(f"--save_state")
-        command.append(f"--save_last_n_steps_state=0")
+        if(save_state):
+            command.append(f"--save_state")
+            command.append(f"--save_last_n_steps_state=0")
 
         # embedding specific:
         command.append(f'--token_string="{keyword}"')
