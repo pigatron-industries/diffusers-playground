@@ -27,7 +27,7 @@ class TrainEmbeddingWorkflow(WorkflowBuilder):
 
         train_data_input = TrainDataUserInputNode(name="train_data")
 
-        output_dir_input = ListSelectUserInputNode(value = "", options=GlobalConfig.loras_dirs, name="output_dir")
+        output_dir_input = ListSelectUserInputNode(value = "", options=GlobalConfig.embeddings_dirs, name="output_dir")
         
         train_lora = TrainEmbeddingNode(model = model_input,
                                    embeddingname = embeddingname_input,
