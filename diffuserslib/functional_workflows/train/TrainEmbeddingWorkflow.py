@@ -26,7 +26,7 @@ class TrainEmbeddingWorkflow(WorkflowBuilder):
         learning_rate_input = FloatUserInputNode(value = 5.0e-04, format='%.5f', name="learning_rate")
         seed_input = SeedUserInputNode(value = None, name="seed")
 
-        train_data_input = TrainDataUserInputNode(name="train_data")
+        train_data_input = TrainDataUserInputNode(name="train_data", repeats=True)
 
         output_dir_input = ListSelectUserInputNode(value = "", options=GlobalConfig.embeddings_dirs, name="output_dir")
         
