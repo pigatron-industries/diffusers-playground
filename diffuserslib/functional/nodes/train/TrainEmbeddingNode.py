@@ -46,7 +46,7 @@ class TrainEmbeddingNode(FunctionalNode):
         self.addParam("model", model, ModelsType)
         self.addParam("loraname", embeddingname, str)
         self.addParam("keyword", keyword, str)
-        self.addParam("classword", initword, str)
+        self.addParam("initword", initword, str)
         self.addParam("num_vectors_per_token", num_vectors_per_token, int)
         self.addParam("template_type", template_type, str)
         self.addParam("train_data", train_data, TrainDataType)
