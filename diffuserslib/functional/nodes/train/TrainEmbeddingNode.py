@@ -133,7 +133,8 @@ class TrainEmbeddingNode(FunctionalNode):
 
     
     def copyTrainingData(self, temp_data_dir:str, keyword:str, train_files:List[str]):
-        keyword = keyword.replace("<>", "")
+        keyword = keyword.replace("<", "")
+        keyword = keyword.replace(">", "")
         temp_data_dir = os.path.join(temp_data_dir, f"{keyword}")
         os.makedirs(temp_data_dir, exist_ok=True)
         for file_pattern in train_files:
@@ -195,7 +196,8 @@ class TrainEmbeddingNode(FunctionalNode):
             steps = self.getStepsFromName(file)
             if(steps is not None):
                 total_steps = resume_steps + steps if resume_steps is not None else steps
-                keyword = keyword.replace("<>", "")
+                keyword = keyword.replace("<", "")
+                keyword = keyword.replace(">", "")
                 new_file_name = os.path.join(temp_output_dir, f"{name}_<{keyword}_{total_steps}>.safetensors")
                 os.rename(file, new_file_name)
                 shutil.copy(new_file_name, output_dir)
