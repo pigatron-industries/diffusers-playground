@@ -82,7 +82,7 @@ class TrainEmbeddingNode(FunctionalNode):
         temp_output_dir = os.path.join(temp_train_dir, "output")
 
         for train_repeat in train_data:
-            self.copyTrainingData(temp_data_dir, train_repeat[0])
+            self.copyTrainingData(temp_data_dir, keyword, train_repeat[0])
 
         resume_steps, temp_resume_dir = self.copyResumeData(temp_resume_dir, output_dir)
 
@@ -107,7 +107,7 @@ class TrainEmbeddingNode(FunctionalNode):
 
         # embedding specific:
         command.append(f"--token_string={keyword}")
-        command.append(f"--init_word={initword}")
+        command.append(f'--init_word="{initword}"')
         command.append(f"--num_vectors_per_token={num_vectors_per_token}")
         if(template_type == "object"):
             command.append(f"--use_object_template")
@@ -132,7 +132,9 @@ class TrainEmbeddingNode(FunctionalNode):
 
 
     
-    def copyTrainingData(self, temp_data_dir:str, train_files:List[str]):
+    def copyTrainingData(self, temp_data_dir:str, keyword:str, train_files:List[str]):
+        keyword = keyword.replace("<>", "")
+        temp_data_dir = os.path.join(temp_data_dir, f"{keyword}")
         os.makedirs(temp_data_dir, exist_ok=True)
         for file_pattern in train_files:
             # TODO change * to *.png etc
