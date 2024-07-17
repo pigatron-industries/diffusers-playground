@@ -54,8 +54,6 @@ class TrainEmbeddingNode(FunctionalNode):
         self.addParam("resolution", resolution, int)
         self.addParam("enable_bucket", enable_bucket, bool)
         self.addParam("batch_size", batch_size, int)
-        self.addParam("network_dim", network_dim, int)
-        self.addParam("network_alpha", network_alpha, int)
         self.addParam("gradient_accumulation_steps", gradient_accumulation_steps, int)
         self.addParam("save_steps", save_steps, int)
         self.addParam("train_steps", train_steps, int)
@@ -195,7 +193,8 @@ class TrainEmbeddingNode(FunctionalNode):
             steps = self.getStepsFromName(file)
             if(steps is not None):
                 total_steps = resume_steps + steps if resume_steps is not None else steps
-                new_file_name = os.path.join(temp_output_dir, f"{name}_{keyword}_{total_steps}.safetensors")
+                keyword = keyword.replace("<>", "")
+                new_file_name = os.path.join(temp_output_dir, f"{name}_<{keyword}_{total_steps}>.safetensors")
                 os.rename(file, new_file_name)
                 shutil.copy(new_file_name, output_dir)
 
