@@ -15,6 +15,7 @@ class TrainEmbeddingWorkflow(WorkflowBuilder):
         model_input = DiffusionModelUserInputNode()
         embeddingname_input = StringUserInputNode(value = "", name="embeddingname")
         keyword_input = StringUserInputNode(value = "", name="keyword")
+        classword_input = StringUserInputNode(value = "", name="classword")
         initword_input = StringUserInputNode(value = "", name="initword")
         num_vectors_per_token = IntUserInputNode(value = 1, name="num_vectors_per_token")
         template_type_input = ListSelectUserInputNode(value = "object", options=["object", "style"], name="template_type")
@@ -32,6 +33,7 @@ class TrainEmbeddingWorkflow(WorkflowBuilder):
         train_lora = TrainEmbeddingNode(model = model_input,
                                    embeddingname = embeddingname_input,
                                    keyword = keyword_input,
+                                   classword = classword_input,
                                    initword = initword_input,
                                    train_data = train_data_input,
                                    output_dir = output_dir_input,

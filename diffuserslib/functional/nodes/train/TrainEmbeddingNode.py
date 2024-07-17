@@ -23,14 +23,13 @@ class TrainEmbeddingNode(FunctionalNode):
                  model:ModelsFuncType,
                  embeddingname:StringFuncType,
                  keyword:StringFuncType,
+                 classword:StringFuncType,
                  initword:StringFuncType,
                  train_data:TrainDataFuncType,
                  output_dir:StringFuncType,
                  resolution:IntFuncType = 768,
                  enable_bucket:BoolFuncType = False,
                  batch_size:IntFuncType = 1,
-                 network_dim:IntFuncType = 4,
-                 network_alpha:IntFuncType = 1,
                  gradient_accumulation_steps:IntFuncType = 1,
                  save_steps:IntFuncType = 100,
                  train_steps:IntFuncType = 1000,
@@ -46,6 +45,7 @@ class TrainEmbeddingNode(FunctionalNode):
         self.addParam("model", model, ModelsType)
         self.addParam("loraname", embeddingname, str)
         self.addParam("keyword", keyword, str)
+        self.addParam("classword", classword, str)
         self.addParam("initword", initword, str)
         self.addParam("num_vectors_per_token", num_vectors_per_token, int)
         self.addParam("template_type", template_type, str)
@@ -63,7 +63,7 @@ class TrainEmbeddingNode(FunctionalNode):
         self.addParam("seed", seed, int)
 
 
-    def process(self, model:ModelsType, loraname:str, keyword:str, initword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
+    def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, initword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
                 learning_rate_warmup_steps:int, seed:int, num_vectors_per_token:int, template_type:str):
         if(DiffusersPipelines.pipelines is None):
@@ -82,7 +82,7 @@ class TrainEmbeddingNode(FunctionalNode):
         temp_output_dir = os.path.join(temp_train_dir, "output")
 
         for train_repeat in train_data:
-            self.copyTrainingData(temp_data_dir, keyword, train_repeat[0])
+            self.copyTrainingData(temp_data_dir, keyword, classword, train_repeat[1], train_repeat[0])
 
         resume_steps, temp_resume_dir = self.copyResumeData(temp_resume_dir, output_dir)
 
@@ -132,10 +132,8 @@ class TrainEmbeddingNode(FunctionalNode):
 
 
     
-    def copyTrainingData(self, temp_data_dir:str, keyword:str, train_files:List[str]):
-        keyword = keyword.replace("<", "")
-        keyword = keyword.replace(">", "")
-        temp_data_dir = os.path.join(temp_data_dir, f"{keyword}")
+    def copyTrainingData(self, temp_data_dir:str, keyword:str, classword:str, repeats:int, train_files:List[str]):
+        temp_data_dir = os.path.join(temp_data_dir, f"{int(repeats)}_{keyword} {classword}")
         os.makedirs(temp_data_dir, exist_ok=True)
         for file_pattern in train_files:
             # TODO change * to *.png etc
