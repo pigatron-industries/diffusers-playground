@@ -17,6 +17,9 @@ class AbstractView:
                 .small-number {
                     width: 4em;
                 }
+                .h-full-input .q-field__control {
+                    height:100%;
+                }
             </style>
         ''')
         context.get_client().content.classes('h-[100vh] p-0')
