@@ -11,7 +11,7 @@ class LanguageModelCompletionWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        prompt_input = TextAreaLinesInputNode(value = "", name = "prompt_input")
+        prompt_input = TextAreaInputNode(value = "", name = "prompt_input")
 
         llm = LanguageModelCompletionNode(prompt=prompt_input, name="llm")
         return llm
