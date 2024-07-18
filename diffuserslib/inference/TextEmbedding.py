@@ -64,6 +64,11 @@ class TextEmbedding:
                 string_to_param = learned_embeds['string_to_param']
                 embedding_vectors = string_to_param[trained_token]
                 self.embeddings.append(embedding_vectors)
+            elif ('clip_l' in learned_embeds):
+                # Multiple embeddings with tokenizer as key
+                self.embeddings = []
+                self.embeddings.append(learned_embeds['clip_l'])
+                self.embeddings.append(learned_embeds['clip_g'])
             else: 
                 # .bin diffusers concept
                 trained_token = list(learned_embeds.keys())[0]
