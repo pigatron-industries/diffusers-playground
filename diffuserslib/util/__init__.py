@@ -1,4 +1,4 @@
 from .DeepCopyObject import *
-from .FileDialog import *
+from .LocalFilePicker import *
 from .ModuleLoader import *
 from .CommandProcess import *

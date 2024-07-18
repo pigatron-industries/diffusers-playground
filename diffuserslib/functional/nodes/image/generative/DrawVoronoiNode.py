@@ -45,7 +45,6 @@ class DrawVoronoiNode(FunctionalNode):
                 line_probability: float = 1,
                 radius: int = 2,
                 width: int = 1) -> Image.Image:
-        print("draw_voronoi")
         drawBoundedLines, drawUnboundedLines = draw_options
         points_array = np.array([vector.coordinates for vector in points]) * image.size
         image = image.copy()

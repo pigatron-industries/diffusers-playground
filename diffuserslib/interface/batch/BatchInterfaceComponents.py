@@ -1,7 +1,7 @@
 from diffuserslib.functional.types import *
 
-from .BatchController import BatchController
-from .InterfaceComponents import InterfaceComponents
+from diffuserslib.interface.WorkflowController import WorkflowController
+from ..WorkflowComponents import WorkflowComponents
 from .BatchRunDataControls import BatchRunDataControls
 from nicegui import ui, run
 from nicegui.element import Element
@@ -16,9 +16,9 @@ class BatchDataControls:
     batch_container:Element|None
 
 
-class BatchInterfaceComponents(InterfaceComponents):
+class BatchInterfaceComponents(WorkflowComponents):
 
-    def __init__(self, controller:BatchController):
+    def __init__(self, controller:WorkflowController):
         super().__init__(controller)
         self.rundata_controls:Dict[int, BatchRunDataControls] = {}
         self.batchdata_controls:Dict[int, BatchDataControls] = {}

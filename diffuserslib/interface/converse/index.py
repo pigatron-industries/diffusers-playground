@@ -1,5 +1,6 @@
 from nicegui import ui, app
 from diffuserslib.interface.AbstractView import AbstractView
+from diffuserslib.interface.WorkflowController import WorkflowController
 from dataclasses import dataclass
 
 
@@ -27,9 +28,8 @@ class ConverseView(AbstractView):
     
 
     def __init__(self):
-        pass
         self.model = ConverseModel(input=ConverseInput())
-        # self.controller = Controller()
+        self.controller = WorkflowController.get_instance()
 
 
     @ui.refreshable

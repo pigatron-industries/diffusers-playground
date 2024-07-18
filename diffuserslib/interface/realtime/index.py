@@ -1,33 +1,25 @@
 from nicegui import ui, app
 from diffuserslib.interface.AbstractView import AbstractView
 from diffuserslib.interface.WorkflowController import WorkflowController
-from ..WorkflowComponents import WorkflowComponents
-from .BatchInterfaceComponents import BatchInterfaceComponents
-from ..realtime.RealtimeInterfaceComponents import RealtimeInterfaceComponents
+from .RealtimeInterfaceComponents import RealtimeInterfaceComponents
 
 
-class BatchView(AbstractView):
+class RealtimeView(AbstractView):
 
-    @ui.page('/')
-    def gui():
+    @ui.page('/realtime')
+    def realtime():
         app.on_exception(ui.notify)
-        view = BatchView()
-        view.page()
-
-    @ui.page('/batch')
-    def batch():
-        app.on_exception(ui.notify)
-        view = BatchView()
+        view = RealtimeView()
         view.page()
 
 
     def __init__(self):
         self.controller = WorkflowController.get_instance()
-        self.interface_components = BatchInterfaceComponents(self.controller)
+        self.interface_components = RealtimeInterfaceComponents(self.controller)
 
 
     def toggles(self):
-        ui.label("Batch").style('margin-top:1.3em; margin-right:5em; margin-bottom:0.1em;')
+        ui.label("Realtime").style('margin-top:1.3em; margin-right:5em; margin-bottom:0.1em;')
 
 
     @ui.refreshable

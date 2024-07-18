@@ -1,15 +1,16 @@
-from .BatchController import BatchController
+from diffuserslib.interface.WorkflowController import WorkflowController
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes import UserInputNode, ListUserInputNode
 from nicegui import ui
 from typing import Dict, List
-from diffuserslib.interface.LocalFilePicker import LocalFilePicker
+from diffuserslib.util.LocalFilePicker import LocalFilePicker
 
 
 
-class InterfaceComponents:
+class WorkflowComponents:
+    """ Components for selecting and setting workflow parameters"""
 
-    def __init__(self, controller:BatchController):
+    def __init__(self, controller:WorkflowController):
         self.controller = controller
         self.workflow_select = None
 

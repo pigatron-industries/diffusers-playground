@@ -1,6 +1,7 @@
 from nicegui import ui
 from diffuserslib.interface.batch.index import *
 from diffuserslib.interface.converse.index import *
+from diffuserslib.interface.realtime.index import *
 from diffuserslib.interface.api import *
 from diffuserslib.init import initializeDiffusers
 

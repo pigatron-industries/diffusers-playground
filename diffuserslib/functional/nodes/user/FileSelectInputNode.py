@@ -1,9 +1,8 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from .UserInputNode import UserInputNode
-from diffuserslib.util import FileDialog
 from nicegui import ui
-from diffuserslib.interface.LocalFilePicker import LocalFilePicker
+from diffuserslib.util.LocalFilePicker import LocalFilePicker
 from diffuserslib.GlobalConfig import GlobalConfig
 
 

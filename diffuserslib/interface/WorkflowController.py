@@ -4,6 +4,7 @@ from diffuserslib.util import ModuleLoader
 from typing import Dict
 from dataclasses import dataclass, field
 from diffuserslib.interface.Clipboard import Clipboard
+from typing import Self
 import inspect
 import yaml
 import sys
@@ -25,15 +26,23 @@ def str_to_class(str):
     return getattr(sys.modules[__name__], str)
     
 
-class BatchController:
+class WorkflowController:
+    instance:Self|None = None
 
     model = Model()
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
     builders_batch:Dict[str, str] = {}       # [WorkflowClass Name, Workflow Display Name]
-    builders_realtime:Dict[str, str] = {}    # [WorkflowClass Name, Workflow Display Name]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
     history_filename = ".history.yml"
+    workflow_directory= "../functional_workflows"
+
+    @classmethod
+    def get_instance(cls) -> Self:
+        if(cls.instance is None):
+            cls.instance = cls()
+        return cls.instance
+    
 
     def __init__(self):
         if(WorkflowRunner.workflowrunner is not None):
@@ -64,7 +73,7 @@ class BatchController:
         self.builders_batch = {}
         self.builders_realtime = {}
         self.builders_sub = {}
-        path = os.path.join(os.path.dirname(__file__), '../../functional_workflows')
+        path = os.path.join(os.path.dirname(__file__), self.workflow_directory)
         modules = ModuleLoader.load_from_directory(path)
         for module in modules:
             vars = ModuleLoader.get_vars(module)

@@ -1,4 +1,4 @@
-from .BatchController import BatchController
+from diffuserslib.interface.WorkflowController import WorkflowController
 from diffuserslib.functional.WorkflowRunner import WorkflowRunData
 from diffuserslib.functional.types import Video, Audio
 from nicegui import ui, run
@@ -13,7 +13,7 @@ default_output_width = 256
 
 class BatchRunDataControls:
 
-    def __init__(self, rundata:WorkflowRunData, runid:int, batchid:int, rundata_container:Element, controller:BatchController):
+    def __init__(self, rundata:WorkflowRunData, runid:int, batchid:int, rundata_container:Element, controller:WorkflowController):
         self.rundata = rundata
         self.runid = runid
         self.batchid = batchid

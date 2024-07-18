@@ -1,20 +1,17 @@
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
-from diffuserslib.functional.nodes.user.ListUserInputNode import ListUserInputNode
-from .BatchController import BatchController
-from .InterfaceComponents import InterfaceComponents
+from diffuserslib.interface.WorkflowController import WorkflowController
+from ..WorkflowComponents import WorkflowComponents
 from nicegui import ui
-from typing import Dict
-from dataclasses import dataclass
 from PIL import Image
 
 
 default_output_width = 256
 
 
-class RealtimeInterfaceComponents(InterfaceComponents):
+class RealtimeInterfaceComponents(WorkflowComponents):
 
-    def __init__(self, controller:BatchController):
+    def __init__(self, controller:WorkflowController):
         super().__init__(controller)
         self.output = None
         self.timer = ui.timer(0.1, lambda: self.updateWorkflowOutput(), active=False)
