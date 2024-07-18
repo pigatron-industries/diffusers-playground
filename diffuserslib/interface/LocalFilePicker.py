@@ -3,12 +3,13 @@ from pathlib import Path
 from typing import Optional
 
 from nicegui import events, ui
+from typing import List
 
 
 class LocalFilePicker(ui.dialog):
 
-    def __init__(self, directory: str, submit_text:str = "Ok",
-                 upper_limit: Optional[str] = ..., multiple: bool = False, show_hidden_files: bool = False) -> None:
+    def __init__(self, directory: str, submit_text:str = "Ok", upper_limit: Optional[str] = ..., 
+                 drives: List[str]|None = None, multiple: bool = False, show_hidden_files: bool = False) -> None:
         """Local File Picker
 
         This is a simple file picker that allows you to select a file from the local filesystem where NiceGUI is running.
@@ -21,6 +22,7 @@ class LocalFilePicker(ui.dialog):
         super().__init__()
 
         self.multiple = multiple
+        self.drives = drives
         self.path = Path(directory).expanduser()
         self.filename = None
         if upper_limit is None:
@@ -43,10 +45,11 @@ class LocalFilePicker(ui.dialog):
         self.update_grid()
 
     def add_drives_toggle(self):
-        if platform.system() == 'Windows':
-            import win32api
-            drives = win32api.GetLogicalDriveStrings().split('\000')[:-1]
-            self.drives_toggle = ui.toggle(drives, value=drives[0], on_change=self.update_drive)
+        # if platform.system() == 'Windows':
+            # import win32api
+            # drives = win32api.GetLogicalDriveStrings().split('\000')[:-1]
+        if(self.drives is not None):
+            self.drives_toggle = ui.toggle(self.drives, value=self.drives[0], on_change=self.update_drive)
 
     def update_drive(self):
         self.path = Path(self.drives_toggle.value).expanduser()

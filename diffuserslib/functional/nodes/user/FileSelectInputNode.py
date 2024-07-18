@@ -3,6 +3,8 @@ from diffuserslib.functional.types.FunctionalTyping import *
 from .UserInputNode import UserInputNode
 from diffuserslib.util import FileDialog
 from nicegui import ui
+from diffuserslib.interface.LocalFilePicker import LocalFilePicker
+from diffuserslib.GlobalConfig import GlobalConfig
 
 
 class FileSelectInputNode(UserInputNode):
@@ -22,7 +24,7 @@ class FileSelectInputNode(UserInputNode):
     def getValue(self) -> List[str]:
         return self.filenames
     
-    def setValue(self, value:List[str]):
+    def setValue(self, value:List[str]|None):
         if(value is None):
             self.filenames = []
         else:
@@ -30,7 +32,7 @@ class FileSelectInputNode(UserInputNode):
 
     @ui.refreshable
     def gui(self):
-        dialog = FileDialog(self.fileSelected, self.extensions[self.filetype])
+        self.dialog = LocalFilePicker(GlobalConfig.inputs_dirs[0], drives=GlobalConfig.inputs_dirs, multiple=True)  # TODO limit to extensions
         with ui.row().style("padding-top: 1.4em;"):
             if(len(self.filenames) == 0):
                 ui.label(f'Select {self.filetype} file')
@@ -38,12 +40,20 @@ class FileSelectInputNode(UserInputNode):
                 ui.label(self.filenames[0])
             else:
                 ui.label(f"{len(self.filenames)} files selected")
-            ui.button(icon='folder', on_click=dialog.open).props('dense')
+            ui.button(icon='folder', on_click=self.selectFiles).props('dense')
 
 
-    def fileSelected(self, selected_files:List[str]):
-        self.filenames = selected_files
-        self.gui.refresh()
+    async def selectFiles(self):
+        result = await self.dialog
+        if(result is not None and len(result) > 0):
+            self.filenames = result
+            self.gui.refresh()
+
+
+    def __deepcopy__(self, memo):
+        new_node = FileSelectInputNode(filetype=self.filetype, name=self.node_name)
+        new_node.filenames = self.filenames
+        return new_node
 
     
     def process(self) -> list[str]:
