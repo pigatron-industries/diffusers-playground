@@ -3,8 +3,7 @@ from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.util import ModuleLoader
 from typing import Dict
 from dataclasses import dataclass, field
-from .Clipboard import Clipboard
-from .LocalFilePicker import LocalFilePicker
+from diffuserslib.interface.Clipboard import Clipboard
 import inspect
 import yaml
 import sys
@@ -26,7 +25,7 @@ def str_to_class(str):
     return getattr(sys.modules[__name__], str)
     
 
-class Controller:
+class BatchController:
 
     model = Model()
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
@@ -65,7 +64,7 @@ class Controller:
         self.builders_batch = {}
         self.builders_realtime = {}
         self.builders_sub = {}
-        path = os.path.join(os.path.dirname(__file__), '../functional_workflows')
+        path = os.path.join(os.path.dirname(__file__), '../../functional_workflows')
         modules = ModuleLoader.load_from_directory(path)
         for module in modules:
             vars = ModuleLoader.get_vars(module)

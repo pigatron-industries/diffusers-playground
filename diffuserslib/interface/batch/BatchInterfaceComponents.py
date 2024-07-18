@@ -1,6 +1,6 @@
 from diffuserslib.functional.types import *
 
-from .Controller import Controller
+from .BatchController import BatchController
 from .InterfaceComponents import InterfaceComponents
 from .BatchRunDataControls import BatchRunDataControls
 from nicegui import ui, run
@@ -18,7 +18,7 @@ class BatchDataControls:
 
 class BatchInterfaceComponents(InterfaceComponents):
 
-    def __init__(self, controller:Controller):
+    def __init__(self, controller:BatchController):
         super().__init__(controller)
         self.rundata_controls:Dict[int, BatchRunDataControls] = {}
         self.batchdata_controls:Dict[int, BatchDataControls] = {}
