@@ -32,6 +32,7 @@ class WorkflowController:
     model = Model()
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
     builders_batch:Dict[str, str] = {}       # [WorkflowClass Name, Workflow Display Name]
+    builders_realtime:Dict[str, str] = {}    # [WorkflowClass Name, Workflow Display Name]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
     history_filename = ".history.yml"

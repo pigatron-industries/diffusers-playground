@@ -67,11 +67,16 @@ class WorkflowComponents:
             self.controls.refresh()
 
     
-    def workflowSelect(self, workflow_list:Dict[str, str]):
+    def workflowSelect(self, workflow_list:Dict[str, str], output_types:List[str]):
         if(self.controller.model.workflow_name not in workflow_list):
             self.controller.model.workflow_name = None
             self.controller.model.workflow = None
-        ui.toggle(self.controller.output_types, on_change=lambda e: self.setOutputType(e.value, workflow_list)).bind_value(self.controller.model, "output_type")
+
+        if(len(output_types) > 1):
+            ui.toggle(output_types, on_change=lambda e: self.setOutputType(e.value, workflow_list)).bind_value(self.controller.model, "output_type")
+        if(len(output_types) == 1):
+            self.controller.model.output_type = output_types[0]
+
         workflow_options = self.controller.filterWorkflowsByOutputType(workflow_list, self.controller.model.output_type)
         if(self.controller.model.workflow_name not in workflow_options):
             self.controller.model.workflow_name = None

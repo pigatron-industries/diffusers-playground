@@ -121,7 +121,7 @@ class BatchInterfaceComponents(WorkflowComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.controller.builders_batch)
+        self.workflowSelect(self.controller.builders_batch, ["Image", "Video", "Audio", "str", "Other"])
         self.workflow_parameters()
 
 

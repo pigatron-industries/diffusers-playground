@@ -9,7 +9,7 @@ from PIL import Image
 default_output_width = 256
 
 
-class RealtimeInterfaceComponents(WorkflowComponents):
+class ConverseInterfaceComponents(WorkflowComponents):
 
     def __init__(self, controller:WorkflowController):
         super().__init__(controller)
@@ -83,7 +83,7 @@ class RealtimeInterfaceComponents(WorkflowComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.controller.builders_realtime, ["Image"])
+        self.workflowSelect(self.controller.builders_realtime, ["str"])
         self.workflow_parameters()
 
 
