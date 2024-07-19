@@ -1,4 +1,5 @@
 from diffuserslib.inference import DiffusersPipelines
+from diffuserslib.functional.nodes.text.llm.OllamaModels import OllamaModels
 from diffuserslib.functional import WorkflowRunner
 from diffuserslib.GlobalConfig import GlobalConfig
 from diffuserslib.functional.nodes.image.diffusers.RandomPromptProcessorNode import RandomPromptProcessorNode
@@ -35,6 +36,7 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
     for modelconfig in modelconfigs:
         if os.path.exists(modelconfig):
             DiffusersPipelines.pipelines.loadPresetFile(modelconfig)
+            OllamaModels.loadPresetFile(modelconfig)
 
     for config in configs:
         if os.path.exists(config):

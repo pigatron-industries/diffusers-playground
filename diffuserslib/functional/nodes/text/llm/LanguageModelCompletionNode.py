@@ -9,8 +9,8 @@ class LanguageModelCompletionNode(FunctionalNode):
                  model:StringFuncType = "llama3:8b",
                  name:str = "chat_completion"):
         super().__init__(name)
-        self.addParam("prompt", prompt, str)
         self.addParam("model", model, str)
+        self.addParam("prompt", prompt, str)
         self.model = None
 
 

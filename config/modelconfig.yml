@@ -278,3 +278,9 @@ animatediff:
   - base: sdxl_1_0
     models:
       - id: guoyww/animatediff-motion-adapter-sdxl-beta
+
+
+ollama:
+  - id: llama3:8b
+  - id: dolphin-llama3:8b
+  - id: gemma2:9b

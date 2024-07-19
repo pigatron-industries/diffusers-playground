@@ -77,17 +77,18 @@ class DiffusersModelList:
         for key in filedata:
             modeldata = filedata[key]
             for basedata in modeldata:
-                basemodel = self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'] if 'pipelines' in basedata else {})
-                for modeldata in basedata['models']:
-                    # print(model)
-                    if (modeldata.get('autocast') != 'false'):
-                        autocast = True
-                    else:
-                        autocast = False
-                    self.addModel(modelid=modeldata['id'], base=basedata['base'], modeltype = key, revision=modeldata.get('revision'), 
-                                  stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), preprocess=modeldata.get('preprocess'), 
-                                  location=modeldata.get('location', 'hf'), 
-                                  autocast=autocast, pipelinetypes = basemodel.pipelinetypes, data=modeldata)
+                if('base' in basedata):
+                    basemodel = self.addBaseModel(base = basedata['base'], pipelinetypes = basedata['pipelines'] if 'pipelines' in basedata else {})
+                    for modeldata in basedata['models']:
+                        # print(model)
+                        if (modeldata.get('autocast') != 'false'):
+                            autocast = True
+                        else:
+                            autocast = False
+                        self.addModel(modelid=modeldata['id'], base=basedata['base'], modeltype = key, revision=modeldata.get('revision'), 
+                                    stylephrase=modeldata.get('phrase'), vae=modeldata.get('vae'), preprocess=modeldata.get('preprocess'), 
+                                    location=modeldata.get('location', 'hf'), 
+                                    autocast=autocast, pipelinetypes = basemodel.pipelinetypes, data=modeldata)
 
     def addBaseModel(self, base: str, pipelinetypes: Dict[str, str]):
         if base not in self.basemodels:
