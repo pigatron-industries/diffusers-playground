@@ -115,7 +115,7 @@ class BatchRunDataControls:
             output.write()
             self.output_control = ui.audio(output.file.name).style(replace= f"max-width:{default_output_width}px; min-width:{default_output_width}px;")
         elif(isinstance(output, str)):
-            self.output_control = ui.label(output).classes('w-full')
+            self.output_control = ui.markdown(output).classes('w-full')
         else:
             self.output_width = 0
             self.output_control = None
@@ -131,6 +131,8 @@ class BatchRunDataControls:
                 self.output_control.set_source(output) # type: ignore
             elif(isinstance(output, List) and len(output) > 0 and isinstance(output[-1], Image.Image)):
                 self.output_control.set_source(output[-1]) # type: ignore
+            elif(isinstance(output, str) and isinstance(self.output_control, ui.markdown)):
+                self.output_control.set_content(output) # type: ignore
 
 
     def workflow_output_dialog(self):
