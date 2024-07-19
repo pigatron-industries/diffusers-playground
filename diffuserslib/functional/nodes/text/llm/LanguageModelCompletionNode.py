@@ -7,7 +7,7 @@ class LanguageModelCompletionNode(FunctionalNode):
     def __init__(self, 
                  prompt:StringFuncType,
                  model:StringFuncType = "llama3:8b",
-                 name:str = "chat_completion"):
+                 name:str = "llm_completion"):
         super().__init__(name)
         self.addParam("model", model, str)
         self.addParam("prompt", prompt, str)
@@ -15,7 +15,7 @@ class LanguageModelCompletionNode(FunctionalNode):
         self.text = ""
 
 
-    def process(self, prompt:str, model:str) -> str:
+    def process(self, model:str, prompt:str) -> str:
         if(model != self.model):
             self.model = model
             self.llm = Ollama(model = model, request_timeout = 120)

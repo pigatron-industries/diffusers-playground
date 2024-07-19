@@ -1,6 +1,6 @@
 from sympy import preview
 from diffuserslib.functional import Video, Audio, FunctionalNode, WorkflowProgress
-from typing import Any, Dict, Self, List
+from typing import Any, Dict, Self, List, Callable
 from dataclasses import dataclass, field
 from PIL import Image
 from PIL.Image import Resampling

@@ -16,6 +16,11 @@ class RealtimeInterfaceComponents(WorkflowComponents):
         self.output = None
         self.timer = ui.timer(0.1, lambda: self.updateWorkflowOutput(), active=False)
         self.running = False
+        self.builders = {}
+        for name, builder in self.controller.builders.items():
+            if(builder.realtime):
+                self.builders[name] = builder.name
+        self.builders = dict(sorted(self.builders.items(), key=lambda item: item[1]))
 
 
     def runWorkflow(self):
@@ -30,19 +35,6 @@ class RealtimeInterfaceComponents(WorkflowComponents):
         self.timer.deactivate()
         self.running = False
         self.status.refresh()
-
-
-    def toggleParamFunctional(self, param:NodeParameter):
-        if(isinstance(param.value, UserInputNode)):
-            param.value = FunctionalNode("empty")
-        else:
-            param.value = param.initial_value
-        self.controls.refresh()
-
-
-    def selectInputNode(self, param:NodeParameter, value):
-        self.controller.createInputNode(param, value)
-        self.controls.refresh()
 
 
     def updateWorkflowOutput(self):
@@ -83,7 +75,7 @@ class RealtimeInterfaceComponents(WorkflowComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.controller.builders_realtime, ["Image"])
+        self.workflowSelect(self.builders, ["Image"])
         self.workflow_parameters()
 
 

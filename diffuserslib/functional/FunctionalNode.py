@@ -1,5 +1,5 @@
 from diffuserslib.util import DeepCopyObject
-from typing import Dict, Any, List, Self, Tuple
+from typing import Dict, Any, List, Self, Callable
 from dataclasses import dataclass
 
 
@@ -39,6 +39,8 @@ class FunctionalNode(DeepCopyObject):
         self.previous_outputs = []
         self.previous_outputs_size = 1
         self.stopping = False
+        self.callback_progress = None
+        self.callback_finished = None
 
 
     def __call__(self, **kwargs) -> Any:
@@ -82,10 +84,25 @@ class FunctionalNode(DeepCopyObject):
         if(self.node_name == node_name):
             return self
         return self.recursive_action("getNode", return_value=True, node_name=node_name)
+    
+
+    def getNodeByType(self, node_type:type) -> Self|None:
+        if isinstance(self, node_type):
+            return self
+        return self.recursive_action("getNodeByType", return_value=True, node_type=node_type)
 
 
     def getProgress(self) -> WorkflowProgress|None:
         return self.recursive_action("getProgress", return_value=True)
+    
+
+    def setProgressCallback(self, callback:Callable):
+        self.callback_progress = callback
+        self.recursive_action("setProgressCallback", callback=callback)
+
+
+    def setFinishedCallback(self, callback:Callable):
+        self.callback_finished = callback
 
 
     def recursive_action(self, action:str, return_value:bool=False, init_params:bool=False, **kwargs):

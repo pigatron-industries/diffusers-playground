@@ -31,12 +31,11 @@ class WorkflowController:
 
     model = Model()
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
-    builders_batch:Dict[str, str] = {}       # [WorkflowClass Name, Workflow Display Name]
-    builders_realtime:Dict[str, str] = {}    # [WorkflowClass Name, Workflow Display Name]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
     history_filename = ".history.yml"
     workflow_directory= "../functional_workflows"
+    output_subdir = "."
 
     @classmethod
     def get_instance(cls) -> Self:
@@ -71,8 +70,6 @@ class WorkflowController:
 
     def loadWorkflows(self):
         print("Loading workflow builders")
-        self.builders_batch = {}
-        self.builders_realtime = {}
         self.builders_sub = {}
         path = os.path.join(os.path.dirname(__file__), self.workflow_directory)
         modules = ModuleLoader.load_from_directory(path)
@@ -82,17 +79,9 @@ class WorkflowController:
                 if(inspect.isclass(buildercls) and issubclass(buildercls, WorkflowBuilder)):
                     builder = buildercls()
                     self.builders[name] = builder
-                    if(builder.workflow and name not in self.builders_batch):
-                        self.builders_batch[name] = builder.name
                     if(builder.subworkflow and name not in self.builders_sub):
                         self.builders_sub[name] = builder.name
-                    if(builder.realtime and name not in self.builders_realtime):
-                        self.builders_realtime[name] = builder.name
                     print(f"Loading workflow builder: {name}")
-        self.builders_batch = dict(sorted(self.builders_batch.items(), key=lambda item: item[1]))
-        self.builders_realtime = dict(sorted(self.builders_realtime.items(), key=lambda item: item[1]))
-        self.builders_sub = dict(sorted(self.builders_sub.items(), key=lambda item: item[1]))
-        print(self.builders_batch)
     
 
     def loadWorkflow(self, workflow_name):

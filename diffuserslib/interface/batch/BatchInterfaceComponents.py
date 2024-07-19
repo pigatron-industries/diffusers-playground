@@ -24,6 +24,11 @@ class BatchInterfaceComponents(WorkflowComponents):
         self.batchdata_controls:Dict[int, BatchDataControls] = {}
         self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
         self.progress = 0
+        self.builders = {}
+        for name, builder in self.controller.builders.items():
+            if(builder.workflow):
+                self.builders[name] = builder.name
+        self.builders = dict(sorted(self.builders.items(), key=lambda item: item[1]))
 
 
     async def runWorkflow(self):
@@ -121,7 +126,7 @@ class BatchInterfaceComponents(WorkflowComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.controller.builders_batch, ["Image", "Video", "Audio", "str", "Other"])
+        self.workflowSelect(self.builders, ["Image", "Video", "Audio", "str", "Other"])
         self.workflow_parameters()
 
 
