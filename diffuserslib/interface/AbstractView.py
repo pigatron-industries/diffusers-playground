@@ -4,6 +4,8 @@ from .api import *
 
 class AbstractView:
 
+    splitter_position = 40
+
     def page(self):
         ui.page_title('Generative Toolkit')
         ui.label.default_classes('label')
@@ -32,7 +34,7 @@ class AbstractView:
                     self.buttons()
                     ui.button(icon='settings', color='dark', on_click=self.settings).classes('align-middle')
                     
-            with ui.splitter(value=40).classes("w-full h-full no-wrap overflow-auto") as splitter:
+            with ui.splitter(value=self.splitter_position).classes("w-full h-full no-wrap overflow-auto") as splitter:
                 with splitter.before:
                     with ui.column().classes("p-2 w-full"):
                         self.controls()

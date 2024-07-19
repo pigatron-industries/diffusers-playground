@@ -141,6 +141,8 @@ cache/
 /config/local_config.yml
 /config/local_modelconfig.yml
 .history.yml
+.history_chat.yml
+.history_realtime.yml
 /inputs
 /outputs
 /loras

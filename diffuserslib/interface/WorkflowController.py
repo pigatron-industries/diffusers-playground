@@ -13,7 +13,6 @@ import os
 
 @dataclass
 class Model:
-    run_type:int = 1
     output_type:str = "Image"
     batch_size:int = 1
     workflow_name:str|None = None
@@ -27,24 +26,17 @@ def str_to_class(str):
     
 
 class WorkflowController:
-    instance:Self|None = None
 
     model = Model()
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
-    history_filename = ".history.yml"
     workflow_directory= "../functional_workflows"
     output_subdir = "."
-
-    @classmethod
-    def get_instance(cls) -> Self:
-        if(cls.instance is None):
-            cls.instance = cls()
-        return cls.instance
     
 
-    def __init__(self):
+    def __init__(self, history_filename=".history.yml"):
+        self.history_filename = history_filename
         if(WorkflowRunner.workflowrunner is not None):
             self.workflowrunner = WorkflowRunner.workflowrunner
         else:
@@ -132,15 +124,16 @@ class WorkflowController:
     def runWorkflow(self):
         if(self.model.workflow is not None and WorkflowRunner.workflowrunner is not None):
             self.saveWorkflowParamsToHistory()
-            WorkflowRunner.workflowrunner.run(self.model.workflow, int(self.model.batch_size))
+            return WorkflowRunner.workflowrunner.run(self.model.workflow, int(self.model.batch_size))
         else:
             print("No workflow loaded")
+            return None
 
     
     def runSubWorkflow(self, workflow):
         if(WorkflowRunner.workflowrunner is not None):
             self.saveWorkflowParamsToHistory()
-            WorkflowRunner.workflowrunner.run(workflow, 1)
+            return WorkflowRunner.workflowrunner.run(workflow, 1)
         else:
             print("No workflow loaded")
 
@@ -173,10 +166,8 @@ class WorkflowController:
             print(workflow_params)
             workflow_name = workflow_params['workflow']
             self.workflow_history['workflow'] = workflow_name
-            self.workflow_history['run_type'] = workflow_params['run_type']
             self.workflow_history['output_type'] = workflow_params['output_type']
             self.workflow_history[workflow_name] = workflow_params['params']
-            self.model.run_type = self.workflow_history['run_type']
             self.model.output_type = self.workflow_history['output_type']
             self.loadWorkflow(self.workflow_history['workflow'])
 
@@ -189,7 +180,6 @@ class WorkflowController:
             workflow_params = {}
             workflow_name = self.model.workflow_name
             workflow_params['workflow'] = workflow_name
-            workflow_params['run_type'] = self.workflow_history['run_type']
             workflow_params['output_type'] = self.workflow_history['output_type']
             workflow_params['params'] = self.workflow_history[workflow_name]
             yaml.dump(workflow_params, file)
@@ -281,7 +271,6 @@ class WorkflowController:
 
     def saveSettings(self):
         self.workflow_history['workflow'] = self.model.workflow_name
-        self.workflow_history['run_type'] = self.model.run_type
         self.workflow_history['output_type'] = self.model.output_type
         self.workflow_history['output_subdir'] = self.output_subdir
         self.saveWorkflowParamsHistoryFile()
@@ -290,8 +279,6 @@ class WorkflowController:
     def loadSettings(self):
         if('output_subdir' in self.workflow_history):
             self.output_subdir = self.workflow_history['output_subdir']
-        if('run_type' in self.workflow_history):
-            self.model.run_type = self.workflow_history['run_type']
         if('output_type' in self.workflow_history):
             self.model.output_type = self.workflow_history['output_type']
         if(self.model.workflow is None and 'workflow' in self.workflow_history):

@@ -14,7 +14,7 @@ class RealtimeView(AbstractView):
 
 
     def __init__(self):
-        self.controller = WorkflowController.get_instance()
+        self.controller = WorkflowController("./.history_realtime.yml")
         self.interface_components = RealtimeInterfaceComponents(self.controller)
 
 

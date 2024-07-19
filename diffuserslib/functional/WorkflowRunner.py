@@ -4,6 +4,7 @@ from typing import Any, Dict, Self, List, Callable
 from dataclasses import dataclass, field
 from PIL import Image
 from PIL.Image import Resampling
+from nicegui import run
 import time
 import datetime
 import yaml
@@ -11,6 +12,7 @@ import copy
 import traceback
 import shutil
 import os
+import threading
 
 
 @dataclass
@@ -57,6 +59,7 @@ class WorkflowRunner:
         self.progress:BatchProgressData = BatchProgressData(0,0)
         self.stopping = False
         self.running = False
+        self.thread = None
         self.batchcount = 0
 
     def setWorkflow(self, workflow:FunctionalNode):
@@ -66,19 +69,26 @@ class WorkflowRunner:
         self.rundata = {}
         self.batchrundata = {}
 
+
     def run(self, workflow:FunctionalNode, batch_size:int = 1):
-        self.batchqueue.append(WorkflowBatchData(self.batchcount, copy.deepcopy(workflow), batch_size))
+        batchid = self.batchcount
+        self.batchqueue.append(WorkflowBatchData(batchid, copy.deepcopy(workflow), batch_size))
         self.batchcount += 1
         self.progress.jobs_remaining += batch_size
-        if(self.running):
-            return
+        if not self.running:
+            self.thread = threading.Thread(target=self.process)
+            self.thread.start()
+        print(f"WorkflowRunner.run() {batchid}")
+        return batchid
+    
 
+    def process(self):
         self.running = True
         while len(self.batchqueue) > 0:
             self.batchcurrent = self.batchqueue.pop(0)
             self.batchrundata[self.batchcurrent.id] = self.batchcurrent
             self.batchcurrent.workflow.reset()
-            print(f"Running workflow {workflow.node_name} with batch size {self.batchcurrent.batch_size}")
+            print(f"Running workflow {self.batchcurrent.workflow.node_name} with batch size {self.batchcurrent.batch_size}")
             for i in range(self.batchcurrent.batch_size):
                 print(f"Running workflow {self.batchcurrent.workflow.node_name} batch {i+1} of {self.batchcurrent.batch_size}")
                 rundata = WorkflowRunData(int(time.time_ns()/1000))

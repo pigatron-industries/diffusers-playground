@@ -22,7 +22,7 @@ class BatchView(AbstractView):
 
 
     def __init__(self):
-        self.controller = WorkflowController.get_instance()
+        self.controller = WorkflowController("./.history.yml")
         self.interface_components = BatchInterfaceComponents(self.controller)
 
 

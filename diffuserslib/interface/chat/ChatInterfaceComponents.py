@@ -3,10 +3,12 @@ from diffuserslib.functional.nodes.text.llm.ChatMessageInputNode import ChatMess
 from diffuserslib.functional.nodes.user.UserInputNode import UserInputNode
 from diffuserslib.interface.WorkflowController import WorkflowController
 from ..WorkflowComponents import WorkflowComponents
+from .ChatHistoryMessageControls import ChatHistoryMessageControls
+from .ChatController import ChatController
 from nicegui import ui, run
 from PIL import Image
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 from llama_index.core.llms import ChatMessage, MessageRole
 
 
@@ -14,21 +16,18 @@ default_output_width = 256
 
 
 @dataclass
-class ConverseInput:
+class ChatInput:
     text:str = ""
 
-
-@dataclass
-class ConverseModel:
-    input:ConverseInput
-    history:List[ChatMessage]
 
 
 class ConverseInterfaceComponents(WorkflowComponents):
 
-    def __init__(self, controller:WorkflowController):
+    def __init__(self, controller:ChatController):
         super().__init__(controller)
-        self.model = ConverseModel(input=ConverseInput(), history=[])
+        self.controller = controller
+        self.chat_input = ChatInput()
+        self.history_controls:Dict[int, ChatHistoryMessageControls] = {}
         self.output = None
         self.timer = ui.timer(0.1, lambda: self.updateWorkflowProgress(), active=False)
         self.builders = {}
@@ -54,16 +53,22 @@ class ConverseInterfaceComponents(WorkflowComponents):
             # self.controller.model.workflow.setFinishedCallback(self.finishedWorkflow)
 
 
-    async def runWorkflow(self):
+    def runWorkflow(self):
         assert self.message_node is not None and self.history_node is not None
-        message = ChatMessage(role=MessageRole.USER, content=self.model.input.text)
+        message = ChatMessage(role=MessageRole.USER, content=self.chat_input.text)
         self.message_node.setValue(message)
-        self.model.history.append(message)
-        self.history_node.setValue(self.model.history)
+        self.history_node.setValue([control.message for control in self.history_controls.values()])
+        self.appendMessage(message)
         self.timer.activate()
-        self.running = True
-        result = await run.io_bound(self.controller.runWorkflow)
+        self.controller.runWorkflow()
+        self.chat_input.text = ""
         self.status.refresh()
+
+
+    def appendMessage(self, message:ChatMessage):
+        messageid = self.controller.appendMessage(message)
+        with self.history_container:
+            self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
 
 
     def stopWorkflow(self):
@@ -75,25 +80,20 @@ class ConverseInterfaceComponents(WorkflowComponents):
         if(not self.controller.workflowrunner.running):
             self.timer.deactivate()
         self.status.refresh()
-        # for batchid, batchdata in self.controller.getBatchRunData().items():
-        #     if(batchid in self.batchdata_controls):
-        #         batchdata_container = self.batchdata_controls[batchid].batch_container
-        #         for runid, rundata in batchdata.rundata.items():
-        #             if(runid in self.rundata_controls):
-        #                 # Update existing output controls
-        #                 self.rundata_controls[runid].update()
-        #             elif(batchdata_container is not None):
-        #                 # Add new output controls
-        #                 with batchdata_container:
-        #                     self.workflow_output_rundata_container(batchid, runid)
-        #     else:
-        #          with self.outputs_container:
-        #             self.workflow_output_batchdata(batchid) # type: ignore
+
+        messageid = self.controller.updateProgress()
+        message = self.controller.message_history[messageid]
+        if(messageid in self.history_controls):
+            # update existing messsage
+            self.history_controls[messageid].update(message)
+        else:
+            # add new message
+            with self.history_container:
+                self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
 
 
     def finishedWorkflow(self):
         pass
-
 
 
     def clearHistory(self):
@@ -129,8 +129,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
     def outputs(self):
         with ui.splitter(horizontal=True, value=70).classes("w-full h-full no-wrap overflow-auto") as splitter:
             with splitter.before:
-                with ui.column().classes("p-2 w-full"):
-                    self.history()
+                self.history()
             with splitter.after:
                 self.input()
 
@@ -142,8 +141,12 @@ class ConverseInterfaceComponents(WorkflowComponents):
                     pass
                 with ui.column():
                     ui.button(icon='send', color='dark', on_click=self.runWorkflow)
-            ui.textarea().bind_value(self.model.input, 'text').classes('h-full-input w-full h-full grow').style("width: 100%; height: 100%;").props('input-class=h-full')
+            ui.textarea().bind_value(self.chat_input, 'text').classes('h-full-input w-full h-full grow').style("width: 100%; height: 100%;").props('input-class=h-full')
 
 
     def history(self):
-        pass
+        with ui.column().classes("p-2 w-full") as self.history_container:
+            for id, message in self.controller.message_history.items():
+                self.history_controls[id] = ChatHistoryMessageControls(id, message)
+                
+                

@@ -31,14 +31,14 @@ class BatchInterfaceComponents(WorkflowComponents):
         self.builders = dict(sorted(self.builders.items(), key=lambda item: item[1]))
 
 
-    async def runWorkflow(self):
+    def runWorkflow(self):
         self.timer.activate()
-        result = await run.io_bound(self.controller.runWorkflow)
+        return self.controller.runWorkflow()
 
 
-    async def runSubWorkflow(self, workflow):
+    def runSubWorkflow(self, workflow):
         self.timer.activate()
-        result = await run.io_bound(self.controller.runSubWorkflow, workflow)
+        return self.controller.runSubWorkflow(workflow)
 
 
     def updateWorkflowProgress(self):

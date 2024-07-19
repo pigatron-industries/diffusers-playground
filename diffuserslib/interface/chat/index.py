@@ -1,12 +1,15 @@
 from nicegui import ui, app
 from diffuserslib.interface.AbstractView import AbstractView
 from diffuserslib.interface.WorkflowController import WorkflowController
-from .ConverseInterfaceComponents import ConverseInterfaceComponents
+from .ChatInterfaceComponents import ConverseInterfaceComponents
+from .ChatController import ChatController
 from dataclasses import dataclass
 
 
 
 class ConverseView(AbstractView):
+
+    splitter_position = 25
 
     @ui.page('/chat')
     def gui():
@@ -16,7 +19,7 @@ class ConverseView(AbstractView):
 
 
     def __init__(self):
-        self.controller = WorkflowController.get_instance()
+        self.controller = ChatController.get_instance("./.history_chat.yml")
         self.interface_components = ConverseInterfaceComponents(self.controller)
 
 
