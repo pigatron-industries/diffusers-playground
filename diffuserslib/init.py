@@ -36,7 +36,6 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
     for modelconfig in modelconfigs:
         if os.path.exists(modelconfig):
             DiffusersPipelines.pipelines.loadPresetFile(modelconfig)
-            OllamaModels.loadPresetFile(modelconfig)
 
     for config in configs:
         if os.path.exists(config):

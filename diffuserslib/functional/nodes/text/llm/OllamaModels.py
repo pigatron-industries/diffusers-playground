@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-import yaml
+import requests
 
 
 @dataclass
@@ -8,12 +8,16 @@ class OllamaModel:
 
 
 class OllamaModels:
+    url = "http://localhost:11434"
     modelList = {}
 
     @staticmethod
-    def loadPresetFile(filepath):
-        filedata = yaml.safe_load(open(filepath, "r"))
-        if('ollama' in filedata):
-            for modeldata in filedata['ollama']:
-                modelid = modeldata['id']
+    def loadLocalModels():
+        url = OllamaModels.url + "/api/tags"
+        response = requests.get(url)
+        if(response.status_code == 200):
+            data = response.json()
+            for model in data['models']:
+                modelid = model['name']
                 OllamaModels.modelList[modelid] = OllamaModel(modelid)
+        return OllamaModels.modelList

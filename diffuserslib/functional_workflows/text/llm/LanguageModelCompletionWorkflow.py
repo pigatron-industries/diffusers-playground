@@ -12,7 +12,8 @@ class LanguageModelCompletionWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        model_input = ListSelectUserInputNode(value = "llama3:8b", options = list(OllamaModels.modelList.keys()), name = "model_input")
+        models = list(OllamaModels.loadLocalModels().keys())
+        model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model_input")
         prompt_input = TextAreaInputNode(value = "", name = "prompt_input")
 
         llm = LanguageModelCompletionNode(model=model_input, prompt=prompt_input, name="llm")
