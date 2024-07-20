@@ -37,12 +37,14 @@ class ChatController(WorkflowController):
 
     def updateProgress(self):
         assert WorkflowRunner.workflowrunner is not None
-        if(self.batchid is not None and self.batchid in WorkflowRunner.workflowrunner.batchrundata):
+        if(self.batchid is not None and self.batchid in WorkflowRunner.workflowrunner.batchrundata and self.lastmessageid is not None):
             WorkflowRunner.workflowrunner.getProgress()
             batch = WorkflowRunner.workflowrunner.batchrundata[self.batchid]
             for runid, rundata in batch.rundata.items():
                 # assumes only a batch of 1
-                if(rundata.progress is not None and self.lastmessageid is not None):
+                if(rundata.output is not None):
+                    self.message_history[self.lastmessageid] = rundata.output
+                elif(rundata.progress is not None):
                     self.message_history[self.lastmessageid] = rundata.progress.output
         return self.lastmessageid
 
