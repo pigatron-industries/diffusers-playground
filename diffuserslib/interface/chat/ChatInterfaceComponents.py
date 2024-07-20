@@ -28,6 +28,8 @@ class ConverseInterfaceComponents(WorkflowComponents):
         self.controller = controller
         self.chat_input = ChatInput()
         self.history_controls:Dict[int, ChatHistoryMessageControls] = {}
+        self.history_scroll = None
+        self.scroll_bottom = True
         self.output = None
         self.timer = ui.timer(0.1, lambda: self.updateWorkflowProgress(), active=False)
         self.builders = {}
@@ -69,6 +71,8 @@ class ConverseInterfaceComponents(WorkflowComponents):
         messageid = self.controller.appendMessage(message)
         with self.history_container:
             self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
+        if(self.history_scroll is not None and self.scroll_bottom):
+            self.scrollToBottom()
 
 
     def stopWorkflow(self):
@@ -91,6 +95,8 @@ class ConverseInterfaceComponents(WorkflowComponents):
                 # add new message
                 with self.history_container:
                     self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
+        if(self.history_scroll is not None and self.scroll_bottom):
+            self.scrollToBottom()
 
 
     def finishedWorkflow(self):
@@ -118,8 +124,8 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
     
     def buttons(self):
-        ui.button('Stop', on_click=lambda e: self.controller.stopWorkflow()).classes('align-middle')
-        ui.button('Clear', on_click=lambda e: self.clearHistory()).classes('align-middle')
+        ui.button('Stop', on_click=lambda e: self.controller.stopWorkflow())
+        ui.button('Clear', on_click=lambda e: self.clearHistory())
 
 
     @ui.refreshable
@@ -156,8 +162,13 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
 
     def history(self):
-        with ui.column().classes("p-2 w-full") as self.history_container:
-            for id, message in self.controller.message_history.items():
-                self.history_controls[id] = ChatHistoryMessageControls(id, message)
+        with ui.scroll_area(on_scroll = self.onScroll).classes("this w-full h-full") as self.history_scroll:
+            with ui.column().classes("p-2 w-full") as self.history_container:
+                for id, message in self.controller.message_history.items():
+                    self.history_controls[id] = ChatHistoryMessageControls(id, message)
                 
-                
+    def onScroll(self, event):
+        self.scroll_bottom = (event.vertical_size - event.vertical_container_size - event.vertical_position) < 50
+
+    def scrollToBottom(self):
+        self.history_scroll.scroll_to(pixels=1000000)
