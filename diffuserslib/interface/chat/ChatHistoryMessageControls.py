@@ -19,7 +19,7 @@ class ChatHistoryMessageControls:
         with ui.card_section().classes('w-full').style(f"background-color:{color}; border-radius:8px;") as self.container:
             with ui.row().classes('grow no-wrap'):
                 with ui.column().classes('grow'):
-                    self.output_control = ui.label(text)
+                    self.output_control = ui.markdown(text)
                 with ui.column():
                     ui.button(icon='delete', on_click=self.deleteMessage).props('dense')
 
