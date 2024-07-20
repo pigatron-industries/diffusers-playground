@@ -14,8 +14,9 @@ class LanguageModelChatWorkflow(WorkflowBuilder):
     def build(self):
         models = list(OllamaModels.loadLocalModels().keys())
         model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model")
+        system_input = TextAreaInputNode(value = "", name = "system")
         history_input = ChatHistoryInputNode(value = [], name = "history")
         message_input = ChatMessageInputNode(value = None, name = "message")
 
-        llm = LanguageModelChatNode(model=model_input, message=message_input, history=history_input, name="chat")
+        llm = LanguageModelChatNode(model=model_input, message=message_input, history=history_input, system_prompt=system_input, name="chat")
         return llm
