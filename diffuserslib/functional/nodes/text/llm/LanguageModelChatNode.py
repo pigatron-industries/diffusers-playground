@@ -31,7 +31,8 @@ class LanguageModelChatNode(FunctionalNode):
         messages = []
         messages.append(ChatMessage(role=MessageRole.SYSTEM, content=system_prompt))
         messages += history
-        messages.append(message)
+        if(message.construct != ""):
+            messages.append(message)
 
         response = self.llm.stream_chat(messages)
         self.text = ""

@@ -60,7 +60,8 @@ class ConverseInterfaceComponents(WorkflowComponents):
         message = ChatMessage(role=MessageRole.USER, content=self.chat_input.text)
         self.message_node.setValue(message)
         self.history_node.setValue(list(self.controller.message_history.values()))
-        self.appendMessage(message)
+        if(message.content != ""):
+            self.appendMessage(message)
         self.timer.activate()
         self.controller.runWorkflow()
         self.chat_input.text = ""
