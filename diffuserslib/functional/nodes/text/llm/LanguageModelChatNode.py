@@ -33,7 +33,7 @@ class LanguageModelChatNode(FunctionalNode):
         for message in history:
             if(message is not None and message.content != ""):
                 messages.append(message)
-        if(message.content != ""):
+        if(message is not None and message.content != ""):
             messages.append(message)
 
         response = self.llm.stream_chat(messages)
@@ -43,9 +43,10 @@ class LanguageModelChatNode(FunctionalNode):
             if(self.callback_progress is not None):
                 self.callback_progress(WorkflowProgress(0, self.response_message))
             if(self.stop_flag):
+                print("LanguageModelChatNode: interrupted")
                 break
 
-        print("process end")
+        print("LanguageModelChatNode:process end")
         print(self.response_message)
         return self.response_message
     
