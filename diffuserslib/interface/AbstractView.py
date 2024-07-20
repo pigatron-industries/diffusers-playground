@@ -32,7 +32,7 @@ class AbstractView:
                 self.status()
                 with ui.row():
                     self.buttons()
-                    ui.button(icon='settings', color='dark', on_click=self.settings).classes('align-middle')
+                    ui.button(icon='settings', color='dark', on_click=self.settings)
                     
             with ui.splitter(value=self.splitter_position).classes("w-full h-full no-wrap overflow-auto") as splitter:
                 with splitter.before:
