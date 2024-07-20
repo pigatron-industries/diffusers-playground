@@ -162,7 +162,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
 
     def history(self):
-        with ui.scroll_area(on_scroll = self.onScroll).classes("this w-full h-full") as self.history_scroll:
+        with ui.scroll_area(on_scroll = self.onScroll).classes("history-scroll w-full h-full") as self.history_scroll:
             with ui.column().classes("p-2 w-full") as self.history_container:
                 for id, message in self.controller.message_history.items():
                     self.history_controls[id] = ChatHistoryMessageControls(id, message)
@@ -171,4 +171,5 @@ class ConverseInterfaceComponents(WorkflowComponents):
         self.scroll_bottom = (event.vertical_size - event.vertical_container_size - event.vertical_position) < 50
 
     def scrollToBottom(self):
-        self.history_scroll.scroll_to(pixels=1000000)
+        assert self.history_scroll is not None
+        self.history_scroll.scroll_to(percent=1.0)
