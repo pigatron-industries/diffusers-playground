@@ -47,6 +47,11 @@ class ChatController(WorkflowController):
                 elif(rundata.progress is not None):
                     self.message_history[self.lastmessageid] = rundata.progress.output
         return self.lastmessageid
+    
+
+    def removeMessage(self, id):
+        if(id in self.message_history):
+            del self.message_history[id]
 
 
     def clearChatHistory(self):

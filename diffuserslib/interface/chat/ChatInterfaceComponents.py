@@ -71,7 +71,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
     def appendMessage(self, message:ChatMessage):
         messageid = self.controller.appendMessage(message)
         with self.history_container:
-            self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
+            self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message, self.controller)
         if(self.history_scroll is not None and self.scroll_bottom):
             self.scrollToBottom()
 
@@ -95,7 +95,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
             else:
                 # add new message
                 with self.history_container:
-                    self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
+                    self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message, self.controller)
         if(self.history_scroll is not None and self.scroll_bottom):
             self.scrollToBottom()
 
@@ -166,7 +166,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
         with ui.scroll_area(on_scroll = self.onScroll).classes("history-scroll w-full h-full") as self.history_scroll:
             with ui.column().classes("p-2 w-full") as self.history_container:
                 for id, message in self.controller.message_history.items():
-                    self.history_controls[id] = ChatHistoryMessageControls(id, message)
+                    self.history_controls[id] = ChatHistoryMessageControls(id, message, self.controller)
                 
     def onScroll(self, event):
         self.scroll_bottom = (event.vertical_size - event.vertical_container_size - event.vertical_position) < 50

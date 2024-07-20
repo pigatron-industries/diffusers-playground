@@ -50,6 +50,7 @@ class LanguageModelChatNode(FunctionalNode):
 
         print("LanguageModelChatNode:process end")
         print(self.response_message)
+        print(self.response_message.content)
         return self.response_message
     
     
