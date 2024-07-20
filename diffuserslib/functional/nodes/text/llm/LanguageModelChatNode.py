@@ -30,9 +30,9 @@ class LanguageModelChatNode(FunctionalNode):
 
         messages = []
         messages.append(ChatMessage(role=MessageRole.SYSTEM, content=system_prompt))
-        for message in history:
-            if(message is not None and message.content != ""):
-                messages.append(message)
+        for histmessage in history:
+            if(histmessage is not None and histmessage.content != ""):
+                messages.append(histmessage)
         if(message is not None and message.content != ""):
             messages.append(message)
 
