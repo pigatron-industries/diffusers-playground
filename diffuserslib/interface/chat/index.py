@@ -48,4 +48,4 @@ class ConverseView(AbstractView):
    
 
     def settings(self):
-        pass
+        self.interface_components.settings()  # type: ignore

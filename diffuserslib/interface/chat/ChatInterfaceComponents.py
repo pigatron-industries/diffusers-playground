@@ -174,3 +174,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
     def scrollToBottom(self):
         assert self.history_scroll is not None
         self.history_scroll.scroll_to(percent=1.0)
+
+
+    def settings(self):
+        print(self.controller.message_history)
