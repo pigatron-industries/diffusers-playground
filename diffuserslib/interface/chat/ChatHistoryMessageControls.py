@@ -13,12 +13,10 @@ class ChatHistoryMessageControls:
     def gui(self):
         role = self.message.role if self.message is not None else MessageRole.ASSISTANT
         color = "#264927" if role == MessageRole.ASSISTANT else "#2E4053"
+        text = self.message.content if self.message is not None else ""
         with ui.card_section().classes('w-full').style(f"background-color:{color}; border-radius:8px;"):
             with ui.row().classes('grow'):
                 with ui.column().classes('grow'):
-                    text = self.message.content if self.message is not None else ""
-                    
-                    ui.label(role.value)
                     self.markdown_control = ui.markdown(text)
 
 

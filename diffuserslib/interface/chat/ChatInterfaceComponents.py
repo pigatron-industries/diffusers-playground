@@ -5,7 +5,7 @@ from diffuserslib.interface.WorkflowController import WorkflowController
 from ..WorkflowComponents import WorkflowComponents
 from .ChatHistoryMessageControls import ChatHistoryMessageControls
 from .ChatController import ChatController
-from nicegui import ui, run
+from nicegui import ui
 from PIL import Image
 from dataclasses import dataclass
 from typing import List, Dict
@@ -141,7 +141,15 @@ class ConverseInterfaceComponents(WorkflowComponents):
                     pass
                 with ui.column():
                     ui.button(icon='send', color='dark', on_click=self.runWorkflow)
-            ui.textarea().bind_value(self.chat_input, 'text').classes('h-full-input w-full h-full grow').style("width: 100%; height: 100%;").props('input-class=h-full')
+            ui.textarea().bind_value(self.chat_input, 'text').classes('h-full-input w-full h-full grow').style("width: 100%; height: 100%;") \
+                .on('keydown.enter', js_handler='(e) => { if(!e.shiftKey) e.preventDefault(); }').on('keyup.enter', self.onEnter)
+            
+
+    def onEnter(self, event):
+        if(event.args['shiftKey']):
+            return
+        else:
+            self.runWorkflow()
 
 
     def history(self):
