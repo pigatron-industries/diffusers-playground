@@ -11,22 +11,24 @@ class LanguageModelChatNode(FunctionalNode):
                  history:ChatHistoryFuncType,
                  model:StringFuncType = "llama3:8b",
                  system_prompt:StringFuncType = "",
+                 temperature:FloatFuncType = 1.0,
                  name:str = "llm_chat"):
         super().__init__(name)
         self.addParam("model", model, str)
         self.addParam("message", message, ChatMessage)
         self.addParam("history", history, List[ChatMessage])
         self.addParam("system_prompt", system_prompt, str)
+        self.addParam("temperature", temperature, float)
         self.model = None
         self.response_message = None
         self.stop_flag = False
 
 
-    def process(self, model:str, message:ChatMessage, history:List[ChatMessage], system_prompt:str) -> ChatMessage|None:
+    def process(self, model:str, message:ChatMessage, history:List[ChatMessage], system_prompt:str, temperature:float) -> ChatMessage|None:
         self.stop_flag = False
-        if(model != self.model):
+        if(model != self.model or temperature != self.llm.temperature):
             self.model = model
-            self.llm = Ollama(model = model, request_timeout = 120)
+            self.llm = Ollama(model = model, request_timeout = 120, temperature = temperature)
 
         messages = []
         messages.append(ChatMessage(role=MessageRole.SYSTEM, content=system_prompt))
@@ -35,9 +37,6 @@ class LanguageModelChatNode(FunctionalNode):
                 messages.append(histmessage)
         if(message is not None and message.content != ""):
             messages.append(message)
-
-        print("LanguageModelChatNode:process start")
-        print(messages)
 
         self.response_message = None
         response = self.llm.stream_chat(messages)
