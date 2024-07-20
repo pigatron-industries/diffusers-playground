@@ -21,6 +21,7 @@ class ChatController(WorkflowController):
         super().__init__(history_filename)
         self.message_history:Dict[int, ChatMessage] = {}
         self.batchid = None
+        self.lastmessageid = None
 
 
     def appendMessage(self, message):
@@ -41,8 +42,15 @@ class ChatController(WorkflowController):
             batch = WorkflowRunner.workflowrunner.batchrundata[self.batchid]
             for runid, rundata in batch.rundata.items():
                 # assumes only a batch of 1
-                if(rundata.progress is not None):
+                if(rundata.progress is not None and self.lastmessageid is not None):
                     self.message_history[self.lastmessageid] = rundata.progress.output
         return self.lastmessageid
 
 
+    def clearChatHistory(self):
+        if(self.model.workflow is not None):
+            self.model.workflow.reset()
+        self.message_history = {}
+        # ChatController.messageid = 0
+        # self.batchid = None
+        # self.lastmessageid = None

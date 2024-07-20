@@ -34,7 +34,7 @@ class ConverseView(AbstractView):
 
     @ui.refreshable
     def buttons(self):
-        pass
+        self.interface_components.buttons()  # type: ignore
 
 
     @ui.refreshable

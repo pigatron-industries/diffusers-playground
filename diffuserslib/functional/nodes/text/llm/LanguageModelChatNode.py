@@ -19,9 +19,11 @@ class LanguageModelChatNode(FunctionalNode):
         self.addParam("system_prompt", system_prompt, str)
         self.model = None
         self.response_message = None
+        self.stop_flag = False
 
 
     def process(self, model:str, message:ChatMessage, history:List[ChatMessage], system_prompt:str) -> ChatMessage|None:
+        self.stop_flag = False
         if(model != self.model):
             self.model = model
             self.llm = Ollama(model = model, request_timeout = 120)
@@ -37,6 +39,8 @@ class LanguageModelChatNode(FunctionalNode):
             self.response_message = r.message
             if(self.callback_progress is not None):
                 self.callback_progress(WorkflowProgress(0, self.response_message))
+            if(self.stop_flag):
+                break
 
         return self.response_message
     
@@ -44,3 +48,6 @@ class LanguageModelChatNode(FunctionalNode):
     def getProgress(self) -> WorkflowProgress|None:
         return WorkflowProgress(0, self.response_message)
         
+
+    def stop(self):
+        self.stop_flag = True

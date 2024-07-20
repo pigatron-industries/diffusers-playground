@@ -139,6 +139,7 @@ class WorkflowRunner:
             elif(len(self.batchqueue) > 0):
                 # Cancel next batch
                 self.batchqueue.pop(0)
+                
 
     def createPreview(self, output:Any):
         if(isinstance(output, Image.Image)):

@@ -57,7 +57,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
         assert self.message_node is not None and self.history_node is not None
         message = ChatMessage(role=MessageRole.USER, content=self.chat_input.text)
         self.message_node.setValue(message)
-        self.history_node.setValue([control.message for control in self.history_controls.values()])
+        self.history_node.setValue(list(self.controller.message_history.values()))
         self.appendMessage(message)
         self.timer.activate()
         self.controller.runWorkflow()
@@ -82,14 +82,15 @@ class ConverseInterfaceComponents(WorkflowComponents):
         self.status.refresh()
 
         messageid = self.controller.updateProgress()
-        message = self.controller.message_history[messageid]
-        if(messageid in self.history_controls):
-            # update existing messsage
-            self.history_controls[messageid].update(message)
-        else:
-            # add new message
-            with self.history_container:
-                self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
+        if(messageid is not None):
+            message = self.controller.message_history[messageid]
+            if(messageid in self.history_controls):
+                # update existing messsage
+                self.history_controls[messageid].update(message)
+            else:
+                # add new message
+                with self.history_container:
+                    self.history_controls[messageid] = ChatHistoryMessageControls(messageid, message)
 
 
     def finishedWorkflow(self):
@@ -99,8 +100,10 @@ class ConverseInterfaceComponents(WorkflowComponents):
     def clearHistory(self):
         if(self.controller.model.workflow is not None):
             self.controller.model.workflow.reset()
-            self.outputs.refresh()
-            self.status.refresh()
+        self.controller.clearChatHistory()
+        self.history_controls = {}
+        self.outputs.refresh()
+        self.status.refresh()
 
     
     @ui.refreshable
@@ -115,7 +118,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
     
     def buttons(self):
-        ui.number(label="Batch Size").bind_value(self.controller.model, 'batch_size').bind_visibility_from(self.controller.model, 'run_type', value=1).style("width: 100px")
+        ui.button('Stop', on_click=lambda e: self.controller.stopWorkflow()).classes('align-middle')
         ui.button('Clear', on_click=lambda e: self.clearHistory()).classes('align-middle')
 
 
