@@ -45,6 +45,7 @@ class LanguageModelChatNode(FunctionalNode):
             if(self.stop_flag):
                 print("LanguageModelChatNode: interrupted")
                 break
+        print(response)
 
         print("LanguageModelChatNode:process end")
         print(self.response_message)
