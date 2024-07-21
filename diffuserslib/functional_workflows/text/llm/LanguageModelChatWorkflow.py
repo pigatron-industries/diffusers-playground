@@ -12,7 +12,12 @@ class LanguageModelChatWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        models = list(OllamaModels.loadLocalModels().keys())
+        models = [""]
+        try:
+            models = list(OllamaModels.loadLocalModels().keys())
+        except:
+            print("Error loading Ollama models. Is Ollama running?")
+            pass
         model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model")
         system_input = TextAreaInputNode(value = "", name = "system")
         history_input = ChatHistoryInputNode(value = [], name = "history")
