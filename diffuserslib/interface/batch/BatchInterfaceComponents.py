@@ -109,7 +109,7 @@ class BatchInterfaceComponents(WorkflowComponents):
                 currentbatch_done = len(currentbatch.rundata)
                 currentbatch_remaining = currentbatch.batch_size - currentbatch_done
                 ui.button(f"{currentbatch_done} - {currentbatch_remaining}", color="slate").classes('px-2 text-yellow-500').props('dense')
-            for batch in queuebatches:
+            for batchid, batch in queuebatches.items():
                 ui.button(f"{batch.batch_size}", color="slate").classes('px-2 text-gray-500').props('dense')
 
     

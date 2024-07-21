@@ -11,4 +11,10 @@ class Video:
         self.file = file
 
 
+    def getFilename(self) -> str|None:
+        if isinstance(self.file, tempfile._TemporaryFileWrapper):
+            return self.file.name
+        return None
+
+
 VideoFuncType = Video|Callable[[], Video]

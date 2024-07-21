@@ -27,7 +27,8 @@ class ChatHistoryMessageControls:
     def getMarkdown(self):
         if self.message is None or self.message.content is None:
             return ""
-        text = self.message.content.replace("\n", "  \n")
+        text = self.message.content
+        print(text)
         return text
 
 

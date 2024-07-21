@@ -17,5 +17,11 @@ class Audio:
             write_wav(self.file.name, self.sample_rate, self.audio_array)
 
 
+    def getFilename(self) -> str|None:
+        if(isinstance(self.file, tempfile._TemporaryFileWrapper)):
+            return self.file.name
+        return None
+
+
 AudioFuncType = Audio | Callable[[], Audio]
 AudiosFuncType = List[Audio] | Callable[[], List[Audio]]

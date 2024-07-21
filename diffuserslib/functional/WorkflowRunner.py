@@ -52,15 +52,25 @@ class WorkflowRunner:
     def __init__(self, output_dir:str):
         self.output_dir = output_dir
         self.rundata:Dict[int, WorkflowRunData] = {}
-        self.batchrundata:Dict[int, WorkflowBatchData] = {}
-        self.batchqueue:List[WorkflowBatchData] = []
-        self.batchcurrent:WorkflowBatchData|None = None
-        self.rundatacurrent:WorkflowRunData|None = None
+        self.batchrundata:Dict[int, WorkflowBatchData] = {} # Batches that have been run - includes currently running
+        self.batchqueue:Dict[int, WorkflowBatchData] = {}   # Batch that have not been started yet
+        self.batchcurrent:WorkflowBatchData|None = None     # Batch currently running
+        self.rundatacurrent:WorkflowRunData|None = None  
         self.progress:BatchProgressData = BatchProgressData(0,0)
         self.stopping = False
         self.running = False
         self.thread = None
         self.batchcount = 0
+
+
+    def getBatch(self, batchid:int):
+        if(batchid in self.batchqueue):
+            return self.batchqueue[batchid]
+        elif(batchid in self.batchrundata):
+            return self.batchrundata[batchid]
+        else:
+            return None
+    
 
     def setWorkflow(self, workflow:FunctionalNode):
         self.workflow = workflow
@@ -72,7 +82,7 @@ class WorkflowRunner:
 
     def run(self, workflow:FunctionalNode, batch_size:int = 1):
         batchid = self.batchcount
-        self.batchqueue.append(WorkflowBatchData(batchid, copy.deepcopy(workflow), batch_size))
+        self.batchqueue[batchid] = WorkflowBatchData(batchid, copy.deepcopy(workflow), batch_size)
         self.batchcount += 1
         self.progress.jobs_remaining += batch_size
         if not self.running:
@@ -85,8 +95,9 @@ class WorkflowRunner:
     def process(self):
         self.running = True
         while len(self.batchqueue) > 0:
-            self.batchcurrent = self.batchqueue.pop(0)
-            self.batchrundata[self.batchcurrent.id] = self.batchcurrent
+            batchid, _ = list(self.batchqueue.items())[0]
+            self.batchcurrent = self.batchqueue.pop(batchid)
+            self.batchrundata[batchid] = self.batchcurrent
             self.batchcurrent.workflow.reset()
             print(f"Running workflow {self.batchcurrent.workflow.node_name} with batch size {self.batchcurrent.batch_size}")
             for i in range(self.batchcurrent.batch_size):
@@ -110,7 +121,7 @@ class WorkflowRunner:
                 rundata.duration = rundata.end_time - rundata.start_time
                 print(rundata.duration)
                 self.progress.jobs_completed = len(self.rundata)
-                self.progress.jobs_remaining = sum([batch.batch_size for batch in self.batchqueue]) + self.batchcurrent.batch_size - len(self.batchcurrent.rundata)
+                self.progress.jobs_remaining = sum([batch.batch_size for batch in self.batchqueue.values()]) + self.batchcurrent.batch_size - len(self.batchcurrent.rundata)
                 if(self.stopping == True):
                     self.stopping = False
                     break
@@ -120,6 +131,7 @@ class WorkflowRunner:
 
 
     def getProgress(self):
+        """ Updates the progress of the current batch """
         if(self.batchcurrent is not None):
             self.progress.run_progress = self.batchcurrent.workflow.getProgress()
             if(self.rundatacurrent):
@@ -167,10 +179,14 @@ class WorkflowRunner:
                 rundata.output.save(f"{save_file}.png")
                 rundata.save_file = f"{save_file}.png"
             elif(isinstance(rundata.output, Video)):
-                shutil.copyfile(rundata.output.file.name, f"{save_file}.mp4")
+                filename = rundata.output.getFilename()
+                assert filename is not None
+                shutil.copyfile(filename, f"{save_file}.mp4")
                 rundata.save_file = f"{save_file}.mp4"
             elif(isinstance(rundata.output, Audio)):
-                shutil.copyfile(rundata.output.file.name, f"{save_file}.wav")
+                filename = rundata.output.getFilename()
+                assert filename is not None
+                shutil.copyfile(filename, f"{save_file}.wav")
                 rundata.save_file = f"{save_file}.wav"
             else:
                 raise Exception("Output format not supported")
