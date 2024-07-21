@@ -131,7 +131,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.builders, ["str"])
+        self.workflowSelect(self.builders, ["ChatMessage"])
         self.workflow_parameters()
 
 
