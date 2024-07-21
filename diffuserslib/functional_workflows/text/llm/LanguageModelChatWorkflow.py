@@ -3,12 +3,13 @@ from diffuserslib.functional.WorkflowBuilder import *
 from diffuserslib.functional.nodes.text.llm.OllamaModels import OllamaModels
 from diffuserslib.functional.nodes.text.llm.LanguageModelChatNode import LanguageModelChatNode
 from diffuserslib.functional.nodes.text.llm.ChatMessageInputNode import ChatMessageInputNode, ChatHistoryInputNode
+from llama_index.core.llms import ChatMessage
 
 
 class LanguageModelChatWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Text Generation - Language Model Chat", str, workflow=True, converse=True)
+        super().__init__("Text Generation - Language Model Chat", ChatMessage, workflow=True, converse=True)
 
 
     def build(self):

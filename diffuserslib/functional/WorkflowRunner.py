@@ -26,7 +26,17 @@ class WorkflowRunData:
     start_time:datetime.datetime|None = None
     end_time:datetime.datetime|None = None
     duration:datetime.timedelta|None = None
-    progress:WorkflowProgress|None = None
+    progress:WorkflowProgress = field(default_factory=lambda: WorkflowProgress(0, 0))
+
+    def getStatus(self):
+        if(self.error is not None):
+            return "Error"
+        elif(self.end_time is not None):
+            return "Complete"
+        elif self.start_time is not None and self.end_time is None:
+            return "Running"
+        else:
+            return "Queued"
 
 
 @dataclass
@@ -70,6 +80,13 @@ class WorkflowRunner:
             return self.batchrundata[batchid]
         else:
             return None
+        
+
+    def removeBatch(self, batchid:int):
+        if(batchid in self.batchqueue):
+            self.batchqueue.pop(batchid)
+        elif(batchid in self.batchrundata):
+            self.batchrundata.pop(batchid)
     
 
     def setWorkflow(self, workflow:FunctionalNode):
