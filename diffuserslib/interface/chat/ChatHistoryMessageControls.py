@@ -27,8 +27,7 @@ class ChatHistoryMessageControls:
     def getMarkdown(self):
         if self.message is None or self.message.content is None:
             return ""
-        text = self.message.content
-        print(text)
+        text = self.message.content.lstrip()
         return text
 
 
@@ -40,5 +39,5 @@ class ChatHistoryMessageControls:
     def update(self, message:ChatMessage):
         assert self.output_control is not None
         self.message = message
-        text = self.message.content if self.message is not None else ""
+        text = self.getMarkdown()
         self.output_control.set_content(text)
