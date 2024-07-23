@@ -31,6 +31,7 @@ RectType = Tuple[float, float, float, float]
 RectFuncType = RectType | Callable[[], RectType]
 
 ImageFuncType = Image.Image | Callable[[], Image.Image]
+ImagesFuncType = List[Image.Image] | Callable[[], List[Image.Image]]
 FramesFuncType = List[Image.Image] | Callable[[], List[Image.Image]]
 
 ColourType = Tuple[int, int, int] | str
