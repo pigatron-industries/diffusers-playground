@@ -9,7 +9,6 @@ import shutil
 import glob
 import re
 import yaml
-from dataclasses import dataclass
 
 
 ListStringFuncType = List[str] | Callable[[], List[str]]
@@ -192,9 +191,9 @@ class TrainLoraNode(FunctionalNode):
 
     def getStepsFromName(self, name:str) -> int|None:
         """Extract number of steps from name in format at-step00001000-state or at-step00001000-state"""
-        match = re.search(r"[^0-9](\d+)[^0-9]", name)
-        if match:
-            return int(match.group(1))
+        matches = re.findall(r"[^0-9](\d+)[^0-9]", name)
+        if len(matches) > 0:
+            return int(matches[-1])
         else:
             return None
 
