@@ -1,8 +1,7 @@
-from diffuserslib.functional.nodes.text.llm import LanguageModelCompletionNode
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.WorkflowBuilder import *
 from diffuserslib.functional.nodes.text.llm.OllamaModels import OllamaModels
-from diffuserslib.functional.nodes.text.llm.LanguageModelCompletionNode import LanguageModelCompletionNode
+from diffuserslib.functional.nodes.text.llm.ImageLanguageModelCompletionNode import ImageLanguageModelCompletionNode
 
 
 class ImageLanguageModelCompletionWorkflow(WorkflowBuilder):
@@ -18,8 +17,9 @@ class ImageLanguageModelCompletionWorkflow(WorkflowBuilder):
         except:
             print("Error loading Ollama models. Is Ollama running?")
             pass
-        model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model_input")
+        model_input = ListSelectUserInputNode(value = "llava:13b", options = models, name = "model_input")
         prompt_input = TextAreaInputNode(value = "", name = "prompt_input")
+        images_input = ImageUploadInputNode(name = "images_input")
 
-        llm = LanguageModelCompletionNode(model=model_input, prompt=prompt_input, name="llm")
+        llm = ImageLanguageModelCompletionNode(model=model_input, prompt=prompt_input, images=images_input, name="llm")
         return llm

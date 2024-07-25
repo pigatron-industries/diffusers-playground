@@ -22,7 +22,7 @@ class BatchInterfaceComponents(WorkflowComponents):
         super().__init__(controller)
         self.rundata_controls:Dict[int, BatchRunDataControls] = {}
         self.batchdata_controls:Dict[int, BatchDataControls] = {}
-        self.timer = ui.timer(1, lambda: self.updateWorkflowProgress(), active=False)
+        self.timer = ui.timer(0.1, lambda: self.updateWorkflowProgress(), active=False)
         self.progress = 0
         self.builders = {}
         for name, builder in self.controller.builders.items():

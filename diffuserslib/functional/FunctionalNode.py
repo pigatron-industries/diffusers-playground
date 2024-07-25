@@ -19,6 +19,12 @@ class WorkflowProgress:
     output: Any
 
 
+class WorkflowStatus:
+    WAITING = "waiting"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+
+
 class WorkflowInterruptedException(Exception):
     def __init__(self, message):
         self.message = message
@@ -44,11 +50,14 @@ class FunctionalNode(DeepCopyObject):
 
 
     def __call__(self, **kwargs) -> Any:
+        self.status = WorkflowStatus.WAITING
         if(self.output is not None):
             return self.output
         args = self.evaluateParams()
         args.update(kwargs)
+        self.status = WorkflowStatus.PROCESSING
         self.output = self.process(**args)
+        self.status = WorkflowStatus.COMPLETED
         return self.output
     
 
@@ -93,8 +102,15 @@ class FunctionalNode(DeepCopyObject):
 
 
     def getProgress(self) -> WorkflowProgress|None:
-        return self.recursive_action("getProgress", return_value=True)
+        if(self.status == WorkflowStatus.WAITING):
+            return self.recursive_action("getProgress", return_value=True)
+        else:
+            return self.progress()
     
+
+    def progress(self) -> WorkflowProgress|None:
+        return None
+
 
     def setProgressCallback(self, callback:Callable):
         self.callback_progress = callback

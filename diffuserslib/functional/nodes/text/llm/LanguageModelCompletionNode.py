@@ -28,6 +28,6 @@ class LanguageModelCompletionNode(FunctionalNode):
         return self.text
     
     
-    def getProgress(self) -> WorkflowProgress|None:
+    def progress(self) -> WorkflowProgress|None:
         return WorkflowProgress(0, self.text)
         
