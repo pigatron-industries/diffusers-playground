@@ -2,14 +2,15 @@ from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.WorkflowBuilder import *
 from diffuserslib.functional.nodes.text.llm.OllamaModels import OllamaModels
 from diffuserslib.functional.nodes.text.llm.LanguageModelChatNode import LanguageModelChatNode
+from diffuserslib.functional.nodes.text.llm.LanguageModelCompletionNode import LanguageModelCompletionNode
 from diffuserslib.functional.nodes.text.llm.ChatMessageInputNode import ChatMessageInputNode, ChatHistoryInputNode
 from llama_index.core.llms import ChatMessage
 
 
-class LanguageModelChatWorkflow(WorkflowBuilder):
+class LanguageModelChainWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Text Generation - Language Model Chat", str, workflow=True, converse=True)
+        super().__init__("Text Generation - Language Model Chain", str, workflow=True, converse=True)
 
 
     def build(self):
@@ -19,12 +20,11 @@ class LanguageModelChatWorkflow(WorkflowBuilder):
         except:
             print("Error loading Ollama models. Is Ollama running?")
             pass
-        model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model")
-        system_input = TextAreaInputNode(value = "", name = "system")
-        history_input = ChatHistoryInputNode(value = [], name = "history")
+        model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model_input")
         message_input = TextAreaInputNode(value = "", name = "message_input")
-        temperature_input = FloatUserInputNode(value = 0.75, name = "temperature")
 
-        llm = LanguageModelChatNode(model=model_input, message=message_input, history=history_input, system_prompt=system_input, 
-                                    temperature=temperature_input, name="chat")
-        return llm
+        llm_out1 = LanguageModelCompletionNode(model=model_input, prompt=message_input, name="llm")
+
+        llm_out2 = LanguageModelCompletionNode(model=model_input, prompt=llm_out1, name="llm")
+
+        return llm_out2

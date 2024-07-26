@@ -43,11 +43,11 @@ class ChatController(WorkflowController):
                 for runid, rundata in batch.rundata.items():
                     # assumes only a batch of 1
                     if(rundata.getStatus() == "Complete"):
-                        self.message_history[self.lastmessageid] = rundata.output
+                        self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.output)
                         WorkflowRunner.workflowrunner.removeBatch(batch.id)
                         self.batchid = None
                     elif(rundata.getStatus() == "Running"):
-                        self.message_history[self.lastmessageid] = rundata.progress.output
+                        self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.progress.output)
                     elif(rundata.getStatus() == "Error"):
                         self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content="Error: " + str(rundata.error))
                     else:

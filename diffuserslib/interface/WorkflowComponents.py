@@ -9,6 +9,7 @@ from diffuserslib.util.LocalFilePicker import LocalFilePicker
 
 class WorkflowComponents:
     """ Components for selecting and setting workflow parameters"""
+    hidden_nodes = []
 
     def __init__(self, controller:WorkflowController):
         self.controller = controller
@@ -118,6 +119,8 @@ class WorkflowComponents:
 
 
     def node_parameter(self, param:NodeParameter):
+        if(param.value.node_name in self.hidden_nodes):
+            return
         input_nodes = self.controller.getSelectableInputNodes(param)
         if(len(input_nodes) > 0):
             ui.button(icon='functions', color='dark', on_click=lambda e: self.toggleParamFunctional(param)).classes('align-middle').props('dense')

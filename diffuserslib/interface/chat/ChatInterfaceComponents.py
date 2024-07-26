@@ -26,6 +26,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
     def __init__(self, controller:ChatController):
         super().__init__(controller)
         self.controller = controller
+        self.hidden_nodes = ["message_input"]
         self.chat_input = ChatInput()
         self.history_controls:Dict[int, ChatHistoryMessageControls] = {}
         self.history_scroll = None
@@ -49,17 +50,19 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
     def findInputNodes(self):
         if(self.controller.model.workflow is not None):
-            self.message_node = self.controller.model.workflow.getNodeByType(ChatMessageInputNode)
+            # self.message_node = self.controller.model.workflow.getNodeByType(ChatMessageInputNode)
+            self.message_node = self.controller.model.workflow.getNodeByName("message_input")
             self.history_node = self.controller.model.workflow.getNodeByType(ChatHistoryInputNode)
             # self.controller.model.workflow.setProgressCallback(self.updateWorkflowProgress)
             # self.controller.model.workflow.setFinishedCallback(self.finishedWorkflow)
 
 
     def runWorkflow(self):
-        assert self.message_node is not None and self.history_node is not None
         message = ChatMessage(role=MessageRole.USER, content=self.chat_input.text)
-        self.message_node.setValue(message)
-        self.history_node.setValue(list(self.controller.message_history.values()))
+        if(self.message_node is not None):
+            self.message_node.setValue(self.chat_input.text)
+        if(self.history_node is not None):
+            self.history_node.setValue(list(self.controller.message_history.values()))
         if(message.content != ""):
             self.appendMessage(message)
         self.timer.activate()
@@ -131,7 +134,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
 
     @ui.refreshable
     def controls(self):
-        self.workflowSelect(self.builders, ["ChatMessage"])
+        self.workflowSelect(self.builders, ["str"])
         self.workflow_parameters()
 
 

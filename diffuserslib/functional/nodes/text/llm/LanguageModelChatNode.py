@@ -7,7 +7,7 @@ from .ChatMessageInputNode import *
 
 class LanguageModelChatNode(FunctionalNode):
     def __init__(self, 
-                 message:ChatMessageFuncType,
+                 message:StringFuncType,
                  history:ChatHistoryFuncType,
                  model:StringFuncType = "llama3:8b",
                  system_prompt:StringFuncType = "",
@@ -15,7 +15,7 @@ class LanguageModelChatNode(FunctionalNode):
                  name:str = "llm_chat"):
         super().__init__(name)
         self.addParam("model", model, str)
-        self.addParam("message", message, ChatMessage)
+        self.addParam("message", message, str)
         self.addParam("history", history, List[ChatMessage])
         self.addParam("system_prompt", system_prompt, str)
         self.addParam("temperature", temperature, float)
@@ -24,7 +24,7 @@ class LanguageModelChatNode(FunctionalNode):
         self.stop_flag = False
 
 
-    def process(self, model:str, message:ChatMessage, history:List[ChatMessage], system_prompt:str, temperature:float) -> ChatMessage|None:
+    def process(self, model:str, message:str, history:List[ChatMessage], system_prompt:str, temperature:float) -> str|None:
         self.stop_flag = False
         if(model != self.model or temperature != self.llm.temperature):
             self.model = model
@@ -35,22 +35,19 @@ class LanguageModelChatNode(FunctionalNode):
         for histmessage in history:
             if(histmessage is not None and histmessage.content != ""):
                 messages.append(histmessage)
-        if(message is not None and message.content != ""):
-            messages.append(message)
+        if(message is not None and message != ""):
+            messages.append(ChatMessage(role=MessageRole.USER, content=message))
 
-        self.response_message = None
+        self.response_message = ""
         response = self.llm.stream_chat(messages)
         for r in response:
-            self.response_message = r.message
-            if(self.callback_progress is not None):
-                self.callback_progress(WorkflowProgress(0, self.response_message))
+            self.response_message = r.message.content
             if(self.stop_flag):
                 print("LanguageModelChatNode: interrupted")
                 break
 
         print("LanguageModelChatNode:process end")
         print(self.response_message)
-        print(self.response_message.content)
         return self.response_message
     
     

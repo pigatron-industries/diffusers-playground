@@ -99,6 +99,12 @@ class FunctionalNode(DeepCopyObject):
         if isinstance(self, node_type):
             return self
         return self.recursive_action("getNodeByType", return_value=True, node_type=node_type)
+    
+
+    def getNodeByName(self, node_name:str) -> Self|None:
+        if(self.node_name == node_name):
+            return self
+        return self.recursive_action("getNodeByName", return_value=True, node_name=node_name)
 
 
     def getProgress(self) -> WorkflowProgress|None:
