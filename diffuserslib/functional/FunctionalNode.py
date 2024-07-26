@@ -34,10 +34,11 @@ class WorkflowInterruptedException(Exception):
 class FunctionalNode(DeepCopyObject):
     name = "FunctionalNode"
 
-    def __init__(self, node_name:str, type:type = Any):
+    def __init__(self, node_name:str, type:type|Any = Any):
         super().__init__()
         self.node_name = node_name
         self.type = type
+        self.status = None
         self.params:Dict[str, NodeParameter] = {}
         self.initparams:Dict[str, NodeParameter] = {}
         self.inited = False
@@ -159,7 +160,7 @@ class FunctionalNode(DeepCopyObject):
             return None
         
     
-    def addParam(self, name:str, value:Any, type:type):
+    def addParam(self, name:str, value:Any, type:type|Any):
         self.params[name] = NodeParameter(node=self.node_name, name=name, value=value, initial_value=value, type=type)
 
 

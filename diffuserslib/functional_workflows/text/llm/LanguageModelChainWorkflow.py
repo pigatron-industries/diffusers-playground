@@ -1,5 +1,7 @@
+from diffuserslib.functional.nodes.text import TemplateNode
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.WorkflowBuilder import *
+from diffuserslib.functional.nodes.text.TemplateNode import TemplateNode
 from diffuserslib.functional.nodes.text.llm.OllamaModels import OllamaModels
 from diffuserslib.functional.nodes.text.llm.LanguageModelChatNode import LanguageModelChatNode
 from diffuserslib.functional.nodes.text.llm.LanguageModelCompletionNode import LanguageModelCompletionNode

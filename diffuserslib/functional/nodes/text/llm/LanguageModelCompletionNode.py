@@ -16,6 +16,7 @@ class LanguageModelCompletionNode(FunctionalNode):
 
 
     def process(self, model:str, prompt:str) -> str:
+        self.stop_flag = False
         if(model != self.model):
             self.model = model
             self.llm = Ollama(model = model, request_timeout = 120)
@@ -23,11 +24,17 @@ class LanguageModelCompletionNode(FunctionalNode):
         self.text = ""
         for r in response:
             self.text = r.text
+            if(self.stop_flag):
+                print("LanguageModelChatNode: interrupted")
+                break
 
-        print(self.text)
+        print("LanguageModelCompletionNode", self.text)
         return self.text
     
     
     def progress(self) -> WorkflowProgress|None:
         return WorkflowProgress(0, self.text)
         
+
+    def stop(self):
+        self.stop_flag = True

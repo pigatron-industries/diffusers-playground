@@ -38,6 +38,12 @@ scikit-image==0.19.3
 blendmodes
 lpips
 
+# database
+SQLAlchemy
+# only required for specific DBs
+psycopg-binary
+sqlalchemy-cockroachdb
+
 # esrgan
 lmdb
 opencv-python

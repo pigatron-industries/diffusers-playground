@@ -46,7 +46,7 @@ class ChatController(WorkflowController):
                         self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.output)
                         WorkflowRunner.workflowrunner.removeBatch(batch.id)
                         self.batchid = None
-                    elif(rundata.getStatus() == "Running"):
+                    elif(rundata.getStatus() == "Running" and rundata.progress is not None):
                         self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.progress.output)
                     elif(rundata.getStatus() == "Error"):
                         self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content="Error: " + str(rundata.error))

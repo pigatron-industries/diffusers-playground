@@ -1,6 +1,6 @@
 from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.WorkflowBuilder import *
-from diffuserslib.functional.nodes.text.LindenmayerSystemNode import LindenmayerSystemNode
+from diffuserslib.functional.nodes.text.generative.LindenmayerSystemNode import LindenmayerSystemNode
 from diffuserslib.functional.nodes.image.generative.TurtleNode import TurtleNode
 from diffuserslib.functional.nodes.image.generative.NewImageNode import NewImageNode
 

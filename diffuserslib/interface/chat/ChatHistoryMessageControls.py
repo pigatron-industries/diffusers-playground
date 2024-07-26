@@ -28,6 +28,12 @@ class ChatHistoryMessageControls:
         if self.message is None or self.message.content is None:
             return ""
         text = self.message.content.lstrip()
+        lines = text.split('\n')
+        output = ""
+        for line in lines:
+            if line.startswith("```"):
+                line = line.lstrip()
+            output += f"{line}\n"
         return text
 
 
