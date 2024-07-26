@@ -27,7 +27,6 @@ def str_to_class(str):
 
 class WorkflowController:
 
-    model = Model()
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
@@ -36,6 +35,7 @@ class WorkflowController:
     
 
     def __init__(self, history_filename=".history.yml"):
+        self.model = Model()
         self.history_filename = history_filename
         if(WorkflowRunner.workflowrunner is not None):
             self.workflowrunner = WorkflowRunner.workflowrunner
