@@ -2,9 +2,8 @@ from re import T
 from diffuserslib.batch.BatchRunner import evaluateArguments
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-from diffuserslib.functional.types import Vector, MovingBody, MovingBodiesFuncType
+from diffuserslib.functional.types.Video import *
 
-import cv2
 import numpy as np
 import torch
 from torch.nn import functional as F
@@ -14,33 +13,33 @@ from models.rife.v4_15.RIFE_HDv3 import Model
 
 class FramesRifeInterpolationNode(FunctionalNode):
     def __init__(self, 
-                 frames:FramesFuncType,
+                 video:VideoFuncType,
                  multiply:IntFuncType,
                  name:str = "frames_rife_interpolation"):
         super().__init__(name)
-        self.addParam("frames", frames, List[Image.Image])
+        self.addParam("video", video, Video)
         self.addParam("multiply", multiply, int)
         self.device = "cpu"
         self.frames = []
         self.num_frames = 0
 
 
-    def process(self, frames:List[Image.Image], multiply:int) -> List[Image.Image]:
+    def process(self, video:Video, multiply:int) -> List[Image.Image]:
         model = Model()
         model.load_model("models/rife/v4_15", -1)
         model.eval()
         model.device()
 
+        framecount = video.getFrameCount()
         self.frames = []
-        self.num_frames = ((len(frames)-1) * multiply) + 1
-        for i in range(len(frames) - 1):
-            image1 = frames[i]
-            image2 = frames[i + 1]
+        self.num_frames = ((framecount-1) * multiply) + 1
+        for i in range(framecount - 1):
+            image1 = video.getFrame(i)
+            image2 = video.getFrame(i + 1)
             self.frames.append(image1)
-            # int_frames = [ Image.new("RGB", (512, 512), (0, 0, 0)) ]
             int_frames = self.interpolate(model, image1, image2, multiply)
             self.frames.extend(int_frames)
-        self.frames.append(frames[-1])
+        self.frames.append(video.getFrame(framecount-1))
 
         return self.frames
     

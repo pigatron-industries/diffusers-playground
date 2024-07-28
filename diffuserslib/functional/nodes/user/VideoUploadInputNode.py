@@ -21,15 +21,10 @@ class VideoUploadInputNode(FileUploadInputNode):
         temp_file = tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True)
         temp_file.write(e.content.read())
         temp_file.seek(0)
-        cap = cv2.VideoCapture(temp_file.name)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        ret, frame = cap.read()
-        if not ret:
-            raise ValueError("Could not read video file")
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        self.preview = Image.fromarray(img)
-        self.framecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.content = [Video(frame_rate = fps, file = temp_file)]
+        # cap = cv2.VideoCapture(temp_file.name)
+        # fps = cap.get(cv2.CAP_PROP_FPS)
+        self.content = [Video(file = temp_file)]
+        self.preview = self.content[0].getFrame(0)
         self.gui.refresh()
 
 
@@ -53,8 +48,8 @@ class VideoUploadInputNode(FileUploadInputNode):
             return
         ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
         with ui.column():
-            ui.label(f"frames: {self.framecount}")
-            ui.label(f"fps: {self.content[0].frame_rate}")
+            ui.label(f"frames: {self.content[0].getFrameCount()}")
+            ui.label(f"fps: {self.content[0].getFrameRate()}")
 
 
     def __deepcopy__(self, memo):

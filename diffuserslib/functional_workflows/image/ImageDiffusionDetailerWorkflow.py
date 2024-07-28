@@ -5,12 +5,15 @@ from diffuserslib.functional.nodes.image.generative import *
 from diffuserslib.functional.nodes.image.process import *
 
 
-#TODO this is a work in progress
 class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
-    """ Image diffusion with a set of fixed conditioning models for adding detail to a large image. """
+    """ 
+    Image diffusion with a set of fixed conditioning models for adding detail to a large image. 
+    Splits image into square tiles based on a max tile size, with overlap, and runs img2img on each tile.
+    Uses canny controlnet and ipadapter as conditioning.
+    """
 
     def __init__(self):
-        super().__init__("Image Diffusion - Detailer", Image.Image, workflow=True, subworkflow=False)
+        super().__init__("Image Diffusion - Detailer - Conditioning", Image.Image, workflow=True, subworkflow=False)
 
 
     def build(self):

@@ -13,10 +13,10 @@ class VideoRifeInterpolationWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        frames_input = VideoUploadInputNode()
+        video_input = VideoUploadInputNode()
         mult_input = IntUserInputNode(name = "frame_multiplier", value = 4)
         fps_input = FloatUserInputNode(name = "fps", value = 30)
 
-        rife = FramesRifeInterpolationNode(frames = frames_input, multiply = mult_input)
+        rife = FramesRifeInterpolationNode(video = video_input, multiply = mult_input)
         frames_to_video = FramesToVideoNode(frames = rife, fps = fps_input)
         return frames_to_video

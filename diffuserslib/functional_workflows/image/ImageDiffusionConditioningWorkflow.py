@@ -65,5 +65,5 @@ class ImageDiffusionConditioningWorkflow(WorkflowBuilder):
                                     conditioning_inputs = conditioning_inputs)
         
         feedback_init_image = ImageUploadInputNode(mandatory = False, display = "Initial Image", name = "feedback_init_image")
-        feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = feedback_init_image, name = "feedback_image", display_name="Feedback Image")
+        feedback_image = FeedbackNode(type = Image.Image, input = diffusion, init_value = feedback_init_image, name = "feedback_image", display_name="Feedback Image - Previous Output")
         return diffusion, feedback_image
