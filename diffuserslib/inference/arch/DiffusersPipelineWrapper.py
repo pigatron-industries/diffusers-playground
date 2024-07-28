@@ -63,8 +63,8 @@ class DiffusersPipelineWrapper:
             else:
                 self.mergeModel(pipeline, params.models[i].weight)
             
-        
-        self.pipeline.enable_attention_slicing()
+        if("torch_dtype" in pipeline_params and not pipeline_params["torch_dtype"] == torch.float16):
+            self.pipeline.enable_attention_slicing()
         # pipeline.enable_model_cpu_offload()
         # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
 

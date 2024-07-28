@@ -5,7 +5,7 @@ from diffuserslib.functional.nodes.user import ListSelectUserInputNode
 from PIL import Image
 
 
-class MLSDEdgeDetectionWorkflow(WorkflowBuilder):
+class ControlNetProcessorWorkflow(WorkflowBuilder):
 
     def __init__(self):
         super().__init__("Image Process - ControlNet Processor", Image.Image, workflow=False, subworkflow=True, realtime=False)

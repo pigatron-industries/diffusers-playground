@@ -2,6 +2,7 @@ from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
 from ..GenerationParameters import GenerationParameters
 from dataclasses import dataclass
 from diffusers import StableVideoDiffusionPipeline
+import torch
 
 
 @dataclass
@@ -14,6 +15,15 @@ class StableVideoDiffusionPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         print(f"creating pipeline {cls.__name__}")
         super().__init__(cls=cls, params=params, device=device, **kwargs)
+
+
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        self.addPipelineParamsCommon(params, pipeline_params)
+        # fp16 producing black images on mac
+        # pipeline_params['torch_dtype'] = torch.float16
+        # pipeline_params['variant'] = 'fp16'
+        return pipeline_params
                 
 
     def diffusers_inference(self, image, seed, scheduler=None, **kwargs):
