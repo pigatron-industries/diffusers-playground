@@ -17,7 +17,9 @@ class WorkflowComponents:
 
 
     def loadWorkflow(self, workflow_name):
-        print("loading workflow")
+        if(workflow_name is None):
+            return
+        print("WorkflowComponents.loadWorkflow()", workflow_name)
         self.controller.loadWorkflow(workflow_name)
         self.controls.refresh()
 
