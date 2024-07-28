@@ -16,7 +16,7 @@ class ImageDiffusionConditioningProcessingWorkflow(WorkflowBuilder):
     """
 
     def __init__(self):
-        super().__init__("Image Diffusion - Conditioning with Processing", Image.Image, workflow=True, subworkflow=False)
+        super().__init__("Image Diffusion - Conditioning with Processing", Image.Image, workflow=True, subworkflow=True)
         self.i = 0
 
 
