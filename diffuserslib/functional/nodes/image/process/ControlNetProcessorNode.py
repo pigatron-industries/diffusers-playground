@@ -22,6 +22,8 @@ class ControlNetProcessorNode(FunctionalNode):
         
         
     def process(self, image:Image.Image, processor:str) -> Image.Image|None:
+        if(processor is None or processor == ""):
+            return image
         if self.model is None:
             self.model = Processor(processor)
         if image is None:
