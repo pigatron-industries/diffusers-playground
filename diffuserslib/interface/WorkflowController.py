@@ -114,7 +114,11 @@ class WorkflowController:
 
     def createInputNode(self, param:NodeParameter, workflow_name):
         if(workflow_name in self.builders):
-            param.value = self.builders[workflow_name].build()
+            workflow_or_tuple = self.builders[workflow_name].build()
+            if(isinstance(workflow_or_tuple, tuple)):
+                param.value = workflow_or_tuple[0]
+            else:
+                param.value = self.builders[workflow_name].build()
             param.value.node_name = workflow_name
         elif(workflow_name in self.model.workflows_sub):
             param.value = self.model.workflows_sub[workflow_name]
