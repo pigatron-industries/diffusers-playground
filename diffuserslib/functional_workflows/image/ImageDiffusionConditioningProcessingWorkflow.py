@@ -48,7 +48,7 @@ class ImageDiffusionConditioningProcessingWorkflow(WorkflowBuilder):
             self.i += 1
             conditioning_model_input = ConditioningModelUserInputNode(diffusion_model_input = model_input, name = f"model{i}")
             scale_input = FloatUserInputNode(value = 1.0, name = f"scale{i}")
-            processor_input = ListSelectUserInputNode(name = "processor", value="canny", options = ControlNetProcessorNode.PROCESSORS)
+            processor_input = ListSelectUserInputNode(name = "processor", value="canny", options = ControlNetProcessorNode.PROCESSORS + [""])
 
             controlnet_processor = ControlNetProcessorNode(image = image_resize, processor = processor_input, name = f"controlnet_processor{i}")
             controlnet_resize_image = ResizeImageNode(image = controlnet_processor, size = size_input, type = ResizeImageNode.ResizeType.STRETCH, name = f"resize_image{i}")
