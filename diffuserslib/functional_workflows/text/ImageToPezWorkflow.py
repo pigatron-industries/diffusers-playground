@@ -3,7 +3,7 @@ from diffuserslib.functional.WorkflowBuilder import *
 from diffuserslib.functional.nodes.text.ImageToPezNode import ImageToPezNode
 
 
-class LindenmayerSystemWorkflow(WorkflowBuilder):
+class ImageToPezWorkflow(WorkflowBuilder):
 
     def __init__(self):
         super().__init__("Text Generation - Image to Pez", str, workflow=True, subworkflow=True)
