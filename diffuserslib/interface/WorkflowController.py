@@ -109,6 +109,7 @@ class WorkflowController:
         for name, workflow in self.model.workflows_sub.items():
             if(workflow.type == param.type):
                 selectable_subworkflows[name] = workflow.name
+        # TODO alphabetical sort
         return selectable_subworkflows
 
 

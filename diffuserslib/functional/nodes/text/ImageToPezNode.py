@@ -18,7 +18,7 @@ class ImageToPezNode(FunctionalNode):
         },
         "sdxl": {
             "model": "ViT-bigG-14",
-            "pretrain": "laion2b_s39b_b160k"
+            "pretrain": "laion2b_39b_b160k"
         }
     }
 
