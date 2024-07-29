@@ -25,9 +25,9 @@ class ImageToPezNode(FunctionalNode):
 
     def __init__(self, 
                  image:ImageFuncType,
-                 name:str = "image_to_pez",
-                 clip_model:str = "sdxl",
-                 iterations:int = 100):
+                 clip_model:StringFuncType = "sdxl",
+                 iterations:IntFuncType = 100,
+                 name:str = "image_to_pez",):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
         self.addParam("clip_model", clip_model, str)
