@@ -40,9 +40,6 @@ class ImageToPezNode(FunctionalNode):
         open_clip = sys.modules["open_clip"]
         optim_utils = sys.modules["optim_utils"]
 
-        clip_model = 'ViT-H-14'
-        clip_pretrain = 'laion2b_s32b_b79k'
-
         args = argparse.Namespace()
         args.__dict__["iter"] = iterations
         args.__dict__["prompt_len"] = 16
@@ -55,7 +52,7 @@ class ImageToPezNode(FunctionalNode):
         args.__dict__["clip_model"] = self.CLIP_MODELS[clip_model]["model"]
         args.__dict__["clip_pretrain"] = self.CLIP_MODELS[clip_model]["pretrain"]
 
-        model, _, preprocess = open_clip.create_model_and_transforms(clip_model, pretrained=clip_pretrain, device="mps")
+        model, _, preprocess = open_clip.create_model_and_transforms(args.__dict__["clip_model"], args.__dict__["clip_pretrain"], device="mps")
         learned_prompt = optim_utils.optimize_prompt(model, preprocess, args, "mps", target_images=[image])
 
         return learned_prompt
