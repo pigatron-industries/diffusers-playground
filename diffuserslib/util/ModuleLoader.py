@@ -22,15 +22,30 @@ class ModuleLoader:
             filelist = glob.glob(path + '/*.py')
         modules = []
         for file in filelist:
-            modules.append(ModuleLoader.load_from_file(file))
+            if(os.path.basename(file) == '__init__.py'):
+                modules.append(ModuleLoader.load_from_file(file, parent_module = path))
+        for file in filelist:
+            if(os.path.basename(file) != '__init__.py'):
+                modules.append(ModuleLoader.load_from_file(file, parent_module = path))
         return modules
             
 
     @staticmethod
-    def load_from_file(path):
-        spec = importlib.util.spec_from_file_location("module", path)
+    def load_from_file(path, parent_module = None, module_name = None):
+        if(module_name is None):
+            module_name = os.path.splitext(os.path.basename(path))[0]
+            if(parent_module is not None):
+                parent_dir = os.path.dirname(parent_module)
+                relative_path = os.path.relpath(path, parent_dir)
+                directories = os.path.dirname(relative_path).split(os.sep)
+                module_name = '.'.join(directories + [module_name])
+                if(module_name.endswith('.__init__')):
+                    module_name = module_name[:-9]
+        print(module_name)
+        spec = importlib.util.spec_from_file_location(module_name, path)
         if (spec is not None and spec.loader is not None):              
             module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
             spec.loader.exec_module(module)
             return module
     
