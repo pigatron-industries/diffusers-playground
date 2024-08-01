@@ -32,7 +32,7 @@ class ConverseInterfaceComponents(WorkflowComponents):
         self.history_scroll = None
         self.scroll_bottom = True
         self.output = None
-        self.timer = ui.timer(0.1, lambda: self.updateWorkflowProgress(), active=False)
+        self.timer = ui.timer(0.5, lambda: self.updateWorkflowProgress(), active=False)
         self.builders = {}
         for name, builder in self.controller.builders.items():
             if(builder.converse):

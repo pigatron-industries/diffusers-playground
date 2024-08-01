@@ -24,15 +24,15 @@ class LanguageModelDatabaseQueryWorkflow(WorkflowBuilder):
         db_connections = DatabaseConnections.getDatabaseConnections()
         db_connections_dict = {connection.name: connection for connection in db_connections.values()}
         
-        model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model")
+        model_input = ListSelectUserInputNode(value = "llama3:8b", options = models, name = "model_input")
         db_connection_input = DictSelectUserInputNode(value = "", options = db_connections_dict, name = "db_connection")
         message_input = TextAreaInputNode(value = "", name = "message_input")
 
         table_info = DatabaseMetadataNode(connection=db_connection_input, name="db_metadata")
         create_sql_prompt = TemplateNode(DatabasePrompts.CREATE_SQL_TEMPLATE, tableinfo=table_info, question=message_input, name="create_sql_prompt")
-        sql_query = LanguageModelCompletionNode(model=model_input, prompt=create_sql_prompt, name="llm")
+        sql_query = LanguageModelCompletionNode(model=model_input, prompt=create_sql_prompt, name="llm_query").setAccumulate()
         extract_sql = ExtractTextNode(text=sql_query, start_token="```sql", end_token="```", name="extract_sql")
-        sql_result = DatabaseQueryNode(connection=db_connection_input, query=extract_sql, output_type="markdown", name="db_query")
-        final_output_prompt = TemplateNode(DatabasePrompts.FINAL_OUTPUT_TEMPLATE, question=message_input, tableinfo=table_info, sql_query=sql_query, sql_result=sql_result, name="final_output_prompt")
-        final_output = LanguageModelCompletionNode(model=model_input, prompt=final_output_prompt, name="llm")
+        sql_result = DatabaseQueryNode(connection=db_connection_input, query=extract_sql, output_type="markdown", name="db_query").setAccumulate()
+        final_output_prompt = TemplateNode(DatabasePrompts.FINAL_OUTPUT_TEMPLATE, question=message_input, tableinfo=table_info, sql_query=extract_sql, sql_result=sql_result, name="final_output_prompt")
+        final_output = LanguageModelCompletionNode(model=model_input, prompt=final_output_prompt, name="llm_result").setAccumulate()
         return final_output

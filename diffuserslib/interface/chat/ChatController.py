@@ -42,12 +42,30 @@ class ChatController(WorkflowController):
             if(batch is not None):
                 for runid, rundata in batch.rundata.items():
                     # assumes only a batch of 1
+                    progression = batch.workflow.getCumulativeProgress()
+                    # print(progression)
                     if(rundata.getStatus() == "Complete"):
-                        self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.output)
+                        if(len(progression) > 0):
+                            output = ""
+                            for progress in progression:
+                                if(progress.output is not None):
+                                    output += "\n---\n"
+                                    output += progress.output + "\n"
+                            self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=output)
+                        else:
+                            self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.output)
                         WorkflowRunner.workflowrunner.removeBatch(batch.id)
                         self.batchid = None
                     elif(rundata.getStatus() == "Running" and rundata.progress is not None):
-                        self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.progress.output)
+                        if(len(progression) > 0):
+                            output = ""
+                            for progress in progression:
+                                if(progress.output is not None):
+                                    output += "\n---\n"
+                                    output += progress.output + "\n"
+                            self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=output)
+                        else:
+                            self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content=rundata.progress.output)
                     elif(rundata.getStatus() == "Error"):
                         self.message_history[self.lastmessageid] = ChatMessage(role=MessageRole.ASSISTANT, content="Error: " + str(rundata.error))
                     else:

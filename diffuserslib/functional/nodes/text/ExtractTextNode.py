@@ -19,7 +19,7 @@ class ExtractTextNode(FunctionalNode):
         pattern = f"{re.escape(start_token)}(.*?){re.escape(end_token)}"
         match = re.search(pattern, text, re.DOTALL)
         if match:
-            print("ExtractTextNode: ", match.group(1))
+            # print("ExtractTextNode: ", match.group(1))
             return match.group(1)
         else:
             return ""
