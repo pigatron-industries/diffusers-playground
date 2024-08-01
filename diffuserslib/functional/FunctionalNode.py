@@ -1,3 +1,4 @@
+from platform import node
 from diffuserslib.util import DeepCopyObject
 from typing import Dict, Any, List, Self, Callable
 from dataclasses import dataclass
@@ -48,6 +49,7 @@ class FunctionalNode(DeepCopyObject):
         self.stopping = False
         self.callback_progress = None
         self.callback_finished = None
+        self.accumulate = True
 
 
     def __call__(self, **kwargs) -> Any:
@@ -106,6 +108,21 @@ class FunctionalNode(DeepCopyObject):
         if(self.node_name == node_name):
             return self
         return self.recursive_action("getNodeByName", return_value=True, node_name=node_name)
+    
+
+    def setAccumulate(self):
+        self.accumulate = True
+        return self
+    
+    
+    def getNodesByAccumulate(self) -> List[Self]:
+        nodes = []
+        if(self.accumulate):
+            nodes.append(self)
+        nodes.extend(self.recursive_action("getNodesByAccumulate", return_value=True, cumulative=True))
+        nodes = list(dict.fromkeys(nodes))
+        nodes.reverse()
+        return nodes
 
 
     def getProgress(self) -> WorkflowProgress|None:
@@ -113,6 +130,16 @@ class FunctionalNode(DeepCopyObject):
             return self.recursive_action("getProgress", return_value=True)
         else:
             return self.progress()
+
+
+    def getCumulativeProgress(self) -> List[WorkflowProgress]:
+        nodes = self.getNodesByAccumulate()
+        progression = []
+        for node in nodes:
+            progress = node.progress()
+            if(progress is not None):
+                progression.append(progress)
+        return progression
     
 
     def progress(self) -> WorkflowProgress|None:
@@ -128,21 +155,34 @@ class FunctionalNode(DeepCopyObject):
         self.callback_finished = callback
 
 
-    def recursive_action(self, action:str, return_value:bool=False, init_params:bool=False, **kwargs):
+    def recursive_action(self, action:str, return_value:bool=False, init_params:bool=False, cumulative:bool=False, **kwargs):
         params = self.initparams if(init_params) else self.params
+        results = []
         for paramname, param in params.items():
             if(isinstance(param.value, FunctionalNode)):
                 func = getattr(param.value, action)
                 result = func(**kwargs)
-                if(return_value and result is not None):
-                    return result
+                if(return_value):
+                    if(cumulative and isinstance(result, list)):
+                        results.extend(result)    
+                    elif(cumulative and result is not None):
+                        results.append(result)
+                    elif(not cumulative and result is not None):
+                        return result
             elif(isinstance(param.value, List)):
                 for listvalue in param.value:
                     if(isinstance(listvalue, FunctionalNode)):
                         func = getattr(listvalue, action)
                         result = func(**kwargs)
-                        if(return_value and result is not None):
-                            return result
+                        if(return_value):
+                            if(cumulative and isinstance(result, list)):
+                                results.extend(result)    
+                            elif(cumulative and result is not None):
+                                results.append(result)
+                            elif(not cumulative and result is not None):
+                                return result
+        if(cumulative and return_value):
+            return results
 
 
     def init(self, **kwargs):

@@ -16,5 +16,5 @@ class TemplateNode(FunctionalNode):
 
     def process(self, template:str, **kwargs) -> str:
         output = template.format(**kwargs)
-        print("TemplateNode:", output)
+        # print("TemplateNode:", output)
         return output

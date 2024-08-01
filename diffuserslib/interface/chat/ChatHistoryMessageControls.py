@@ -31,10 +31,10 @@ class ChatHistoryMessageControls:
         lines = text.split('\n')
         output = ""
         for line in lines:
-            if line.startswith("```"):
+            if line.lstrip().startswith("```"):
                 line = line.lstrip()
             output += f"{line}\n"
-        return text
+        return output
 
 
     def deleteMessage(self):

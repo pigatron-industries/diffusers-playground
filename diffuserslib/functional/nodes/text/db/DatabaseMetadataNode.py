@@ -57,6 +57,6 @@ class DatabaseMetadataNode(FunctionalNode):
             create_statement += ",\n".join(columns)
             create_statement += "\n);"
             create_statements += create_statement + "\n\n"
-        print("DatabaseMetadataNode:", create_statements)
+        # print("DatabaseMetadataNode:", create_statements)
         return create_statements
         

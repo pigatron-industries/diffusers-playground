@@ -33,7 +33,7 @@ class DatabaseQueryNode(FunctionalNode):
         statement = sql.text(query)
         result = session.execute(statement)
         if(self.output_type == "markdown"):
-            print("DatabaseQueryNode: ", result)
+            # print("DatabaseQueryNode: ", result)
             return self.toMarkdown(result)
         else:
             return result.fetchall()
@@ -48,6 +48,8 @@ class DatabaseQueryNode(FunctionalNode):
         return markdown_table
         
 
-
-    
-    
+    def progress(self) -> WorkflowProgress|None:
+        if(self.output is None):
+            return WorkflowProgress(0, None)
+        else:
+            return WorkflowProgress(1, self.output)
