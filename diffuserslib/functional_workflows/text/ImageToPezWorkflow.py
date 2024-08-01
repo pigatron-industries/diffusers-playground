@@ -11,6 +11,8 @@ class ImageToPezWorkflow(WorkflowBuilder):
 
     def build(self):
         image_input = ImageUploadInputNode(name="image_input")
+        model_input = ListSelectUserInputNode(value="sdxl", options=list(ImageToPezNode.CLIP_MODELS.keys()), name="model_input")
+        iterations_input = IntUserInputNode(value=100, name="iterations_input")
 
-        pez = ImageToPezNode(image=image_input, name="lsystem")
+        pez = ImageToPezNode(image=image_input, clip_model=model_input, iterations=iterations_input, name="lsystem")
         return pez
