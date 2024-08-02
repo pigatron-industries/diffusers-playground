@@ -9,3 +9,4 @@ from .DeepFloydPipelines import *
 from .KandinskyPipelines import *
 from .AuraFlowPipelines import *
 from .KwaiKolorsPipelines import *
+from .FluxPipelines import *
