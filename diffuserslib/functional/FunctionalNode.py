@@ -114,14 +114,13 @@ class FunctionalNode(DeepCopyObject):
         self.accumulate = True
         return self
     
-    
+
     def getNodesByAccumulate(self) -> List[Self]:
         nodes = []
         if(self.accumulate):
             nodes.append(self)
         nodes.extend(self.recursive_action("getNodesByAccumulate", return_value=True, cumulative=True))
         nodes = list(dict.fromkeys(nodes))
-        nodes.reverse()
         return nodes
 
 
