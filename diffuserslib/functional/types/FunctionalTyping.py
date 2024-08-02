@@ -1,7 +1,9 @@
-from typing import Callable, Tuple, List, Any
+from typing import Callable, Tuple, List, Any, Dict
 from PIL import Image
 
 # Python type definitions for node inputs
+ParamsDictFuncType = Dict[str, Any] | Callable[[], Dict[str, Any]] | None
+
 StringFuncType = str | Callable[[], str]
 IntFuncType = int | Callable[[], int]
 FloatFuncType = float | Callable[[], float]

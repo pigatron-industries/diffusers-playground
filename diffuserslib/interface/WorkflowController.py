@@ -93,8 +93,9 @@ class WorkflowController:
             else:
                 self.model.workflow = workflow_or_tuple
             self.loadWorkflowParamsFromHistory()
-            print(f"Loaded workflow: {self.model.workflow.name}")
-            self.model.workflow.printDebug()
+            if(self.model.workflow is not None):
+                print(f"Loaded workflow: {self.model.workflow.name}")
+                self.model.workflow.printDebug()
         else:
             self.model.workflow_name = None
             self.model.workflow = None
@@ -194,13 +195,14 @@ class WorkflowController:
         if(self.model.workflow is not None and self.model.workflow_name is not None and self.model.workflow_name in self.workflow_history):
             user_input_values = self.workflow_history[self.model.workflow_name]
 
-            def visitor(param, parents):
+            def visitor(param:NodeParameter, parents):
                 paramstring = '.'.join([parent.name if isinstance(parent, NodeParameter) else str(parent) for parent in parents])
                 print(paramstring)
-                if(paramstring+'.value' in user_input_values):
-                    param.value.setValue(user_input_values[paramstring+'.value'])
-                if(paramstring+'.node' in user_input_values):
-                    self.createInputNode(param, user_input_values[paramstring+'.node'])
+                if(isinstance(param.value, UserInputNode)):
+                    if(paramstring+'.value' in user_input_values):
+                        param.value.setValue(user_input_values[paramstring+'.value'])
+                    if(paramstring+'.node' in user_input_values):
+                        self.createInputNode(param, user_input_values[paramstring+'.node'])
             
             self.model.workflow.visitParams(visitor)
 

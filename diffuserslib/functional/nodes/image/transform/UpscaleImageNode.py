@@ -10,6 +10,17 @@ class UpscaleImageNode(FunctionalNode):
         ESRGAN = "esrgan"
         AURASR = "aurasr"
 
+    UPSCALE_MODELS = {
+        "ESRGAN / 4x_remacri": {
+            "type": UpscaleType.ESRGAN,
+            "model": "4x_remacri",
+        },
+        "AuraSR": {
+            "type": UpscaleType.AURASR,
+            "model": None,
+        }
+    }
+
     UpscaleTypeFuncType = UpscaleType | Callable[[], UpscaleType]
 
     def __init__(self, 
@@ -28,6 +39,8 @@ class UpscaleImageNode(FunctionalNode):
         
         
     def process(self, image:Image.Image, type:UpscaleType, model:str, scale:int) -> Image.Image|None:
+        print(type)
+        print(model)
         if(type == self.UpscaleType.ESRGAN):
             outimage = self.upscaleEsrgan(image, scale=scale, model=model)
         elif(type == self.UpscaleType.AURASR):

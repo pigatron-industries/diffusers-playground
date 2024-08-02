@@ -1,6 +1,7 @@
 from platform import node
 from diffuserslib.util import DeepCopyObject
 from typing import Dict, Any, List, Self, Callable
+from diffuserslib.functional.types.FunctionalTyping import *
 from dataclasses import dataclass
 
 
@@ -33,6 +34,8 @@ class WorkflowInterruptedException(Exception):
 
 
 class FunctionalNode(DeepCopyObject):
+    # paramsdict is a special parameter that can be used to pass a dictionary of parameters as the output of another node
+    PARAMSDICT_PARAM = "paramsdict"
     name = "FunctionalNode"
 
     def __init__(self, node_name:str, type:type|Any = Any):
@@ -203,9 +206,19 @@ class FunctionalNode(DeepCopyObject):
     def addParam(self, name:str, value:Any, type:type|Any):
         self.params[name] = NodeParameter(node=self.node_name, name=name, value=value, initial_value=value, type=type)
 
+    
+    def addParamsDict(self, value:ParamsDictFuncType):
+        self.addParam(self.PARAMSDICT_PARAM, value, Dict[str, Any])
+        return self
+
 
     def addInitParam(self, name:str, value:Any, type:type):
         self.initparams[name] = NodeParameter(node=self.node_name, name=name, value=value, initial_value=value, type=type)
+
+
+    def addInitParamsDict(self, value:ParamsDictFuncType):
+        self.addInitParam(self.PARAMSDICT_PARAM, value, Dict[str, Any])
+        return self
 
 
     def getParams(self) -> List[NodeParameter]:
@@ -228,36 +241,48 @@ class FunctionalNode(DeepCopyObject):
     def evaluateParams(self):
         paramvalues = {}
         for paramname, param in self.params.items():
-            if(callable(param.value)):
-                paramvalues[paramname] = param.value()
-            elif(isinstance(param.value, list)):
-                paramvalues[paramname] = []
-                for listvalue in param.value:
-                    if(callable(listvalue)):
-                        paramvalues[paramname].append(listvalue())
-                    else:
-                        paramvalues[paramname].append(listvalue)
+            if(paramname == self.PARAMSDICT_PARAM):
+                if(callable(self.params[self.PARAMSDICT_PARAM].value)):
+                    paramvalues.update(self.params[self.PARAMSDICT_PARAM].value())
+                else:
+                    paramvalues.update(self.params[self.PARAMSDICT_PARAM].value)
             else:
-                paramvalues[paramname] = param.value
-            param.evaluated = paramvalues[paramname]
+                if(callable(param.value)):
+                    paramvalues[paramname] = param.value()
+                elif(isinstance(param.value, list)):
+                    paramvalues[paramname] = []
+                    for listvalue in param.value:
+                        if(callable(listvalue)):
+                            paramvalues[paramname].append(listvalue())
+                        else:
+                            paramvalues[paramname].append(listvalue)
+                else:
+                    paramvalues[paramname] = param.value
+                param.evaluated = paramvalues[paramname]
         return paramvalues
     
 
     def evaluateInitParams(self):
         paramvalues = {}
         for paramname, param in self.initparams.items():
-            if(callable(param.value)):
-                paramvalues[paramname] = param.value()
-            elif(isinstance(param.value, list)):
-                paramvalues[paramname] = []
-                for listvalue in param.value:
-                    if(callable(listvalue)):
-                        paramvalues[paramname].append(listvalue())
-                    else:
-                        paramvalues[paramname].append(listvalue)
+            if(paramname == self.PARAMSDICT_PARAM):
+                if(callable(self.initparams[self.PARAMSDICT_PARAM].value)):
+                    paramvalues.update(self.initparams[self.PARAMSDICT_PARAM].value())
+                else:
+                    paramvalues.update(self.initparams[self.PARAMSDICT_PARAM].value)
             else:
-                paramvalues[paramname] = param.value
-            param.evaluated = paramvalues[paramname]
+                if(callable(param.value)):
+                    paramvalues[paramname] = param.value()
+                elif(isinstance(param.value, list)):
+                    paramvalues[paramname] = []
+                    for listvalue in param.value:
+                        if(callable(listvalue)):
+                            paramvalues[paramname].append(listvalue())
+                        else:
+                            paramvalues[paramname].append(listvalue)
+                else:
+                    paramvalues[paramname] = param.value
+                param.evaluated = paramvalues[paramname]
         return paramvalues
     
 

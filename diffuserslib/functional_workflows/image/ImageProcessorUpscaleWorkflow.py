@@ -17,7 +17,8 @@ class ImageProcessorUpscaleWorkflow(WorkflowBuilder):
     def build(self):
         image_input = ImageUploadInputNode(name = "image")
         scale_input = IntUserInputNode(value = 4, name = "scale")
-        model_input = ListSelectUserInputNode(name = "model", value = "4x_remacri", options = ["4x_remacri"])
+        model_input = DictSelectUserInputNode(name = "model", value = "4x_remacri", options = UpscaleImageNode.UPSCALE_MODELS)
         
-        upscale = UpscaleImageNode(image = image_input, scale = scale_input, model = model_input, type=UpscaleImageNode.UpscaleType.ESRGAN)
+        # upscale = UpscaleImageNode(image = image_input, scale = scale_input)
+        upscale = UpscaleImageNode(image = image_input, scale = scale_input).addParamsDict(model_input)
         return upscale
