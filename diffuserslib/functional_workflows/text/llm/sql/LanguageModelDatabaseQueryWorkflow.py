@@ -32,12 +32,12 @@ class LanguageModelDatabaseQueryWorkflow(WorkflowBuilder):
         
         table_info = DatabaseMetadataNode(connection=db_connection_input, name="db_metadata")
         create_sql_prompt = TemplateNode(DatabasePrompts.CREATE_SQL_TEMPLATE, tableinfo=table_info, question=message_input, name="create_sql_prompt")
-        sql_query = LanguageModelCompletionNode(model=model_input, prompt=create_sql_prompt, name="llm_query").setAccumulate()
+        sql_query = LanguageModelCompletionNode(model=model_input, prompt=create_sql_prompt, name="llm_query").setDisplayIndex(0)
 
         extract_sql = ExtractTextNode(text=sql_query, start_token="```sql", end_token="```", name="extract_sql")
-        sql_result = DatabaseQueryNode(connection=db_connection_input, query=extract_sql, output_type="markdown", name="db_query").setAccumulate()
+        sql_result = DatabaseQueryNode(connection=db_connection_input, query=extract_sql, output_type="markdown", name="db_query").setDisplayIndex(1)
         final_output_prompt = TemplateNode(DatabasePrompts.FINAL_OUTPUT_TEMPLATE, question=message_input, tableinfo=table_info, sql_query=extract_sql, sql_result=sql_result, name="final_output_prompt")
-        final_output = LanguageModelCompletionNode(model=model_input, prompt=final_output_prompt, name="llm_result").setAccumulate()
+        final_output = LanguageModelCompletionNode(model=model_input, prompt=final_output_prompt, name="llm_result").setDisplayIndex(2)
 
         # return final_output
 

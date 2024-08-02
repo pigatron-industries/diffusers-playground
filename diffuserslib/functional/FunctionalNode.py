@@ -49,7 +49,7 @@ class FunctionalNode(DeepCopyObject):
         self.stopping = False
         self.callback_progress = None
         self.callback_finished = None
-        self.accumulate = True
+        self.displayindex = None
 
 
     def __call__(self, **kwargs) -> Any:
@@ -110,17 +110,18 @@ class FunctionalNode(DeepCopyObject):
         return self.recursive_action("getNodeByName", return_value=True, node_name=node_name)
     
 
-    def setAccumulate(self):
-        self.accumulate = True
+    def setDisplayIndex(self, index:int):
+        self.displayindex = index
         return self
     
 
-    def getNodesByAccumulate(self) -> List[Self]:
+    def getNodesByDisplay(self) -> List[Self]:
         nodes = []
-        if(self.accumulate):
+        if(self.displayindex is not None):
             nodes.append(self)
-        nodes.extend(self.recursive_action("getNodesByAccumulate", return_value=True, cumulative=True))
+        nodes.extend(self.recursive_action("getNodesByDisplay", return_value=True, cumulative=True))
         nodes = list(dict.fromkeys(nodes))
+        nodes.sort(key=lambda node: node.displayindex)
         return nodes
 
 
@@ -132,7 +133,7 @@ class FunctionalNode(DeepCopyObject):
 
 
     def getCumulativeProgress(self) -> List[WorkflowProgress]:
-        nodes = self.getNodesByAccumulate()
+        nodes = self.getNodesByDisplay()
         progression = []
         for node in nodes:
             progress = node.progress()
