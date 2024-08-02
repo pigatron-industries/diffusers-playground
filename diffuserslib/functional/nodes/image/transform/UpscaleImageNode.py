@@ -2,6 +2,7 @@ from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from enum import Enum
 from diffuserslib.imagetools.ESRGAN_upscaler import ESRGANUpscaler
+from diffuserslib.GlobalConfig import GlobalConfig
 
 
 class UpscaleImageNode(FunctionalNode):
@@ -64,5 +65,6 @@ class UpscaleImageNode(FunctionalNode):
         if(self.model is None or self.loadedmodel != self.UpscaleType.AURASR):
             self.loadedmodel = self.UpscaleType.AURASR
             self.model = AuraSR.from_pretrained(model_id = "fal/AuraSR-v2")
+            self.model.upsampler = self.model.upsampler.to(GlobalConfig.device)
         outimage = self.model.upscale_4x_overlapped(inimage)
         return outimage
