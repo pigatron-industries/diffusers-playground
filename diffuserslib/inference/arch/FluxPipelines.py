@@ -1,4 +1,4 @@
-from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
+from .StableDiffusionPipelines import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters, ControlImageType
 from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
@@ -11,63 +11,38 @@ from diffusers import ( # Pipelines
                         FlowMatchEulerDiscreteScheduler)
 
 
-class FluxPipelineWrapper(StableDiffusionPipelineWrapper):
+class FluxPipelineWrapper(DiffusersPipelineWrapper):
+    def __init__(self, cls, params:GenerationParameters, device, **kwargs):
+        self.safety_checker = params.safetychecker
+        self.device = device
+        inferencedevice = 'cpu' if self.device == 'mps' else self.device
+        self.createPipeline(params, cls, **kwargs)
+        super().__init__(params, inferencedevice)
 
-    def __init__(self, cls, params:GenerationParameters, device, dtype=None):
-        super().__init__(cls=cls, params=params, device=device, dtype=dtype)
-                
-
-    def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):
+    def createPipelineParams(self, params:GenerationParameters):
+        pipeline_params = {}
+        self.addPipelineParamsCommon(params, pipeline_params)
+        return pipeline_params
+    
+    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, **kwargs):
         generator, seed = self.createGenerator(seed)
-        # if(scheduler is not None):
-        #     self.loadScheduler(scheduler)
-        self.pipeline.vae.enable_tiling(tiling)
-
-        output = self.pipeline(prompt = prompt,
-                              negative_prompt = negative_prompt,
-                              generator=generator, **kwargs)
+        output = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
         return output, seed
-
 
 
 class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
 
     PIPELINE_MAP = {
-        #img2im,    controlnet, t2iadapter, inpaint
-        (False,     False,      False,      False):    FluxPipeline,
-        # (False,     True,       False,      False):    StableDiffusion3ControlNetPipeline,
-        # (False,     False,      True,       False):    StableDiffusion3AdapterPipeline,
-        # (True,      False,      False,      False):    StableDiffusion3Img2ImgPipeline,
-        # (True,      True,       False,      False):    StableDiffusion3ControlNetImg2ImgPipeline,
-        # (True,      False,      False,      True):     StableDiffusion3InpaintPipeline,
-        # (True,      True,       False,      True):     StableDiffusion3ControlNetInpaintPipeline,
+        #img2im,    inpaint
+        (False,     False):    FluxPipeline
     }
 
 
     def __init__(self, params:GenerationParameters, device):
-        self.dtype = None
-        self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
-
         super().__init__(params=params, device=device, cls=cls)
-
-        if(self.features.ipadapter):
-            self.initIpAdapter(params)
 
 
     def getPipelineClass(self, params:GenerationParameters):
         self.features = self.getPipelineFeatures(params)
-        return self.PIPELINE_MAP[(self.features.img2img, self.features.controlnet, self.features.t2iadapter, self.features.inpaint)]  
-
-
-    def createPipelineParams(self, params:GenerationParameters):
-        pipeline_params = {}
-        self.addPipelineParamsCommon(params, pipeline_params)
-        if(self.features.controlnet):
-            self.addPipelineParamsControlNet(params, pipeline_params)
-        if(self.features.t2iadapter):
-            self.addPipelineParamsT2IAdapter(params, pipeline_params)
-        if(self.features.ipadapter):
-            self.addPipelineParamsIpAdapter(params, pipeline_params)
-        return pipeline_params
-
+        return self.PIPELINE_MAP[(self.features.img2img, self.features.inpaint)]
