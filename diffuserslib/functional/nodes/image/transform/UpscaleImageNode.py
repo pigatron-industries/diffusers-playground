@@ -34,6 +34,7 @@ class UpscaleImageNode(FunctionalNode):
         self.addParam("type", type, self.UpscaleType)
         self.addParam("model", model, str)
         self.addParam("scale", scale, int)
+        self.model = None
         self.modelscale = None
         self.loadedmodel = None
         
