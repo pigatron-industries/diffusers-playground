@@ -30,13 +30,21 @@ class DatabaseQueryNode(FunctionalNode):
 
         engine = create_engine(connectionstring, echo=True)
         session = Session(engine)
-        statement = sql.text(query)
-        result = session.execute(statement)
-        if(self.output_type == "markdown"):
-            # print("DatabaseQueryNode: ", result)
-            return self.toMarkdown(result)
-        else:
-            return result.fetchall()
+
+        try:
+            statement = sql.text(query)
+            result = session.execute(statement)
+            if(self.output_type == "markdown"):
+                # print("DatabaseQueryNode: ", result)
+                return self.toMarkdown(result)
+            else:
+                return result.fetchall()
+        except Exception as e:
+            session.rollback()
+            return f"Error: {e}"
+        finally:
+            session.close()
+            engine.dispose()
 
         
     def toMarkdown(self, result) -> str:
