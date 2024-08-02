@@ -8,6 +8,7 @@ class UpscaleImageNode(FunctionalNode):
 
     class UpscaleType(Enum):
         ESRGAN = "esrgan"
+        AURASR = "aurasr"
 
     UpscaleTypeFuncType = UpscaleType | Callable[[], UpscaleType]
 
@@ -22,14 +23,32 @@ class UpscaleImageNode(FunctionalNode):
         self.addParam("type", type, self.UpscaleType)
         self.addParam("model", model, str)
         self.addParam("scale", scale, int)
+        self.modelscale = None
+        self.loadedmodel = None
         
         
     def process(self, image:Image.Image, type:UpscaleType, model:str, scale:int) -> Image.Image|None:
         if(type == self.UpscaleType.ESRGAN):
-            return self.upscaleEsrgan(image, scale=scale, model=model)
+            outimage = self.upscaleEsrgan(image, scale=scale, model=model)
+        elif(type == self.UpscaleType.AURASR):
+            outimage = self.upscaleAuraSR(image, scale=scale)
+
+        modelscaled = outimage.width / image.width
+        if (modelscaled != scale):
+            outimage = outimage.resize((image.width*scale, image.height*scale))
+        return outimage
 
 
     def upscaleEsrgan(self, inimage, scale:int, model:str, tilewidth=512+64, tileheight=512+64, overlap=64):
         upscaler = ESRGANUpscaler(f'models/esrgan/{model}.pth', device="mps")
         outimage = upscaler.upscaleTiled(inimage, scale=scale, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap)
+        return outimage
+    
+
+    def upscaleAuraSR(self, inimage, scale:int):
+        from aura_sr import AuraSR
+        if(self.model is None or self.loadedmodel != self.UpscaleType.AURASR):
+            self.loadedmodel = self.UpscaleType.AURASR
+            self.model = AuraSR.from_pretrained(model_id = "fal/AuraSR-v2")
+        outimage = self.model.upscale_4x_overlapped(inimage)
         return outimage
