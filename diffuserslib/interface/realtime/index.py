@@ -6,6 +6,14 @@ from .RealtimeInterfaceComponents import RealtimeInterfaceComponents
 
 class RealtimeView(AbstractView):
 
+    controller = None
+
+    @staticmethod
+    def getControllerInstance():
+        if RealtimeView.controller is None:
+            RealtimeView.controller = WorkflowController("./.history_realtime.yml")
+        return RealtimeView.controller
+
     @ui.page('/realtime')
     def realtime():
         app.on_exception(ui.notify)
@@ -14,8 +22,7 @@ class RealtimeView(AbstractView):
 
 
     def __init__(self):
-        self.controller = WorkflowController("./.history_realtime.yml")
-        self.interface_components = RealtimeInterfaceComponents(self.controller)
+        self.interface_components = RealtimeInterfaceComponents(RealtimeView.getControllerInstance())
 
 
     def toggles(self):

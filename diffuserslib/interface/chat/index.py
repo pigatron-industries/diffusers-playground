@@ -11,6 +11,15 @@ class ConverseView(AbstractView):
 
     splitter_position = 25
 
+    controller = None
+
+    @staticmethod
+    def getControllerInstance():
+        if ConverseView.controller is None:
+            ConverseView.controller = ChatController("./.history_chat.yml")
+        return ConverseView.controller
+
+
     @ui.page('/chat')
     def gui():
         app.on_exception(ui.notify)
@@ -19,8 +28,7 @@ class ConverseView(AbstractView):
 
 
     def __init__(self):
-        self.controller = ChatController.get_instance("./.history_chat.yml")
-        self.interface_components = ConverseInterfaceComponents(self.controller)
+        self.interface_components = ConverseInterfaceComponents(self.getControllerInstance())
 
 
     def toggles(self):

@@ -8,6 +8,15 @@ from ..realtime.RealtimeInterfaceComponents import RealtimeInterfaceComponents
 
 class BatchView(AbstractView):
 
+    controller = None
+
+    @staticmethod
+    def getControllerInstance():
+        if BatchView.controller is None:
+            BatchView.controller = WorkflowController()
+        return BatchView.controller
+        
+
     @ui.page('/')
     def gui():
         app.on_exception(ui.notify)
@@ -22,8 +31,7 @@ class BatchView(AbstractView):
 
 
     def __init__(self):
-        self.controller = WorkflowController("./.history.yml")
-        self.interface_components = BatchInterfaceComponents(self.controller)
+        self.interface_components = BatchInterfaceComponents(BatchView.getControllerInstance())
 
 
     def toggles(self):
