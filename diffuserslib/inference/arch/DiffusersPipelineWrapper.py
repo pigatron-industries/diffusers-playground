@@ -38,16 +38,17 @@ class SplitModelName:
 
 
 class DiffusersPipelineWrapper:
-    def __init__(self, params:GenerationParameters, inferencedevice:str, dtype = None):
+    def __init__(self, params:GenerationParameters, inferencedevice:str, cls, dtype = None, **kwargs):
+        if(dtype is None):
+            dtype = torch.bfloat16
         self.dtype = dtype
         self.initparams = params
         self.inferencedevice = inferencedevice
         self.features = self.getPipelineFeatures(params)
+        self.createPipeline(params, cls, **kwargs)
 
 
     def createPipeline(self, params:GenerationParameters, cls):
-        if(params.modelConfig is None):
-            raise ValueError("Must provide modelConfig")
         pipeline_params = self.createPipelineParams(params)
         if(type(cls) is str):
             pipeline_params['custom_pipeline'] = cls
@@ -63,10 +64,8 @@ class DiffusersPipelineWrapper:
             else:
                 self.mergeModel(pipeline, params.models[i].weight)
             
-        if("torch_dtype" in pipeline_params and not pipeline_params["torch_dtype"] == torch.float16):
+        if("torch_dtype" in pipeline_params and pipeline_params["torch_dtype"] not in [torch.float16, torch.bfloat16]):
             self.pipeline.enable_attention_slicing()
-        # pipeline.enable_model_cpu_offload()
-        # self.pipeline.enable_xformers_memory_efficient_attention()  # doesn't work on mps
 
 
     def mergeModel(self, mergePipeline, weight):
@@ -167,7 +166,9 @@ class DiffusersPipelineWrapper:
             pipeline_params['revision'] = modelConfig.revision
             if(modelConfig.revision == 'fp16'):
                 pipeline_params['torch_dtype'] = torch.float16
-        if(hasattr(self, 'dtype') and self.dtype is not None):
+        print("dtype")
+        print(self.dtype)
+        if(self.dtype is not None):
             pipeline_params['torch_dtype'] = self.dtype
         if(modelConfig.vae is not None):
             pipeline_params['vae'] = AutoencoderKL.from_pretrained(modelConfig.vae, 

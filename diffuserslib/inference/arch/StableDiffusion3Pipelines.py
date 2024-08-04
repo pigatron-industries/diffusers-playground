@@ -14,8 +14,8 @@ import torch
 
 class StableDiffusion3PipelineWrapper(StableDiffusionPipelineWrapper):
 
-    def __init__(self, cls, params:GenerationParameters, device, dtype=None):
-        super().__init__(cls=cls, params=params, device=device, dtype=dtype)
+    def __init__(self, cls, params:GenerationParameters, device):
+        super().__init__(cls=cls, params=params, device=device)
                 
 
     def diffusers_inference(self, prompt, negative_prompt, seed, scheduler=None, tiling=False, **kwargs):

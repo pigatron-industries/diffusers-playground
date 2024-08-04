@@ -21,6 +21,7 @@ from typing import List
 from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from huggingface_hub import hf_hub_download
 from safetensors.torch import load_file
+from diffusers import __version__
 
 
 
@@ -32,16 +33,13 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     INPAINT_CONTROL_MODEL = "lllyasviel/control_v11p_sd15_inpaint"
     LCM_LORA_MODEL = "latent-consistency/lcm-lora-sdv1-5"
 
-    def __init__(self, cls, params:GenerationParameters, device, dtype = None):
+    def __init__(self, cls, params:GenerationParameters, device):
         print(f"creating pipeline {cls.__name__ if type(cls) is type else cls}")
-        if(params.modelConfig is None):
-            raise ValueError("Must provide modelConfig")
         self.safety_checker = params.safetychecker
         self.device = device
         self.lora_names = []
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(params, cls)
-        super().__init__(params, inferencedevice, dtype)
+        super().__init__(params, inferencedevice, cls=cls)
 
 
     def createPipelineParams(self, params:GenerationParameters):
@@ -123,7 +121,12 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         for i, lora in enumerate(loras):
             lora_weights.append(weights[i])
             lora_names.append(lora.name.split('.', 1)[0])
-        if hasattr(self.pipeline, 'set_adapters'):
+        print(__version__)
+        #  lora loading broken in diffusers dev
+
+        if(len(lora_weights) > 0 and __version__ == "0.30.0.dev0"):
+            raise ValueError("Lora loading is broken in diffusers version 0.30.0.dev0")
+        if(__version__ != "0.30.0.dev0" and hasattr(self.pipeline, 'set_adapters')):
             self.pipeline.set_adapters(lora_names, lora_weights)
 
 

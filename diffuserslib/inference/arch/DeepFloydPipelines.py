@@ -12,8 +12,7 @@ class DeepFloydPipelineWrapper(DiffusersPipelineWrapper):
         self.safety_checker = safety_checker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(params.modelConfig, cls, **kwargs)
-        super().__init__(params, inferencedevice)
+        super().__init__(params, inferencedevice, cls, **kwargs)
 
     def createPipeline(self, preset:DiffusersModel, cls, **kwargs):
         args = self.createPipelineArgs(preset, **kwargs)

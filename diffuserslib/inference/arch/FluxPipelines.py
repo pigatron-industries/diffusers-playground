@@ -9,6 +9,24 @@ from diffusers import ( # Pipelines
                         T2IAdapter, ControlNetModel,
                         # Schedulers
                         FlowMatchEulerDiscreteScheduler)
+import diffusers
+import torch
+
+
+_flux_rope = diffusers.models.transformers.transformer_flux.rope
+def new_flux_rope(pos: torch.Tensor, dim: int, theta: int) -> torch.Tensor:
+    assert dim % 2 == 0, "The dimension must be even."
+
+    if pos.device.type == "mps":
+        print("I got called")
+        return _flux_rope(pos.to("cpu"), dim, theta).to(device=pos.device)
+    else:
+        print("I should not be called")
+        return _flux_rope(pos, dim, theta)
+
+diffusers.models.transformers.transformer_flux.rope = new_flux_rope
+
+
 
 
 class FluxPipelineWrapper(DiffusersPipelineWrapper):
@@ -16,17 +34,16 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        self.createPipeline(params, cls, **kwargs)
-        super().__init__(params, inferencedevice)
+        super().__init__(params, inferencedevice, cls, **kwargs)
 
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
         return pipeline_params
     
-    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, **kwargs):
+    def diffusers_inference(self, prompt, seed, guidance_scale=4.0, scheduler=None, negative_prompt=None, clip_skip=None, **kwargs):
         generator, seed = self.createGenerator(seed)
-        output = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
+        output = self.pipeline(prompt=prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
         return output, seed
 
 
