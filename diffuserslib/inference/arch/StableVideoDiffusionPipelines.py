@@ -21,8 +21,8 @@ class StableVideoDiffusionPipelineWrapper(StableDiffusionPipelineWrapper):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
         # fp16 producing black images on mac
-        # pipeline_params['torch_dtype'] = torch.float16
-        # pipeline_params['variant'] = 'fp16'
+        pipeline_params['torch_dtype'] = torch.bfloat16
+        pipeline_params['variant'] = 'fp16'
         return pipeline_params
                 
 
