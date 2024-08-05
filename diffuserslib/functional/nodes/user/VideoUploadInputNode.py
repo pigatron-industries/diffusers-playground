@@ -48,6 +48,7 @@ class VideoUploadInputNode(FileUploadInputNode):
             return
         ui.image(self.preview).style(f"max-width:128px; min-width:128px;")
         with ui.column():
+            ui.label(f"size: {self.preview.width}x{self.preview.height}")
             ui.label(f"frames: {self.content[0].getFrameCount()}")
             ui.label(f"fps: {self.content[0].getFrameRate()}")
 

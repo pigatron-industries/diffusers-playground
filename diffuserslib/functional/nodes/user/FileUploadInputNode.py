@@ -58,7 +58,7 @@ class FileUploadInputNode(UserInputNode):
     
     def process(self) -> Any|None:
         if(len(self.content) == 0 and self.mandatory):
-            raise Exception("File not selected")
+            raise Exception(f"File not selected: {self.node_name}")
         if(self.multiple):
             return self.content
         else:
