@@ -1,3 +1,4 @@
+import stat
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib import pilToCv2
@@ -37,7 +38,31 @@ class SemanticSegmentationNode(FunctionalNode):
         return Image.fromarray(color_seg)
 
 
-    def ade_palette(self):
+    @staticmethod
+    def ade_palette_names():
+        """ADE20K palette class names."""
+        return [
+            "wall", "building", "sky", "floor", "tree", "ceiling", "road", "bed", "window", "grass",
+            "cabinet", "pavement", "person", "ground", "door", "table", "mountain", "plant", "curtain",
+            "chair", "car", "water", "painting", "sofa", "shelf", "house", "sea", "mirror", "carpet",
+            "field", "armchair", "seat", "fence", "desk", "rock", "wardrobe", "lamp", "bathtub", "railing",
+            "cushion", "base", "box", "column", "sign", "drawers", "counter", "sand", "sink", "skyscraper",
+            "fireplace", "refrigerator", "grandstand", "path", "stairs", "runway", "case", "pooltable",
+            "pillow", "screendoor", "stairway", "river", "bridge", "bookcase", "blind", "coffeetable",
+            "toilet", "flower", "book", "hill", "bench", "countertop", "stove", "palm", "kitchenisland",
+            "computer", "swivelchair", "boat", "bar", "arcade", "hut", "bus", "towel", "light", "truck",
+            "tower", "chandelier", "awning", "streetlight", "booth", "television", "airplane", "dirt",
+            "clothes", "pole", "land", "bannister", "escalator", "ottoman", "bottle", "buffet", "poster",
+            "stage", "van", "ship", "fountain", "conveyorbelt", "canopy", "washer", "toy", "swimmingpool",
+            "stool", "barrel", "basket", "waterfall", "tent", "bag", "motorbike", "cradle", "oven", "ball",
+            "food", "step", "tank", "trade", "microwave", "pot", "animal", "bicycle", "lake", "dishwasher",
+            "screen", "blanket", "sculpture", "hood", "sconce", "vase", "trafficlight", "tray", "bin", "fan",
+            "pier", "screen", "plate", "monitor", "bulletinboard", "shower", "radiator", "glass", "clock", "flag"
+        ]
+
+
+    @staticmethod
+    def ade_palette():
         """ADE20K palette that maps each class to RGB values."""
         return [[120, 120, 120], [180, 120, 120], [6, 230, 230], [80, 50, 50],
             [4, 200, 3], [120, 120, 80], [140, 140, 140], [204, 5, 255],
