@@ -1,6 +1,7 @@
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
-from PIL import Image, ImageFilter
+from PIL import Image
+from imgcat import imgcat
 
 
 class ImageCompositeNode(FunctionalNode):
@@ -20,6 +21,11 @@ class ImageCompositeNode(FunctionalNode):
         foreground = foreground.convert("RGBA")
         background = background.convert("RGBA")
         mask = mask.convert("L")
+
+        imgcat(foreground)
+        imgcat(background)
+        imgcat(mask)
+
         return Image.composite(foreground, background, mask)
         
     

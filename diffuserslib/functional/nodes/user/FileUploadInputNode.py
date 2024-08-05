@@ -32,10 +32,10 @@ class FileUploadInputNode(UserInputNode):
         with ui.dialog() as dialog:
             ui.upload(on_upload=self.handleUpload, on_multi_upload=self.handleMultiUpload, multiple=self.multiple)
         with ui.row().style("padding-top: 1.4em;"):
-            if(len(self.content) == 0):
+            with ui.column():
                 ui.label(self.display)
-            else:
-                self.previewContent()
+                if(len(self.content) > 0):
+                    self.previewContent()
             ui.button(icon='folder', on_click=dialog.open).props('dense')
             ui.button(icon='content_paste', on_click=lambda: run.io_bound(self.paste)).props('dense')
 

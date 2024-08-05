@@ -1,41 +1,56 @@
-import stat
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib import pilToCv2
 from transformers import AutoImageProcessor, UperNetForSemanticSegmentation
+from enum import Enum
 import torch
 import numpy as np
 
 
+
 class SemanticSegmentationNode(FunctionalNode):
+
+    OUTPUT_TYPES = ["palette", "mask"]
 
     def __init__(self, 
                  image:ImageFuncType, 
+                 mask_labels:StringsFuncType|None = None,
                  name:str="semantic_segmentation"):
         super().__init__(name)
         self.addParam("image", image, Image.Image)
+        self.addParam("mask_labels", mask_labels, List[str])
         self.model = None
         
 
-    def process(self, image:Image.Image) -> Image.Image:
+    def process(self, image:Image.Image, mask_labels:List[str]|None) -> Image.Image:
+        seg = self.inference(image)
+
+        palette = np.array(self.ade_palette())
+        output_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
+
+        for label, color in enumerate(palette):
+            if (np.any(np.array(seg) == label)):
+                text = self.ade_palette_names()[label]
+                print(f"Label: {text}, Color: {color}")
+            if(mask_labels is None):
+                output_seg[seg == label, :] = color
+            elif(self.ade_palette_names()[label] in mask_labels):
+                output_seg[seg == label, :] = [255, 255, 255]
+
+
+        return Image.fromarray(output_seg)
+            
+
+    def inference(self, image:Image.Image):
         if self.model is None:
             self.model = UperNetForSemanticSegmentation.from_pretrained("openmmlab/upernet-swin-large") # type: ignore
-
         image = image.convert("RGB")
-
         processor = AutoImageProcessor.from_pretrained("openmmlab/upernet-swin-large")
         pixel_values = processor(image, return_tensors="pt").pixel_values
-
         with torch.no_grad():
             outputs = self.model(pixel_values)
-
         seg = processor.post_process_semantic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
-        color_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
-        palette = np.array(self.ade_palette())
-        for label, color in enumerate(palette):
-            color_seg[seg == label, :] = color
-
-        return Image.fromarray(color_seg)
+        return seg
 
 
     @staticmethod
