@@ -106,7 +106,6 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
 
 
     def __init__(self, params:GenerationParameters, device):
-        self.dtype = None
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
 
@@ -159,11 +158,10 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
 
 class StableDiffusionXLAnimateDiffPipelineWrapper(StableDiffusionXLPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
-        self.dtype = torch.float16
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
         self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-sdxl-beta", torch_dtype=self.dtype)
-        super().__init__(cls, params, device, dtype = self.dtype)
+        super().__init__(cls, params, device)
 
 
     def getPipelineClass(self, params:GenerationParameters):
@@ -173,7 +171,6 @@ class StableDiffusionXLAnimateDiffPipelineWrapper(StableDiffusionXLPipelineWrapp
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         pipeline_params['motion_adapter'] = self.adapter
-        pipeline_params['torch_dtype'] = torch.float16
         self.addPipelineParamsCommon(params, pipeline_params)
         if(self.features.controlnet):
             self.addPipelineParamsControlNet(params, pipeline_params)
