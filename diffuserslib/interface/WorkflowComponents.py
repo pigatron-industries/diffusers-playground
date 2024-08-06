@@ -29,6 +29,8 @@ class WorkflowComponents:
 
 
     def toggleParamFunctional(self, param:NodeParameter):
+        # TODO param replacing value with an empty node causes issue where other values with the same input node are not replaced
+        # would be better to keep the UserInputNode but allow it to be connected to other upstream nodes
         if(isinstance(param.value, UserInputNode)):
             param.value = FunctionalNode("empty")
         else:

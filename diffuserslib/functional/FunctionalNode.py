@@ -56,9 +56,9 @@ class FunctionalNode(DeepCopyObject):
 
 
     def __call__(self, **kwargs) -> Any:
-        self.status = WorkflowStatus.WAITING
         if(self.output is not None):
             return self.output
+        self.status = WorkflowStatus.WAITING
         args = self.evaluateParams()
         args.update(kwargs)
         self.status = WorkflowStatus.PROCESSING

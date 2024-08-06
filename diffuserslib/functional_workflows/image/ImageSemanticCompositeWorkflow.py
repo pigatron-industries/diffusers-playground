@@ -19,6 +19,7 @@ class ImageSemanticCompositeWorkflow(WorkflowBuilder):
         mask_dilation = IntUserInputNode(value = 5, name = "mask_dilation")
         mask_feather = IntUserInputNode(value = 5, name = "mask_feather")
 
+        # Do the semantic segmentation before resizing becasue it doesn't do as well with the black borders
         segmentation_mask = SemanticSegmentationNode(image = foreground_input, mask_labels = mask_labels_input)
         resize_mask = ResizeImageNode(image = segmentation_mask, size = size_input, 
                                       type = ResizeImageNode.ResizeType.FIT, name="resize_mask")
