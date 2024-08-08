@@ -236,6 +236,13 @@ class FunctionalNode(DeepCopyObject):
             self.initparams[name].value = value
         else:
             raise Exception(f"Parameter {name} not found in node {self.node_name}")
+        
+
+    def getParam(self, name:str):
+        if(name in self.params):
+            return self.params[name].value
+        else:
+            return None
 
 
     def evaluateParams(self):

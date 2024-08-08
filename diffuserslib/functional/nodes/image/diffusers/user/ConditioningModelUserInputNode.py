@@ -40,7 +40,7 @@ class ConditioningModelUserInputNode(UserInputNode):
         self.gui.refresh()
 
 
-    def process(self) -> str:
+    def processValue(self) -> str:
         if(self.model is None):
             raise Exception("Model not selected")
         return self.model

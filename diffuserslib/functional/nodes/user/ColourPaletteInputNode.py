@@ -59,7 +59,7 @@ class ColourPaletteInputNode(UserInputNode):
         return new_node
 
 
-    def process(self) -> ColourPalette|None:
+    def processValue(self) -> ColourPalette|None:
         if(self.enabled):
             colours = [tuple(int(colour[i:i+2], 16) for i in (1, 3, 5)) for colour in self.colours]
             value = ColourPalette.fromGradient(colours[0], colours[1], 256)

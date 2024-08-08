@@ -166,7 +166,7 @@ class DiffusionModelUserInputNode(UserInputNode):
         self.modifierEditor.refresh()
 
 
-    def process(self) -> ModelsType:
+    def processValue(self) -> ModelsType:
         if(len(self.selected_models) == 0):
             raise Exception("Model not selected")
         modelparams:List[ModelParameters] = []

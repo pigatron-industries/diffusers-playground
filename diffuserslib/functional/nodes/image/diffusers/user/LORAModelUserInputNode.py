@@ -82,7 +82,7 @@ class LORAModelUserInputNode(UserInputNode):
         self.gui.refresh()
 
 
-    def process(self) -> LorasType:
+    def processValue(self) -> LorasType:
         loraparams:List[LoraParameters] = []
         for i in range(len(self.selected_loras)):
             if self.selected_loras[i] != "":

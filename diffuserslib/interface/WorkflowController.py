@@ -115,16 +115,20 @@ class WorkflowController:
 
 
     def createInputNode(self, param:NodeParameter, workflow_name):
+        # print("createInputNode", param.name, workflow_name)
         if(workflow_name in self.builders):
             workflow_or_tuple = self.builders[workflow_name].build()
             if(isinstance(workflow_or_tuple, tuple)):
-                param.value = workflow_or_tuple[0]
+                param.value.setParam("input", workflow_or_tuple[0])
             else:
-                param.value = self.builders[workflow_name].build()
-            param.value.node_name = workflow_name
+                param.value.setParam("input", workflow_or_tuple)
+            # param.value.node_name = workflow_name
+            param.value.getParam("input").node_name = workflow_name
         elif(workflow_name in self.model.workflows_sub):
-            param.value = self.model.workflows_sub[workflow_name]
-            param.value.node_name = workflow_name
+            param.value.setParam("input", self.model.workflows_sub[workflow_name])
+            # param.value.node_name = workflow_name
+            param.value.getParam("input").node_name = workflow_name
+        # self.model.workflow.printDebug()
 
 
     def runWorkflow(self):

@@ -10,6 +10,7 @@ class UserInputNode(FunctionalNode):
 
     def __init__(self, name:str="user_input"):
         super().__init__(name)
+        self.addParam("input", None, Any)
         self.update_listeners = []
         self.deepcopy_excluded_modules = ["nicegui"]
 
@@ -29,6 +30,15 @@ class UserInputNode(FunctionalNode):
     def gui(self):
         ui.label(self.node_name).classes('align-middle')
 
+    def process(self, input):
+        if(input is None):
+            return self.processValue()
+        else:
+            return input
+        
+    def processValue(self):
+        raise Exception(f"{self.__class__.__name__} processValue() method is not implemented")
+
 
 class IntUserInputNode(UserInputNode):
     def __init__(self, value:int|None=0, name:str="int_user_input"):
@@ -44,7 +54,7 @@ class IntUserInputNode(UserInputNode):
     def gui(self):
         self.input = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
 
-    def process(self) -> int|None:
+    def processValue(self) -> int|None:
         return int(self.value) if self.value is not None else None
     
 
@@ -64,7 +74,7 @@ class SeedUserInputNode(UserInputNode):
     def gui(self):
         self.input = ui.number(value=self.value, label=self.node_name).bind_value(self, 'value')
 
-    def process(self) -> int|None:
+    def processValue(self) -> int|None:
         if(self.value is None):
             return random.randint(0, self.MAX_SEED)
         else:
@@ -86,7 +96,7 @@ class FloatUserInputNode(UserInputNode):
     def gui(self):
         ui.number(value=self.value, label=self.node_name, format=self.format).bind_value(self, 'value')
 
-    def process(self) -> float:
+    def processValue(self) -> float:
         return float(self.value)
     
 
@@ -105,7 +115,7 @@ class BoolUserInputNode(UserInputNode):
         ui.label(self.node_name).classes('align-middle')
         ui.checkbox(value=self.value).bind_value(self, 'value')
 
-    def process(self) -> bool:
+    def processValue(self) -> bool:
         return bool(self.value)
     
 
@@ -123,7 +133,7 @@ class StringUserInputNode(UserInputNode):
     def gui(self):
         ui.input(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
-    def process(self) -> str:
+    def processValue(self) -> str:
         return str(self.value)
     
 
@@ -141,7 +151,7 @@ class TextAreaInputNode(UserInputNode):
     def gui(self):
         ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
-    def process(self) -> str:
+    def processValue(self) -> str:
         return str(self.value)
     
 
@@ -159,7 +169,7 @@ class TextAreaLinesInputNode(UserInputNode):
     def gui(self):
         ui.textarea(value=self.value, label=self.node_name).bind_value(self, 'value').classes('grow')
 
-    def process(self) -> List[str]:
+    def processValue(self) -> List[str]:
         return self.value.split('\n')
     
 
@@ -188,7 +198,7 @@ class ListSelectUserInputNode(UserInputNode):
     def gui(self):
         ui.select(options=self.options, with_input=True, label=self.node_name).bind_value(self, 'value').classes('grow')
 
-    def process(self) -> str:
+    def processValue(self) -> str:
         return str(self.value)
     
 
@@ -223,7 +233,7 @@ class DictSelectUserInputNode(UserInputNode):
     def gui(self):
         ui.select(options=self.options, label=self.node_name, on_change=self.fireUpdate).bind_value(self, 'selected').classes('grow')
 
-    def process(self) -> Any:
+    def processValue(self) -> Any:
         return self.dict[self.selected]
 
 
@@ -243,7 +253,7 @@ class EnumSelectUserInputNode(UserInputNode):
     def gui(self):
         ui.select(options=self.options, label=self.node_name).bind_value(self, 'value').classes('grow')
 
-    def process(self) -> Enum|None:
+    def processValue(self) -> Enum|None:
         for member in self.enum:
             if member.value == self.value:
                 return member
@@ -271,7 +281,7 @@ class SizeUserInputNode(UserInputNode):
     def swap(self):
         self.width, self.height = self.height, self.width
 
-    def process(self) -> SizeType:
+    def processValue(self) -> SizeType:
         return (int(self.width), int(self.height))
     
 
@@ -296,7 +306,7 @@ class IntTupleInputNode(UserInputNode):
         ui.number(value=self.value1, label="Min").bind_value(self, 'value1')
         ui.number(value=self.value2, label="Max").bind_value(self, 'value2')
 
-    def process(self) -> Tuple[int, int]:
+    def processValue(self) -> Tuple[int, int]:
         return (int(self.value1), int(self.value2))
 
 
@@ -321,7 +331,7 @@ class FloatTupleInputNode(UserInputNode):
         ui.number(value=self.value1, label=self.labels[0], format='%.2f').bind_value(self, 'value1')
         ui.number(value=self.value2, label=self.labels[1], format='%.2f').bind_value(self, 'value2')
 
-    def process(self) -> Tuple[float, float]:
+    def processValue(self) -> Tuple[float, float]:
         return (float(self.value1), float(self.value2))
     
 
@@ -350,5 +360,5 @@ class BoolListUserInputNode(UserInputNode):
     def update(self, index:int, value:bool):
         self.value[index] = value
 
-    def process(self) -> List[bool]:
+    def processValue(self) -> List[bool]:
         return self.value

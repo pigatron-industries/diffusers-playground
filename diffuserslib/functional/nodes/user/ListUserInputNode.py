@@ -51,6 +51,6 @@ class ListUserInputNode(UserInputNode):
         self.refresh.refresh()
 
 
-    def process(self, list:List[Any]) -> List[Any]:
+    def processValue(self, list:List[Any]) -> List[Any]:
         return list
     

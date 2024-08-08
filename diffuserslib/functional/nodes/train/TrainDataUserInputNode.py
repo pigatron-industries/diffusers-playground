@@ -62,5 +62,5 @@ class TrainDataUserInputNode(UserInputNode):
         self.train_data[i] = (train_files[0], int(value))
 
 
-    def process(self) -> TrainDataType:
+    def processValue(self) -> TrainDataType:
         return self.train_data

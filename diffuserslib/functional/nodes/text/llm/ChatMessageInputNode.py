@@ -32,7 +32,7 @@ class ChatMessageInputNode(UserInputNode):
     def gui(self):
         pass
 
-    def process(self) -> ChatMessage|None:
+    def processValue(self) -> ChatMessage|None:
         return self.value
     
 
@@ -51,5 +51,5 @@ class ChatHistoryInputNode(UserInputNode):
     def gui(self):
         pass
 
-    def process(self) -> List[ChatMessage]:
+    def processValue(self) -> List[ChatMessage]:
         return self.value

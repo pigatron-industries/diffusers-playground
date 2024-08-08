@@ -31,14 +31,17 @@ class WorkflowComponents:
     def toggleParamFunctional(self, param:NodeParameter):
         # TODO param replacing value with an empty node causes issue where other values with the same input node are not replaced
         # would be better to keep the UserInputNode but allow it to be connected to other upstream nodes
-        if(isinstance(param.value, UserInputNode)):
-            param.value = FunctionalNode("empty")
+        if(param.value.getParam("input") is None):
+            param.value.setParam("input", FunctionalNode("empty"))
+            print("toggleParamFunctional", "on")
         else:
-            param.value = param.initial_value
+            param.value.setParam("input", None)
+            print("toggleParamFunctional", "off")
         self.controls.refresh()
 
 
     def selectInputNode(self, param:NodeParameter, value):
+        print("selectInputNode", param.name, value)
         self.controller.createInputNode(param, value)
         self.controls.refresh()
 
@@ -108,21 +111,27 @@ class WorkflowComponents:
 
 
     def node_parameters(self, node:FunctionalNode):
+        print("node_parameters", node.node_name)
         params = node.getInitParams() + node.getParams()
         for param in params:
-            if(isinstance(param.initial_value, UserInputNode) and param.initial_value not in self.input_nodes):
-                self.input_nodes.append(param.initial_value)
+            print("node_parameters", param.name, param.value)
+            if(isinstance(param.value, UserInputNode) and param.value not in self.input_nodes):
+                print("node_parameters", "UserInputNode", param.value)
+                self.input_nodes.append(param.value)
                 with ui.row().classes('w-full'):
                     self.node_parameter(param)
             elif(isinstance(param.value, FunctionalNode)):
+                print("node_parameters", "FunctionalNode", param.value)
                 self.node_parameters(param.value)
             elif(isinstance(param.value, List)):
+                print("node_parameters", "List", param.value)
                 for item in param.value:
                     if(isinstance(item, FunctionalNode)):
                         self.node_parameters(item)
 
 
     def node_parameter(self, param:NodeParameter):
+        print("node_parameter", param.name, param.value)
         if(param.value.node_name in self.hidden_nodes):
             return
         input_nodes = self.controller.getSelectableInputNodes(param)
@@ -131,14 +140,22 @@ class WorkflowComponents:
         else:
             ui.label().classes('w-8')
         if(isinstance(param.value, ListUserInputNode)):
+            print("node_parameter", "ListUserInputNode", param.value)
             param.value.gui(child_renderer=self.node_parameters, refresh=self.controls) # type: ignore
-        elif(isinstance(param.value, UserInputNode)):
+        elif(isinstance(param.value, UserInputNode) and param.value.getParam("input") is None):
+            print("node_parameter", "UserInputNode", param.value)
             param.value.gui()
         else:
+            print("node_parameter", "FunctionalNode", param.value)
             with ui.card_section().classes('grow').style("background-color:rgba(255, 255, 255, 0.1); border-radius:8px;"):
                 with ui.column():
                     with ui.row():
-                        selected_node = param.value.node_name if param.value.node_name != "empty" else None
-                        ui.select(input_nodes, value=selected_node, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
+                        selected_node = param.value.getParam("input")
+                        selected_nodename = param.value.getParam("input").node_name
+                        if(selected_nodename == "empty"):
+                            selected_nodename = None
+                        print("node_parameter", "why is this firing the on change function", selected_nodename)
+                        ui.select(input_nodes, value=selected_nodename, label=param.name, on_change=lambda e: self.selectInputNode(param, e.value))
                         ui.button(text='run', on_click=lambda e: self.runSubWorkflow(param.value)).classes('align-middle').props('dense')
                     self.node_parameters(param.value)
+        print("node_parameter", "end")

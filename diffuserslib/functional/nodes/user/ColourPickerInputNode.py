@@ -51,7 +51,7 @@ class ColourPickerInputNode(UserInputNode):
         return new_node
 
 
-    def process(self) -> ColourType|None:
+    def processValue(self) -> ColourType|None:
         if(self.enabled):
             colour = tuple(int(self.colour[i:i+2], 16) for i in (1, 3, 5))
             return colour

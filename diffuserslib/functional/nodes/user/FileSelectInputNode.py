@@ -55,7 +55,7 @@ class FileSelectInputNode(UserInputNode):
         return new_node
 
     
-    def process(self) -> list[str]:
+    def processValue(self) -> list[str]:
         return self.filenames
     
 

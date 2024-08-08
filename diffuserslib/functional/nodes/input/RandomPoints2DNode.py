@@ -12,7 +12,7 @@ class RandomPoints2DNode(UserInputNode):
                  name:str = "random_points_2d"):
         super().__init__(name)
 
-    def process(self) -> List[Vector]:
+    def processValue(self) -> List[Vector]:
         return []
 
 
