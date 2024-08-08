@@ -16,12 +16,9 @@ import torch
 _flux_rope = diffusers.models.transformers.transformer_flux.rope
 def new_flux_rope(pos: torch.Tensor, dim: int, theta: int) -> torch.Tensor:
     assert dim % 2 == 0, "The dimension must be even."
-
     if pos.device.type == "mps":
-        print("I got called")
         return _flux_rope(pos.to("cpu"), dim, theta).to(device=pos.device)
     else:
-        print("I should not be called")
         return _flux_rope(pos, dim, theta)
 
 diffusers.models.transformers.transformer_flux.rope = new_flux_rope
