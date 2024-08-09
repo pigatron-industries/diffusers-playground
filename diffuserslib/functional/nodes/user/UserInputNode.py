@@ -30,9 +30,9 @@ class UserInputNode(FunctionalNode):
     def gui(self):
         ui.label(self.node_name).classes('align-middle')
 
-    def process(self, input):
+    def process(self, input, **kwargs):
         if(input is None):
-            return self.processValue()
+            return self.processValue(**kwargs)
         else:
             return input
         
