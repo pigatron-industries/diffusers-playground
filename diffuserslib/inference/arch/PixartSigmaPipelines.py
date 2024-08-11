@@ -2,7 +2,7 @@ from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters, ControlImageType
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
-from diffusers.pipelines.pixart_alpha.pipeline_pixart_sigma import PixArtSigmaPipeline
+from diffusers.pipelines.pixart_alpha.pipeline_pixart_sigma import PixArtSigmaPAGPipeline
 import torch
 
 
@@ -28,7 +28,7 @@ class PixartSigmaGeneratePipelineWrapper(PixartSigmaPipelineWrapper):
 
     PIPELINE_MAP = {
         #img2im,    inpaint
-        (False,     False):    PixArtSigmaPipeline
+        (False,     False):    PixArtSigmaPAGPipeline
     }
 
 

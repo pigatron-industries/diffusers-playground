@@ -1,6 +1,6 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters
-from diffusers.pipelines.kolors.pipeline_kolors import KolorsPipeline
+from diffusers.pipelines.pag.pipeline_pag_kolors import KolorsPAGPipeline
 from diffusers.pipelines.kolors.pipeline_kolors_img2img import KolorsImg2ImgPipeline
 import torch
 
@@ -29,7 +29,7 @@ class KwaiKolorsGeneratePipelineWrapper(KwaiKolorsPipelineWrapper):
 
     PIPELINE_MAP = {
         #img2im,    inpaint
-        (False,     False):    KolorsPipeline,
+        (False,     False):    KolorsPAGPipeline,
         (True,      False):    KolorsImg2ImgPipeline
     }
 

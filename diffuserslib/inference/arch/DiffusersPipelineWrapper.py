@@ -166,8 +166,6 @@ class DiffusersPipelineWrapper:
             pipeline_params['revision'] = modelConfig.revision
             if(modelConfig.revision == 'fp16'):
                 pipeline_params['torch_dtype'] = torch.float16
-        print("dtype")
-        print(self.dtype)
         if(self.dtype is not None):
             pipeline_params['torch_dtype'] = self.dtype
         if(modelConfig.vae is not None):

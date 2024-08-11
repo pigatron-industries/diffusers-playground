@@ -4,7 +4,7 @@ from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
-                        StableDiffusion3Pipeline, StableDiffusion3Img2ImgPipeline, StableDiffusion3ControlNetPipeline,
+                        StableDiffusion3PAGPipeline, StableDiffusion3Img2ImgPipeline, StableDiffusion3ControlNetPipeline,
                         # Conditioning models
                         T2IAdapter, ControlNetModel,
                         # Schedulers
@@ -35,7 +35,7 @@ class StableDiffusion3GeneratePipelineWrapper(StableDiffusion3PipelineWrapper):
 
     PIPELINE_MAP = {
         #img2im,    controlnet, t2iadapter, inpaint
-        (False,     False,      False,      False):    StableDiffusion3Pipeline,
+        (False,     False,      False,      False):    StableDiffusion3PAGPipeline,
         (False,     True,       False,      False):    StableDiffusion3ControlNetPipeline,
         # (False,     False,      True,       False):    StableDiffusion3AdapterPipeline,
         (True,      False,      False,      False):    StableDiffusion3Img2ImgPipeline,

@@ -2,10 +2,10 @@ from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters, ControlImageType
 from PIL import Image
 from diffusers import ( # Pipelines
-                        DiffusionPipeline, StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, 
-                        StableDiffusionInpaintPipeline, StableDiffusionControlNetPipeline,
+                        DiffusionPipeline, StableDiffusionPAGPipeline, StableDiffusionImg2ImgPipeline, 
+                        StableDiffusionInpaintPipeline, StableDiffusionControlNetPAGPipeline,
                         StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline,
-                        StableDiffusionAdapterPipeline, AnimateDiffPipeline, PIAPipeline, AnimateDiffVideoToVideoPipeline,
+                        StableDiffusionAdapterPipeline, AnimateDiffPAGPipeline, PIAPipeline, AnimateDiffVideoToVideoPipeline,
                         # Conditioning models
                         T2IAdapter, ControlNetModel, MotionAdapter,
                         # Schedulers
@@ -86,7 +86,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
                 output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)
         else:
             output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)
-        return output.images[0], seed
+        return output, seed
     
 
     def add_embeddings(self, token, embeddings):
@@ -114,20 +114,20 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
 
 
     def add_loras(self, loras, weights:List[float]):
-        for lora in loras:
-            self.add_lora(lora)
-        lora_weights = []
-        lora_names = []
-        for i, lora in enumerate(loras):
-            lora_weights.append(weights[i])
-            lora_names.append(lora.name.split('.', 1)[0])
-        print(__version__)
-        #  lora loading broken in diffusers dev
+        for lora, weight in zip(loras, weights):
+            self.pipeline.load_lora_weights(lora.path)
+            self.pipeline.fuse_lora(lora_scale = weight)
 
-        if(len(lora_weights) > 0 and __version__ == "0.30.0.dev0"):
-            raise ValueError("Lora loading is broken in diffusers version 0.30.0.dev0")
-        if(__version__ != "0.30.0.dev0" and hasattr(self.pipeline, 'set_adapters')):
-            self.pipeline.set_adapters(lora_names, lora_weights)
+        # for lora in loras:
+        #     self.add_lora(lora)
+        # lora_weights = []
+        # lora_names = []
+        # for i, lora in enumerate(loras):
+        #     lora_weights.append(weights[i])
+        #     lora_names.append(lora.name.split('.', 1)[0])
+
+        # if(hasattr(self.pipeline, 'set_adapters')):
+        #     self.pipeline.set_adapters(lora_names, lora_weights)
 
 
 
@@ -135,8 +135,8 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
 
     PIPELINE_MAP = {
         #img2im,    controlnet, t2iadapter, inpaint
-        (False,     False,      False,      False):    StableDiffusionPipeline,
-        (False,     True,       False,      False):    StableDiffusionControlNetPipeline,
+        (False,     False,      False,      False):    StableDiffusionPAGPipeline,
+        (False,     True,       False,      False):    StableDiffusionControlNetPAGPipeline,
         (False,     False,      True,       False):    StableDiffusionAdapterPipeline,
         (True,      False,      False,      False):    StableDiffusionImg2ImgPipeline,
         (True,      True,       False,      False):    StableDiffusionControlNetImg2ImgPipeline,
@@ -197,7 +197,7 @@ class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):
     def inference(self, params:GenerationParameters):
         diffusers_params = self.createInferenceParams(params)
         output, seed = super().diffusers_inference(**diffusers_params)
-        return output, seed
+        return output.images[0], seed
 
 
 def make_inpaint_condition(initimage:Image.Image, maskimage:Image.Image) -> torch.Tensor:
@@ -226,22 +226,17 @@ class StableDiffusionUpscalePipelineWrapper(StableDiffusionPipelineWrapper):
         initimage = initimageparams.image.convert("RGB")
         output, seed = super().diffusers_inference(prompt=params.prompt, negative_prompt=params.negprompt, seed=params.seed, image=initimage, guidance_scale=params.cfgscale, 
                                  num_inference_steps=params.steps, scheduler=params.scheduler)
-        return output, seed
+        return output.images[0], seed
     
 
 class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
     def __init__(self, params:GenerationParameters, device):
-        self.dtype = torch.float16
+        self.dtype = torch.bfloat16
         self.features = self.getPipelineFeatures(params)
         cls = self.getPipelineClass(params)
-        # self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=self.dtype)
-        if(params.steps in [1, 2, 4, 8]):
-            ckpt = f"animatediff_lightning_{params.steps}step_diffusers.safetensors"
-            self.adapter = MotionAdapter().to(device, self.dtype)
-            self.adapter.load_state_dict(load_file(hf_hub_download("ByteDance/AnimateDiff-Lightning", ckpt), device=device))
-        else:
-            self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=self.dtype)
-        super().__init__(cls, params, device, dtype = self.dtype)
+        super().__init__(cls, params, device)
+        self.pipeline.enable_free_noise(context_length = 10, context_stride = 4)
+        self.pipeline.vae.enable_slicing()
 
 
     def getPipelineClass(self, params:GenerationParameters):
@@ -254,13 +249,19 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
             else:
                 return "pipeline_animatediff_img2video"
         else:
-            return AnimateDiffPipeline
+            return AnimateDiffPAGPipeline
 
 
     def createPipelineParams(self, params:GenerationParameters):
+        if(params.steps in [1, 2, 4, 8]):
+            ckpt = f"animatediff_lightning_{params.steps}step_diffusers.safetensors"
+            self.adapter = MotionAdapter().to(self.device, self.dtype)
+            self.adapter.load_state_dict(load_file(hf_hub_download("ByteDance/AnimateDiff-Lightning", ckpt), device=self.device))
+        else:
+            self.adapter = MotionAdapter.from_pretrained("guoyww/animatediff-motion-adapter-v1-5-2", torch_dtype=self.dtype)
+
         pipeline_params = {}
         pipeline_params['motion_adapter'] = self.adapter
-        pipeline_params['torch_dtype'] = torch.float16
         self.addPipelineParamsCommon(params, pipeline_params)
         if(self.features.controlnet):
             self.addPipelineParamsControlNet(params, pipeline_params)
@@ -278,6 +279,7 @@ class StableDiffusionAnimateDiffPipelineWrapper(StableDiffusionPipelineWrapper):
         diffusers_params['width'] = params.width
         diffusers_params['height'] = params.height
         diffusers_params['num_frames'] = params.frames
+        diffusers_params['decode_chunk_size'] = 2
         if(self.features.controlnet):
             self.addInferenceParamsControlNet(params, diffusers_params)
         if(self.features.img2img):

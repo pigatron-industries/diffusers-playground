@@ -4,8 +4,8 @@ from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
-                        StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
-                        StableDiffusionXLControlNetPipeline, StableDiffusionXLAdapterPipeline, StableDiffusionXLControlNetImg2ImgPipeline,
+                        StableDiffusionXLPAGPipeline, StableDiffusionXLPAGImg2ImgPipeline, StableDiffusionXLPAGInpaintPipeline,
+                        StableDiffusionXLControlNetPAGPipeline, StableDiffusionXLAdapterPipeline, StableDiffusionXLControlNetImg2ImgPipeline,
                         StableDiffusionXLControlNetInpaintPipeline,
                         # Conditioning models
                         T2IAdapter, ControlNetModel, MotionAdapter, AnimateDiffSDXLPipeline, 
@@ -95,12 +95,12 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
 
     PIPELINE_MAP = {
         #img2im,    controlnet, t2iadapter, inpaint
-        (False,     False,      False,      False):    StableDiffusionXLPipeline,
-        (False,     True,       False,      False):    StableDiffusionXLControlNetPipeline,
+        (False,     False,      False,      False):    StableDiffusionXLPAGPipeline,
+        (False,     True,       False,      False):    StableDiffusionXLControlNetPAGPipeline,
         (False,     False,      True,       False):    StableDiffusionXLAdapterPipeline,
-        (True,      False,      False,      False):    StableDiffusionXLImg2ImgPipeline,
+        (True,      False,      False,      False):    StableDiffusionXLPAGImg2ImgPipeline,
         (True,      True,       False,      False):    StableDiffusionXLControlNetImg2ImgPipeline,
-        (True,      False,      False,      True):     StableDiffusionXLInpaintPipeline,
+        (True,      False,      False,      True):     StableDiffusionXLPAGInpaintPipeline,
         (True,      True,       False,      True):     StableDiffusionXLControlNetInpaintPipeline,
     }
 
