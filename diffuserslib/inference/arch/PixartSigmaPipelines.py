@@ -2,7 +2,7 @@ from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters, ControlImageType
 from ...StringUtils import mergeDicts
 from ...models.DiffusersModelPresets import DiffusersModel
-from diffusers.pipelines.pixart_alpha.pipeline_pixart_sigma import PixArtSigmaPAGPipeline
+from diffusers.pipelines.pag.pipeline_pag_pixart_sigma import PixArtSigmaPAGPipeline
 import torch
 
 
