@@ -229,6 +229,11 @@ controlnet:
       - id: xinsir/controlnet-scribble-sdxl-1.0
       - id: monster-labs/control_v1p_sdxl_qrcode_monster
       - id: destitech/controlnet-inpaint-dreamer-sdxl
+  - base: sd_3_0
+    models:
+      - id: InstantX/SD3-Controlnet-Canny
+      - id: InstantX/SD3-Controlnet-Pose
+      - id: InstantX/SD3-Controlnet-Tile
 
 t2iadapter:
   - base: sd_1_5
