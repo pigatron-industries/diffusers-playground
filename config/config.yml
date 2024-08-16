@@ -9,3 +9,7 @@ folders:
     - "./loras"
   models: ./models
   outputs: ./outputs
+  workflows: 
+    - "./diffuserslib/functional_workflows"
+  workflowstates:
+    - "./workflows"

@@ -31,6 +31,10 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
                 WorkflowRunner.workflowrunner = WorkflowRunner(output_dir=outputs_dir)
             if ("inputs" in folders):
                 GlobalConfig.inputs_dirs.extend(folders["inputs"])
+            if ("workflows" in folders):
+                GlobalConfig.workflow_dirs.extend(folders["workflows"])
+            if ("workflowstates" in folders):
+                GlobalConfig.workflowstate_dirs.extend(folders["workflowstates"])
 
     DiffusersPipelines.pipelines = DiffusersPipelines(device=device, safety_checker=safety_checker, localmodelpath=models)
     for modelconfig in modelconfigs:
