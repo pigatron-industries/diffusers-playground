@@ -234,6 +234,11 @@ controlnet:
       - id: InstantX/SD3-Controlnet-Canny
       - id: InstantX/SD3-Controlnet-Pose
       - id: InstantX/SD3-Controlnet-Tile
+  - base: flux
+    models:
+      - id: InstantX/FLUX.1-dev-Controlnet-Canny
+      - id: InstantX/FLUX.1-dev-Controlnet-Pose
+      - id: InstantX/FLUX.1-dev-Controlnet-Tile
 
 t2iadapter:
   - base: sd_1_5

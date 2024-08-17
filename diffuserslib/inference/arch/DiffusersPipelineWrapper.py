@@ -38,9 +38,10 @@ class SplitModelName:
 
 
 class DiffusersPipelineWrapper:
-    def __init__(self, params:GenerationParameters, inferencedevice:str, cls, dtype = None, **kwargs):
+    def __init__(self, params:GenerationParameters, inferencedevice:str, cls, controlnet_cls:type = ControlNetModel, dtype = None, **kwargs):
         if(dtype is None):
             dtype = torch.bfloat16
+        self.controlnet_cls = controlnet_cls
         self.dtype = dtype
         self.initparams = params
         self.inferencedevice = inferencedevice
@@ -181,7 +182,7 @@ class DiffusersPipelineWrapper:
         controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
         controlnet = []
         for controlnetparam in controlnetparams:
-            controlnet.append(ControlNetModel.from_pretrained(controlnetparam.model, **args))
+            controlnet.append(self.controlnet_cls.from_pretrained(controlnetparam.model, **args))
         pipeline_params['controlnet'] = controlnet
         return pipeline_params
     

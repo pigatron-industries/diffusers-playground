@@ -4,9 +4,9 @@ from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
-                        FluxPipeline,
+                        FluxPipeline, FluxControlNetPipeline,
                         # Conditioning models
-                        T2IAdapter, ControlNetModel,
+                        FluxControlNetModel,
                         # Schedulers
                         FlowMatchEulerDiscreteScheduler)
 import diffusers
@@ -31,7 +31,7 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
-        super().__init__(params, inferencedevice, cls, **kwargs)
+        super().__init__(params, inferencedevice, cls, controlnet_cls = FluxControlNetModel, **kwargs)
 
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
@@ -47,8 +47,9 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
 class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
 
     PIPELINE_MAP = {
-        #img2im,    inpaint
-        (False,     False):    FluxPipeline
+        #img2img,   inpaint, controlnet
+        (False,     False,   False):    FluxPipeline,
+        (False,     False,   True):     FluxControlNetPipeline
     }
 
 
@@ -59,4 +60,4 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
 
     def getPipelineClass(self, params:GenerationParameters):
         self.features = self.getPipelineFeatures(params)
-        return self.PIPELINE_MAP[(self.features.img2img, self.features.inpaint)]
+        return self.PIPELINE_MAP[(self.features.img2img, self.features.inpaint, self.features.controlnet)]
