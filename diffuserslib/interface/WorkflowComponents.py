@@ -1,3 +1,4 @@
+from diffuserslib import GlobalConfig
 from diffuserslib.interface.WorkflowController import WorkflowController
 from diffuserslib.functional.FunctionalNode import FunctionalNode, NodeParameter
 from diffuserslib.functional.nodes import UserInputNode, ListUserInputNode
@@ -90,7 +91,7 @@ class WorkflowComponents:
             self.controller.model.workflow_name = None
         with ui.row().classes('w-full no-wrap'):
             self.workflow_select = ui.select(workflow_options, value=self.controller.model.workflow_name, label='Workflow', on_change=lambda e: self.loadWorkflow(e.value)).classes('w-full')
-            self.workflow_dialog = LocalFilePicker('./workflows')
+            self.workflow_dialog = LocalFilePicker(directory = GlobalConfig.workflowstate_dirs[0], drives = GlobalConfig.workflowstate_dirs)
             with ui.dropdown_button(icon='save', auto_close=True).classes('align-middle').props('dense'):
                 ui.item('Save', on_click=lambda e: self.saveWorkflowParamsToFile())
                 ui.item('Load', on_click=lambda e: self.loadWorkflowParamsFromFile())

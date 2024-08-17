@@ -1,9 +1,11 @@
+from ast import Global
 from diffuserslib.functional import FunctionalNode, WorkflowBuilder, WorkflowRunner, NodeParameter, BatchProgressData, WorkflowBatchData, UserInputNode
 from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.util import ModuleLoader
 from typing import Dict
 from dataclasses import dataclass, field
 from diffuserslib.interface.Clipboard import Clipboard
+from diffuserslib.GlobalConfig import GlobalConfig
 from typing import Self
 import inspect
 import yaml
@@ -30,7 +32,6 @@ class WorkflowController:
     builders:Dict[str, WorkflowBuilder] = {} # [WorkflowClass Name, WorkflowBuilder]
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
-    workflow_directory= "../functional_workflows"
     output_subdir = "."
     
 
@@ -63,17 +64,18 @@ class WorkflowController:
     def loadWorkflows(self):
         print("Loading workflow builders")
         self.builders_sub = {}
-        path = os.path.join(os.path.dirname(__file__), self.workflow_directory)
-        modules = ModuleLoader.load_from_directory(path)
-        for module in modules:
-            vars = ModuleLoader.get_vars(module)
-            for name, buildercls in vars.items():
-                if(inspect.isclass(buildercls) and issubclass(buildercls, WorkflowBuilder)):
-                    builder = buildercls()
-                    self.builders[name] = builder
-                    if(builder.subworkflow and name not in self.builders_sub):
-                        self.builders_sub[name] = builder.name
-                    print(f"Loading workflow builder: {name}")
+        print(GlobalConfig.workflow_dirs)
+        for path in GlobalConfig.workflow_dirs:
+            modules = ModuleLoader.load_from_directory(path)
+            for module in modules:
+                vars = ModuleLoader.get_vars(module)
+                for name, buildercls in vars.items():
+                    if(inspect.isclass(buildercls) and issubclass(buildercls, WorkflowBuilder)):
+                        builder = buildercls()
+                        self.builders[name] = builder
+                        if(builder.subworkflow and name not in self.builders_sub):
+                            self.builders_sub[name] = builder.name
+                        print(f"Loading workflow builder: {name}")
     
 
     def loadWorkflow(self, workflow_name):
@@ -122,11 +124,9 @@ class WorkflowController:
                 param.value.setParam("input", workflow_or_tuple[0])
             else:
                 param.value.setParam("input", workflow_or_tuple)
-            # param.value.node_name = workflow_name
             param.value.getParam("input").node_name = workflow_name
         elif(workflow_name in self.model.workflows_sub):
             param.value.setParam("input", self.model.workflows_sub[workflow_name])
-            # param.value.node_name = workflow_name
             param.value.getParam("input").node_name = workflow_name
         # self.model.workflow.printDebug()
 
