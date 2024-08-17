@@ -219,8 +219,9 @@ class WorkflowController:
                 paramstring = '.'.join([parent.name if isinstance(parent, NodeParameter) else str(parent) for parent in parents])
                 if(isinstance(param.value, UserInputNode)):
                     user_input_values[paramstring+'.value'] = param.value.getValue()
-                if(param.value != param.initial_value and isinstance(param.value, FunctionalNode) and isinstance(param.initial_value, UserInputNode)):
-                    user_input_values[paramstring+'.node'] = param.value.node_name
+                    input_node = param.value.getParam("input")
+                    if(input_node is not None and isinstance(input_node, FunctionalNode) and input_node.node_name != "empty"):
+                        user_input_values[paramstring+'.node'] = input_node.node_name
                     
             self.model.workflow.visitParams(visitor)
             self.workflow_history[self.model.workflow_name] = user_input_values
