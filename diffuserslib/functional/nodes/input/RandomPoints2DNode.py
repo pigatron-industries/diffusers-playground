@@ -19,7 +19,7 @@ class RandomPoints2DNode(UserInputNode):
         pass
 
     def processValue(self) -> List[Vector]:
-        return []
+        raise NotImplementedError(f"{self.node_name} is a placeholder and should be replaced by a functional node")
 
 
 class RandomPoints2DUniformNode(FunctionalNode):
