@@ -14,6 +14,9 @@ class RandomPoints2DNode(UserInputNode):
 
     def getValue(self):
         return []
+    
+    def setValue(self, value):
+        pass
 
     def processValue(self) -> List[Vector]:
         return []

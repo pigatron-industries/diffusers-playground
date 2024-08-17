@@ -36,6 +36,8 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
+        if(self.features.controlnet):
+            self.addPipelineParamsControlNet(params, pipeline_params)
         return pipeline_params
     
     def diffusers_inference(self, prompt, seed, guidance_scale=4.0, scheduler=None, negative_prompt=None, clip_skip=None, **kwargs):
