@@ -23,5 +23,5 @@ class ZoomImageNode(FunctionalNode):
         zoom_height = int(height * zoom)
         resize_image = image.resize((zoom_width, zoom_height))
         new_image = Image.new("RGB", (width, height), fill_colour)
-        new_image.paste(resize_image, ((zoom_width - width) // 2, (zoom_height - height) // 2))
+        new_image.paste(resize_image, ((width - zoom_width) // 2, (height - zoom_height) // 2))
         return new_image
