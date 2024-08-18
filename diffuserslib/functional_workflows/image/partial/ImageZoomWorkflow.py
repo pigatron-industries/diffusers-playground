@@ -10,6 +10,6 @@ class ImageZoomWorkflow(WorkflowBuilder):
     def build(self):
         image_input = ImageUploadInputNode(name = "image")
         zoom_input = FloatUserInputNode(value = 0.9, name = "zoom")
-        rotate = RotateImageNode(image = image_input, angle = zoom_input)
+        rotate = ZoomImageNode(image = image_input, zoom = zoom_input)
         return rotate
     
