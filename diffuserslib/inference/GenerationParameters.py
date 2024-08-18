@@ -32,6 +32,7 @@ class ModelConfig:
 class ModelParameters:
     name:str
     weight:float = 1.0
+    base:str|None = None
 
 def modelparameters_representer(dumper: yaml.Dumper, data: ModelParameters) -> yaml.Node:
     return dumper.represent_dict(data.__dict__)

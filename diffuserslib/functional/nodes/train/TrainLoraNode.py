@@ -83,7 +83,15 @@ class TrainLoraNode(FunctionalNode):
 
         resume_steps, temp_resume_dir = self.copyResumeData(temp_resume_dir, output_dir)
 
-        command = ["accelerate", "launch", "../sd-scripts/sdxl_train_network.py"]
+        scriptname = "train_network"
+        base = model[0].base
+        assert base is not None
+        if (base.startswith("sdxl")):
+            scriptname = "sdxl_train_network"
+        elif (base.startswith("flux")):
+            scriptname = "flux_train_network"
+
+        command = ["accelerate", "launch", f"../sd-scripts/{scriptname}.py"]
         command.append(f'--network_module="networks.lora"')
         command.append(f'--pretrained_model_name_or_path={model[0].name}')
         command.append(f"--train_data_dir={temp_data_dir}")

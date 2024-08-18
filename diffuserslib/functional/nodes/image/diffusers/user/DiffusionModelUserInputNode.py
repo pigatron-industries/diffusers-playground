@@ -173,5 +173,5 @@ class DiffusionModelUserInputNode(UserInputNode):
         for i, selected_model in enumerate(self.selected_models):
             weight = self.selected_weights[i]
             if selected_model[0] != "":
-                modelparams.append(ModelParameters(selected_model, weight))
+                modelparams.append(ModelParameters(selected_model, weight, self.basemodel))
         return modelparams
