@@ -14,9 +14,10 @@ class VideoDiffusionConditioningWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        diffusion, feedback = ImageDiffusionConditioningWorkflow().build()
-
+        fps_input = FloatUserInputNode(name = "fps", value = 30)
         num_frames_input = IntUserInputNode(value = 20, name = "num_frames")
+
+        diffusion, feedback = ImageDiffusionConditioningWorkflow().build()
         frame_aggregator = FrameAggregatorNode(frame = diffusion, num_frames = num_frames_input)
-        frames_to_video = FramesToVideoNode(frames = frame_aggregator, fps = 10)
+        frames_to_video = FramesToVideoNode(frames = frame_aggregator, fps = fps_input)
         return frames_to_video, feedback
