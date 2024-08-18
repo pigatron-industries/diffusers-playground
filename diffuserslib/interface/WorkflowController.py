@@ -1,4 +1,3 @@
-from ast import Global
 from diffuserslib.functional import FunctionalNode, WorkflowBuilder, WorkflowRunner, NodeParameter, BatchProgressData, WorkflowBatchData, UserInputNode
 from diffuserslib.inference import DiffusersPipelines
 from diffuserslib.util import ModuleLoader
@@ -6,7 +5,6 @@ from typing import Dict
 from dataclasses import dataclass, field
 from diffuserslib.interface.Clipboard import Clipboard
 from diffuserslib.GlobalConfig import GlobalConfig
-from typing import Self
 import inspect
 import yaml
 import sys

@@ -2,7 +2,6 @@ from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 from diffuserslib.functional.types import Vector
 from diffuserslib.functional.nodes.user import *
-import itertools
 import numpy as np
 
 
