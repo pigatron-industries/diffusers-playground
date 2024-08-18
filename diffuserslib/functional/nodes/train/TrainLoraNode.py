@@ -91,7 +91,7 @@ class TrainLoraNode(FunctionalNode):
         elif (base.startswith("flux")):
             scriptname = "flux_train_network"
 
-        command = ["accelerate", "launch", f"../sd-scripts/{scriptname}.py"]
+        command = ["accelerate", "launch", f"./workspace/sd-scripts/{scriptname}.py"]
         command.append(f'--network_module="networks.lora"')
         command.append(f'--pretrained_model_name_or_path={model[0].name}')
         command.append(f"--train_data_dir={temp_data_dir}")
