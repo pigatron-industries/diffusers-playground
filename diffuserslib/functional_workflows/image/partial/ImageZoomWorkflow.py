@@ -1,4 +1,5 @@
 from diffuserslib.functional import *
+from diffuserslib.functional.nodes.image.transform import ZoomImageNode
 
 
 class ImageZoomWorkflow(WorkflowBuilder):
