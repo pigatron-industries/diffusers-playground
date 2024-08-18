@@ -28,6 +28,7 @@ diffusers.models.transformers.transformer_flux.rope = new_flux_rope
 
 class FluxPipelineWrapper(DiffusersPipelineWrapper):
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
+        self.lora_names = []
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
@@ -61,6 +62,18 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
         generator, seed = self.createGenerator(seed)
         output = self.pipeline(prompt=prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
         return output, seed
+    
+
+    def add_lora(self, lora):
+        if(lora.name not in self.lora_names):
+            self.lora_names.append(lora.name)
+            self.pipeline.load_lora_weights(lora.path, adapter_name=lora.name.split('.', 1)[0])
+
+
+    def add_loras(self, loras, weights:List[float]):
+        for lora, weight in zip(loras, weights):
+            self.pipeline.load_lora_weights(lora.path)
+            self.pipeline.fuse_lora(lora_scale = weight)
 
 
 class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
