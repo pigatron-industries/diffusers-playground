@@ -11,5 +11,6 @@ folders:
   outputs: ./outputs
   workflows: 
     - "./diffuserslib/functional_workflows"
+    - "./workflows"
   workflowstates:
     - "./workflowstates"
