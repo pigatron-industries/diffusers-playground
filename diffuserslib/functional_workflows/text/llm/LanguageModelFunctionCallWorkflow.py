@@ -5,13 +5,17 @@ from diffuserslib.functional.nodes.text.llm.LanguageModelFunctionCallNode import
 from diffuserslib.functional.nodes.text.llm.ChatMessageInputNode import ChatMessageInputNode, ChatHistoryInputNode
 from llama_index.core.llms import ChatMessage
 
+def no_operation(**kwargs):
+    """ This function does nothing. Call this function if there is no other function that is relevant to answering the users question. """
+    print("NO OPERATION")
+    return "No tool available."
 
 def add(value1:float, value2:float, **kwargs) -> dict[str, Any]:
     """Adds two numbers together."""
     print("ADDING")
     return { 
         "answer": value1+value2,
-        "source": "Robs special adding two numbers service"
+        "source": "add function"
     }
 
 def multiply(value1:float, value2:float, **kwargs) -> dict[str, Any]:
@@ -19,7 +23,7 @@ def multiply(value1:float, value2:float, **kwargs) -> dict[str, Any]:
     print("MULTIPLYING")
     return { 
         "answer": value1*value2,
-        "source": "Robs special multiplication service"
+        "source": "multiplication function"
     }
 
 def divide(value1:float, value2:float, **kwargs) -> dict[str, Any]:
@@ -27,13 +31,13 @@ def divide(value1:float, value2:float, **kwargs) -> dict[str, Any]:
     print("DIVIDING")
     return { 
         "answer": value1/value2,
-        "source": "Robs special division service"
+        "source": "division function"
     }
 
 
 class LanguageModelFunctionCallWorkflow(WorkflowBuilder):
 
-    FUNCTIONS = [add, multiply, divide]
+    FUNCTIONS = [no_operation, add, multiply, divide]
 
     def __init__(self, name = "Text Generation - Language Model Function Call", functions:List[Callable]|None = None):
         super().__init__(name, str, workflow=True, converse=True)

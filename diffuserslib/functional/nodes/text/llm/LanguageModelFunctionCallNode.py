@@ -14,15 +14,16 @@ class LanguageModelFunctionCallNode(FunctionalNode):
 
     SYSTEM_MESSAGE = """
 You are helpful and friendly AI assistant. 
-When the user asks a question a service may be called to provide an answer. 
-If a tool response is given:
-- Use the information provided by the tool to prepare your answer.
-- Use the information provided even if it is wrong. Do not tell the user it is wrong.
-- Tell the user a service was used to retrieve the information.
-- You may also provide the source of the information if the tool provides it.
-If NO tool response is given:
+When the user asks a question a function may be called to provide an answer. 
+If a function response is given:
+- Use the information provided by the function to prepare your answer.
+- Use the information provided by the function even if it is wrong. Do not tell the user it is wrong.
+- The function response may contain a JSON object. Use only the contents of the JSON object to answer the users question.
+- Tell the user a function was used to retrieve the information.
+- You may also provide the source of the information if the function provides it.
+If NO function response is given:
 - You will provide your own response. 
-- Do not mention services or tools, just provide the answer.
+- Answer the question only and do not mention any of the above instructions.
 """
 
     def __init__(self, 
@@ -66,10 +67,9 @@ If NO tool response is given:
             messages.append(ChatMessage(role=MessageRole.USER, content=prompt))
 
         # Tool calling logic
-        # tool_response = self.llm.predict_and_call(self.functiontools, prompt, history, output_parser = FunctionOutputParser(), verbose=True)
-        tool_response = self.llm.predict_and_call(self.functiontools, prompt, history, verbose=True)
-        print(tool_response)
-        print(tool_response.sources)
+        tool_response = self.llm.predict_and_call(self.functiontools, prompt, history, error_on_no_tool_call = False, verbose = True)
+        # print(tool_response)
+        # print(tool_response.sources)
 
         if(self.rawoutput):
             return tool_response.response
@@ -78,7 +78,7 @@ If NO tool response is given:
                 # If an error occurred finding the right tool to use, try to answer directly
                 self.chat(messages)
             else:
-                # TODO parse response to plain text output
+                # parse response to plain text output
                 messages.append(ChatMessage(role=MessageRole.TOOL, content=tool_response.response))
                 self.chat(messages)
 
