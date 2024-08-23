@@ -4,7 +4,7 @@ from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
-                        StableDiffusionXLPAGPipeline, StableDiffusionXLPAGImg2ImgPipeline, StableDiffusionXLPAGInpaintPipeline,
+                        StableDiffusionXLPAGPipeline, StableDiffusionXLPAGImg2ImgPipeline, StableDiffusionXLInpaintPipeline,
                         StableDiffusionXLControlNetPAGPipeline, StableDiffusionXLAdapterPipeline, StableDiffusionXLControlNetImg2ImgPipeline,
                         StableDiffusionXLControlNetInpaintPipeline,
                         # Conditioning models
@@ -100,7 +100,7 @@ class StableDiffusionXLGeneratePipelineWrapper(StableDiffusionXLPipelineWrapper)
         (False,     False,      True,       False):    StableDiffusionXLAdapterPipeline,
         (True,      False,      False,      False):    StableDiffusionXLPAGImg2ImgPipeline,
         (True,      True,       False,      False):    StableDiffusionXLControlNetImg2ImgPipeline,
-        (True,      False,      False,      True):     StableDiffusionXLPAGInpaintPipeline,
+        (True,      False,      False,      True):     StableDiffusionXLInpaintPipeline,
         (True,      True,       False,      True):     StableDiffusionXLControlNetInpaintPipeline,
     }
 
