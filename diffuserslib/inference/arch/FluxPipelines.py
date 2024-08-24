@@ -17,7 +17,6 @@ from diffuserslib.scripts.convert_flux_lora import convert_sd_scripts_to_ai_tool
 
 class FluxPipelineWrapper(DiffusersPipelineWrapper):
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
-        self.lora_names = []
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
@@ -72,19 +71,6 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
             state_dict = self.load_lora_weights(lora.path)
             self.lora_names.append(lora.name)
             self.pipeline.load_lora_weights(state_dict, adapter_name=lora.name.split('.', 1)[0])
-
-
-    def add_loras(self, loras, weights:List[float]):
-        for lora in loras:
-            self.add_lora(lora)
-        lora_weights = []
-        lora_names = []
-        for i, lora in enumerate(loras):
-            lora_weights.append(weights[i])
-            lora_names.append(lora.name.split('.', 1)[0])
-
-        if(hasattr(self.pipeline, 'set_adapters')):
-            self.pipeline.set_adapters(lora_names, lora_weights)
 
 
 class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
