@@ -58,9 +58,16 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
 
 
     def add_loras(self, loras, weights:List[float]):
-        for lora, weight in zip(loras, weights):
-            self.pipeline.load_lora_weights(lora.path)
-            self.pipeline.fuse_lora(lora_scale = weight)
+        for lora in loras:
+            self.add_lora(lora)
+        lora_weights = []
+        lora_names = []
+        for i, lora in enumerate(loras):
+            lora_weights.append(weights[i])
+            lora_names.append(lora.name.split('.', 1)[0])
+
+        if(hasattr(self.pipeline, 'set_adapters')):
+            self.pipeline.set_adapters(lora_names, lora_weights)
 
 
 class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
