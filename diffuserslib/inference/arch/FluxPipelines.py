@@ -11,6 +11,8 @@ from diffusers import ( # Pipelines
                         FlowMatchEulerDiscreteScheduler)
 import diffusers
 import torch
+from safetensors import safe_open
+from diffuserslib.scripts.convert_flux_lora import convert_sd_scripts_to_ai_toolkit
 
 
 class FluxPipelineWrapper(DiffusersPipelineWrapper):
@@ -51,10 +53,25 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
         return output, seed
     
 
+    def load_lora_weights(self, path:str):
+        state_dict = {}
+        sdscripts_format = False
+        with safe_open(path, framework="pt") as f:
+            metadata = f.metadata()
+            for k in f.keys():
+                if(k.startswith('lora_unet')):
+                    sdscripts_format = True
+                state_dict[k] = f.get_tensor(k)
+        if(sdscripts_format):
+            state_dict = convert_sd_scripts_to_ai_toolkit(state_dict)
+        return state_dict
+        
+
     def add_lora(self, lora):
         if(lora.name not in self.lora_names):
+            state_dict = self.load_lora_weights(lora.path)
             self.lora_names.append(lora.name)
-            self.pipeline.load_lora_weights(lora.path, adapter_name=lora.name.split('.', 1)[0])
+            self.pipeline.load_lora_weights(state_dict, adapter_name=lora.name.split('.', 1)[0])
 
 
     def add_loras(self, loras, weights:List[float]):
