@@ -22,6 +22,7 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
         super().__init__(params, inferencedevice, cls, controlnet_cls = FluxControlNetModel, **kwargs)
 
+
     def createPipelineParams(self, params:GenerationParameters):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
@@ -29,22 +30,6 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
             self.addPipelineParamsControlNet(params, pipeline_params)
         return pipeline_params
     
-    def addPipelineParamsControlNet(self, params:GenerationParameters, pipeline_params):
-        args = {}
-        if(self.dtype is not None):
-            args['torch_dtype'] = self.dtype
-        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
-        if(len(controlnetparams) > 1):
-            raise ValueError("Only one controlnet model is supported by flux pipeline.")
-        controlnet = self.controlnet_cls.from_pretrained(controlnetparams[0].model, **args)
-        pipeline_params['controlnet'] = controlnet
-        return pipeline_params
-    
-    def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
-        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
-        if(controlnetparams[0].image is not None and controlnetparams[0].condscale > 0):
-            diffusers_params['control_image'] = controlnetparams[0].image
-            diffusers_params['controlnet_conditioning_scale'] = controlnetparams[0].condscale
     
     def diffusers_inference(self, prompt, seed, guidance_scale=4.0, scheduler=None, negative_prompt=None, clip_skip=None, **kwargs):
         generator, seed = self.createGenerator(seed)
