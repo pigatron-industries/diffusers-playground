@@ -4,7 +4,7 @@ from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
 from diffusers import ( # Pipelines
-                        FluxPipeline, FluxControlNetPipeline,
+                        FluxPipeline, FluxControlNetPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline,
                         # Conditioning models
                         FluxControlNetModel,
                         # Schedulers
@@ -63,6 +63,8 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
     PIPELINE_MAP = {
         #img2img,   inpaint, controlnet
         (False,     False,   False):    FluxPipeline,
+        (True,      False,   False):    FluxImg2ImgPipeline,
+        (True,      True,    False):    FluxInpaintPipeline,
         (False,     False,   True):     FluxControlNetPipeline
     }
 
