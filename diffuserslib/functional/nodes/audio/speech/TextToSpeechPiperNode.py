@@ -2,7 +2,6 @@ from diffuserslib.functional.types import *
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 
-from piper.voice import PiperVoice
 from diffuserslib.ModelUtils import getFile
 
 
@@ -28,6 +27,7 @@ class TextToSpeechPiperNode(FunctionalNode):
         
         
     def process(self, prompt:str, model:str, speakerid:int, noise_scale:float, length_scale:float, noise_w:float):
+        from piper.voice import PiperVoice
         if (self.tts is None):
             model_file = getFile(model)
             config_file = getFile(model + ".json")
