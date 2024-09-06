@@ -9,6 +9,7 @@ import shutil
 import glob
 import re
 import yaml
+from enum import Enum
 
 
 ListStringFuncType = List[str] | Callable[[], List[str]]
@@ -18,6 +19,14 @@ TrainDataFuncType = TrainDataType | Callable[[], TrainDataType]
 
 
 class TrainLoraNode(FunctionalNode):
+
+    class TrainScript(Enum):
+        DIFFUSERS = "diffusers"
+        KOHYA = "kohya"
+
+    TRAIN_SCRIPTS = [TrainScript.DIFFUSERS.value, TrainScript.KOHYA.value]
+
+
     def __init__(self, 
                  model:ModelsFuncType,
                  loraname:StringFuncType,
@@ -37,9 +46,11 @@ class TrainLoraNode(FunctionalNode):
                  learning_rate_schedule:StringFuncType = "constant",
                  learning_rate_warmup_steps:IntFuncType = 0,
                  seed:IntFuncType = 0,
+                 trainscript:StringFuncType = TrainScript.DIFFUSERS.name,
                  name:str = "train_lora",
                  ):
         super().__init__(name)
+        self.addParam("trainscript", trainscript, str)
         self.addParam("model", model, ModelsType)
         self.addParam("loraname", loraname, str)
         self.addParam("keyword", keyword, str)
@@ -62,29 +73,55 @@ class TrainLoraNode(FunctionalNode):
 
     def process(self, model:ModelsType, loraname:str, keyword:str, classword:str, train_data:TrainDataType, output_dir:str, resolution:int, enable_bucket:bool,
                 batch_size:int, gradient_accumulation_steps:int, save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, 
-                learning_rate_warmup_steps:int, seed:int, network_dim:int, network_alpha:int):
+                learning_rate_warmup_steps:int, seed:int, network_dim:int, network_alpha:int, trainscript:str):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("DiffusersPipelines not initialized")
 
-        temp_train_dir = "./train"
-        os.makedirs(temp_train_dir, exist_ok=True)
-        shutil.rmtree(temp_train_dir)
+        self.temp_train_dir = "./train"
+        self.temp_data_dir = os.path.join(self.temp_train_dir, "data")
+        self.temp_resume_dir = os.path.join(self.temp_train_dir, "resume")
+        self.temp_output_dir = os.path.join(self.temp_train_dir, "output")
+        os.makedirs(self.temp_train_dir, exist_ok=True)
+        shutil.rmtree(self.temp_train_dir)
 
         base_model = DiffusersPipelines.pipelines.getModel(model[0].name).base
         output_dir = os.path.join(output_dir, base_model, loraname)
         os.makedirs(output_dir, exist_ok=True)
 
-        temp_data_dir = os.path.join(temp_train_dir, "data")
-        temp_resume_dir = os.path.join(temp_train_dir, "resume")
-        temp_output_dir = os.path.join(temp_train_dir, "output")
-
         for train_repeat in train_data:
-            self.copyTrainingData(temp_data_dir, keyword, classword, train_repeat[1], train_repeat[0])
+            self.copyTrainingData(trainscript, keyword, classword, train_repeat[1], train_repeat[0])
 
-        resume_steps, temp_resume_dir = self.copyResumeData(temp_resume_dir, output_dir)
+        resume_steps, self.temp_resume_dir = self.copyResumeData(self.temp_resume_dir, output_dir)
 
+        if (trainscript == TrainLoraNode.TrainScript.DIFFUSERS.value):
+            command = self.trainDiffusersCommand(keyword, classword, model, resolution, enable_bucket, batch_size, gradient_accumulation_steps, save_steps, train_steps, 
+                                        learning_rate, learning_rate_schedule, learning_rate_warmup_steps, seed)
+        elif (trainscript == TrainLoraNode.TrainScript.KOHYA.value):
+            command = self.trainKohyaCommand(resume_steps, model, resolution, enable_bucket, batch_size, gradient_accumulation_steps, save_steps, train_steps, 
+                                        learning_rate, learning_rate_schedule, learning_rate_warmup_steps, seed, network_dim, network_alpha)
+
+        process = CommandProcess(command)
+        process.runSync()
+
+        print("Copying output files to output dir...")
+        self.copyOutputFiles(self.temp_output_dir, output_dir, resume_steps, loraname, keyword, classword)
+        self.saveParameters(output_dir=output_dir, model=model[0].name, keyword=keyword, classword=classword, train_data=train_data, 
+                            resolution=resolution, batch_size=batch_size, gradient_accumulation_steps=gradient_accumulation_steps, 
+                            save_steps=save_steps, train_steps=train_steps, learning_rate=learning_rate, learning_rate_schedule=learning_rate_schedule, 
+                            learning_rate_warmup_steps=learning_rate_warmup_steps, seed=seed)
+        self.copyResumeDataToOutput(resume_steps, self.temp_output_dir, output_dir)
+        print("Done")
+
+
+    def trainKohyaCommand(self, resume_steps:int|None, model:ModelsType, resolution:int, enable_bucket:bool, batch_size:int, gradient_accumulation_steps:int, 
+                          save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, learning_rate_warmup_steps:int, seed:int, 
+                          network_dim:int, network_alpha:int):
         scriptname = "train_network"
         network_module = "networks.lora"
+        clip_l = None
+        t5xxl = None
+        ae = None
+        modelname = model[0].name
         base = model[0].base
         assert base is not None
         if (base.startswith("sdxl")):
@@ -92,13 +129,24 @@ class TrainLoraNode(FunctionalNode):
         elif (base.startswith("flux")):
             scriptname = "flux_train_network"
             network_module = "networks.lora_flux"
+            # TODO remove hard coded values
+            modelname = "/Volumes/CrucialX9/rob/models/flux/flux1-schnell.safetensors"
+            clip_l = "/Volumes/CrucialX9/rob/models/flux/clip_l.safetensors"
+            t5xxl = "/Volumes/CrucialX9/rob/models/flux/t5xxl_fp16.safetensors"
+            ae = "/Volumes/CrucialX9/rob/models/flux/ae.safetensors"
 
         command = ["accelerate", "launch", f"./workspace/sd-scripts/{scriptname}.py"]
         command.append(f'--network_module="{network_module}"')
-        command.append(f'--pretrained_model_name_or_path={model[0].name}')
-        command.append(f"--train_data_dir={temp_data_dir}")
-        command.append(f"--output_dir={temp_output_dir}")
+        command.append(f'--pretrained_model_name_or_path={modelname}')
+        command.append(f"--train_data_dir={self.temp_data_dir}")
+        command.append(f"--output_dir={self.temp_output_dir}")
         command.append(f"--resolution={resolution}")
+        if(clip_l is not None):
+            command.append(f"--clip_l={clip_l}")
+        if(t5xxl is not None):
+            command.append(f"--t5xxl={t5xxl}")
+        if(ae is not None):
+            command.append(f"--ae={ae}")
         if(enable_bucket):
             command.append(f"--enable_bucket")
         command.append(f"--train_batch_size={batch_size}")
@@ -115,32 +163,49 @@ class TrainLoraNode(FunctionalNode):
         command.append(f"--save_state")
         command.append(f"--save_last_n_steps_state=0")
         if(resume_steps is not None):     
-            print (f"Resuming from {temp_resume_dir}, steps={resume_steps}")
-            command.append(f"--resume={temp_resume_dir}")
-        
-        process = CommandProcess(command)
-        process.runSync()
+            print (f"Resuming from {self.temp_resume_dir}, steps={resume_steps}")
+            command.append(f"--resume={self.temp_resume_dir}")
+        return command
 
-        print("Copying output files to output dir...")
-        self.copyOutputFiles(temp_output_dir, output_dir, resume_steps, loraname, keyword, classword)
-        self.saveParameters(output_dir=output_dir, model=model[0].name, keyword=keyword, classword=classword, train_data=train_data, 
-                            resolution=resolution, batch_size=batch_size, gradient_accumulation_steps=gradient_accumulation_steps, 
-                            save_steps=save_steps, train_steps=train_steps, learning_rate=learning_rate, learning_rate_schedule=learning_rate_schedule, 
-                            learning_rate_warmup_steps=learning_rate_warmup_steps, seed=seed)
-        self.copyResumeDataToOutput(resume_steps, temp_output_dir, output_dir)
-        print("Done")
+
+    def trainDiffusersCommand(self, keyword:str, classword:str, model:ModelsType, resolution:int, enable_bucket:bool, batch_size:int, gradient_accumulation_steps:int,
+                                save_steps:int, train_steps:int, learning_rate:float, learning_rate_schedule:str, learning_rate_warmup_steps:int, seed:int):
+        modelname = model[0].name
+        base = model[0].base
+        assert base is not None
+        if (base.startswith("sdxl")):
+            scriptname = "train_dreambooth_lora_sdxl"
+        elif (base.startswith("flux")):
+            scriptname = "train_dreambooth_lora_flux"
+        command = ["accelerate", "launch", f"./workspace/diffusers/examples/dreambooth/{scriptname}.py"]
+        command.append(f'--pretrained_model_name_or_path={modelname}')
+        command.append(f'--instance_data_dir={self.temp_data_dir}')
+        command.append(f'--output_dir={self.temp_output_dir}')
+        command.append(f'--mixed_precision="no"')
+        command.append(f'--instance_prompt="a photo of {keyword} {classword}"')
+        command.append(f'--resolution={resolution}')
+        command.append(f'--train_batch_size={batch_size}')
+        command.append(f'--gradient_accumulation_steps={gradient_accumulation_steps}')
+        command.append(f'--learning_rate={learning_rate}')
+        command.append(f'--lr_scheduler={learning_rate_schedule}')
+        command.append(f'--lr_warmup_steps={learning_rate_warmup_steps}')
+        command.append(f'--max_train_steps={train_steps}')
+        command.append(f'--seed={seed}')
+        return command
 
 
     
-    def copyTrainingData(self, temp_data_dir:str, keyword:str, classword:str, repeats:int, train_files:List[str]):
-        temp_data_dir = os.path.join(temp_data_dir, f"{int(repeats)}_{keyword} {classword}")
-        os.makedirs(temp_data_dir, exist_ok=True)
+    def copyTrainingData(self, trainscript, keyword:str, classword:str, repeats:int, train_files:List[str]):
+        if(trainscript == TrainLoraNode.TrainScript.KOHYA.name):
+            self.temp_data_dir = os.path.join(self.temp_data_dir, f"{int(repeats)}_{keyword} {classword}")
+
+        os.makedirs(self.temp_data_dir, exist_ok=True)
         for file_pattern in train_files:
             # TODO change * to *.png etc
             files = glob.glob(file_pattern)
             for file in files:
                 if os.path.isfile(file):
-                    shutil.copy(file, temp_data_dir)
+                    shutil.copy(file, self.temp_data_dir)
         
     
     def copyResumeData(self, temp_resume_dir:str, output_dir:str) -> tuple[int|None, str|None]:
