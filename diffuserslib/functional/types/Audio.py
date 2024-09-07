@@ -5,10 +5,10 @@ import numpy as np
 
 
 class Audio:
-    def __init__(self, audio_array:np.ndarray, sample_rate:float):
+    def __init__(self, audio_array:np.ndarray, sample_rate:float, file:tempfile._TemporaryFileWrapper|None = None):
         self.audio_array = audio_array
         self.sample_rate = sample_rate
-        self.file = None
+        self.file = file
         
     def write(self):
         if(self.file is None):

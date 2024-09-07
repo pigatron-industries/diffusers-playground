@@ -10,7 +10,7 @@ class AudioGenerationStableAudioWorkflow(WorkflowBuilder):
 
 
     def build(self):
-        # files_input = FileSelectInputNode(filetype = "audio", name = "samples")
+        audio_input = AudioUploadInputNode(mandatory=False, sample_rate = None, mono = False, name = "init_audio")
         prompt_input = TextAreaInputNode(value = "Hello World!", name = "prompt")
         negative_prompt_input = StringUserInputNode(value = "", name = "negative_prompt")
         duration_input = FloatUserInputNode(value = 10.0, name = "duration")
@@ -19,6 +19,6 @@ class AudioGenerationStableAudioWorkflow(WorkflowBuilder):
         seed_input = SeedUserInputNode(value = None, name = "seed")
 
         audio = StableAudioNode(prompt = prompt_input, negative_prompt = negative_prompt_input, duration = duration_input, steps = steps_input, 
-                                cfg_scale = cfg_scale_input, seed = seed_input)
+                                cfg_scale = cfg_scale_input, seed = seed_input, initaudio = audio_input)
         return audio
     
