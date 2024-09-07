@@ -46,10 +46,10 @@ class StableAudioNode(FunctionalNode):
         params['guidance_scale'] = cfg_scale
         params['generator'] = generator
         if initaudio is not None:
-            params["initial_audio_waveforms"] = torch.from_numpy(initaudio.audio_array)
+            params["initial_audio_waveforms"] = torch.from_numpy(np.expand_dims(initaudio.audio_array, axis=0))
             params["initial_audio_sampling_rate"] = initaudio.sample_rate
+
+        audio = self.model(**params).audios[0]
         
-        audio = self.model(**params).audios
-        
-        audio_array = audio[0].T.float().cpu().numpy()
+        audio_array = audio.T.float().cpu().numpy()
         return Audio(audio_array, self.model.vae.sampling_rate)
