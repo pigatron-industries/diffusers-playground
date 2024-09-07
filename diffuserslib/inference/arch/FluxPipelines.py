@@ -3,11 +3,7 @@ from ..GenerationParameters import GenerationParameters
 from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from typing import List
 from PIL import Image
-from diffusers import ( # Pipelines
-                        FluxPipeline, FluxControlNetPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline,
-                        # Conditioning models
-                        FluxControlNetModel,
-                        # Schedulers
+from diffusers import ( # Schedulers
                         FlowMatchEulerDiscreteScheduler)
 import diffusers
 import torch
@@ -17,6 +13,7 @@ from diffuserslib.scripts.convert_flux_lora import convert_sd_scripts_to_ai_tool
 
 class FluxPipelineWrapper(DiffusersPipelineWrapper):
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
+        from diffusers import FluxControlNetModel
         self.safety_checker = params.safetychecker
         self.device = device
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
@@ -60,20 +57,29 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
 
 class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
 
-    PIPELINE_MAP = {
-        #img2img,   inpaint, controlnet
-        (False,     False,   False):    FluxPipeline,
-        (True,      False,   False):    FluxImg2ImgPipeline,
-        (True,      True,    False):    FluxInpaintPipeline,
-        (False,     False,   True):     FluxControlNetPipeline
-    }
-
-
     def __init__(self, params:GenerationParameters, device):
         cls = self.getPipelineClass(params)
         super().__init__(params=params, device=device, cls=cls)
 
 
     def getPipelineClass(self, params:GenerationParameters):
+        from diffusers import FluxControlNetPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline, FluxPipeline
+        PIPELINE_MAP = {
+            #img2img,   inpaint, controlnet
+            (False,     False,   False):    FluxPipeline,
+            (True,      False,   False):    FluxImg2ImgPipeline,
+            (True,      True,    False):    FluxInpaintPipeline,
+            (False,     False,   True):     FluxControlNetPipeline
+        }
         self.features = self.getPipelineFeatures(params)
-        return self.PIPELINE_MAP[(self.features.img2img, self.features.inpaint, self.features.controlnet)]
+        return PIPELINE_MAP[(self.features.img2img, self.features.inpaint, self.features.controlnet)]
+
+
+    def addInferenceParamsImg2Img(self, params:GenerationParameters, diffusers_params):
+        #FluxImg2ImgPipeline not using dimnsions of image
+        initimageparams = params.getInitImage()
+        if(initimageparams is not None and initimageparams.image is not None):
+            diffusers_params['image'] = initimageparams.image.convert("RGB")
+            diffusers_params['strength'] = initimageparams.condscale
+            diffusers_params['width'] = initimageparams.image.width
+            diffusers_params['height'] = initimageparams.image.height
