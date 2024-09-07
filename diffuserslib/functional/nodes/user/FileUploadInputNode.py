@@ -62,4 +62,4 @@ class FileUploadInputNode(UserInputNode):
         if(self.multiple):
             return self.content
         else:
-            return self.content[0]
+            return self.content[0] if len(self.content) > 0 else None
