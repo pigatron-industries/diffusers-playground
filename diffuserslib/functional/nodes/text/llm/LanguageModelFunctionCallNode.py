@@ -69,7 +69,9 @@ If NO function response is given:
         # Tool calling logic
         tool_response = self.llm.predict_and_call(self.functiontools, prompt, history, error_on_no_tool_call = False, verbose = True)
         # print(tool_response)
-        # print(tool_response.sources)
+        print("TOOL SOURCES")
+        print(tool_response.sources)
+        print(tool_response.metadata)
 
         if(self.rawoutput):
             return tool_response.response
@@ -79,6 +81,7 @@ If NO function response is given:
                 self.chat(messages)
             else:
                 # parse response to plain text output
+                messages.append(ChatMessage(role=MessageRole.ASSISTANT, content="", additional_kwargs = { 'tool_calls':tool_response.sources }))
                 messages.append(ChatMessage(role=MessageRole.TOOL, content=tool_response.response))
                 self.chat(messages)
 

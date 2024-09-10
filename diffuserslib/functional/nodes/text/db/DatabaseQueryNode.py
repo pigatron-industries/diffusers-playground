@@ -31,6 +31,9 @@ class DatabaseQueryNode(FunctionalNode):
         engine = create_engine(connectionstring, echo=True)
         session = Session(engine)
 
+        # remove any trailing semicolons
+        query = query.strip().rstrip(";")
+
         try:
             statement = sql.text(query)
             result = session.execute(statement)

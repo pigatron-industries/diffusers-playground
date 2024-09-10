@@ -8,6 +8,7 @@ StringFuncType = str | Callable[[], str]
 IntFuncType = int | Callable[[], int]
 FloatFuncType = float | Callable[[], float]
 BoolFuncType = bool | Callable[[], bool]
+DictFuncType = Dict[str, Any] | Callable[[], Dict[str, Any]]
 
 StringsFuncType = List[str] | Callable[[], List[str]]
 IntsFuncType = List[int] | Callable[[], List[int]]
