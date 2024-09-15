@@ -75,8 +75,7 @@ class StableAudioNode(FunctionalNode):
         if initaudio is not None:
             audio = torch.from_numpy(initaudio.audio_array).div(2)
             params["init_audio"] = (initaudio.sample_rate, audio)
-            params["init_noise_level"] = 1.0
-
+            params["init_noise_level"] = noise_level
         output = generate_diffusion_cond(**params)
 
         output = rearrange(output, 'b d n -> d (b n)')
