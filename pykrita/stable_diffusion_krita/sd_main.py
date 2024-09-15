@@ -275,7 +275,7 @@ class SDDialog(QDialog):
         if('base' in self.actionfields):
             formLayout.addWidget(QLabel("Base"))
             self.base = QComboBox()
-            self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1'])
+            self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1', 'flux'])
             self.base.setCurrentText('sd_1_5')
             self.base.currentIndexChanged.connect(self.baseChanged)
             formLayout.addWidget(self.base)
