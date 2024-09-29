@@ -36,13 +36,6 @@ generate:
       - id: stabilityai/stable-cascade
         prior: stabilityai/stable-cascade-prior
         decoder: stabilityai/stable-cascade
-  - base: svd_1_0
-    pipelines:
-      generate: StableVideoDiffusionGeneratePipeline
-    models:
-      - id: stabilityai/stable-video-diffusion-img2vid
-      - id: stabilityai/stable-video-diffusion-img2vid-xt
-      - id: stabilityai/stable-video-diffusion-img2vid-xt-1-1
   - base: sdxl_1_0
     pipelines:
       generate: StableDiffusionXLGeneratePipeline
@@ -240,6 +233,9 @@ controlnet:
       - id: InstantX/FLUX.1-dev-Controlnet-Canny
       - id: InstantX/FLUX.1-dev-Controlnet-Pose
       - id: InstantX/FLUX.1-dev-Controlnet-Tile
+      - id: jasperai/Flux.1-dev-Controlnet-Upscaler
+      - id: jasperai/Flux.1-dev-Controlnet-Depth
+      - id: jasperai/Flux.1-dev-Controlnet-Surface-Normals
 
 t2iadapter:
   - base: sd_1_5
@@ -282,7 +278,30 @@ ipadapterfaceid:
       - id: h94/IP-Adapter-FaceID/ip-adapter-faceid-plusv2_sdxl.bin
 
 
-animatediff:
+video:
+  - base: cogvideox_i2v
+    pipelines:
+      generate: CogVideoXGeneratePipeline
+    models:
+      - id: THUDM/CogVideoX-5b-I2V
+  - base: cogvideox_v2v
+    pipelines:
+      generate: CogVideoXGeneratePipeline
+    models:
+      - id: THUDM/CogVideoX-5b-trail
+  - base: cogvideox_t2v
+    pipelines:
+      generate: CogVideoXGeneratePipeline
+    models:
+      - id: THUDM/CogVideoX-5b
+      - id: THUDM/CogVideoX-2b
+  - base: svd_1_0
+    pipelines:
+      generate: StableVideoDiffusionGeneratePipeline
+    models:
+      - id: stabilityai/stable-video-diffusion-img2vid
+      - id: stabilityai/stable-video-diffusion-img2vid-xt
+      - id: stabilityai/stable-video-diffusion-img2vid-xt-1-1
   - base: sd_1_5
     models:
       - id: vladmandic/animatediff-v3
