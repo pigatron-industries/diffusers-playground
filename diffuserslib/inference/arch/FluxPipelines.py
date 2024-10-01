@@ -27,6 +27,18 @@ class FluxPipelineWrapper(DiffusersPipelineWrapper):
             self.addPipelineParamsControlNet(params, pipeline_params)
         return pipeline_params
     
+
+    def addPipelineParamsControlNet(self, params:GenerationParameters, pipeline_params):
+        args = {}
+        if(self.dtype is not None):
+            args['torch_dtype'] = self.dtype
+        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
+        controlnet = []
+        for controlnetparam in controlnetparams:
+            controlnet.append(self.controlnet_cls.from_pretrained(controlnetparam.model, **args))
+        pipeline_params['controlnet'] = controlnet[0] #Only one controlnet model is supported by flus pipeline currently
+        return pipeline_params
+    
     
     def diffusers_inference(self, prompt, seed, guidance_scale=4.0, scheduler=None, negative_prompt=None, clip_skip=None, **kwargs):
         generator, seed = self.createGenerator(seed)
@@ -83,3 +95,15 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
             diffusers_params['strength'] = initimageparams.condscale
             diffusers_params['width'] = initimageparams.image.width
             diffusers_params['height'] = initimageparams.image.height
+
+
+    def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
+        controlnetparams = params.getConditioningParamsByModelType(DiffusersModelType.controlnet)
+        images = []
+        scales = []
+        for controlnetparam in controlnetparams:
+            if(controlnetparam.image is not None and controlnetparam.condscale > 0):
+                images.append(controlnetparam.image.convert("RGB"))
+                scales.append(controlnetparam.condscale)
+        diffusers_params['control_image'] = images[0] #Only one controlnet model is supported by flus pipeline currently
+        diffusers_params['controlnet_conditioning_scale'] = scales[0]
