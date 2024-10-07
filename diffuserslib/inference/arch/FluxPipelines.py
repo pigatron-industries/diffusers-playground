@@ -75,13 +75,15 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
 
 
     def getPipelineClass(self, params:GenerationParameters):
-        from diffusers import FluxControlNetPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline, FluxPipeline
+        from diffusers import FluxControlNetPipeline, FluxImg2ImgPipeline, FluxInpaintPipeline, FluxPipeline, FluxControlNetImg2ImgPipeline, FluxControlNetInpaintPipeline
         PIPELINE_MAP = {
             #img2img,   inpaint, controlnet
             (False,     False,   False):    FluxPipeline,
             (True,      False,   False):    FluxImg2ImgPipeline,
             (True,      True,    False):    FluxInpaintPipeline,
-            (False,     False,   True):     FluxControlNetPipeline
+            (False,     False,   True):     FluxControlNetPipeline,
+            (True,      False,   True):     FluxControlNetImg2ImgPipeline,
+            (False,     True,    False):    FluxControlNetInpaintPipeline,
         }
         self.features = self.getPipelineFeatures(params)
         return PIPELINE_MAP[(self.features.img2img, self.features.inpaint, self.features.controlnet)]
