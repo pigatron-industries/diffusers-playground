@@ -133,6 +133,6 @@ class DiffusersModelList:
             modeltypes = [modeltype]
         matchingmodels = {}
         for modelid, model in self.models.items():
-            if (model.modeltype in modeltypes and model.base == base):
+            if any(mt in model.pipelinetypes for mt in modeltypes) and model.base == base:
                 matchingmodels[modelid] = model
         return matchingmodels
