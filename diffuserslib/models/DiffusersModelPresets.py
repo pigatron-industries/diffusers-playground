@@ -29,7 +29,7 @@ class DiffusersBaseModel:
 class DiffusersModel:
     modelid: str
     base: str
-    modeltype: str
+    modeltypes: List[str]
     modelpath: str
     pipelinetypes: Dict[str, str]
     revision: str|None = None
@@ -100,7 +100,10 @@ class DiffusersModelList:
                  preprocess:str|None=None, autocast=True, location='hf', modelpath=None, pipelinetypes:Dict[str, str]|None=None, data=None):
         if pipelinetypes is None:
             pipelinetypes = self.basemodels[base].pipelinetypes
-        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, modeltype=modeltype, pipelinetypes=pipelinetypes, revision=revision, 
+        modeltypes = [modeltype]
+        if modelid in self.models:
+            modeltypes.extend(self.models[modelid].modeltypes)
+        self.models[modelid] = DiffusersModel(modelid=modelid, base=base, modeltypes=modeltypes, pipelinetypes=pipelinetypes, revision=revision, 
                                               stylephrase=stylephrase, vae=vae, autocast=autocast, preprocess=preprocess, location=location, modelpath=modelpath, data=data)
 
     def addModels(self, models):
@@ -113,7 +116,7 @@ class DiffusersModelList:
         if modelid in self.models:
             return self.models[modelid]
         else:
-            return DiffusersModel(modelid, None, None, None, None)
+            return DiffusersModel(modelid, None, [], None, None)
         
     def getModelsByType(self, modeltype) -> Dict[str, DiffusersModel]:
         if modeltype == 'controlimage':
@@ -122,7 +125,7 @@ class DiffusersModelList:
             modeltypes = [modeltype]
         matchingmodels = {}
         for modelid, model in self.models.items():
-            if (model.modeltype in modeltypes):
+            if any(mt in model.modeltypes for mt in modeltypes):
                 matchingmodels[modelid] = model
         return matchingmodels
 
@@ -133,6 +136,6 @@ class DiffusersModelList:
             modeltypes = [modeltype]
         matchingmodels = {}
         for modelid, model in self.models.items():
-            if any(mt in model.pipelinetypes for mt in modeltypes) and model.base == base:
+            if any(mt in model.modeltypes for mt in modeltypes) and model.base == base:
                 matchingmodels[modelid] = model
         return matchingmodels
