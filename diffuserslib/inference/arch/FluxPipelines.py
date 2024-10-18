@@ -1,5 +1,5 @@
 from .StableDiffusionPipelines import DiffusersPipelineWrapper
-from ..GenerationParameters import GenerationParameters
+from ..GenerationParameters import GenerationParameters, ControlImageType
 from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from diffuserslib.ModelUtils import getFile
 from diffuserslib.models.DiffusersModelPresets import DiffusersModel
@@ -9,6 +9,7 @@ from diffusers import ( # Schedulers
                         FlowMatchEulerDiscreteScheduler)
 import diffusers
 import torch
+from torchvision import transforms
 from safetensors import safe_open
 from diffuserslib.scripts.convert_flux_lora import convert_sd_scripts_to_ai_toolkit
 
@@ -117,6 +118,14 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
             diffusers_params['strength'] = initimageparams.condscale
             diffusers_params['width'] = initimageparams.image.width
             diffusers_params['height'] = initimageparams.image.height
+
+
+    def addInferenceParamsDifferential(self, params:GenerationParameters, diffusers_params):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getImage(ControlImageType.IMAGETYPE_DIFFMASKIMAGE)
+        if(initimageparams is not None and maskimageparams is not None):
+            diffusers_params['image'] = initimageparams.image.convert("RGB")
+            diffusers_params['mask_image'] = maskimageparams.image.convert("L")
 
 
     def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
