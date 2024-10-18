@@ -3,13 +3,9 @@ from ..GenerationParameters import GenerationParameters, ControlImageType
 from diffuserslib.models.DiffusersModelPresets import DiffusersModelType
 from diffuserslib.ModelUtils import getFile
 from diffuserslib.models.DiffusersModelPresets import DiffusersModel
-from typing import List
-from PIL import Image
+from PIL import  ImageOps
 from diffusers import ( # Schedulers
                         FlowMatchEulerDiscreteScheduler)
-import diffusers
-import torch
-from torchvision import transforms
 from safetensors import safe_open
 from diffuserslib.scripts.convert_flux_lora import convert_sd_scripts_to_ai_toolkit
 
@@ -125,7 +121,7 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
         maskimageparams = params.getImage(ControlImageType.IMAGETYPE_DIFFMASKIMAGE)
         if(initimageparams is not None and maskimageparams is not None):
             diffusers_params['image'] = initimageparams.image.convert("RGB")
-            diffusers_params['mask_image'] = maskimageparams.image.convert("L")
+            diffusers_params['mask_image'] = ImageOps.invert(maskimageparams.image.convert("L"))
 
 
     def addInferenceParamsControlNet(self, params:GenerationParameters, diffusers_params):
