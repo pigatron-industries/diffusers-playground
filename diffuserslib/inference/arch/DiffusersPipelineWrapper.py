@@ -57,10 +57,7 @@ class DiffusersPipelineWrapper:
             cls = DiffusionPipeline
 
         for i, modelConfig in enumerate(params.modelConfig):
-            if (modelConfig.modelpath.endswith('.safetensors') or modelConfig.modelpath.endswith('.ckpt')):
-                pipeline = cls.from_single_file(modelConfig.modelpath, load_safety_checker=self.safety_checker, **pipeline_params).to(self.device)
-            else:
-                pipeline = cls.from_pretrained(modelConfig.modelpath, **pipeline_params).to(self.device)
+            pipeline = self.loadPipeline(modelConfig, cls, pipeline_params)
             if(i == 0):
                 self.pipeline = pipeline
             else:
@@ -68,6 +65,13 @@ class DiffusersPipelineWrapper:
             
         if("torch_dtype" in pipeline_params and pipeline_params["torch_dtype"] not in [torch.float16, torch.bfloat16]):
             self.pipeline.enable_attention_slicing()
+
+
+    def loadPipeline(self, modelConfig, cls, pipelineParams):
+        if (modelConfig.modelpath.endswith('.safetensors') or modelConfig.modelpath.endswith('.ckpt')):
+            return cls.from_single_file(modelConfig.modelpath, **pipelineParams).to(self.device)
+        else:
+            return cls.from_pretrained(modelConfig.modelpath, **pipelineParams).to(self.device)
 
 
     def mergeModel(self, mergePipeline, weight):
