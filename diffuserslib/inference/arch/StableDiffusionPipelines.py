@@ -37,7 +37,6 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         print(f"creating pipeline {cls.__name__ if type(cls) is type else cls}")
         self.safety_checker = params.safetychecker
         self.device = device
-        self.lora_names = []
         inferencedevice = 'cpu' if self.device == 'mps' else self.device
         super().__init__(params, inferencedevice, cls=cls)
 
@@ -105,30 +104,6 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
             text_encoder.resize_token_embeddings(len(tokenizer))
             token_id = tokenizer.convert_tokens_to_ids(tokenpart)
             text_encoder.get_input_embeddings().weight.data[token_id] = embedding_vector
-
-
-    def add_lora(self, lora):
-        if(lora.name not in self.lora_names):
-            self.lora_names.append(lora.name)
-            self.pipeline.load_lora_weights(lora.path, adapter_name=lora.name.split('.', 1)[0])
-
-
-    def add_loras(self, loras, weights:List[float]):
-        for lora, weight in zip(loras, weights):
-            self.pipeline.load_lora_weights(lora.path)
-            self.pipeline.fuse_lora(lora_scale = weight)
-
-        # for lora in loras:
-        #     self.add_lora(lora)
-        # lora_weights = []
-        # lora_names = []
-        # for i, lora in enumerate(loras):
-        #     lora_weights.append(weights[i])
-        #     lora_names.append(lora.name.split('.', 1)[0])
-
-        # if(hasattr(self.pipeline, 'set_adapters')):
-        #     self.pipeline.set_adapters(lora_names, lora_weights)
-
 
 
 class StableDiffusionGeneratePipelineWrapper(StableDiffusionPipelineWrapper):

@@ -82,8 +82,8 @@ class SeedUserInputNode(UserInputNode):
     
 
 class FloatUserInputNode(UserInputNode):
-    def __init__(self, value:float=0.0, format:str='%.2f' , name:str="float_user_input"):
-        self.value = float(value)
+    def __init__(self, value:float|None=0.0, format:str='%.2f' , name:str="float_user_input"):
+        self.value = float(value) if value is not None else None
         self.format = format
         super().__init__(name)
 
@@ -96,8 +96,9 @@ class FloatUserInputNode(UserInputNode):
     def gui(self):
         ui.number(value=self.value, label=self.node_name, format=self.format).bind_value(self, 'value')
 
-    def processValue(self) -> float:
-        return float(self.value)
+    def processValue(self) -> float|None:
+        if self.value is not None:
+            return float(self.value)
     
 
 class BoolUserInputNode(UserInputNode):

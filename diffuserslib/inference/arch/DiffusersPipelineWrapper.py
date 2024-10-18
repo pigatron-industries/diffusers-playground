@@ -41,6 +41,7 @@ class DiffusersPipelineWrapper:
     def __init__(self, params:GenerationParameters, inferencedevice:str, cls, controlnet_cls:type = ControlNetModel, dtype = None, **kwargs):
         if(dtype is None):
             dtype = torch.bfloat16
+        self.lora_names = []
         self.controlnet_cls = controlnet_cls
         self.dtype = dtype
         self.initparams = params
@@ -151,13 +152,28 @@ class DiffusersPipelineWrapper:
     def add_embeddings(self, token, embeddings):
         raise ValueError(f"add_embeddings not implemented for pipeline")
     
+
+    def add_lora(self, lora):
+        if(lora.name not in self.lora_names):
+            self.lora_names.append(lora.name)
+            self.pipeline.load_lora_weights(lora.path, adapter_name=lora.name.split('.', 1)[0])
+
+
     def add_loras(self, loras, weights:List[float]):
-        if(len(loras) > 0):
-            raise ValueError(f"add_lora not implemented for pipeline")
-    
+        for lora in loras:
+            self.add_lora(lora)
+        lora_weights = []
+        lora_names = []
+        for i, lora in enumerate(loras):
+            lora_weights.append(weights[i])
+            lora_names.append(lora.name.split('.', 1)[0])
+
+        if(hasattr(self.pipeline, 'set_adapters')):
+            if(len(lora_names) > 0):
+                self.pipeline.set_adapters(lora_names, lora_weights)
 
 
-    ### Functions for adding pipeline and inference parameters - TODO: move to common diffusers functions mixin
+    ### Functions for adding pipeline and inference parameters
 
     def addPipelineParamsCommon(self, params:GenerationParameters, pipeline_params):
         modelConfig = params.modelConfig[0]

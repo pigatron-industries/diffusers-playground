@@ -12,6 +12,7 @@ class TrainLoraWorkflow(WorkflowBuilder):
         super().__init__("Train Lora", None, workflow=True, subworkflow=False)
 
     def build(self):
+        script_input = ListSelectUserInputNode(value = "", options = TrainLoraNode.TRAIN_SCRIPTS, name="script")
         model_input = DiffusionModelUserInputNode()
         loraname_input = StringUserInputNode(value = "", name="loraname")
         keyword_input = StringUserInputNode(value = "", name="keyword")
@@ -29,7 +30,8 @@ class TrainLoraWorkflow(WorkflowBuilder):
 
         output_dir_input = ListSelectUserInputNode(value = "", options=GlobalConfig.loras_dirs, name="output_dir")
         
-        train_lora = TrainLoraNode(model = model_input,
+        train_lora = TrainLoraNode(trainscript = script_input, 
+                                   model = model_input,
                                    loraname = loraname_input,
                                    keyword = keyword_input,
                                    classword = classword_input,

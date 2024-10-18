@@ -37,8 +37,11 @@ def initializeDiffusers(configs:List[str]=["config.yml"], modelconfigs:List[str]
                 GlobalConfig.workflowstate_dirs.extend(folders["workflowstates"])
 
     DiffusersPipelines.pipelines = DiffusersPipelines(device=device, safety_checker=safety_checker, localmodelpath=models)
+    GlobalConfig.modelconfigs = {}
     for modelconfig in modelconfigs:
         if os.path.exists(modelconfig):
+            modelconfigdata = yaml.safe_load(open(modelconfig, "r"))
+            GlobalConfig.addModelConfig(modelconfigdata)
             DiffusersPipelines.pipelines.loadPresetFile(modelconfig)
 
     for config in configs:

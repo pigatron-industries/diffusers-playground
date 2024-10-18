@@ -120,22 +120,31 @@ def cv2ToPil(cv2_image):
     return Image.fromarray(cv2_image, "RGBA")
 
 
-def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640, tileheight=640, overlap=128, 
+def tiledImageProcessor(processor, initimage:Image.Image|None=None, controlimages:List[Image.Image]|None=None, tilewidth=640, tileheight=640, overlap=128, 
                         reduceEdges = False, scale=1, merge_to_new = True, callback=None):
-    xslices = math.ceil((initimage.width-overlap) / (tilewidth-overlap))
-    yslices = math.ceil((initimage.height-overlap) / (tileheight-overlap))
+    if(initimage is not None):
+        width = initimage.width
+        height = initimage.height
+    elif(controlimages is not None and len(controlimages) > 0):
+        width = controlimages[0].width
+        height = controlimages[0].height
+    else:
+        raise Exception("tiledImageProcessor requires initimage or controlimages to be set")
+
+    xslices = math.ceil((width-overlap) / (tilewidth-overlap))
+    yslices = math.ceil((height-overlap) / (tileheight-overlap))
     totalslices = xslices * yslices
     slicesdone = 0
     print(f'Processing {xslices} x {yslices} slices')
     if(callback is not None):
         callback("Running", totalslices, slicesdone)
 
-    if(overlap >= 0):
+    if(overlap >= 0 and initimage is not None):
         merged_image = initimage.convert("RGBA")
-        merged_image = merged_image.resize((initimage.width*scale, initimage.height*scale), resample=Image.BICUBIC)
+        merged_image = merged_image.resize((width*scale, height*scale), resample=Image.BICUBIC)
     else:
         # if overlap is negative create new transparent image to leave gaps between tiles
-        merged_image = Image.new("RGBA", size=(initimage.width*scale, initimage.height*scale), color=(255, 255, 255, 0))
+        merged_image = Image.new("RGBA", size=(width*scale, height*scale), color=(255, 255, 255, 0))
 
     # split into slices
     for yslice in range(yslices):
@@ -150,15 +159,19 @@ def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640,
             ybottom = ytop + tileheight
             if(reduceEdges):
                 if(bottom):
-                    ybottom = initimage.height
+                    ybottom = height
                 if(right):
-                    xright = initimage.width
+                    xright = width
 
-            if(overlap >= 0 and scale == 1 and not merge_to_new): 
+            if(initimage is None):
+                image_slice = None
+            elif(overlap >= 0 and scale == 1 and not merge_to_new): 
                 # if possible take slice from merged image to include overlapped portions
                 image_slice = merged_image.crop((xleft, ytop, xright, ybottom))
+                image_slice = image_slice.convert("RGB")
             else:
                 image_slice = initimage.crop((xleft, ytop, xright, ybottom))
+                image_slice = image_slice.convert("RGB")
             
             # slice controlimages if provided
             controlimage_slices = None
@@ -169,7 +182,6 @@ def tiledImageProcessor(processor, initimage, controlimages=None, tilewidth=640,
                     controlimage_slices.append(controlimage_slice)
 
             # process image tile
-            image_slice = image_slice.convert("RGB")
             if(controlimages is not None):
                 imageout_slice = processor(image_slice, controlimage_slices)
             else:

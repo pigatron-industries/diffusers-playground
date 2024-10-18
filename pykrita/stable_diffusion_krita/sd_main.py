@@ -218,8 +218,8 @@ dialogfields = {
     'txt2img':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'seed', 'batch', 'scheduler', 'lora'],
     'img2img':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
     'upscale':         ['prompt', 'model', 'upscale_amount', 'scale', 'scheduler', 'image'],
-    'inpaint':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'strength', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
-    'generateTiled':   ['prompt', 'negprompt', 'base', 'model', 'strength', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image', 'lora'],
+    'inpaint':         ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler', 'prescale', 'lora'],
+    'generateTiled':   ['prompt', 'negprompt', 'base', 'model', 'steps', 'scale', 'tile_method', 'tile_width', 'tile_height', 'tile_overlap', 'tile_alignmentx', 'tile_alignmenty', 'seed', 'scheduler', 'image', 'lora'],
     'instructpix2pix': ['instruct', 'steps', 'scale', 'seed', 'batch', 'image', 'scheduler'],
     'preprocess':      ['model', 'image']
 }
@@ -275,7 +275,7 @@ class SDDialog(QDialog):
         if('base' in self.actionfields):
             formLayout.addWidget(QLabel("Base"))
             self.base = QComboBox()
-            self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1'])
+            self.base.addItems(['sd_1_5', 'sd_2_1', 'sdxl_1_0', 'deepfloyd', 'kandinsky_2_1', 'flux'])
             self.base.setCurrentText('sd_1_5')
             self.base.currentIndexChanged.connect(self.baseChanged)
             formLayout.addWidget(self.base)

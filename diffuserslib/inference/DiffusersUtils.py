@@ -14,16 +14,26 @@ def loginHuggingFace(token):
 
 def tiledGeneration(pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=768, tileheight=768, overlap=128, masktile:ControlImageParameters|None=None, callback=None):
     initimageparams = params.getInitImage()
-    if initimageparams is None:
-        raise Exception("tiledImageToImage requires initimage to be set in params")
+    if initimageparams is not None:
+        initimage = initimageparams.image
+    else:
+        initimage = None
+    
     controlimages = [ controlimageparams.image for controlimageparams in params.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE) ]
     if(params.seed is None):
         params.seed = random.randint(0, MAX_SEED)
     
-    def imageToImageFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
+    def imageToImageFunc(initimagetile:Image.Image|None, controlimagetiles:List[Image.Image]):
         tileparams = copy.deepcopy(params)
+        if(initimagetile is not None):
+            tileparams.width = initimagetile.width
+            tileparams.height = initimagetile.height
+        elif(controlimagetiles is not None and len(controlimagetiles) > 0):
+            tileparams.width = controlimagetiles[0].width
+            tileparams.height = controlimagetiles[0].height
         tileparams.generationtype = "generate"
-        tileparams.setInitImage(initimagetile)
+        if(initimagetile is not None):
+            tileparams.setInitImage(initimagetile)
         if masktile is not None:
             tileparams.controlimages.append(masktile)
         for i in range(len(controlimagetiles)):
@@ -31,7 +41,7 @@ def tiledGeneration(pipelines:DiffusersPipelines, params:GenerationParameters, t
         image, _ = pipelines.generate(tileparams)
         return image
     
-    return tiledImageProcessor(processor=imageToImageFunc, initimage=initimageparams.image, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
+    return tiledImageProcessor(processor=imageToImageFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
 
 
 def tiledInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=768, tileheight=768, overlap=256, inpaintwidth=512, inpaintheight=512, callback=None):
@@ -43,11 +53,7 @@ def tiledInpaint(pipelines:DiffusersPipelines, params:GenerationParameters, tile
     
 
 def tiledProcessorOffset(tileprocessor, pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth:int=640, tileheight:int=640, overlap:int=128, offsetx:int=0, offsety:int=0):
-    # creates a new image slightly bigger than original image to allow tiling to start at negative offset
-    initimageparams = params.getInitImage()
-    if initimageparams is None:
-        raise Exception("tiledImageToImage requires initimage to be set in params")
-    
+    # creates a new image slightly bigger than original image to allow tiling to start at negative offset   
     params = copy.deepcopy(params)
 
     for controlimageparams in params.controlimages:
@@ -62,13 +68,9 @@ def tiledProcessorOffset(tileprocessor, pipelines:DiffusersPipelines, params:Gen
 
 def tiledProcessorCentred(tileprocessor, pipelines:DiffusersPipelines, params:GenerationParameters, tilewidth=640, tileheight=640, overlap=128, 
                              alignmentx='tile_centre', alignmenty='tile_centre', offsetx=0, offsety=0):
-    initimageparams = params.getInitImage()
-    if initimageparams is None:
-        raise Exception("tiledImageToImage requires initimage to be set in params")
-
     # find top left of initial centre tile 
-    offsetx = offsetx + int(initimageparams.image.width/2)
-    offsety = offsety + int(initimageparams.image.height/2)
+    offsetx = offsetx + int(params.width/2)
+    offsety = offsety + int(params.height/2)
     if(alignmentx == 'tile_centre'):
         offsetx = offsetx - int(tilewidth/2)
     else:

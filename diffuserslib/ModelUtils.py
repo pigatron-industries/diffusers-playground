@@ -3,7 +3,17 @@ import os, subprocess, sys
 import urllib.request as request
 from urllib.parse import urlparse
 from safetensors.torch import load_file
+from huggingface_hub import hf_hub_download
 
+
+def getFile(path:str):
+    if(path.startswith("/") or path.startswith(".")):
+        return path
+    else:
+        repo_id = path.split("/")[0] + "/" + path.split("/")[1]
+        repo_path = "/".join(path.split("/")[2:])
+        return hf_hub_download(repo_id, repo_path)
+    
 
 def chdirDiffuserScripts():
     filepath = os.path.dirname(os.path.realpath(__file__))
