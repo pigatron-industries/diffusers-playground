@@ -28,7 +28,7 @@ class LanguageModelCompletionNode(FunctionalNode):
                 print("LanguageModelChatNode: interrupted")
                 break
 
-        print("LanguageModelCompletionNode: ", self.text)
+        # print("LanguageModelCompletionNode: ", self.text)
         return self.text
     
     
