@@ -525,8 +525,6 @@ class SDDialog(QDialog):
             self.modifiers.setPlainText(params.modifiers)
         if('negprompt' in self.actionfields):
             self.negprompt.setText(params.negprompt)
-        if('batch' in self.actionfields):
-            self.batch.setValue(params.batch)
         if('tile_method' in self.actionfields):
             self.tile_method.setCurrentText(params.tilemethod)
             self.tile_width.setValue(params.tilewidth)
@@ -558,8 +556,8 @@ class SDDialog(QDialog):
             self.scheduler.setCurrentText(params.scheduler)
         if('prescale' in self.actionfields):
             self.prescale.setCurrentText(str(params.prescale))
-        # if('batch' in self.actionfields):
-        #     self.batch.setValue(params.batch)
+        if('batch' in self.actionfields):
+            self.batch.setValue(params.batch)
         if('image' in self.actionfields):
             for i, control_model_dropdown in enumerate(self.control_model_dropdowns):
                 if (i < len(params.controlimages)):
