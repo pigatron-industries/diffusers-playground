@@ -120,7 +120,7 @@ class GenerationParameters:
 
     def getImage(self, type:str) -> ControlImageParameters|None:
         for controlimage in self.controlimages:
-            if(controlimage.type == type or (controlimage.modelConfig is not None and controlimage.modelConfig.modeltype == type)):
+            if(controlimage.type == type or (controlimage.modelConfig is not None and type in controlimage.modelConfig.modeltypes)):
                 return controlimage
         return None
     
@@ -140,7 +140,7 @@ class GenerationParameters:
     def getConditioningParamsByModelType(self, modeltype:str) -> List[ControlImageParameters]:
         conditioningparams = []
         for conditioningparam in self.controlimages:
-            if(conditioningparam.modelConfig is not None and conditioningparam.modelConfig.modeltype == modeltype):
+            if(conditioningparam.modelConfig is not None and modeltype in conditioningparam.modelConfig.modeltypes):
                 conditioningparams.append(conditioningparam)
         return conditioningparams
     
