@@ -525,6 +525,8 @@ class SDDialog(QDialog):
             self.modifiers.setPlainText(params.modifiers)
         if('negprompt' in self.actionfields):
             self.negprompt.setText(params.negprompt)
+        if('batch' in self.actionfields):
+            self.batch.setValue(params.batch)
         if('tile_method' in self.actionfields):
             self.tile_method.setCurrentText(params.tilemethod)
             self.tile_width.setValue(params.tilewidth)
