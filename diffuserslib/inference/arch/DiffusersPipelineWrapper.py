@@ -337,13 +337,13 @@ class DiffusersPipelineWrapper:
             elif(conditioningimage.type == ControlImageType.IMAGETYPE_DIFFMASKIMAGE):
                 features.differential = True
             elif(conditioningimage.modelConfig is not None):
-                if(conditioningimage.modelConfig.modeltype == DiffusersModelType.ipadapter):
+                if(DiffusersModelType.ipadapter in conditioningimage.modelConfig.modeltypes):
                     features.ipadapter = True
                     if(conditioningimage.modelConfig.preprocess == "faceid"):
                         features.ipadapter_faceid = True    
-                elif(conditioningimage.modelConfig.modeltype == DiffusersModelType.controlnet):
+                elif(DiffusersModelType.controlnet in conditioningimage.modelConfig.modeltypes):
                     features.controlnet = True
-                elif(conditioningimage.modelConfig.modeltype == DiffusersModelType.t2iadapter):
+                elif(DiffusersModelType.t2iadapter in conditioningimage.modelConfig.modeltypes):
                     features.t2iadapter = True
             else:
                 raise ValueError(f"Unknown control image type {conditioningimage.type}")
