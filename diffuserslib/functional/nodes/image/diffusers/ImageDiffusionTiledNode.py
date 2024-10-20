@@ -113,14 +113,14 @@ class ImageDiffusionTiledNode(FunctionalNode):
             if(initimagetile is not None):
                 tileparams.setInitImage(initimagetile)
             print("ImageDiffusionTiledNode: Tile init image:")
-            imgcat(initimagetile)
+            # imgcat(initimagetile)
             if masktile is not None:
                 tileparams.controlimages.append(masktile)
             for i in range(len(controlimagetiles)):
                 tileparams.setControlImage(i, controlimagetiles[i])
             image, _ = DiffusersPipelines.pipelines.generate(tileparams)
             print("ImageDiffusionTiledNode: Tile output image:")
-            imgcat(image)
+            # imgcat(image)
             return image
         
         return tiledImageProcessor(processor=imageToImageFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
