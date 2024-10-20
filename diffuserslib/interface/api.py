@@ -7,8 +7,11 @@ from diffuserslib.processing.ProcessingPipelineFactory import ProcessingPipeline
 from diffuserslib import ImageTools
 from diffuserslib.processing.processors.transformers import *
 from diffuserslib.processing.processors.filters import *
+from diffuserslib.functional.nodes.image.diffusers.TileSizeCalculatorNode import TileSizeCalculatorNode
+from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionTiledNode import ImageDiffusionTiledNode
+from diffuserslib.functional.nodes.image.generative.TileMaskNode import TileMaskNode
 from .Clipboard import ClipboardContentDTO, Clipboard
-from typing import List
+from typing import List, Tuple
 from PIL import Image
 import sys
 
@@ -181,8 +184,12 @@ class RestApi:
             outputimages = []
             for i in range(0, params.batch):
                 RestApi.updateProgress(f"Running", params.batch, i)
-                if (params.tilemethod=="singlepass"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
+                if (params.tilemethod=="auto"):
+                    tilesize_calc = TileSizeCalculatorNode(image_size = (params.width, params.height), overlap = params.tileoverlap)()
+                    masktile = TileMaskNode(size = tilesize_calc, border = 0, gradient = params.tileoverlap)()
+                    outimage = ImageDiffusionTiledNode.tiledGeneration(params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], overlap=params.tileoverlap, masktile=masktile)
+                elif (params.tilemethod=="singlepass"):
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], 
                                                                overlap=params.tileoverlap, alignmentx=params.tilealignmentx, alignmenty=params.tilealignmenty)
                 elif (params.tilemethod=="multipass"):
                     outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 

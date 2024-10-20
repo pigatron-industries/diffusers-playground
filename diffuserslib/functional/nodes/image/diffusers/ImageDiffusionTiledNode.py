@@ -88,19 +88,30 @@ class ImageDiffusionTiledNode(FunctionalNode):
             raise Exception("Output is not an image")
         
 
-    def tiledGeneration(self, params:GenerationParameters, tilewidth=768, tileheight=768, overlap=128, masktile:ControlImageParameters|None=None, callback=None):
+    @staticmethod
+    def tiledGeneration(params:GenerationParameters, tilewidth=768, tileheight=768, overlap=128, masktile:ControlImageParameters|None=None, callback=None):
         initimageparams = params.getInitImage()
-        if initimageparams is None:
-            raise Exception("tiledImageToImage requires initimage to be set in params")
+        if initimageparams is not None:
+            initimage = initimageparams.image
+        else:
+            initimage = None
+
         controlimages = [ controlimageparams.image for controlimageparams in params.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE) ]
         if(params.seed is None):
             params.seed = random.randint(0, MAX_SEED)
         
-        def imageToImageFunc(initimagetile:Image.Image, controlimagetiles:List[Image.Image]):
+        def imageToImageFunc(initimagetile:Image.Image|None, controlimagetiles:List[Image.Image]):
             assert(DiffusersPipelines.pipelines is not None)
             tileparams = copy.deepcopy(params)
+            if(initimagetile is not None):
+                tileparams.width = initimagetile.width
+                tileparams.height = initimagetile.height
+            elif(controlimagetiles is not None and len(controlimagetiles) > 0):
+                tileparams.width = controlimagetiles[0].width
+                tileparams.height = controlimagetiles[0].height
             tileparams.generationtype = "generate"
-            tileparams.setInitImage(initimagetile)
+            if(initimagetile is not None):
+                tileparams.setInitImage(initimagetile)
             print("ImageDiffusionTiledNode: Tile init image:")
             imgcat(initimagetile)
             if masktile is not None:
@@ -112,7 +123,7 @@ class ImageDiffusionTiledNode(FunctionalNode):
             imgcat(image)
             return image
         
-        return tiledImageProcessor(processor=imageToImageFunc, initimage=initimageparams.image, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
+        return tiledImageProcessor(processor=imageToImageFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
 
 
 
