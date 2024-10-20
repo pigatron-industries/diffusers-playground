@@ -185,6 +185,7 @@ class RestApi:
             outputimages = []
             for i in range(0, params.batch):
                 RestApi.updateProgress(f"Running", params.batch, i)
+                usedseed = 0
                 if (params.tilemethod=="auto"):
                     # TODO make this use a full workflow, will need to convert params into conditioning param nodes
                     # TODO support use of differential img2img by passing a mask tile
