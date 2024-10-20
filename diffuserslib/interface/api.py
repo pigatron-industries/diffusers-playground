@@ -190,7 +190,7 @@ class RestApi:
                     # TODO make this use a full workflow, will need to convert params into conditioning param nodes
                     # TODO support use of differential img2img by passing a mask tile
                     tilesize_calc = TileSizeCalculatorNode(image_size = (params.width, params.height), overlap = params.tileoverlap)()
-                    outimage = ImageDiffusionTiledNode.tiledGeneration(params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], overlap=params.tileoverlap)
+                    outimage, usedseed = ImageDiffusionTiledNode.tiledGeneration(params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], overlap=params.tileoverlap)
                 elif (params.tilemethod=="singlepass"):
                     outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], 
                                                                overlap=params.tileoverlap, alignmentx=params.tilealignmentx, alignmenty=params.tilealignmenty)
