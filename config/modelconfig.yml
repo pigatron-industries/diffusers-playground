@@ -8,7 +8,7 @@ generate:
         revision: refs/pr/1
       - id: black-forest-labs/FLUX.1-dev
         revision: refs/pr/3
-      - id: sayakpaul/FLUX.1-merged
+      - id: SG161222/RealFlux_1.0b_Dev/2 - Transformer Version/RealFlux_1.0b_Dev_Transformer.safetensors
   - base: kwai_kolors
     pipelines:
       generate: KwaiKolorsGeneratePipeline
@@ -24,6 +24,8 @@ generate:
       generate: StableDiffusion3GeneratePipeline
     models:
       - id: stabilityai/stable-diffusion-3-medium-diffusers
+      - id: stabilityai/stable-diffusion-3.5-large
+      - id: stabilityai/stable-diffusion-3.5-large-turbo
   - base: pixart_sigma
     pipelines:
       generate: PixartSigmaGeneratePipeline
