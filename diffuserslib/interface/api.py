@@ -192,7 +192,7 @@ class RestApi:
                     tilesize_calc = TileSizeCalculatorNode(image_size = (params.width, params.height), overlap = params.tileoverlap)()
                     outimage, usedseed = ImageDiffusionTiledNode.tiledGeneration(params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], overlap=params.tileoverlap)
                 elif (params.tilemethod=="singlepass"):
-                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=tilesize_calc[0], tileheight=tilesize_calc[1], 
+                    outimage, usedseed = tiledProcessorCentred(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
                                                                overlap=params.tileoverlap, alignmentx=params.tilealignmentx, alignmenty=params.tilealignmenty)
                 elif (params.tilemethod=="multipass"):
                     outimage, usedseed = tiledImageToImageMultipass(tileprocessor=tiledGeneration, pipelines=DiffusersPipelines.pipelines, params=params, tilewidth=params.tilewidth, tileheight=params.tileheight, 
