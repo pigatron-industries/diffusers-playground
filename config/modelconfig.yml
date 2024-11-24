@@ -154,6 +154,11 @@ generate:
         vae: stabilityai/sd-vae-ft-mse
 
 inpaint:
+  - base: flux
+    pipelines:
+      generate: FluxGeneratePipeline
+    models:
+      - id: black-forest-labs/FLUX.1-Fill-dev
   - base: kandinsky_2_1
     pipelines:
       inpaint: KandinskyGeneratePipeline
