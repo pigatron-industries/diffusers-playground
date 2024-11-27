@@ -116,6 +116,18 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
             diffusers_params['height'] = initimageparams.image.height
 
 
+    def addInferenceParamsInpaint(self, params:GenerationParameters, diffusers_params):
+        initimageparams = params.getInitImage()
+        maskimageparams = params.getMaskImage()
+        if(initimageparams is None or maskimageparams is None or initimageparams.image is None or maskimageparams.image is None):
+            raise ValueError("Must provide both initimage and maskimage")
+        diffusers_params['image'] = initimageparams.image.convert("RGB")
+        diffusers_params['mask_image'] = maskimageparams.image.convert("RGB")
+        diffusers_params['num_inference_steps'] = params.steps
+        diffusers_params['width'] = initimageparams.image.width
+        diffusers_params['height'] = initimageparams.image.height
+
+
     def addInferenceParamsDifferential(self, params:GenerationParameters, diffusers_params):
         initimageparams = params.getInitImage()
         maskimageparams = params.getImage(ControlImageType.IMAGETYPE_DIFFMASKIMAGE)
