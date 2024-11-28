@@ -126,6 +126,7 @@ class FluxGeneratePipelineWrapper(FluxPipelineWrapper):
         diffusers_params['num_inference_steps'] = params.steps
         diffusers_params['width'] = initimageparams.image.width
         diffusers_params['height'] = initimageparams.image.height
+        del diffusers_params['strength']
 
 
     def addInferenceParamsDifferential(self, params:GenerationParameters, diffusers_params):
