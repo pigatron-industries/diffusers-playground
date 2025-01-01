@@ -7,13 +7,13 @@ from diffuserslib.functional.nodes.user import *
 from diffuserslib.functional.nodes.image.transform import *
 
 
-class VideoDiffusionStableVideoDiffussionWorkflow(WorkflowBuilder):
+class VideoDiffusionWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Diffusion - Stable Video Diffusion", Video, workflow=True, subworkflow=True)
+        super().__init__("Video Diffusion - Generate", Video, workflow=True, subworkflow=True)
 
     def build(self):
-        model_input = DiffusionModelUserInputNode(basemodels=["svd_1_0"], name="model")
+        model_input = DiffusionModelUserInputNode(basemodels=["svd_1_0", "cogvideox_t2v"], name="model")
         size_input = SizeUserInputNode(value = (512, 512), name="size")
         seed_input = SeedUserInputNode(value = None, name="seed")
         frames_input = IntUserInputNode(value = 16, name = "frames")

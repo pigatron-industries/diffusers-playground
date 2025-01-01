@@ -7,10 +7,10 @@ from diffuserslib.functional.nodes.video.diffusers import *
 from diffuserslib.functional.nodes.user import *
 
 
-class VideoDiffusionConditioningWorkflow(WorkflowBuilder):
+class VideoDiffusionImageDiffusionWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Diffusion - Animated Conditioning", Video, workflow=True, subworkflow=False, realtime=False)
+        super().__init__("Video Diffusion - Animated Image Diffusion", Video, workflow=True, subworkflow=False, realtime=False)
 
 
     def build(self):
