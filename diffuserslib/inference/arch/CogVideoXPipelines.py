@@ -10,7 +10,8 @@ class CogVideoXPipelineWrapper(DiffusersPipelineWrapper):
 
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         print(f"creating pipeline {cls.__name__}")
-        super().__init__(cls=cls, params=params, device=device, **kwargs)
+        inferencedevice = 'cpu' if device == 'mps' else device
+        super().__init__(cls=cls, params=params, device=device, inferencedevice=inferencedevice, **kwargs)
 
 
     def createPipelineParams(self, params:GenerationParameters):
