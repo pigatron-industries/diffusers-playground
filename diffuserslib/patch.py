@@ -1,6 +1,6 @@
 import diffusers.models.embeddings
 
-
+# This function is monkey patched to use float32 so that it works on mps
 def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, output_type="np"):
     """
     This function generates 1D positional embeddings from a grid.
