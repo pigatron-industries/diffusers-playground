@@ -55,6 +55,7 @@ class VideoDiffusionNode(FunctionalNode):
             seed=seed,
             frames=frames,
             fps=fps,
+            prompt=prompt if prompt is not None else "",
             controlimages=conditioning_inputs if conditioning_inputs is not None else []
         )
 
