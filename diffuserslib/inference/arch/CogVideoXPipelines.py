@@ -22,11 +22,11 @@ class CogVideoXPipelineWrapper(DiffusersPipelineWrapper):
         return pipeline_params
                 
 
-    def diffusers_inference(self, image, seed, scheduler=None, **kwargs):
+    def diffusers_inference(self, seed, scheduler=None, **kwargs):
         generator, seed = self.createGenerator(seed)
         # if(scheduler is not None):
         #     self.loadScheduler(scheduler)
-        output = self.pipeline(image, generator=generator, **kwargs)
+        output = self.pipeline(generator=generator, **kwargs)
         return output, seed
 
 
