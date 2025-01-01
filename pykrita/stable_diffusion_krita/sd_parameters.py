@@ -58,7 +58,7 @@ class GenerationParameters:
     controlimages:List[ControlImageParameters] = field(default_factory=list)
 
     # Tiling parameters
-    tilemethod:str = "singlepass"
+    tilemethod:str = "auto"
     tilealignmentx:str = "tile_centre"
     tilealignmenty:str = "tile_centre"
     tilewidth:int = 512

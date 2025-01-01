@@ -266,7 +266,7 @@ class SDDialog(QDialog):
             tilemethod_label = QLabel("Tile method")
             formLayout.addWidget(tilemethod_label)
             self.tile_method = QComboBox()
-            self.tile_method.addItems(['singlepass', 'multipass', 'inpaint'])
+            self.tile_method.addItems(['auto', 'singlepass', 'multipass', 'inpaint'])
             # tilemethod = self.config.params.tilemethod
             # self.tile_method.setCurrentText(tilemethod)
             self.tile_method.currentIndexChanged.connect(self.tileMethodChanged)
