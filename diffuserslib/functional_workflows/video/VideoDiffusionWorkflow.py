@@ -19,15 +19,17 @@ class VideoDiffusionWorkflow(WorkflowBuilder):
         frames_input = IntUserInputNode(value = 16, name = "frames")
         fps_input = IntUserInputNode(value = 7, name = "fps")
 
+        prompt_input = TextAreaInputNode(name = "prompt")
         image_input = ImageUploadInputNode(name = "image")
 
         resize_image = ResizeImageNode(image = image_input, size = size_input, type = ResizeImageNode.ResizeType.STRETCH)
         conditioning_inputs = [ConditioningInputNode(image = resize_image, model = "initimage")]
 
-        video_diffusion = VideoDiffusionStableVideoDiffusionNode(models = model_input, 
+        video_diffusion = VideoDiffusionNode(models = model_input, 
                                                             size = size_input, 
                                                             seed = seed_input,
                                                             frames = frames_input,
+                                                            prompt = prompt_input,
                                                             conditioning_inputs = conditioning_inputs)
         frames_to_video = FramesToVideoNode(frames = video_diffusion, fps = fps_input)
         return frames_to_video

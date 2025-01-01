@@ -1,15 +1,9 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from ..GenerationParameters import GenerationParameters
+from ..GenerationParameters import GenerationParameters, VideoGenerationParameters
 from dataclasses import dataclass
 import torch
 from diffuserslib.inference.GenerationParameters import ControlImageType
 from PIL import Image
-
-
-
-@dataclass
-class CogVideoXGenerationParameters(GenerationParameters):
-    fps:int = 8
 
 
 class CogVideoXPipelineWrapper(DiffusersPipelineWrapper):
@@ -53,7 +47,7 @@ class CogVideoXGeneratePipelineWrapper(CogVideoXPipelineWrapper):
 
 
 
-    def inference(self, params:CogVideoXGenerationParameters):
+    def inference(self, params:VideoGenerationParameters):
         diffusers_params = {}
         diffusers_params['prompt'] = params.prompt
         diffusers_params['negative_prompt'] = params.negprompt

@@ -1,13 +1,9 @@
 from .StableDiffusionPipelines import StableDiffusionPipelineWrapper
-from ..GenerationParameters import GenerationParameters
+from ..GenerationParameters import GenerationParameters, VideoGenerationParameters
 from dataclasses import dataclass
 from diffusers import StableVideoDiffusionPipeline
 import torch
 
-
-@dataclass
-class StableVideoDiffusionGenerationParameters(GenerationParameters):
-    fps:int = 7
 
 
 class StableVideoDiffusionPipelineWrapper(StableDiffusionPipelineWrapper):
@@ -39,7 +35,7 @@ class StableVideoDiffusionGeneratePipelineWrapper(StableVideoDiffusionPipelineWr
     def __init__(self, params:GenerationParameters, device):
         super().__init__(params=params, device=device, cls=StableVideoDiffusionPipeline)
 
-    def inference(self, params:StableVideoDiffusionGenerationParameters):
+    def inference(self, params:VideoGenerationParameters):
         diffusers_params = {}
         initimageparams = params.getInitImage()
         if(initimageparams is None or initimageparams.image is None):

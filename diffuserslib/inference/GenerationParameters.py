@@ -174,6 +174,11 @@ def generationparameters_representer(dumper: yaml.Dumper, data: GenerationParame
 yaml.add_representer(GenerationParameters, generationparameters_representer)
 
 
+@dataclass
+class VideoGenerationParameters(GenerationParameters):
+    fps:int = 7
+
+
 @dataclass(config=ModelConfig)
 class TiledGenerationParameters(GenerationParameters):
     tilemethod:str = "singlepass"
