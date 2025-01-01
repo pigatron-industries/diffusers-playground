@@ -1,5 +1,3 @@
-torch>=2.1.0
-
 # diffusers
 huggingface_hub
 diffusers
@@ -15,7 +13,9 @@ peft
 OmegaConf
 pytorch-lightning
 safetensors
-torch==2.3.0
+torch==2.5.1
+torchaudio==2.5.1
+torchvision==0.20.1
 
 # utils
 einops

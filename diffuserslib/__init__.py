@@ -13,3 +13,4 @@ from .interface import *
 from .training import *
 from .functional import *
 from .functional_workflows import *
+from .patch import *
