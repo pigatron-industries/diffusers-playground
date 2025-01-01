@@ -13,7 +13,7 @@ class VideoDiffusionWorkflow(WorkflowBuilder):
         super().__init__("Video Diffusion - Generate", Video, workflow=True, subworkflow=True)
 
     def build(self):
-        model_input = DiffusionModelUserInputNode(basemodels=["svd_1_0", "cogvideox_t2v"], name="model")
+        model_input = DiffusionModelUserInputNode(basemodels=["svd_1_0", "cogvideox_t2v"], modeltype="video", name="model")
         size_input = SizeUserInputNode(value = (512, 512), name="size")
         seed_input = SeedUserInputNode(value = None, name="seed")
         frames_input = IntUserInputNode(value = 16, name = "frames")
