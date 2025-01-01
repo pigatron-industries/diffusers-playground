@@ -40,7 +40,7 @@ class CogVideoXGeneratePipelineWrapper(CogVideoXPipelineWrapper):
     def getPipelineClass(self, params:GenerationParameters):
         from diffusers import CogVideoXPipeline, CogVideoXImageToVideoPipeline, CogVideoXVideoToVideoPipeline
         initimageparams = params.getImage(ControlImageType.IMAGETYPE_INITIMAGE)
-        if(initimageparams is None):
+        if(initimageparams is None or initimageparams.image is None):
             return CogVideoXPipeline
         elif(isinstance(initimageparams.image, Image.Image)):
             return CogVideoXImageToVideoPipeline
