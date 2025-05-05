@@ -2,8 +2,6 @@ from diffuserslib.functional.types import *
 from diffuserslib.functional.FunctionalNode import *
 from diffuserslib.functional.types.FunctionalTyping import *
 
-from tortoise.api import TextToSpeech
-
 import librosa
 import torch
 
@@ -21,6 +19,7 @@ class AudioGenerationTortoiseNode(FunctionalNode):
         
         
     def process(self, prompt:str, samples:List[Audio]):
+        from tortoise.api import TextToSpeech
         if (self.tts is None):
             self.tts = TextToSpeech(use_deepspeed=True, kv_cache=True, half=True)
 
