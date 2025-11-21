@@ -11,7 +11,6 @@ class VideoUploadInputNode(FileUploadInputNode):
     """A node that allows the user to upload a video. The output is a video."""
 
     def __init__(self, mandatory:bool = True, multiple:bool=False, display:str = "Select video file", name:str="video_input"):
-        self.content:List[Video] = []
         self.content_temp = []
         self.preview:Image.Image|None = None
         self.framecount = 0
@@ -82,4 +81,5 @@ class VideoUploadInputNode(FileUploadInputNode):
         new_node.content = self.content
         new_node.preview = self.preview
         new_node.framecount = self.framecount
+        new_node.params = self.params.copy()
         return new_node
