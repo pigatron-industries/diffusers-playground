@@ -23,7 +23,30 @@ class VideoUploadInputNode(FileUploadInputNode):
         temp_file.seek(0)
         # cap = cv2.VideoCapture(temp_file.name)
         # fps = cap.get(cv2.CAP_PROP_FPS)
-        self.content = [Video(file = temp_file)]
+        video = Video(file = temp_file)
+        self.addContent(video)
+        self.gui.refresh()
+
+
+    def handleMultiUpload(self, e: events.UploadEventArguments):
+        self.content = self.content_temp
+        self.content_temp = []
+        self.gui.refresh()
+
+
+    def clearContent(self):
+        self.content = []
+        self.content_temp = []
+        self.preview = None
+        self.gui.refresh()
+
+
+    def addContent(self, video:Video):
+        if(self.multiple):
+            self.content_temp.append(video)
+        else:
+            self.content_temp = [video]
+            self.content = [video]
         self.preview = self.content[0].getFrame(0)
         self.gui.refresh()
 
