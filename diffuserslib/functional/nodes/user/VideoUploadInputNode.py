@@ -48,7 +48,7 @@ class VideoUploadInputNode(FileUploadInputNode):
         else:
             self.content_temp = [video]
             self.content = [video]
-        self.preview = self.content[0].getFrame(0)
+        self.preview = self.content_temp[0].getFrame(0)
         self.gui.refresh()
 
 
