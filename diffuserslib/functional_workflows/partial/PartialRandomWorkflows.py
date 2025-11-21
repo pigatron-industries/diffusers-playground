@@ -56,3 +56,14 @@ class BatchImageUploadWorkflow(WorkflowBuilder):
         images = ImageUploadInputNode(multiple = True)
         image = ListCycleNode(items = images)
         return image
+    
+
+class BatchVideoUploadWorkflow(WorkflowBuilder):
+    
+    def __init__(self):
+        super().__init__("Video Upload - Batch", Image.Image, workflow=False, subworkflow=True)
+
+    def build(self):
+        images = VideoUploadInputNode(multiple = True)
+        image = ListCycleNode(items = images)
+        return image
