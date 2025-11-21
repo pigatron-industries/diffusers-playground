@@ -12,6 +12,7 @@ class VideoUploadInputNode(FileUploadInputNode):
 
     def __init__(self, mandatory:bool = True, multiple:bool=False, display:str = "Select video file", name:str="video_input"):
         self.content:List[Video] = []
+        self.content_temp = []
         self.preview:Image.Image|None = None
         self.framecount = 0
         super().__init__(mandatory, multiple, display, name)
