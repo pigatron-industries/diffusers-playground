@@ -24,6 +24,7 @@ class BatchRunDataControls:
         self.label_saved = None
         self.waiting_output = False
         self.expanded = False
+        self.progress = 0
         self.workflow_output_rundata()
 
 
