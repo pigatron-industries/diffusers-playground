@@ -79,7 +79,11 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
-        self.pipeline.vae.enable_tiling(tiling)
+        if tiling:
+            self.pipeline.vae.enable_tiling()
+        else:
+            if hasattr(self.pipeline.vae, 'disable_tiling'):
+                self.pipeline.vae.disable_tiling()
         if(self.initparams.modelConfig[0].autocast):
             with torch.autocast(self.inferencedevice):
                 output = self.pipeline(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_prompt_embeds, generator=generator, **kwargs)

@@ -22,7 +22,11 @@ class StableDiffusion3PipelineWrapper(StableDiffusionPipelineWrapper):
         generator, seed = self.createGenerator(seed)
         # if(scheduler is not None):
         #     self.loadScheduler(scheduler)
-        self.pipeline.vae.enable_tiling(tiling)
+        if tiling:
+            self.pipeline.vae.enable_tiling()
+        else:
+            if hasattr(self.pipeline.vae, 'disable_tiling'):
+                self.pipeline.vae.disable_tiling()
 
         output = self.pipeline(prompt = prompt,
                               negative_prompt = negative_prompt,

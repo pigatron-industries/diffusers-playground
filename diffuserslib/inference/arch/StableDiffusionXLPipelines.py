@@ -38,7 +38,12 @@ class StableDiffusionXLPipelineWrapper(StableDiffusionPipelineWrapper):
         generator, seed = self.createGenerator(seed)
         if(scheduler is not None):
             self.loadScheduler(scheduler)
-        self.pipeline.vae.enable_tiling(tiling)
+        if tiling:
+            self.pipeline.vae.enable_tiling()
+        else:
+            # ensure tiling is disabled when not requested
+            if hasattr(self.pipeline.vae, 'disable_tiling'):
+                self.pipeline.vae.disable_tiling()
 
         if(self.initparams.scheduler == "LCMScheduler"):
             kwargs['guidance_scale'] = 0
