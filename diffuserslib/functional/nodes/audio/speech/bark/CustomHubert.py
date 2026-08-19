@@ -13,11 +13,7 @@ import torch
 from torch import nn
 from einops import pack, unpack
 
-import fairseq
-
 from torchaudio.functional import resample
-
-from audiolm_pytorch.utils import curtail_to_multiple
 
 import logging
 logging.root.setLevel(logging.ERROR)
@@ -45,6 +41,9 @@ class CustomHubert(nn.Module):
         output_layer=9,
         device=None
     ):
+        import fairseq
+        from audiolm_pytorch.utils import curtail_to_multiple
+
         super().__init__()
         self.target_sample_hz = target_sample_hz
         self.seq_len_multiple_of = seq_len_multiple_of

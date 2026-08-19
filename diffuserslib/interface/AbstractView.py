@@ -24,7 +24,7 @@ class AbstractView:
                 }
             </style>
         ''')
-        context.get_client().content.classes('h-[100vh] p-0')
+        context.client.content.classes('h-[100vh] p-0')
 
         with ui.column().classes("w-full h-full no-wrap gap-0"):
             with ui.row().classes("w-full p-2 place-content-between").style("background-color:#2b323b; border-bottom:1px solid #585b5f"):

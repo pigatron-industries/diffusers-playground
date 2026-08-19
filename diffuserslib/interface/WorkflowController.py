@@ -15,6 +15,7 @@ import os
 class Model:
     output_type:str = "Image"
     batch_size:int = 1
+    run_type:int = 1
     workflow_name:str|None = None
     workflow:FunctionalNode|None = None
     workflows_sub:Dict[str, FunctionalNode] = field(default_factory=dict)

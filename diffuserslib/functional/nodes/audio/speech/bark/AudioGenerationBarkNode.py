@@ -14,14 +14,14 @@ import numpy as np
 from .CustomHubert import CustomHubert
 from .CustomTokenizer import CustomTokenizer
 
-import bark
-
 class AudioGenerationBarkNode(FunctionalNode):
 
     def __init__(self, 
                  sample:AudiosFuncType,
                  prompt:StringFuncType = "",
                  name:str="audio_bark"):
+        import bark
+
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("sample", sample, List[Audio])

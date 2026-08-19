@@ -5,8 +5,6 @@ from diffuserslib.GlobalConfig import GlobalConfig
 from diffusers import StableAudioPipeline
 import torch
 
-from stable_audio_tools import get_pretrained_model
-from stable_audio_tools.inference.generation import generate_diffusion_cond
 from einops import rearrange
 
 MAX_SEED = 4294967295
@@ -23,6 +21,9 @@ class StableAudioNode(FunctionalNode):
                  initaudio:AudioFuncType|None = None,
                  noise_level:FloatFuncType = 1.0,
                  name:str="stableaudio"):
+        from stable_audio_tools import get_pretrained_model
+        from stable_audio_tools.inference.generation import generate_diffusion_cond
+
         super().__init__(name)
         self.addParam("prompt", prompt, str)
         self.addParam("negative_prompt", negative_prompt, str)

@@ -5,7 +5,7 @@ import gc
 from typing import Dict, Tuple, List, Self
 from PIL import Image
 from diffusers.models import AutoencoderKL
-from transformers import CLIPFeatureExtractor, CLIPModel
+from transformers import CLIPModel
 from .TextEmbedding import TextEmbeddings
 from .LORA import LORA
 from .arch import *
@@ -173,10 +173,6 @@ class DiffusersPipelines:
         return params.prompt
 
     #===============  ==============
-
-    def loadCLIP(self, model=DEFAULT_CLIP_MODEL):
-        self.feature_extractor = CLIPFeatureExtractor.from_pretrained(model)
-        self.clip_model = CLIPModel.from_pretrained(model, torch_dtype=torch.float16)
 
 
     def getModel(self, modelid:str) -> DiffusersModel:
