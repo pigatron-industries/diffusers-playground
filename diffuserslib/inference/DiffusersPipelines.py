@@ -3,6 +3,8 @@ import os
 import sys
 import gc
 from typing import Dict, Tuple, List, Self
+from .MetaData import build_civitai_metadata, add_ai_metadata_to_pil_image
+from typing import Dict, Tuple, List, Self
 from PIL import Image
 from diffusers.models import AutoencoderKL
 from transformers import CLIPModel
@@ -220,6 +222,13 @@ class DiffusersPipelines:
         pipelineWrapper = self.createPipeline(params)
         self.processPrompt(params, pipelineWrapper)
         image, seed = pipelineWrapper.inference(params)
+        
+        # Attach AI generation metadata to the image (Civitai-style) when possible
+        metadata_string = build_civitai_metadata(params, seed)
+        # Only attach EXIF for PIL images
+        if isinstance(image, Image.Image):
+            image = add_ai_metadata_to_pil_image(image, metadata_string)
+
         gc.collect()
         torch.mps.empty_cache()
         torch.cuda.empty_cache()

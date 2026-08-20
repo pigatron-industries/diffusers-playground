@@ -193,8 +193,21 @@ class WorkflowRunner:
         rundata = self.rundata[timestamp]
         if(rundata.output is not None):
             if(isinstance(rundata.output, Image.Image)):
-                rundata.output.save(f"{save_file}.png")
-                rundata.save_file = f"{save_file}.png"
+                # Preserve EXIF metadata if present. Pillow requires passing exif bytes when saving
+                try:
+                    exif_bytes = rundata.output.info.get('exif', None)
+                except Exception:
+                    exif_bytes = None
+
+                if exif_bytes:
+                    # Ensure RGB for JPEG
+                    rgb = rundata.output.convert('RGB')
+                    rundata.output = rgb
+                    rundata.output.save(f"{save_file}.png", exif=exif_bytes, quality=95)
+                    rundata.save_file = f"{save_file}.png"
+                else:
+                    rundata.output.save(f"{save_file}.png")
+                    rundata.save_file = f"{save_file}.png"
             elif(isinstance(rundata.output, Video)):
                 filename = rundata.output.getFilename()
                 assert filename is not None

@@ -64,7 +64,7 @@ class StableDiffusionPipelineWrapper(DiffusersPipelineWrapper):
     def loadScheduler(self, schedulerClass):
         if (isinstance(schedulerClass, str)):
             schedulerClass = str_to_class(schedulerClass)
-        self.pipeline.scheduler = schedulerClass.from_config(self.pipeline.scheduler.config)
+        self.pipeline.scheduler = schedulerClass.from_config(self.pipeline.scheduler.config, use_karras_sigmas = True)
         return schedulerClass
 
     
