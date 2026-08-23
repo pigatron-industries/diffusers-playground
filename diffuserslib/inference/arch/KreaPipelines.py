@@ -1,11 +1,9 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
-from ..GenerationParameters import GenerationParameters, ControlImageType
-from ...StringUtils import mergeDicts
-from ...models.DiffusersModelPresets import DiffusersModel
-from diffusers.pipelines.pag.pipeline_pag_pixart_sigma import PixArtSigmaPAGPipeline
+from ..GenerationParameters import GenerationParameters
+from diffusers import Krea2Pipeline
 
 
-class PixartSigmaPipelineWrapper(DiffusersPipelineWrapper):
+class KreaPipelineWrapper(DiffusersPipelineWrapper):
     def __init__(self, cls, params:GenerationParameters, device, **kwargs):
         self.safety_checker = params.safetychecker
         self.device = device
@@ -16,25 +14,23 @@ class PixartSigmaPipelineWrapper(DiffusersPipelineWrapper):
         pipeline_params = {}
         self.addPipelineParamsCommon(params, pipeline_params)
         return pipeline_params
-    
-    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, **kwargs):
+
+    def diffusers_inference(self, prompt, negative_prompt, seed, guidance_scale=4.0, scheduler=None, clip_skip=None, **kwargs):
         generator, seed = self.createGenerator(seed)
         output = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
         return output, seed
 
 
-class PixartSigmaGeneratePipelineWrapper(PixartSigmaPipelineWrapper):
+class KreaGeneratePipelineWrapper(KreaPipelineWrapper):
 
     PIPELINE_MAP = {
-        #img2im,    inpaint
-        (False,     False):    PixArtSigmaPAGPipeline
+        #img2img,  inpaint
+        (False,     False):    Krea2Pipeline
     }
-
 
     def __init__(self, params:GenerationParameters, device):
         cls = self.getPipelineClass(params)
         super().__init__(params=params, device=device, cls=cls)
-
 
     def getPipelineClass(self, params:GenerationParameters):
         self.features = self.getPipelineFeatures(params)

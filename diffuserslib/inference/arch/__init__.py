@@ -10,3 +10,4 @@ from .DeepFloydPipelines import *
 from .KandinskyPipelines import *
 from .AuraFlowPipelines import *
 from .FluxPipelines import *
+from .KreaPipelines import *

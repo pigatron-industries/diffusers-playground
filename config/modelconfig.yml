@@ -19,6 +19,11 @@ generate:
       generate: AuraFlowGeneratePipeline
     models:
       - id: fal/AuraFlow
+  - base: krea
+    pipelines:
+      generate: KreaGeneratePipeline
+    models:
+      - id: krea/Krea-2-Raw
   - base: sd_3_0
     pipelines:
       generate: StableDiffusion3GeneratePipeline
