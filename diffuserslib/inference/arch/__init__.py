@@ -11,3 +11,4 @@ from .KandinskyPipelines import *
 from .AuraFlowPipelines import *
 from .FluxPipelines import *
 from .KreaPipelines import *
+from .ZImagePipelines import *

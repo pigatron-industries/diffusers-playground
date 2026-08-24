@@ -24,6 +24,12 @@ generate:
       generate: KreaGeneratePipeline
     models:
       - id: krea/Krea-2-Raw
+  - base: zimage
+    pipelines:
+      generate: ZImageGeneratePipeline
+    models:
+      - id: Tongyi-MAI/Z-Image-Turbo
+      - id: Tongyi-MAI/Z-Image
   - base: sd_3_0
     pipelines:
       generate: StableDiffusion3GeneratePipeline
