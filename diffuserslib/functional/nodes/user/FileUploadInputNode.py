@@ -50,9 +50,9 @@ class FileUploadInputNode(UserInputNode):
     
     def handleUpload(self, e: events.UploadEventArguments):
         raise NotImplementedError("File upload not implemented")
-    
 
-    def handleMultiUpload(self, e: events.UploadEventArguments):
+
+    def handleMultiUpload(self, e: events.MultiUploadEventArguments):
         pass
 
     

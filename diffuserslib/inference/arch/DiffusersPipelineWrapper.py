@@ -63,8 +63,8 @@ class DiffusersPipelineWrapper:
             else:
                 self.mergeModel(pipeline, params.models[i].weight)
             
-        if("torch_dtype" in pipeline_params and pipeline_params["torch_dtype"] not in [torch.float16, torch.bfloat16]):
-            self.pipeline.enable_attention_slicing()
+        # if("torch_dtype" in pipeline_params and pipeline_params["torch_dtype"] not in [torch.float16, torch.bfloat16]):
+        #     self.pipeline.enable_attention_slicing()
 
 
     def loadPipeline(self, modelConfig, cls, pipelineParams):

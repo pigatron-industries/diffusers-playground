@@ -17,10 +17,10 @@ class AudioUploadInputNode(FileUploadInputNode):
         super().__init__(mandatory, multiple, display, name)
 
 
-    def handleUpload(self, e: events.UploadEventArguments):
-        if(e.name.lower().endswith(("wav"))):
+    async def handleUpload(self, e: events.UploadEventArguments):
+        if(e.file.name.lower().endswith(("wav"))):
             temp_file = tempfile.NamedTemporaryFile(suffix = ".wav", delete=True)
-            temp_file.write(e.content.read())
+            temp_file.write(await e.file.read())
             temp_file.seek(0)
             audio_array, sample_rate = librosa.load(temp_file, sr=self.sample_rate, mono=self.mono)
             self.addContent(Audio(audio_array = audio_array, sample_rate = sample_rate, file = temp_file))
@@ -29,7 +29,7 @@ class AudioUploadInputNode(FileUploadInputNode):
         self.gui.refresh()
 
 
-    def handleMultiUpload(self, e: events.UploadEventArguments):
+    def handleMultiUpload(self, e: events.MultiUploadEventArguments):
         self.content = self.content_temp
         self.content_temp = []
         self.gui.refresh()

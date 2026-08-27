@@ -17,9 +17,9 @@ class VideoUploadInputNode(FileUploadInputNode):
         super().__init__(mandatory, multiple, display, name)
         
 
-    def handleUpload(self, e: events.UploadEventArguments):
+    async def handleUpload(self, e: events.UploadEventArguments):
         temp_file = tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True)
-        temp_file.write(e.content.read())
+        temp_file.write(await e.file.read())
         temp_file.seek(0)
         # cap = cv2.VideoCapture(temp_file.name)
         # fps = cap.get(cv2.CAP_PROP_FPS)
@@ -28,7 +28,7 @@ class VideoUploadInputNode(FileUploadInputNode):
         self.gui.refresh()
 
 
-    def handleMultiUpload(self, e: events.UploadEventArguments):
+    def handleMultiUpload(self, e: events.MultiUploadEventArguments):
         self.content = self.content_temp
         self.content_temp = []
         self.gui.refresh()

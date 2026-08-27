@@ -4,6 +4,7 @@ from nicegui import ui, events
 from PIL import Image
 from diffuserslib.interface.Clipboard import Clipboard
 import tempfile
+from io import BytesIO
 
 
 
@@ -16,12 +17,12 @@ class ImageUploadInputNode(FileUploadInputNode):
         super().__init__(mandatory, multiple, display, name)
 
 
-    def handleUpload(self, e: events.UploadEventArguments):
-        if(e.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))):
-            self.addContent(Image.open(e.content))
-        elif (e.name.lower().endswith(('.mp4', '.avi', '.mov'))):
+    async def handleUpload(self, e: events.UploadEventArguments):
+        if(e.file.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))):
+            self.addContent(Image.open(BytesIO(await e.file.read())))
+        elif (e.file.name.lower().endswith(('.mp4', '.avi', '.mov'))):
             with tempfile.NamedTemporaryFile(suffix = ".mp4", delete=True) as temp_file:
-                temp_file.write(e.content.read())
+                temp_file.write(await e.file.read())
                 temp_file.seek(0)
                 frames, _ = VideoUploadInputNode.loadVideoFrames(temp_file.name)
                 self.addContent(frames[-1])
@@ -30,7 +31,7 @@ class ImageUploadInputNode(FileUploadInputNode):
         self.gui.refresh()
 
 
-    def handleMultiUpload(self, e: events.UploadEventArguments):
+    def handleMultiUpload(self, e: events.MultiUploadEventArguments):
         self.content = self.content_temp
         self.content_temp = []
         self.gui.refresh()
