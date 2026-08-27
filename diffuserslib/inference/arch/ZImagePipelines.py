@@ -1,6 +1,6 @@
 from .DiffusersPipelineWrapper import DiffusersPipelineWrapper
 from ..GenerationParameters import GenerationParameters
-from diffusers import ZImagePipeline
+from diffusers import ZImagePipeline, ZImageImg2ImgPipeline, ZImageInpaintPipeline, ZImageTransformer2DModel
 import torch
 
 
@@ -21,12 +21,25 @@ class ZImagePipelineWrapper(DiffusersPipelineWrapper):
         output = self.pipeline(prompt=prompt, negative_prompt=negative_prompt, generator=generator, guidance_scale=guidance_scale, return_dict=True, **kwargs)
         return output, seed
 
+    def loadPipeline(self, modelConfig, cls, pipelineParams):
+        print("Load ZImage checkpoint: ", modelConfig.modelpath)
+        if (modelConfig.modelpath.endswith('.safetensors') or modelConfig.modelpath.endswith('.ckpt')):
+            transformer = ZImageTransformer2DModel.from_single_file(modelConfig.modelpath, torch_dtype=torch.bfloat16)
+            # transformer.set_attention_backend("native")
+            pipe = ZImagePipeline.from_pretrained("Tongyi-MAI/Z-Image-Turbo", transformer=transformer, torch_dtype=torch.bfloat16).to(self.device)
+            pipe.vae.to(torch.float32) 
+            return pipe
+        else:
+            return cls.from_pretrained(modelConfig.modelpath, **pipelineParams).to(self.device)
+
 
 class ZImageGeneratePipelineWrapper(ZImagePipelineWrapper):
 
     PIPELINE_MAP = {
         #img2img,  inpaint
-        (False,     False):    ZImagePipeline
+        (False,     False):    ZImagePipeline,
+        (True,      False):    ZImageImg2ImgPipeline,
+        (True,      True):     ZImageInpaintPipeline,
     }
 
     def __init__(self, params:GenerationParameters, device):
