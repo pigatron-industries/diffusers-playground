@@ -218,6 +218,7 @@ class DiffusersPipelines:
     #=============== INFERENCE ==============
 
     def generate(self, params:GenerationParameters) -> Tuple[Image.Image|ndarray, int]:
+        print(params)
         params.safetychecker = self.safety_checker
         pipelineWrapper = self.createPipeline(params)
         self.processPrompt(params, pipelineWrapper)
