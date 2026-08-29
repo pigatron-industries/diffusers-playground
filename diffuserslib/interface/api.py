@@ -17,6 +17,8 @@ from PIL import Image
 import sys
 from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ImageDiffusionNode
 from diffuserslib.functional import WorkflowRunner
+from diffuserslib.interface.WorkflowController import WorkflowController
+from diffuserslib.functional_workflows.image.ImageDiffusionWorkflow import ImageDiffusionWorkflow
 
 
 def str_to_class(str):
@@ -126,24 +128,91 @@ class RestApi:
             if WorkflowRunner.workflowrunner is None:
                 raise Exception("WorkflowRunner not initialized")
 
-            # Build an ImageDiffusionNode with parameters from the request
-            node = ImageDiffusionNode(
-                models=params.models,
-                loras=params.loras,
-                size=(params.width, params.height),
-                prompt=params.prompt,
-                negprompt=params.negprompt,
-                steps=params.steps,
-                cfgscale=params.cfgscale,
-                seed=params.seed,
-                scheduler=params.scheduler,
-                sigmas=params.sigmas,
-                clipskip=params.clipskip,
-                conditioning_inputs=params.controlimages
-            )
+            # Build the ImageDiffusion workflow and populate user-input nodes
+            if WorkflowRunner.workflowrunner is None:
+                raise Exception("WorkflowRunner not initialized")
+
+            controller = WorkflowController()
+            # load the workflow builder instance (uses class name)
+            controller.loadWorkflow('ImageDiffusionWorkflow')
+            workflow_node = controller.model.workflow
+
+            # set user input nodes from params
+            try:
+                # models
+                models_node = workflow_node.getNodeByType(type(workflow_node)).getNodeByType.__self__
+            except Exception:
+                pass
+
+            # helper to safely get node by type or name
+            def get_node_by_type(node, t):
+                try:
+                    return node.getNodeByType(t)
+                except Exception:
+                    return None
+
+            def get_node_by_name(node, name):
+                try:
+                    return node.getNodeByName(name)
+                except Exception:
+                    return None
+
+            # Diffusion model input
+            dm_node = get_node_by_type(workflow_node, __import__('diffuserslib.functional.nodes.image.diffusers.user.DiffusionModelUserInputNode', fromlist=['DiffusionModelUserInputNode']).DiffusionModelUserInputNode)
+            if dm_node is not None and len(params.models) > 0:
+                base = params.models[0].base if hasattr(params.models[0], 'base') else None
+                models_list = [(m.name, m.weight) for m in params.models]
+                dm_node.setValue((base, models_list))
+
+            # LORA node
+            try:
+                from diffuserslib.functional.nodes.image.diffusers.user.LORAModelUserInputNode import LORAModelUserInputNode
+                lora_node = get_node_by_type(workflow_node, LORAModelUserInputNode)
+                if lora_node is not None:
+                    lora_node.setValue([(l.name, l.weight) for l in params.loras] if params.loras else [])
+            except Exception:
+                lora_node = None
+
+            # other simple inputs
+            n = get_node_by_name(workflow_node, 'prompt')
+            if n is not None:
+                n.setValue(params.prompt)
+            n = get_node_by_name(workflow_node, 'negprompt')
+            if n is not None:
+                n.setValue(params.negprompt)
+            n = get_node_by_name(workflow_node, 'seed')
+            if n is not None:
+                n.setValue(params.seed)
+            n = get_node_by_name(workflow_node, 'steps')
+            if n is not None:
+                n.setValue(params.steps)
+            n = get_node_by_name(workflow_node, 'cfgscale')
+            if n is not None:
+                n.setValue(params.cfgscale)
+            n = get_node_by_name(workflow_node, 'scheduler')
+            if n is not None:
+                n.setValue(params.scheduler)
+            n = get_node_by_name(workflow_node, 'clipskip')
+            if n is not None:
+                n.setValue(params.clipskip)
+            # sigmas: try to match dict option values to params.sigmas
+            n = get_node_by_name(workflow_node, 'sigmas')
+            if n is not None:
+                # n.getSelectedOption not guaranteed; find matching key
+                for key, val in getattr(n, 'dict', {}).items():
+                    if val == params.sigmas:
+                        n.setValue(key)
+                        break
+                else:
+                    # fallback for None
+                    if params.sigmas is None and 'None' in getattr(n, 'dict', {}):
+                        n.setValue('None')
+
+            # Save workflow params to history (UI does this before running)
+            controller.saveWorkflowParamsToHistory()
 
             # Enqueue as a workflow batch and wait for completion
-            batchid = WorkflowRunner.workflowrunner.run(node, batch_size=int(params.batch))
+            batchid = WorkflowRunner.workflowrunner.run(workflow_node, batch_size=int(params.batch))
 
             # Poll until all runs in the batch have completed
             import time
