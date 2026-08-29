@@ -15,6 +15,8 @@ from .Clipboard import ClipboardContentDTO, Clipboard
 from typing import List, Tuple
 from PIL import Image
 import sys
+from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ImageDiffusionNode
+from diffuserslib.functional import WorkflowRunner
 
 
 def str_to_class(str):
@@ -117,18 +119,63 @@ class RestApi:
     @app.post("/api/generate")
     def generateRun(params:GenerationParameters):
         RestApi.validateParams(params)
-
-        # print(params)
         try:
-            print('=== generate ===')
+            print('=== generate (workflow) ===')
             RestApi.prescaleBefore(params)
 
+            if WorkflowRunner.workflowrunner is None:
+                raise Exception("WorkflowRunner not initialized")
+
+            # Build an ImageDiffusionNode with parameters from the request
+            node = ImageDiffusionNode(
+                models=params.models,
+                loras=params.loras,
+                size=(params.width, params.height),
+                prompt=params.prompt,
+                negprompt=params.negprompt,
+                steps=params.steps,
+                cfgscale=params.cfgscale,
+                seed=params.seed,
+                scheduler=params.scheduler,
+                sigmas=params.sigmas,
+                clipskip=params.clipskip,
+                conditioning_inputs=params.controlimages
+            )
+
+            # Enqueue as a workflow batch and wait for completion
+            batchid = WorkflowRunner.workflowrunner.run(node, batch_size=int(params.batch))
+
+            # Poll until all runs in the batch have completed
+            import time
+            while True:
+                batch = WorkflowRunner.workflowrunner.getBatch(batchid)
+                if batch is None:
+                    # no batch found (should not normally happen) - break
+                    break
+                # check if we've collected all run results
+                if len(batch.rundata) >= batch.batch_size:
+                    all_done = True
+                    for rd in batch.rundata.values():
+                        if rd.error is None and rd.end_time is None:
+                            all_done = False
+                            break
+                    if all_done:
+                        break
+                time.sleep(0.25)
+
+            # Collect outputs
             outputimages = []
-            for i in range(0, params.batch):
-                RestApi.updateProgress(f"Running", params.batch, i)
-                outimage, usedseed = DiffusersPipelines.pipelines.generate(params)
+            batch = WorkflowRunner.workflowrunner.getBatch(batchid)
+            if batch is None:
+                raise Exception("Batch data missing after run")
+
+            for rd in batch.rundata.values():
+                if rd.error is not None:
+                    RestApi.job.status = { "status":"error", "action":"generate", "error":str(rd.error) }
+                    raise rd.error
+                outimage = rd.output
                 outimage = RestApi.prescaleAfter([outimage], params)[0]
-                outputimages.append({ "seed": usedseed, "image": base64EncodeImage(outimage) })
+                outputimages.append({ "seed": None, "image": base64EncodeImage(outimage) })
 
             RestApi.job.status = { "status":"finished", "action":"generate", "images": outputimages }
             return RestApi.job.status
