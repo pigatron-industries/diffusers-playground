@@ -66,11 +66,22 @@ class RestApi:
 
     @staticmethod
     @app.get("/api/loras")
-    def loras(model:str):
+    def loras(model: str | None = None, base: str | None = None):
         if(DiffusersPipelines.pipelines is None):
             raise Exception("Pipelines not initialized")
-        loranames = DiffusersPipelines.pipelines.getLORAList(model)
-        return loranames
+        pipelines = DiffusersPipelines.pipelines
+        if base:
+            try:
+                return pipelines.getLORAsByBase(base)
+            except Exception:
+                return []
+        if model:
+            try:
+                return pipelines.getLORAList(model)
+            except Exception:
+                return []
+
+        raise Exception("Must provide either 'model' or 'base' parameter")
     
     
     @staticmethod
