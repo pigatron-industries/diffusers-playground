@@ -2,6 +2,9 @@ from .arch.StableDiffusionPipelines import DiffusersPipelineWrapper
 from typing import Dict, List, Tuple
 import re
 import torch
+import json
+import os
+from safetensors import safe_open
 
 
 
@@ -9,10 +12,69 @@ class LORA:
     def __init__(self, name, path):
         self.name = name
         self.path = path
+        self.triggers: List[str] = []
+
+    def load_triggers(self, top_n: int = 5):
+        try:
+            self.triggers = guess_trigger_words(self.path, top_n)
+        except Exception:
+            self.triggers = []
 
     @classmethod
     def from_file(cls, name, path):
-        return cls(name, path)
+        lora = cls(name, path)
+        # lora.load_triggers()
+        # print(f"Loaded LORA {name} from {path} with triggers: {lora.triggers}")
+        return lora
+
+
+def read_safetensors_metadata(path: str) -> dict:
+    # Return metadata dict for a safetensors file, or empty dict if unavailable
+    if not path or not os.path.exists(path):
+        return {}
+    if path.endswith('.safetensors'):
+        try:
+            with safe_open(path, framework='pt') as f:
+                # safetensors SafeFile exposes metadata as .metadata
+                meta = getattr(f, 'metadata', None)
+                if meta is None:
+                    return {}
+                # metadata values may be bytes; convert to str
+                out = {}
+                for k, v in meta.items():
+                    if isinstance(v, (bytes, bytearray)):
+                        try:
+                            out[k] = v.decode('utf-8')
+                        except Exception:
+                            out[k] = str(v)
+                    else:
+                        out[k] = v
+                return out
+        except Exception:
+            return {}
+    else:
+        return {}
+
+
+def guess_trigger_words(path: str, top_n: int = 5) -> list[str]:
+    meta = read_safetensors_metadata(path)
+    # Civitai's explicit field, if present
+    if "modelspec.trigger_phrase" in meta:
+        return [meta["modelspec.trigger_phrase"]]
+
+    # Kohya tag frequency — most common tags as candidates
+    if "ss_tag_frequency" in meta:
+        try:
+            tag_freq = json.loads(meta["ss_tag_frequency"])
+        except Exception:
+            return []
+        counts: dict[str, int] = {}
+        for dataset in tag_freq.values():  # keyed by dataset dir
+            for tag, count in dataset.items():
+                counts[tag] = counts.get(tag, 0) + count
+        return [t for t, _ in sorted(counts.items(), key=lambda x: -x[1])[:top_n]]
+
+    return []
         
 
 class LORAs:
