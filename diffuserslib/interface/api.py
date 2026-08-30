@@ -132,19 +132,12 @@ class RestApi:
             if WorkflowRunner.workflowrunner is None:
                 raise Exception("WorkflowRunner not initialized")
 
-            controller = WorkflowController()
-            # load the workflow builder instance (uses class name)
+            # TODO this could be made more generic
+            controller = WorkflowController.getInstance()
             controller.loadWorkflow('ImageDiffusionWorkflow')
             workflow_node = controller.model.workflow
 
-            # set user input nodes from params
-            try:
-                # models
-                models_node = workflow_node.getNodeByType(type(workflow_node)).getNodeByType.__self__
-            except Exception:
-                pass
-
-            # helper to safely get node by type or name
+            # helper to safely get node by type or name, maybe a load workflow and set all named parameters function
             def get_node_by_type(node, t):
                 try:
                     return node.getNodeByType(t)

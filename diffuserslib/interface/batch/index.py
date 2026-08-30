@@ -12,9 +12,7 @@ class BatchView(AbstractView):
 
     @staticmethod
     def getControllerInstance():
-        if BatchView.controller is None:
-            BatchView.controller = WorkflowController()
-        return BatchView.controller
+        return WorkflowController.getInstance()
         
 
     @ui.page('/')

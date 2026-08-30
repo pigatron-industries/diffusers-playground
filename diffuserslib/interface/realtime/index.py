@@ -10,9 +10,7 @@ class RealtimeView(AbstractView):
 
     @staticmethod
     def getControllerInstance():
-        if RealtimeView.controller is None:
-            RealtimeView.controller = WorkflowController("./.history_realtime.yml")
-        return RealtimeView.controller
+        return WorkflowController.getInstance()
 
     @ui.page('/realtime')
     def realtime():

@@ -32,7 +32,14 @@ class WorkflowController:
     builders_sub:Dict[str, str] = {}         # [WorkflowClass Name, Workflow Display Name]
     output_types = ["Image", "Video", "Audio", "str", "Other"]
     output_subdir = "."
-    
+    _instance = None
+
+    @classmethod
+    def getInstance(cls) -> 'WorkflowController':
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
 
     def __init__(self, history_filename=".history.yml"):
         self.model = Model()
@@ -78,7 +85,7 @@ class WorkflowController:
     
 
     def loadWorkflow(self, workflow_name):
-        if(self.model.workflow is not None and self.model.workflow.name == workflow_name):
+        if(self.model.workflow is not None and self.model.workflow_name == workflow_name):
             return
         print(f"Loading workflow instance: {workflow_name}")
         self.model.workflows_sub = {}
