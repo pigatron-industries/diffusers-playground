@@ -13,7 +13,7 @@ class ImageDiffusionWorkflow(WorkflowBuilder):
     def build(self):
         models_input = DiffusionModelUserInputNode()
         lora_input = LORAModelUserInputNode(diffusion_model_input = models_input, name = "lora")
-        size_input = SizeUserInputNode(value = (512, 512))
+        size_input = SizeUserInputNode(value = (512, 512), name="size")
         prompt_input = TextAreaInputNode(value = "", name="prompt")
         negprompt_input = StringUserInputNode(value = "", name="negprompt")
         seed_input = SeedUserInputNode(value = None, name="seed")

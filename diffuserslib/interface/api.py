@@ -153,7 +153,7 @@ class RestApi:
             # Diffusion model input
             dm_node = get_node_by_type(workflow_node, __import__('diffuserslib.functional.nodes.image.diffusers.user.DiffusionModelUserInputNode', fromlist=['DiffusionModelUserInputNode']).DiffusionModelUserInputNode)
             if dm_node is not None and len(params.models) > 0:
-                base = params.models[0].base if hasattr(params.models[0], 'base') else None
+                base = DiffusersPipelines.pipelines.getModel(params.models[0].name).base
                 models_list = [(m.name, m.weight) for m in params.models]
                 dm_node.setValue((base, models_list))
 
@@ -167,6 +167,9 @@ class RestApi:
                 lora_node = None
 
             # other simple inputs
+            n = get_node_by_name(workflow_node, 'size')
+            if n is not None:
+                n.setValue((params.width, params.height))
             n = get_node_by_name(workflow_node, 'prompt')
             if n is not None:
                 n.setValue(params.prompt)
