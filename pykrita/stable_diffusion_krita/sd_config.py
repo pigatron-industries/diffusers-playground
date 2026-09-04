@@ -20,7 +20,7 @@ class SDConfig:
     url = "http://localhost:5000"
     width=512
     height=512
-    params:ConfigDialogParameters=ConfigDialogParameters()
+    params = ConfigDialogParameters()
     param_history:List[ConfigDialogParameters] = field(default_factory=list)
 
     def __post_init__(self):
