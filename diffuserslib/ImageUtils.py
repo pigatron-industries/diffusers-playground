@@ -163,6 +163,8 @@ def tiledImageProcessor(processor, initimage:Image.Image|None=None, controlimage
                 if(right):
                     xright = width
 
+            print(f'Processing slice {xslice+1}/{xslices}, {yslice+1}/{yslices} at ({xleft}, {ytop}) to ({xright}, {ybottom})')
+
             if(initimage is None):
                 image_slice = None
             elif(overlap >= 0 and scale == 1 and not merge_to_new): 
@@ -186,7 +188,6 @@ def tiledImageProcessor(processor, initimage:Image.Image|None=None, controlimage
                 imageout_slice = processor(image_slice, controlimage_slices)
             else:
                 imageout_slice = processor(image_slice)
-            display(imageout_slice)
             # imageout_slice = applyColourCorrection(image_slice, imageout_slice)
             
             # merge image tile back into output image

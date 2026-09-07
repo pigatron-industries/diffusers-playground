@@ -165,6 +165,11 @@ generate:
         vae: stabilityai/sd-vae-ft-mse
 
 inpaint:
+  - base: zimage
+    pipelines:
+      inpaint: ZImageGeneratePipeline
+    models:
+      - id: Tongyi-MAI/Z-Image-Turbo
   - base: flux
     pipelines:
       inpaint: FluxGeneratePipeline

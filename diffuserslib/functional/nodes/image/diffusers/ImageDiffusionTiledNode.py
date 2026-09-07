@@ -96,13 +96,20 @@ class ImageDiffusionTiledNode(FunctionalNode):
         else:
             initimage = None
 
-        controlimages = [ controlimageparams.image for controlimageparams in params.getImages(ControlImageType.IMAGETYPE_CONTROLIMAGE) ]
+        control_images_with_indexes = []
+        for i, controlimageparams in enumerate(params.controlimages):
+            if(controlimageparams.image is not None and isinstance(controlimageparams.image, Image.Image) and controlimageparams.condscale > 0 
+               and (controlimageparams.type in [ControlImageType.IMAGETYPE_CONTROLIMAGE, ControlImageType.IMAGETYPE_MASKIMAGE])):
+                control_images_with_indexes.append((i, controlimageparams.image))
+        controlimages = [img for i, img in control_images_with_indexes]
+
         if(params.seed is None):
             params.seed = random.randint(0, MAX_SEED)
         
         def imageToImageFunc(initimagetile:Image.Image|None, controlimagetiles:List[Image.Image]):
             assert(DiffusersPipelines.pipelines is not None)
             tileparams = copy.deepcopy(params)
+
             if(initimagetile is not None):
                 tileparams.width = initimagetile.width
                 tileparams.height = initimagetile.height
@@ -112,15 +119,20 @@ class ImageDiffusionTiledNode(FunctionalNode):
             tileparams.generationtype = "generate"
             if(initimagetile is not None):
                 tileparams.setInitImage(initimagetile)
-            print("ImageDiffusionTiledNode: Tile init image:")
-            # imgcat(initimagetile)
+                print("ImageDiffusionTiledNode: Tile init image:")
+                imgcat(initimagetile)
             if masktile is not None:
                 tileparams.controlimages.append(masktile)
+                print("ImageDiffusionTiledNode: Tile mask image:")
+                imgcat(masktile)
             for i in range(len(controlimagetiles)):
-                tileparams.setControlImage(i, controlimagetiles[i])
+                index = control_images_with_indexes[i][0]
+                tileparams.controlimages[index].image = controlimagetiles[i]
+                print(f"ImageDiffusionTiledNode: Tile control image {i}:")
+                imgcat(controlimagetiles[i])
             image, _ = DiffusersPipelines.pipelines.generate(tileparams)
             print("ImageDiffusionTiledNode: Tile output image:")
-            # imgcat(image)
+            imgcat(image)
             return image
         
         return tiledImageProcessor(processor=imageToImageFunc, initimage=initimage, controlimages=controlimages, tilewidth=tilewidth, tileheight=tileheight, overlap=overlap, callback=callback), params.seed
