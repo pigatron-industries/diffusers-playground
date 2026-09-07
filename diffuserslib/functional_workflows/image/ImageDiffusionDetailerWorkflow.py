@@ -74,7 +74,7 @@ class ImageDiffusionDetailerWorkflow(WorkflowBuilder):
                                     tileoverlap = tileoverlap_input,
                                     tilesize = tilesize_calc,
                                     conditioning_inputs = [initimage_condition, cannyimage_condition, ipadapter_condition],
-                                    conditioning_inputs_tile = [diffmask_condition]
+                                    # conditioning_inputs_tile = [diffmask_condition]
                                     )
         
         return diffusion

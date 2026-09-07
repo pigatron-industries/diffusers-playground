@@ -18,7 +18,7 @@ import sys
 from diffuserslib.functional.nodes.image.diffusers.ImageDiffusionNode import ImageDiffusionNode
 from diffuserslib.functional import WorkflowRunner
 from diffuserslib.interface.WorkflowController import WorkflowController
-from diffuserslib.functional_workflows.image.ImageDiffusionWorkflow import ImageDiffusionWorkflow
+from diffuserslib.functional_workflows.image.ImageDiffusionConditioningWorkflow import ImageDiffusionConditioningWorkflow
 
 
 def str_to_class(str):
@@ -134,7 +134,7 @@ class RestApi:
 
             # TODO this could be made more generic
             controller = WorkflowController.getInstance()
-            controller.loadWorkflow('ImageDiffusionWorkflow')
+            controller.loadWorkflow('ImageDiffusionConditioningWorkflow')
             workflow_node = controller.model.workflow
 
             # helper to safely get node by type or name, maybe a load workflow and set all named parameters function
@@ -203,6 +203,24 @@ class RestApi:
                     # fallback for None
                     if params.sigmas is None and 'None' in getattr(n, 'dict', {}):
                         n.setValue('None')
+
+            # Conditioning inputs from control images
+            cond_list = get_node_by_name(workflow_node, 'conditioning_inputs')
+            if cond_list is not None and params.controlimages:
+                controlimgs = [ci for ci in params.controlimages if ci.image is not None]
+                if len(controlimgs) > 0:
+                    cond_list.setValue(len(controlimgs))
+                    cond_nodes = cond_list.params["list"].value
+                    for i, cond_node in enumerate(cond_nodes):
+                        ci = controlimgs[i]
+                        model_node = cond_node.params["model"].value
+                        print("Setting control image model/type:", ci.model, ci.type)
+                        model_node.setValue(ci.model if ci.model else ci.type)
+                        scale_node = cond_node.params["scale"].value
+                        scale_node.setValue(ci.condscale)
+                        resize_node = cond_node.params["image"].value
+                        image_upload = resize_node.params["image"].value
+                        image_upload.content = [ci.image]
 
             # Save workflow params to history (UI does this before running)
             controller.saveWorkflowParamsToHistory()
