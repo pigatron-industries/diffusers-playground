@@ -8,8 +8,6 @@ from ..realtime.RealtimeInterfaceComponents import RealtimeInterfaceComponents
 
 class BatchView(AbstractView):
 
-    controller = None
-
     @staticmethod
     def getControllerInstance():
         return WorkflowController.getInstance()
@@ -47,7 +45,7 @@ class BatchView(AbstractView):
 
 
     def settings(self):
-        if(self.controller.model.workflow is not None):
+        if(self.getControllerInstance().model.workflow is not None):
             self.controller.model.workflow.printDebug()
         with ui.dialog(value=True) as settings_dialog, ui.card():
             self.interface_components.settings()

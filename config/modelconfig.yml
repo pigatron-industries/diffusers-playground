@@ -24,6 +24,7 @@ generate:
       generate: KreaGeneratePipeline
     models:
       - id: krea/Krea-2-Raw
+      - id: krea/Krea-2-Turbo
   - base: zimage
     pipelines:
       generate: ZImageGeneratePipeline
