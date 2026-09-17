@@ -9,6 +9,13 @@ class GlobalConfig:
     workflowstate_dirs = []
     modelconfigs = {}
 
+    # MiniMax-H3 (Apple Silicon) - checkout of minimax-h3-mac and its python interpreter.
+    # Model weights are expected under {minimax_h3_dir}/models/... and the generation
+    # entrypoint at {minimax_h3_dir}/scripts/generate.py.
+    minimax_h3_proj_dir = "./workspace/minimax-h3-mac"
+    minimax_h3_model_dir = "/Volumes/T9/models/other/minimax-h3"
+
+
     @staticmethod   
     def getModelsByBase(type:str, base:str):
         print(GlobalConfig.modelconfigs)
