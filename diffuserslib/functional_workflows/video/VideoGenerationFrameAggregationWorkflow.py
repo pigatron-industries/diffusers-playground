@@ -6,10 +6,10 @@ from diffuserslib.functional.nodes.video.diffusers import *
 from diffuserslib.functional.nodes.user import *
 
 
-class VideoGenerationGenericWorkflow(WorkflowBuilder):
+class VideoGenerationFrameAggregatorWorkflow(WorkflowBuilder):
 
     def __init__(self):
-        super().__init__("Video Generation - Generic", Video, workflow=True, subworkflow=False)
+        super().__init__("Video Generation - Frames", Video, workflow=True, subworkflow=False)
 
 
     def build(self):

@@ -1,6 +1,8 @@
 from diffuserslib.functional import *
 from diffuserslib.functional.nodes import *
 from diffuserslib.functional.nodes.video.MinimaxH3VideoNode import MinimaxH3VideoNode
+from diffuserslib.functional.nodes.video.VideoLastFrameFeedbackNode import VideoLastFrameFeedbackNode
+from PIL import Image
 
 
 class MinimaxH3VideoWorkflow(WorkflowBuilder):
@@ -20,5 +22,8 @@ class MinimaxH3VideoWorkflow(WorkflowBuilder):
 
         output_video = MinimaxH3VideoNode(prompt=prompt_input, first_image=first_image_input, last_image=last_image_input,
                                   resolution=size_input, duration=duration_input, steps=steps_input, seed=seed_input)
-        
-        return output_video
+
+        feedback_init_image = ImageUploadInputNode(mandatory=False, display="Initial Image", name="feedback_init_image")
+        feedback_image = VideoLastFrameFeedbackNode(init_value=feedback_init_image, input=output_video, type=Image.Image,
+                                       name="feedback_image", display_name="Feedback Image - Previous Output Last Frame")
+        return output_video, feedback_image

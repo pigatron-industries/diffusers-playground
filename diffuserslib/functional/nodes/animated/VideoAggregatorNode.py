@@ -4,14 +4,14 @@ from diffuserslib.functional.types.FunctionalTyping import *
 
 class VideoAggregatorNode(FunctionalNode):
     def __init__(self, 
-                 frames:FramesFuncType,
+                 videos:VideosFuncType,
                  num_videos:IntFuncType,
                  name:str = "video_aggregator"):
         super().__init__(name)
         self.addInitParam("num_videos", num_videos, int)
-        self.addParam("frames", frames, List[Image.Image])
+        self.addParam("videos", videos, List[Video])
         self.args = {}
-        self.frames = []
+        self.videos = []
         self.videos_done = 0
 
 
@@ -19,29 +19,29 @@ class VideoAggregatorNode(FunctionalNode):
         self.num_videos = num_videos
 
 
-    def __call__(self) -> List[Image.Image]:
-        self.frames = []
+    def __call__(self) -> List[Video]:
+        self.videos = []
         self.videos_done = 0
         self.video()
         self.videos_done += 1
         for i in range(1, self.num_videos):
             self.video()
             self.videos_done += 1
-        return self.frames
+        return self.videos
     
 
-    def video(self) -> List[Image.Image]:
+    def video(self) -> List[Video]:
         if(self.stopping):
             raise WorkflowInterruptedException("Workflow interrupted")
         self.flush()
         self.args = self.evaluateParams()
-        frames = self.args["frames"]
-        self.frames.extend(frames)
-        return frames
+        videos = self.args["videos"]
+        self.videos.extend(videos)
+        return videos
     
 
     def getProgress(self) -> WorkflowProgress|None:
-        if len(self.frames) == 0:
+        if len(self.videos) == 0:
             return WorkflowProgress(0, None)
         else:
-            return WorkflowProgress(float(self.videos_done) / float(self.num_videos), self.frames)
+            return WorkflowProgress(float(self.videos_done) / float(self.num_videos), self.videos)

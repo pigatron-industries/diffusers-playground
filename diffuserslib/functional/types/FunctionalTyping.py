@@ -1,5 +1,6 @@
 from typing import Callable, Tuple, List, Any, Dict
 from PIL import Image
+from diffuserslib.functional.types.Video import Video
 
 # Python type definitions for node inputs
 ParamsDictFuncType = Dict[str, Any] | Callable[[], Dict[str, Any]] | None
@@ -36,6 +37,8 @@ RectFuncType = RectType | Callable[[], RectType]
 ImageFuncType = Image.Image | Callable[[], Image.Image]
 ImagesFuncType = List[Image.Image] | Callable[[], List[Image.Image]]
 FramesFuncType = List[Image.Image] | Callable[[], List[Image.Image]]
+
+VideosFuncType = List[Video] | Callable[[], List[Video]]
 
 ColourType = Tuple[int, int, int] | str
 ColourFuncType = ColourType | Callable[[], ColourType]
