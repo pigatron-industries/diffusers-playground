@@ -10,5 +10,6 @@ from .DeepFloydPipelines import *
 from .KandinskyPipelines import *
 from .AuraFlowPipelines import *
 from .FluxPipelines import *
+from .Flux2Pipelines import *
 from .KreaPipelines import *
 from .ZImagePipelines import *
