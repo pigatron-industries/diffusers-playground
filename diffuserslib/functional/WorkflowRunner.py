@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from PIL import Image
 from PIL.Image import Resampling
 from nicegui import run
+import json
+import piexif
 import time
 import datetime
 import yaml
@@ -193,19 +195,24 @@ class WorkflowRunner:
         rundata = self.rundata[timestamp]
         if(rundata.output is not None):
             if(isinstance(rundata.output, Image.Image)):
-                # Preserve EXIF metadata if present. Pillow requires passing exif bytes when saving
+                # Build EXIF with workflow params embedded in UserComment
                 try:
-                    exif_bytes = rundata.output.info.get('exif', None)
-                except Exception:
-                    exif_bytes = None
-
-                if exif_bytes:
-                    # Ensure RGB for JPEG
-                    rgb = rundata.output.convert('RGB')
-                    rundata.output = rgb
-                    rundata.output.save(f"{save_file}.png", exif=exif_bytes, quality=95)
+                    params_json = json.dumps(rundata.params, default=str)
+                    exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}, "thumbnail": None}
+                    if 'exif' in rundata.output.info and rundata.output.info['exif']:
+                        try:
+                            exif_dict = piexif.load(rundata.output.info['exif'])
+                        except Exception:
+                            pass
+                    exif_dict["Exif"][piexif.ExifIFD.UserComment] = params_json.encode('utf-8')
+                    exif_dict["0th"][piexif.ImageIFD.Software] = "diffusers-playground"
+                    exif_bytes = piexif.dump(exif_dict)
+                    if rundata.output.mode not in ('RGB', 'RGBA', 'L', 'P', '1'):
+                        rundata.output = rundata.output.convert('RGBA')
+                    rundata.output.save(f"{save_file}.png", exif=exif_bytes)
                     rundata.save_file = f"{save_file}.png"
-                else:
+                except Exception as e:
+                    print(f"Warning: failed to embed EXIF params: {e}")
                     rundata.output.save(f"{save_file}.png")
                     rundata.save_file = f"{save_file}.png"
             elif(isinstance(rundata.output, Video)):

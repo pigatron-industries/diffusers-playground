@@ -3,6 +3,7 @@ from diffuserslib.interface.batch.index import *
 from diffuserslib.interface.chat.index import *
 from diffuserslib.interface.realtime.index import *
 from diffuserslib.interface.api import *
+from diffuserslib.interface.generic_api import *
 from diffuserslib.init import initializeDiffusers
 
 initializeDiffusers(configs=["config/config.yml", "config/local_config.yml"], 
