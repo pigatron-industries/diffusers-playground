@@ -1,10 +1,14 @@
 from nicegui import app
+from fastapi import HTTPException
+from threading import Thread, Lock
 from typing import Any, Dict
 from pydantic import BaseModel, Field
 from PIL import Image
 from io import BytesIO
 import base64
+import datetime
 import os
+import uuid
 
 from diffuserslib.functional import FunctionalNode, NodeParameter, UserInputNode, WorkflowRunner, Video, Audio
 from diffuserslib.functional.nodes.user.FileUploadInputNode import FileUploadInputNode
@@ -17,6 +21,16 @@ class GenericWorkflowRequest(BaseModel):
     workflow:str
     params:Dict[str, Any] = Field(default_factory=dict)
     batch_size:int = 1
+
+
+class GenericJob:
+    """A single queued generic-workflow job with its own status/result."""
+
+    def __init__(self, jobid:str):
+        self.id = jobid
+        self.status:Dict[str, Any] = { "status":"queued", "action":"generic" }
+        self.created_at = datetime.datetime.now().isoformat()
+        self.thread:Thread|None = None
 
 
 class GenericApi:
@@ -34,7 +48,17 @@ class GenericApi:
 
     The workflow is queued exactly like the generate endpoint: it is submitted
     to the shared WorkflowRunner batch queue and polled to completion.
+
+    Async runs are tracked as independent jobs (see GenericJob): each POST to
+    /api/generic/async/run gets its own job id, so multiple workflows can be
+    queued at once and polled individually via /api/generic/async/{job_id}.
     """
+
+    # Registry of async jobs: jobid -> GenericJob. Dicts preserve insertion
+    # order, which we use to prune the oldest finished jobs first.
+    jobs:Dict[str, GenericJob] = {}
+    jobs_lock:Lock = Lock()
+    MAX_JOBS:int = 128
 
     #================= DISCOVERY =================
     @staticmethod
@@ -79,15 +103,45 @@ class GenericApi:
     @staticmethod
     @app.post("/api/generic/async/run")
     def runAsync(request:GenericWorkflowRequest):
-        return RestApi.startAsync("generic", GenericApi.genericRun, request)
+        job = GenericJob(uuid.uuid4().hex)
+        with GenericApi.jobs_lock:
+            GenericApi.jobs[job.id] = job
+            # Bound memory: drop the oldest finished jobs once over the cap.
+            if len(GenericApi.jobs) > GenericApi.MAX_JOBS:
+                for oldid in list(GenericApi.jobs):
+                    if len(GenericApi.jobs) <= GenericApi.MAX_JOBS:
+                        break
+                    if GenericApi.jobs[oldid].status.get("status") in ("finished", "error"):
+                        del GenericApi.jobs[oldid]
+        job.thread = Thread(target=GenericApi.genericRun, args=(request, job))
+        job.thread.start()
+        return { "job_id": job.id, **job.status }
 
 
     @staticmethod
-    def genericRun(request:GenericWorkflowRequest):
+    @app.get("/api/generic/async/{job_id}")
+    def getJob(job_id:str):
+        with GenericApi.jobs_lock:
+            job = GenericApi.jobs.get(job_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail=f"Unknown job id '{job_id}'")
+        return { "job_id": job.id, **job.status }
+
+
+    @staticmethod
+    def genericRun(request:GenericWorkflowRequest, job:GenericJob|None = None):
+        def setStatus(status:Dict[str, Any]):
+            if job is not None:
+                job.status = status
+            else:
+                RestApi.job.status = status
+
         try:
             print('=== generic workflow run ===')
             if (WorkflowRunner.workflowrunner is None):
                 raise Exception("WorkflowRunner not initialized")
+
+            setStatus({ "status":"running", "action":"generic", "workflow": request.workflow })
 
             workflow = GenericApi._buildWorkflow(request.workflow)
             applied, unmatched = GenericApi._applyParams(workflow, request.params)
@@ -103,11 +157,11 @@ class GenericApi:
             outputs = []
             for runid, rd in batch.rundata.items():
                 if rd.error is not None:
-                    RestApi.job.status = { "status":"error", "action":"generic", "error":str(rd.error) }
+                    setStatus({ "status":"error", "action":"generic", "error":str(rd.error) })
                     raise rd.error
                 outputs.append(GenericApi._serializeOutput(runid, rd.output))
 
-            RestApi.job.status = {
+            status = {
                 "status":"finished",
                 "action":"generic",
                 "workflow": request.workflow,
@@ -115,10 +169,11 @@ class GenericApi:
                 "applied_params": list(applied),
                 "unmatched_params": unmatched,
             }
-            return RestApi.job.status
+            setStatus(status)
+            return status
 
         except Exception as e:
-            RestApi.job.status = { "status":"error", "action":"generic", "error":str(e) }
+            setStatus({ "status":"error", "action":"generic", "error":str(e) })
             raise e
 
 

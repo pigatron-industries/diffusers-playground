@@ -16,8 +16,8 @@ The server runs on port `8070` (see `app_nicegui.py`). Base URL below assumes
 | `GET`  | `/api/generic/workflows` | List all registered workflows |
 | `GET`  | `/api/generic/workflows/{workflow}/params` | Describe a workflow's input keys, node types, and sample values |
 | `POST` | `/api/generic/run` | Run a workflow synchronously (blocks until finished) |
-| `POST` | `/api/generic/async/run` | Run a workflow in the background (returns immediately) |
-| `GET`  | `/api/async` | Poll the status/result of the background job |
+| `POST` | `/api/generic/async/run` | Queue a workflow in the background — returns a **job id** immediately |
+| `GET`  | `/api/generic/async/{job_id}` | Poll the status/result of one queued job by its job id |
 
 ---
 
@@ -112,19 +112,39 @@ Blocks until the workflow finishes, then returns the result:
   (useful for catching typos).
 - On error, `status` is `error` and an `error` field contains the message.
 
-### Asynchronous (`/api/generic/async/run`) + poll (`/api/async`)
+### Asynchronous (`/api/generic/async/run`) + poll by job id
 
-`/api/generic/async/run` returns immediately:
+`POST /api/generic/async/run` queues the workflow and returns immediately with a
+**job id**:
 
 ```json
-{ "status": "running", "action": "generic" }
+{ "job_id": "e5af490aa706450594d850709de718e9", "status": "queued", "action": "generic" }
 ```
 
-Poll `GET /api/async` until `status` is `finished` or `error`. When finished, the
-response has the same shape as the synchronous response above.
+Poll `GET /api/generic/async/{job_id}` with that id until `status` is `finished`
+or `error`. When finished, the response has the same shape as the synchronous
+response above (plus the `job_id`). An unknown job id returns HTTP 404.
 
-> Note: there is a single shared job slot. Starting a second async job while one is
-> running returns the in-progress job's status rather than queueing a new one.
+```bash
+JOB_ID=$(curl -s -X POST http://localhost:8070/api/generic/async/run \
+  -H "Content-Type: application/json" \
+  -d '{ "workflow": "ImageDiffusionConditioningWorkflow", "params": { ... } }' \
+  | python3 -c 'import sys, json; print(json.load(sys.stdin)["job_id"])')
+
+# poll until finished / error
+while true; do
+  STATUS=$(curl -s http://localhost:8070/api/generic/async/$JOB_ID)
+  echo "$STATUS" | grep -qE '"status":\s*"(finished|error)"' && break
+  sleep 2
+done
+echo "$STATUS"
+```
+
+> **Multiple jobs:** each POST creates an independent job, so you can queue as many
+> workflows as you like — they run one after another on the shared workflow runner.
+> Poll each job by its own id; there is no longer a single shared job slot for the
+> generic API. (The legacy `GET /api/async` endpoint still exists for the other,
+> non-generic endpoints.)
 
 ---
 
