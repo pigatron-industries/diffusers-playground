@@ -6,8 +6,6 @@ from .RealtimeInterfaceComponents import RealtimeInterfaceComponents
 
 class RealtimeView(AbstractView):
 
-    controller = None
-
     @staticmethod
     def getControllerInstance():
         return WorkflowController.getInstance()
@@ -38,8 +36,9 @@ class RealtimeView(AbstractView):
 
 
     def settings(self):
-        if(self.controller.model.workflow is not None):
-            self.controller.model.workflow.printDebug()
+        controller = self.getControllerInstance()
+        if(controller.model.workflow is not None):
+            controller.model.workflow.printDebug()
         with ui.dialog(value=True) as settings_dialog, ui.card():
             self.interface_components.settings()
 

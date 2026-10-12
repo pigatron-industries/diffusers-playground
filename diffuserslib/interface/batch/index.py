@@ -45,8 +45,9 @@ class BatchView(AbstractView):
 
 
     def settings(self):
-        if(self.getControllerInstance().model.workflow is not None):
-            self.controller.model.workflow.printDebug()
+        controller = self.getControllerInstance()
+        if(controller.model.workflow is not None):
+            controller.model.workflow.printDebug()
         with ui.dialog(value=True) as settings_dialog, ui.card():
             self.interface_components.settings()
 
