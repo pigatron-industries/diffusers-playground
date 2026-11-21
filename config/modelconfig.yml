@@ -38,6 +38,11 @@ generate:
     models:
       - id: Tongyi-MAI/Z-Image-Turbo
       - id: Tongyi-MAI/Z-Image
+  - base: moss_image
+    pipelines:
+      generate: MossImageGeneratePipeline
+    models:
+      - id: lodestones/Kromoss
   - base: sd_3_0
     pipelines:
       generate: StableDiffusion3GeneratePipeline

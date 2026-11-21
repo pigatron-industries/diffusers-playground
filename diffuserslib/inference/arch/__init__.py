@@ -13,3 +13,4 @@ from .FluxPipelines import *
 from .Flux2Pipelines import *
 from .KreaPipelines import *
 from .ZImagePipelines import *
+from .MossImagePipelines import *
